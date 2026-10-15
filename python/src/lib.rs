@@ -1092,6 +1092,7 @@ mod community {
             vec![
 Citation {
                 id: "https://github.com/alphal00p/oneloopmaster".into(),
+                url: "https://github.com/alphal00p/oneloopmaster".into(),
                 reference: "OneLoopMaster contributors. OneLoopMaster (2026).".into(),
                 bibtex: r#"@software{oneloopmaster,
   author = {{OneLoopMaster contributors}},
@@ -1105,6 +1106,7 @@ Citation {
             },
 Citation {
                 id: "arXiv:1007.4716".into(),
+                url: "https://arxiv.org/abs/1007.4716".into(),
                 reference: "A. van Hameren. OneLOop: for the evaluation of one-loop scalar functions. Computer Physics Communications 182 (2011) 2427–2438.".into(),
                 bibtex: r#"@article{vanHameren2011OneLOop,
   author = {van Hameren, Andreas},
@@ -1121,6 +1123,7 @@ Citation {
             },
 Citation {
                 id: "arXiv:0903.4665".into(),
+                url: "https://arxiv.org/abs/0903.4665".into(),
                 reference: "A. van Hameren, C. G. Papadopoulos and R. Pittau. Automated one-loop calculations: a proof of concept. JHEP 09 (2009) 106.".into(),
                 bibtex: r#"@article{vanHameren2009Automated,
   author = {van Hameren, Andreas and Papadopoulos, Costas G. and Pittau, Roberto},
