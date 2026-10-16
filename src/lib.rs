@@ -254,6 +254,9 @@ mod tests;
 #[cfg(test)]
 mod analytic_continuation_tests;
 
+#[cfg(test)]
+mod removable_log_tests;
+
 static CITATIONS_USED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
 #[inline]
