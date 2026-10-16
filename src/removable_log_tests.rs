@@ -27,7 +27,7 @@ fn close(actual: Complex<f64>, expected: Complex<f64>) {
 // If (1-x) f(x) = log(x), the coefficients of f(1+h) follow from
 // derivatives of log(1+h) one order higher. Symbolica performs all derivatives.
 // This oracle does not use the series operation used by production preparation.
-fn oracle_polynomial(depth: usize, offset: &Atom) -> Atom {
+pub(crate) fn oracle_polynomial(depth: usize, offset: &Atom) -> Atom {
     let h = symbolica::symbol!("removable_oracle_h");
     let mut derivative = (Atom::num(1) + h.to_atom()).log();
     let mut result = Atom::num(0);

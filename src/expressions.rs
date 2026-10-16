@@ -68,7 +68,9 @@ impl OneLoopExpressions {
     /// The maximum total derivative order comes from `dual`, so the generated
     /// local polynomials cover every component of its shape. Inputs and outputs
     /// use Symbolica's ordinary argument-major/component-minor Dual layout.
-    /// This currently preserves the sheet `log(x)/(1-x)` limit at one. Coincident
+    /// This currently preserves equal nonzero sheet quotient jets and the sheet
+    /// `log(x)/(1-x)` limit at one. An unresolved `0/0` sheet quotient stays
+    /// nonfinite instead of inheriting the historical scalar convention. Coincident
     /// dilogarithm differences and other triangle/box limits still need their own
     /// neighborhoods; this constructor does not establish a C0/D0 derivative
     /// domain. Callers must validate their domain independently.
