@@ -235,22 +235,22 @@ impl NativeFloat for Float {
 }
 
 #[inline]
-pub(crate) fn add<T: NativeFloat>(a: &C<T>, b: &C<T>) -> C<T> {
+pub fn add<T: NativeFloat>(a: &C<T>, b: &C<T>) -> C<T> {
     T::complex_add(a, b)
 }
 
 #[inline]
-pub(crate) fn inline_add<T: NativeFloat>(a: &C<T>, b: &C<T>) -> C<T> {
+pub fn inline_add<T: NativeFloat>(a: &C<T>, b: &C<T>) -> C<T> {
     C::new(a.re.clone() + &b.re, a.im.clone() + &b.im)
 }
 
 #[inline]
-pub(crate) fn mul<T: NativeFloat>(a: &C<T>, b: &C<T>) -> C<T> {
+pub fn mul<T: NativeFloat>(a: &C<T>, b: &C<T>) -> C<T> {
     T::complex_mul(a, b)
 }
 
 #[inline]
-pub(crate) fn inline_mul<T: NativeFloat>(a: &C<T>, b: &C<T>) -> C<T> {
+pub fn inline_mul<T: NativeFloat>(a: &C<T>, b: &C<T>) -> C<T> {
     // Keep separately rounded products, including exactly cancelling pairs.
     C::new(
         a.re.clone() * &b.re - a.im.clone() * &b.im,
@@ -287,7 +287,7 @@ fn inverse<T: NativeFloat>(a: &C<T>) -> C<T> {
 }
 
 #[inline]
-pub(crate) fn powi<T: NativeFloat>(a: &C<T>, exponent: i64, _is_real: bool) -> C<T> {
+pub fn powi<T: NativeFloat>(a: &C<T>, exponent: i64, _is_real: bool) -> C<T> {
     if exponent == 1 {
         return a.clone();
     }
@@ -318,7 +318,7 @@ pub(crate) fn powi<T: NativeFloat>(a: &C<T>, exponent: i64, _is_real: bool) -> C
 }
 
 #[inline]
-pub(crate) fn powf<T: NativeFloat>(a: &C<T>, b: &C<T>, is_real: bool) -> C<T> {
+pub fn powf<T: NativeFloat>(a: &C<T>, b: &C<T>, is_real: bool) -> C<T> {
     if b.im.is_fully_zero() {
         let half = b.re.one() / b.re.from_i64(2);
         if b.re == half {
@@ -352,7 +352,7 @@ pub(crate) fn powf<T: NativeFloat>(a: &C<T>, b: &C<T>, is_real: bool) -> C<T> {
 }
 
 #[inline]
-pub(crate) fn log<T: NativeFloat>(a: &C<T>) -> C<T> {
+pub fn log<T: NativeFloat>(a: &C<T>) -> C<T> {
     let radius = NativeFloat::hypot(&a.re, &a.im);
     let magnitude = if !radius.is_finite() && a.re.is_finite() && a.im.is_finite() {
         let x = a.re.norm();
@@ -384,7 +384,7 @@ pub(crate) fn log<T: NativeFloat>(a: &C<T>) -> C<T> {
 }
 
 #[inline]
-pub(crate) fn sqrt<T: NativeFloat>(a: &C<T>) -> C<T> {
+pub fn sqrt<T: NativeFloat>(a: &C<T>) -> C<T> {
     if a.im.is_fully_zero() {
         let root = a.re.norm().sqrt();
         return if a.re < a.re.zero() {
@@ -413,30 +413,30 @@ pub(crate) fn sqrt<T: NativeFloat>(a: &C<T>) -> C<T> {
 }
 
 #[inline]
-pub(crate) fn abs<T: NativeFloat>(a: &C<T>) -> C<T> {
+pub fn abs<T: NativeFloat>(a: &C<T>) -> C<T> {
     C::new(NativeFloat::hypot(&a.re, &a.im), a.im.zero())
 }
 #[inline]
-pub(crate) fn conj<T: NativeFloat>(a: &C<T>) -> C<T> {
+pub fn conj<T: NativeFloat>(a: &C<T>) -> C<T> {
     C::new(a.re.clone(), -a.im.clone())
 }
 #[inline]
 #[cfg(test)]
 #[allow(dead_code)] // Exercised by the standalone primitive integration target.
-pub(crate) fn re<T: NativeFloat>(a: &C<T>) -> C<T> {
+pub fn re<T: NativeFloat>(a: &C<T>) -> C<T> {
     C::new(a.re.clone(), a.im.zero())
 }
 #[inline]
 #[cfg(test)]
 #[allow(dead_code)] // Exercised by the standalone primitive integration target.
-pub(crate) fn im<T: NativeFloat>(a: &C<T>) -> C<T> {
+pub fn im<T: NativeFloat>(a: &C<T>) -> C<T> {
     C::new(a.im.clone(), a.im.zero())
 }
 #[inline]
-pub(crate) fn polylog2<T: NativeFloat>(a: &C<T>) -> C<T> {
+pub fn polylog2<T: NativeFloat>(a: &C<T>) -> C<T> {
     T::dilog(a)
 }
 #[inline]
-pub(crate) fn truth<T: NativeFloat>(a: &C<T>) -> bool {
+pub fn truth<T: NativeFloat>(a: &C<T>) -> bool {
     !a.re.is_fully_zero() || !a.im.is_fully_zero()
 }
