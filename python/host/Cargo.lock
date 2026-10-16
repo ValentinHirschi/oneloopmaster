@@ -316,7 +316,7 @@ dependencies = [
 [[package]]
 name = "graphica"
 version = "3.0.1"
-source = "git+https://github.com/ValentinHirschi/symbolica?rev=8e23925ed7b5cbb91607c8633dda114cb43be8ce#8e23925ed7b5cbb91607c8633dda114cb43be8ce"
+source = "git+https://github.com/ValentinHirschi/symbolica?rev=58b72d438e7bcfce158d132612db7d35fdefa4ba#58b72d438e7bcfce158d132612db7d35fdefa4ba"
 dependencies = [
  "ahash",
  "dyn-clone",
@@ -568,7 +568,7 @@ dependencies = [
 [[package]]
 name = "numerica"
 version = "3.0.1"
-source = "git+https://github.com/ValentinHirschi/symbolica?rev=8e23925ed7b5cbb91607c8633dda114cb43be8ce#8e23925ed7b5cbb91607c8633dda114cb43be8ce"
+source = "git+https://github.com/ValentinHirschi/symbolica?rev=58b72d438e7bcfce158d132612db7d35fdefa4ba#58b72d438e7bcfce158d132612db7d35fdefa4ba"
 dependencies = [
  "ahash",
  "bincode",
@@ -1169,7 +1169,7 @@ checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
 [[package]]
 name = "symbolica"
 version = "3.0.1"
-source = "git+https://github.com/ValentinHirschi/symbolica?rev=8e23925ed7b5cbb91607c8633dda114cb43be8ce#8e23925ed7b5cbb91607c8633dda114cb43be8ce"
+source = "git+https://github.com/ValentinHirschi/symbolica?rev=58b72d438e7bcfce158d132612db7d35fdefa4ba#58b72d438e7bcfce158d132612db7d35fdefa4ba"
 dependencies = [
  "ahash",
  "append-only-vec",
