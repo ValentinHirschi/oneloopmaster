@@ -260,6 +260,9 @@ mod removable_log_tests;
 #[cfg(test)]
 mod quotient_tests;
 
+#[cfg(test)]
+mod coincident_dilog_tests;
+
 static CITATIONS_USED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
 #[inline]
