@@ -58,7 +58,7 @@ fn log_body(value: &Atom, phase: &Atom, odd: &Atom) -> Atom {
     choose(&real_axis, real, complex)
 }
 
-fn dilog_body(value: &Atom, phase: &Atom, odd: &Atom) -> Atom {
+fn dilog_body(value: &Atom, phase: &Atom, odd: &Atom, at_one: Atom, at_zero: Atom) -> Atom {
     let i_pi = i() * Symbol::PI.to_atom();
     let pi_squared = Symbol::PI.to_atom() * Symbol::PI.to_atom();
     let even = phase - odd;
@@ -81,11 +81,7 @@ fn dilog_body(value: &Atom, phase: &Atom, odd: &Atom) -> Atom {
         -&base - &sheet_logarithm * &sheet_logarithm / 2,
         base,
     );
-    choose(
-        value,
-        choose(&nonunit, ordinary, Atom::num(0)),
-        pi_squared / 6,
-    )
+    choose(value, choose(&nonunit, ordinary, at_one), at_zero)
 }
 
 fn log_symbol() -> Symbol {
@@ -98,6 +94,10 @@ fn dilog_symbol() -> Symbol {
 
 fn log_ratio_symbol() -> Symbol {
     symbolica::symbol!("__olo_sheet_log_over_one_minus")
+}
+
+fn difference_symbol() -> Symbol {
+    symbolica::symbol!("__olo_sheet_dilog_difference")
 }
 
 fn sheet_parameters() -> [Symbol; 3] {
@@ -140,7 +140,132 @@ pub(crate) fn with_neighborhoods(map: &FunctionMap, order: usize) -> Result<Func
     for (component, body) in parts.into_iter().enumerate() {
         map = map.with_replaced_body(product_symbol(true, component), body)?;
     }
-    Ok(map)
+    with_dilog_neighborhoods(map, order)
+}
+
+fn difference_parameters() -> [Symbol; 6] {
+    [
+        "__olo_dd_v1",
+        "__olo_dd_p1",
+        "__olo_dd_o1",
+        "__olo_dd_v2",
+        "__olo_dd_p2",
+        "__olo_dd_o2",
+    ]
+    .map(|s| symbolica::symbol!(s))
+}
+
+fn difference_sheets(arguments: &[Atom; 6]) -> [SheetAtom; 2] {
+    core::array::from_fn(|i| SheetAtom {
+        value: arguments[3 * i].clone(),
+        phase: arguments[3 * i + 1].clone(),
+        odd: arguments[3 * i + 2].clone(),
+    })
+}
+
+fn difference_body(first: &SheetAtom, second: &SheetAtom, coincident: Atom) -> Atom {
+    let difference = first.value() - second.value();
+    choose(
+        &difference,
+        (first.dilog() - second.dilog()) / &difference,
+        coincident,
+    )
+}
+
+fn with_dilog_neighborhoods(mut map: FunctionMap, order: usize) -> Result<FunctionMap, String> {
+    let depth = order
+        .checked_add(1)
+        .ok_or("dilogarithm neighborhood order overflow")?;
+    let delta = symbolica::symbol!("__olo_dilog_offset");
+    let center = symbolica::symbol!("__olo_dilog_center");
+    let other = symbolica::symbol!("__olo_dilog_other_offset");
+    let h = delta.to_atom();
+    let y = center.to_atom();
+    // Series and cancellation are performed before specializing either argument.
+    // In particular, the joint unit limit needs the native polylog-at-zero series.
+    let local_numerator = crate::dilog_atom(-&h)
+        .series(delta, 0, depth)
+        .map_err(|error| error.to_string())?
+        .to_atom();
+    let unit_difference = ((&local_numerator - local_numerator.replace(delta).with(other))
+        / (&h - other.to_atom()))
+    .cancel();
+    // Keep Li2's argument as the symbolic center until log(1-y) has been
+    // replaced by the continued sheet logarithm below.
+    let numerator = crate::dilog_atom(&y + &h)
+        .series(delta, 0, depth)
+        .map_err(|error| error.to_string())?
+        .to_atom();
+    let general = (-(numerator - crate::dilog_atom(&y)) / &h)
+        .cancel()
+        .series(delta, 0, order)
+        .map_err(|error| error.to_string())?;
+    let constant = general
+        .coefficient(0.into())
+        .ok_or("missing dilogarithm constant")?;
+    let correction = general.to_atom() - constant;
+
+    let arguments = sheet_parameters().map(Symbol::to_atom);
+    let value = physical(&arguments[0], &arguments[2]);
+    let logarithm = log_symbol().call(arguments.as_slice());
+    let unit = choose(
+        &logarithm,
+        &logarithm / (Atom::num(1) - &value),
+        local_numerator.replace(delta).with(&value - 1),
+    );
+    // Li2(1-z) is finite at z=0, but its derivatives are nonanalytic there.
+    // Keep the native primitive so its singular derivatives remain visible.
+    map = map.with_replaced_body(
+        dilog_symbol(),
+        dilog_body(
+            &arguments[0],
+            &arguments[1],
+            &arguments[2],
+            unit,
+            crate::dilog_atom(Atom::num(1) - &value),
+        ),
+    )?;
+
+    let arguments = difference_parameters().map(Symbol::to_atom);
+    let [first, second] = difference_sheets(&arguments);
+    let difference = first.value() - second.value();
+    let undefined = (first.dilog() - second.dilog()) / &difference;
+    // The positive offset powers vanish exactly at coincidence, preserving
+    // the existing scalar primal while keeping both arguments' derivatives.
+    let regular = second.log_over_one_minus()
+        + correction
+            .replace((Atom::num(1) - &y).log())
+            .with(second.log())
+            .replace(center)
+            .with(Atom::num(1) - second.value())
+            .replace(delta)
+            .with(-&difference);
+    let unit = unit_difference
+        .replace(delta)
+        .with(first.value() - 1)
+        .replace(other)
+        .with(second.value() - 1);
+    let coincident = choose(
+        &(first.phase.clone() - &second.phase),
+        undefined.clone(),
+        choose(
+            &(first.odd.clone() - &second.odd),
+            undefined.clone(),
+            choose(
+                &second.value(),
+                choose(
+                    &(second.value() - 1),
+                    regular,
+                    choose(&second.log(), undefined.clone(), unit),
+                ),
+                undefined,
+            ),
+        ),
+    );
+    map.with_replaced_body(
+        difference_symbol(),
+        difference_body(&first, &second, coincident),
+    )
 }
 
 fn product_parameters() -> [Symbol; 6] {
@@ -289,10 +414,26 @@ fn register_impl(function_map: &mut FunctionMap, grouped_predicates: bool) {
         .add_function_with_options(
             dilog_symbol(),
             variables.to_vec(),
-            dilog_body(&atoms[0], &atoms[1], &atoms[2]),
+            dilog_body(
+                &atoms[0],
+                &atoms[1],
+                &atoms[2],
+                Atom::num(0),
+                Symbol::PI.to_atom().pow(2) / 6,
+            ),
             super::native_function_options(),
         )
         .expect("unique sheet dilogarithm");
+    let variables = difference_parameters();
+    let [first, second] = difference_sheets(&variables.map(Symbol::to_atom));
+    function_map
+        .add_function_with_options(
+            difference_symbol(),
+            variables.to_vec(),
+            difference_body(&first, &second, first.log_over_one_minus()),
+            super::native_function_options(),
+        )
+        .expect("unique sheet dilogarithm difference");
 }
 
 #[derive(Clone)]
@@ -394,12 +535,14 @@ fn product(left: &SheetAtom, right: &SheetAtom, divide: bool) -> SheetAtom {
 }
 
 pub(crate) fn divided_difference(first: &SheetAtom, second: &SheetAtom) -> Atom {
-    let difference = first.value() - second.value();
-    choose(
-        &difference,
-        (first.dilog() - second.dilog()) / &difference,
-        first.log_over_one_minus(),
-    )
+    difference_symbol().call((
+        &first.value,
+        &first.phase,
+        &first.odd,
+        &second.value,
+        &second.phase,
+        &second.odd,
+    ))
 }
 
 #[cfg(test)]
@@ -498,12 +641,18 @@ mod tests {
         let odd = symbolica::parse!("sheet_test_odd");
         let mut map = FunctionMap::new();
         register(&mut map);
-        let mut eval = dilog_body(&x, &phase, &odd)
-            .evaluator(&[x, phase, odd])
-            .function_map(map.into())
-            .build()
-            .unwrap()
-            .map_coeff(&|v| Complex::new(v.re.to_f64(), v.im.to_f64()));
+        let mut eval = dilog_body(
+            &x,
+            &phase,
+            &odd,
+            Atom::num(0),
+            Symbol::PI.to_atom().pow(2) / 6,
+        )
+        .evaluator(&[x, phase, odd])
+        .function_map(map.into())
+        .build()
+        .unwrap()
+        .map_coeff(&|v| Complex::new(v.re.to_f64(), v.im.to_f64()));
         for (r, im, p, er, ei) in [
             (
                 1.4637302044942475,

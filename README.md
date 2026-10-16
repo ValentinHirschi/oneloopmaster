@@ -161,6 +161,17 @@ Equal nonzero sheet quotient arguments retain independent derivative components.
 The derivative constructor leaves an unresolved `0/0` quotient nonfinite instead
 of applying the historical scalar convention of assigning it one.
 
+Mapped sheet dilogarithm divided differences also retain independently seeded
+arguments at coincidence. Symbolica generates the numerator series before
+cancellation, including the joint `x=y=1` neighborhood; the same unit series
+preserves a single dilogarithm argument's jets at one. At coincidence the two
+arguments must carry matching sheet tags. Zero arguments, differing sheet tags,
+and wound unit points do not receive an analytic continuation from this
+constructor and remain nonfinite. The native polylogarithm series at zero
+requires Symbolica [PR84](https://github.com/symbolica-dev/symbolica/pull/84).
+The local branches apply at exact coincidence. Nearby points use the ordinary
+continuation formulas and retain their cancellation and precision requirements.
+
 Shared-body Dual evaluation requires Symbolica's recursive vectorizer
 ([PR82](https://github.com/symbolica-dev/symbolica/pull/82)) and its optimizer
 scope correction for branches with multiple results
@@ -170,8 +181,8 @@ f64 and 256-bit precision; it does not validate a general C0/D0 derivative domai
 
 Constructing a scalar evaluator and then dualizing it cannot recover derivatives
 discarded by a scalar limit. Other limits still need neighborhoods, including
-coincident dilogarithm differences, the separate plain-expression log-ratio
-helper, and inspection formulas. Complete C0/D0 derivative-domain coverage is
+the separate plain-expression log-ratio and divided-difference helpers, and
+inspection formulas. Complete C0/D0 derivative-domain coverage is
 not established by these constructors; callers must validate their domain.
 
 For a self-contained formula, `oneloop::get_expression(master_call)` (also
