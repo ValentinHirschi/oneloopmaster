@@ -631,17 +631,21 @@ functions return an export error.
 instruction-major `evaluate_batch(input, output, rows, ctx, workspace)` entry.
 Re-export `BatchWorkspace` and `batch` from the same runtime in its parent module,
 and construct `BatchWorkspace::new(prototype)` once. Public buffers are row-major;
-retained scratch columns are slot-major. Each instruction runs across all rows,
-including inside shared helpers. Storage follows Symbolica's exported parameter,
+retained scratch columns are slot-major. Each instruction runs across its active
+rows, including inside shared helpers. Storage follows Symbolica's exported parameter,
 temporary and output slot counts, rather than the number of emitted statements.
 Empty batches do no arithmetic; single-row calls use the scalar entry without
 scratch packing or allocation. Dimension/size errors leave output unchanged.
 
-This first batch emitter **rejects all control flow recursively**, including
-`if`, joins and labels inside shared bodies. It does not silently fall back to
-scalar evaluation for larger batches. Native scalar master evaluators retain
-their existing row-loop behavior; this extension does not make branched masters
-instruction-major. Lazy active-lane branch support requires a separate change.
+Conditional graphs retain Symbolica's lazy forward branches: inactive singular
+arms do no arithmetic. Shared helpers receive the parent's stride and active
+lane indices, and consecutive joins preserve the selected component values.
+Active/resume scratch is retained per canonical helper. Entirely branch-free
+graphs keep their existing contiguous loop path. Malformed or backward control
+flow is rejected before export changes the constant table. Larger batches never
+fall back to scalar row loops. The existing scalar master evaluator backend
+still uses its established row loops; emitting lazy batch kernels does not
+automatically replace that backend.
 
 Scratch initialization uses the explicit prototype, while inputs and constants
 retain their own precision (including different Float precision per component).

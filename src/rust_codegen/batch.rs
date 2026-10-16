@@ -1,31 +1,37 @@
-//! Branch-free lowering of the existing exported instruction stream.
+//! Instruction-major lowering of the existing exported instruction stream.
 //!
 //! Function metadata below describes storage and emitted Rust, not a second IR.
 //! Each canonical shared body gets disjoint slots in one reusable arena. Calls
-//! copy argument columns, execute the helper once for all lanes, then copy its
-//! result column. This preserves shared-body boundaries without per-row calls.
+//! retain the parent stride and pass only their active lane indices. Conditional
+//! graphs also reserve two usize columns per body: the active list and each
+//! caller lane's next eligible instruction, matching Symbolica's batch evaluator.
+//! Calls copy argument columns, execute the helper once for its active lanes,
+//! then copy its result column without introducing per-row helper calls.
 
 use super::*;
 
 pub(super) fn check_control_flow(graph: &Graph) -> Result<(), String> {
-    for instruction in &graph.instructions {
-        if matches!(
+    let labels = labels(&graph.instructions)?;
+    liveness(&graph.instructions, graph.output_count, &labels)?;
+    for child in &graph.sub_evaluators {
+        check_control_flow(&child.instructions)?;
+    }
+    Ok(())
+}
+
+fn has_control_flow(graph: &Graph) -> bool {
+    graph.instructions.iter().any(|instruction| {
+        matches!(
             instruction,
             Instruction::IfElse(..)
                 | Instruction::Join(..)
                 | Instruction::Goto(..)
                 | Instruction::Label(..)
-        ) {
-            return Err(
-                "native batch emission requires branch-free instructions (including shared bodies)"
-                    .into(),
-            );
-        }
-    }
-    for child in &graph.sub_evaluators {
-        check_control_flow(&child.instructions)?;
-    }
-    Ok(())
+        )
+    }) || graph
+        .sub_evaluators
+        .iter()
+        .any(|child| has_control_flow(&child.instructions))
 }
 
 #[derive(Clone)]
@@ -41,6 +47,7 @@ struct BatchGenerator<'a> {
     slots: usize,
     functions: Vec<String>,
     normalized: HashMap<String, Function>,
+    controlled: bool,
 }
 
 pub(super) fn emit(graph: &Graph, constants: &mut Constants) -> Result<String, String> {
@@ -49,11 +56,30 @@ pub(super) fn emit(graph: &Graph, constants: &mut Constants) -> Result<String, S
         slots: 0,
         functions: Vec::new(),
         normalized: HashMap::new(),
+        controlled: has_control_flow(graph),
     };
     let root = generator.function(graph, false)?;
-    let mut source = String::from(
-        "\nuse super::BatchWorkspace;\nuse super::batch::{copy_column, copy_value};\n\n",
-    );
+    let mut source = if generator.controlled {
+        String::from(
+            "\nuse super::BatchWorkspace;\nuse super::batch::{copy_active_column, copy_value};\n\n",
+        )
+    } else {
+        String::from(
+            "\nuse super::BatchWorkspace;\nuse super::batch::{copy_column, copy_value};\n\n",
+        )
+    };
+    let preparation = if generator.controlled {
+        format!(
+            "let (v, stride, lanes, control) = workspace.prepare_controlled(rows, {}, {})?;",
+            generator.slots,
+            generator.functions.len()
+        )
+    } else {
+        format!(
+            "let (v, stride) = workspace.prepare(rows, {})?;",
+            generator.slots
+        )
+    };
     // All dimensions are checked before packing, arithmetic or output writes.
     writeln!(source, "pub(super) fn evaluate_batch<T: NativeFloat>(input: &[C<T>], output: &mut [C<T>], rows: usize, ctx: &Context<T>, workspace: &mut BatchWorkspace<T>) -> Result<(), String> {{
     let inputs = rows.checked_mul({}).ok_or(\"batch input size overflow\")?;
@@ -65,16 +91,25 @@ pub(super) fn emit(graph: &Graph, constants: &mut Constants) -> Result<String, S
         for (target, source) in output.iter_mut().zip(&values) {{ copy_value(target, source); }}
         return Ok(());
     }}
-    let (v, stride) = workspace.prepare(rows, {})?;", graph.input_count, graph.output_count, generator.slots).unwrap();
+    {preparation}", graph.input_count, graph.output_count).unwrap();
     for index in 0..graph.input_count {
         writeln!(source, "    for lane in 0..rows {{ copy_value(&mut v[{} * stride + lane], &input[lane * {} + {index}]); }}", root.base + index, graph.input_count).unwrap();
     }
-    writeln!(
-        source,
-        "    {}(v, stride, rows, {}, ctx);",
-        root.name, root.base
-    )
-    .unwrap();
+    if generator.controlled {
+        writeln!(
+            source,
+            "    {}(v, stride, lanes, control, {}, ctx);",
+            root.name, root.base
+        )
+        .unwrap();
+    } else {
+        writeln!(
+            source,
+            "    {}(v, stride, rows, {}, ctx);",
+            root.name, root.base
+        )
+        .unwrap();
+    }
     for index in 0..graph.output_count {
         writeln!(source, "    for lane in 0..rows {{ copy_value(&mut output[lane * {} + {index}], &v[{} * stride + lane]); }}", graph.output_count, root.base + root.output_offset + index).unwrap();
     }
@@ -101,6 +136,7 @@ impl BatchGenerator<'_> {
             }
         }
         let constants = self.constants.graph_constants(graph)?;
+        let labels = labels(&graph.instructions)?;
         let output_offset = graph
             .input_count
             .checked_add(graph.temporary_count)
@@ -130,7 +166,12 @@ impl BatchGenerator<'_> {
             .chain((0..constants.len()).map(Slot::Const))
             .collect();
         let mut body = String::new();
-        for instruction in &graph.instructions {
+        let loop_header = if self.controlled {
+            "for &lane in &active[..active_len]"
+        } else {
+            "for lane in 0..rows"
+        };
+        for (pc, instruction) in graph.instructions.iter().enumerate() {
             let (target, arguments) = uses(instruction);
             for argument in arguments {
                 if !defined.contains(&argument) {
@@ -138,11 +179,34 @@ impl BatchGenerator<'_> {
                 }
                 read(argument)?;
             }
-            let target = target.ok_or("unsupported control flow in native batch emission")?;
+            match instruction {
+                Instruction::IfElse(condition, label) => {
+                    let destination = labels[label];
+                    writeln!(body, "    {{ let mut kept = 0; for i in 0..active_len {{ let lane = active[i]; if truth({}) {{ active[kept] = lane; kept += 1; }} else {{ resume[lane] = {destination}; }} }} active_len = kept; }}", read(*condition)?).unwrap();
+                    continue;
+                }
+                Instruction::Goto(label) => {
+                    let destination = labels[label];
+                    writeln!(
+                        body,
+                        "    {loop_header} {{ resume[lane] = {destination}; }} active_len = 0;"
+                    )
+                    .unwrap();
+                    continue;
+                }
+                Instruction::Label(_) => {
+                    writeln!(body, "    active_len = 0; for &lane in lanes {{ if resume[lane] <= {pc} {{ active[active_len] = lane; active_len += 1; }} }}").unwrap();
+                    continue;
+                }
+                _ => {}
+            }
+            let target = target.ok_or("missing numerical instruction target")?;
             let destination = index(target)?;
             let mut assign = |source: Slot| -> Result<(), String> {
                 if matches!(source, Slot::Const(_)) {
-                    writeln!(body, "    for lane in 0..rows {{ copy_value(&mut v[(base + {destination}) * stride + lane], {}); }}", read(source)?).unwrap();
+                    writeln!(body, "    {loop_header} {{ copy_value(&mut v[(base + {destination}) * stride + lane], {}); }}", read(source)?).unwrap();
+                } else if self.controlled {
+                    writeln!(body, "    copy_active_column(v, stride, &active[..active_len], base + {destination}, base + {});", index(source)?).unwrap();
                 } else {
                     writeln!(
                         body,
@@ -156,6 +220,26 @@ impl BatchGenerator<'_> {
             let expression = match instruction {
                 Instruction::Assign(_, source) => {
                     assign(*source)?;
+                    None
+                }
+                Instruction::Join(_, condition, yes, no) => {
+                    writeln!(
+                        body,
+                        "    {loop_header} {{ if truth({}) {{",
+                        read(*condition)?
+                    )
+                    .unwrap();
+                    for (arm, source) in [yes, no].into_iter().enumerate() {
+                        if arm == 1 {
+                            body.push_str("    } else {\n");
+                        }
+                        if matches!(source, Slot::Const(_)) {
+                            writeln!(body, "        copy_value(&mut v[(base + {destination}) * stride + lane], {});", read(*source)?).unwrap();
+                        } else {
+                            writeln!(body, "        copy_active_column(v, stride, &[lane], base + {destination}, base + {});", index(*source)?).unwrap();
+                        }
+                    }
+                    body.push_str("    } }\n");
                     None
                 }
                 Instruction::Add(_, args, _) | Instruction::Mul(_, args, _) => {
@@ -192,10 +276,15 @@ impl BatchGenerator<'_> {
                         if arguments.len() != callee.input_count {
                             return Err("native batch helper argument count mismatch".into());
                         }
+                        if self.controlled {
+                            body.push_str("    if active_len != 0 {\n");
+                        }
                         for (argument, source) in arguments.iter().enumerate() {
                             let target = callee.base + argument;
                             if matches!(source, Slot::Const(_)) {
-                                writeln!(body, "    for lane in 0..rows {{ copy_value(&mut v[{target} * stride + lane], {}); }}", read(*source)?).unwrap();
+                                writeln!(body, "    {loop_header} {{ copy_value(&mut v[{target} * stride + lane], {}); }}", read(*source)?).unwrap();
+                            } else if self.controlled {
+                                writeln!(body, "    copy_active_column(v, stride, &active[..active_len], {target}, base + {});", index(*source)?).unwrap();
                             } else {
                                 writeln!(
                                     body,
@@ -205,18 +294,28 @@ impl BatchGenerator<'_> {
                                 .unwrap();
                             }
                         }
-                        writeln!(
-                            body,
-                            "    {}(v, stride, rows, {}, ctx);",
-                            callee.name, callee.base
-                        )
-                        .unwrap();
-                        writeln!(
-                            body,
-                            "    copy_column(v, stride, rows, base + {destination}, {});",
-                            callee.base + callee.output_offset
-                        )
-                        .unwrap();
+                        if self.controlled {
+                            writeln!(
+                                body,
+                                "    {}(v, stride, &active[..active_len], children, {}, ctx);",
+                                callee.name, callee.base
+                            )
+                            .unwrap();
+                            writeln!(body, "    copy_active_column(v, stride, &active[..active_len], base + {destination}, {});\n    }}", callee.base + callee.output_offset).unwrap();
+                        } else {
+                            writeln!(
+                                body,
+                                "    {}(v, stride, rows, {}, ctx);",
+                                callee.name, callee.base
+                            )
+                            .unwrap();
+                            writeln!(
+                                body,
+                                "    copy_column(v, stride, rows, base + {destination}, {});",
+                                callee.base + callee.output_offset
+                            )
+                            .unwrap();
+                        }
                         None
                     } else {
                         let name = primitive_name(*symbol, tags)?;
@@ -229,7 +328,7 @@ impl BatchGenerator<'_> {
                 _ => return Err("unsupported control flow in native batch emission".into()),
             };
             if let Some(expression) = expression {
-                writeln!(body, "    for lane in 0..rows {{ v[(base + {destination}) * stride + lane] = {expression}; }}").unwrap();
+                writeln!(body, "    {loop_header} {{ v[(base + {destination}) * stride + lane] = {expression}; }}").unwrap();
             }
             defined.insert(target);
         }
@@ -257,7 +356,12 @@ impl BatchGenerator<'_> {
             .slots
             .checked_add(slots)
             .ok_or("batch module slot count overflow")?;
-        self.functions.push(format!("fn {}<T: NativeFloat>(v: &mut [C<T>], stride: usize, rows: usize, base: usize, ctx: &Context<T>) {{\n{body}}}\n\n", function.name));
+        if self.controlled {
+            let frame = self.functions.len();
+            self.functions.push(format!("fn {}<T: NativeFloat>(v: &mut [C<T>], stride: usize, lanes: &[usize], control: &mut [usize], base: usize, ctx: &Context<T>) {{\n    let (children, own) = control.split_at_mut({frame} * 2 * stride);\n    let (active, resume) = own[..2 * stride].split_at_mut(stride);\n    let mut active_len = lanes.len();\n    active[..active_len].copy_from_slice(lanes);\n    for &lane in lanes {{ resume[lane] = 0; }}\n{body}}}\n\n", function.name));
+        } else {
+            self.functions.push(format!("fn {}<T: NativeFloat>(v: &mut [C<T>], stride: usize, rows: usize, base: usize, ctx: &Context<T>) {{\n{body}}}\n\n", function.name));
+        }
         self.normalized.insert(key, function.clone());
         Ok(function)
     }
@@ -280,27 +384,32 @@ mod tests {
     }
 
     #[test]
-    fn rejection_checks_all_nested_control_flow_and_is_transactional() {
+    fn rejection_checks_nested_malformed_control_flow_and_is_transactional() {
         let mut emitter = RustEmitter::default();
         let valid = graph(vec![Instruction::Assign(Slot::Out(0), Slot::Const(0))]);
         emitter
             .emit_batch_graph(&valid, EmitOptions::default())
             .unwrap();
         let before = emitter.constants_source();
-        for instruction in [
-            Instruction::IfElse(Slot::Param(0), 1),
-            Instruction::Join(Slot::Out(0), Slot::Param(0), Slot::Const(0), Slot::Const(0)),
-            Instruction::Goto(1),
-            Instruction::Label(1),
+        for instructions in [
+            vec![Instruction::IfElse(Slot::Param(0), 1)],
+            vec![Instruction::Join(
+                Slot::Out(0),
+                Slot::Param(0),
+                Slot::Temp(0),
+                Slot::Const(0),
+            )],
+            vec![Instruction::Goto(1)],
+            vec![Instruction::Label(1), Instruction::Goto(1)],
+            vec![Instruction::Label(1), Instruction::Label(1)],
         ] {
-            let mut bad = graph(vec![instruction]);
+            let mut bad = graph(instructions);
             bad.constants[0] = Complex::new(Rational::from(11), Rational::from(0));
             for depth in 0..3 {
                 assert!(
                     emitter
                         .emit_batch_graph(&bad, EmitOptions::default())
-                        .unwrap_err()
-                        .contains("branch-free")
+                        .is_err()
                 );
                 assert_eq!(emitter.constants_source(), before);
                 let mut parent = valid.clone();

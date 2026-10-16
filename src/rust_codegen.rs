@@ -11,8 +11,8 @@
 //! each child module's `evaluate` with its declared number of input components.
 //! Input length/precision validation belongs to the caller; emitted arithmetic
 //! does not convert or increase input precision. [`RustEmitter::emit_batch`]
-//! additionally emits instruction-major kernels for branch-free graphs and
-//! shared helpers. Vectorized Dual graphs use flattened scalar components after
+//! additionally emits instruction-major kernels with lazy active-lane branches
+//! and shared helpers. Vectorized Dual graphs use flattened scalar components after
 //! applying Symbolica's `Dualizer`; component order is left unchanged.
 
 mod batch;
@@ -79,12 +79,13 @@ impl RustEmitter {
 
     /// Emit scalar and instruction-major batch entry points together.
     ///
-    /// Every reachable shared body must be branch-free. Control-flow instructions
-    /// are rejected recursively, including joins and unused exported bodies.
+    /// Conditional branches run only their active lanes, including shared bodies.
+    /// Exported labels, joins and forward control flow retain Symbolica's lazy
+    /// semantics. Malformed control flow is rejected before constants are committed.
     /// The generated `evaluate_batch(input, output, rows, ctx, workspace)` accepts
     /// row-major buffers, validates dimensions before writing, and uses the scalar
-    /// entry point when `rows == 1`. Larger batches run each instruction over all
-    /// lanes before continuing. Raw inputs retain their precision and uncertainty.
+    /// entry point when `rows == 1`. Larger batches run each instruction over its
+    /// active lanes before continuing. Raw inputs retain their precision and uncertainty.
     /// Shared bodies currently require one output, as in the scalar emitter.
     pub fn emit_batch(
         &mut self,
@@ -691,14 +692,25 @@ fn liveness(
     let mut phi_edges = HashMap::new();
     let mut structured_joins = BTreeSet::new();
     for instruction in instructions {
-        if let Instruction::IfElse(_, false_label) = instruction {
+        if let Instruction::IfElse(condition, false_label) = instruction {
             let false_start = *labels.get(false_label).ok_or("missing false label")?;
             let true_end = false_start.checked_sub(1).ok_or("invalid false label")?;
             if let Instruction::Goto(end_label) = &instructions[true_end] {
                 let end = *labels.get(end_label).ok_or("missing end label")?;
-                if let Some(Instruction::Join(_, _, yes, no)) = instructions.get(end + 1) {
-                    phi_edges.insert(end, (true_end, *yes, *no));
-                    structured_joins.insert(end + 1);
+                let mut phis = Vec::new();
+                let mut join = end + 1;
+                while let Some(Instruction::Join(out, join_condition, yes, no)) =
+                    instructions.get(join)
+                {
+                    if join_condition != condition {
+                        break;
+                    }
+                    phis.push((*out, *yes, *no));
+                    structured_joins.insert(join);
+                    join += 1;
+                }
+                if !phis.is_empty() {
+                    phi_edges.insert(end, (true_end, phis));
                 }
             }
         }
@@ -708,13 +720,17 @@ fn liveness(
     for index in (0..instructions.len()).rev() {
         let edge = |destination: usize| -> Result<BTreeSet<Slot>, String> {
             let mut values = live[destination].clone();
-            if let Some((true_end, yes, no)) = phi_edges.get(&destination) {
-                if index == *true_end {
-                    values.insert(*yes);
-                } else if index + 1 == destination {
-                    values.insert(*no);
-                } else {
+            if let Some((true_end, phis)) = phi_edges.get(&destination) {
+                let true_edge = index == *true_end;
+                if !true_edge && index + 1 != destination {
                     return Err("non-structured phi predecessor".into());
+                }
+                // Joins execute in order and may overwrite a slot consumed by
+                // a later join. Propagate each selected arm backwards through
+                // all assignments instead of making sibling-arm values live.
+                for (out, yes, no) in phis.iter().rev() {
+                    values.remove(out);
+                    values.insert(if true_edge { *yes } else { *no });
                 }
             }
             Ok(values)
@@ -829,12 +845,10 @@ impl Emitter<'_, '_> {
                 };
                 let join_label = *self.labels.get(end_label).ok_or("missing join label")?;
                 let join = join_label + 1;
-                let Some(Instruction::Join(target, join_condition, yes, no)) =
-                    self.instructions.get(join)
+                let Some(Instruction::Join(_, join_condition, _, _)) = self.instructions.get(join)
                 else {
                     return Err("structured branch does not terminate in Join".into());
                 };
-                let (target, yes, no) = (*target, *yes, *no);
                 if *join_condition != condition || false_start <= index || join >= end {
                     return Err("invalid structured branch boundary".into());
                 }
@@ -860,16 +874,26 @@ impl Emitter<'_, '_> {
                     depth + 1,
                 )?;
                 self.restore_computed(dominating);
-                let mut merged = vec![(
-                    target,
-                    read(&true_environment, yes)?.to_owned(),
-                    read(&false_environment, no)?.to_owned(),
-                )];
+                let mut merged = Vec::new();
+                let mut after_join = join;
+                while let Some(Instruction::Join(target, join_condition, yes, no)) =
+                    self.instructions.get(after_join)
+                {
+                    if *join_condition != condition || after_join >= end {
+                        break;
+                    }
+                    let yes = read(&true_environment, *yes)?.to_owned();
+                    let no = read(&false_environment, *no)?.to_owned();
+                    true_environment.insert(*target, yes.clone());
+                    false_environment.insert(*target, no.clone());
+                    merged.push((*target, yes, no));
+                    after_join += 1;
+                }
                 // Register allocation may reuse slots across a branch. Merge
                 // every additional live value rather than assuming only Join
                 // escapes. Branch-private dead values never need zero padding.
-                for slot in &self.live[join + 1] {
-                    if *slot == target {
+                for slot in &self.live[after_join] {
+                    if merged.iter().any(|(target, _, _)| target == slot) {
                         continue;
                     }
                     let yes = read(&true_environment, *slot)?;
@@ -918,7 +942,7 @@ impl Emitter<'_, '_> {
                     for ((slot, _, _), reference) in merged.iter().zip(references) {
                         environment.insert(*slot, reference.clone());
                     }
-                    index = join + 1;
+                    index = after_join;
                     continue;
                 }
                 writeln!(
@@ -938,7 +962,7 @@ impl Emitter<'_, '_> {
                     environment.insert(slot, reference.clone());
                 }
                 self.remember(key, references);
-                index = join + 1;
+                index = after_join;
                 continue;
             }
             let (target, expression) = match instruction {
@@ -1167,6 +1191,44 @@ fn powi<T: NativeFloat>(a: &T, exponent: i64, _: bool) -> T {
             .unwrap()
             .join()
             .unwrap();
+    }
+
+    #[test]
+    fn consecutive_joins_keep_edge_liveness_and_sequential_slot_aliases() {
+        let graph = Graph {
+            input_count: 3,
+            output_count: 2,
+            temporary_count: 3,
+            constants: vec![],
+            constant_functions: vec![],
+            sub_evaluators: vec![],
+            instructions: vec![
+                Instruction::IfElse(Slot::Param(0), 1),
+                Instruction::Pow(Slot::Temp(0), Slot::Param(1), -1, false),
+                Instruction::Assign(Slot::Temp(2), Slot::Param(1)),
+                Instruction::Goto(2),
+                Instruction::Label(1),
+                Instruction::Pow(Slot::Temp(1), Slot::Param(2), -1, false),
+                Instruction::Assign(Slot::Temp(2), Slot::Param(2)),
+                Instruction::Label(2),
+                Instruction::Join(Slot::Temp(0), Slot::Param(0), Slot::Temp(0), Slot::Temp(1)),
+                Instruction::Join(Slot::Out(0), Slot::Param(0), Slot::Temp(0), Slot::Temp(0)),
+                Instruction::Join(Slot::Temp(2), Slot::Param(0), Slot::Temp(2), Slot::Temp(2)),
+                Instruction::Join(Slot::Out(1), Slot::Param(0), Slot::Temp(2), Slot::Temp(2)),
+            ],
+        };
+        let labels = labels(&graph.instructions).unwrap();
+        let live = liveness(&graph.instructions, graph.output_count, &labels).unwrap();
+        assert!(!live[1].contains(&Slot::Temp(1)));
+        assert!(!live[5].contains(&Slot::Temp(0)));
+        let module = RustEmitter::default()
+            .emit_graph(&graph, EmitOptions::default())
+            .unwrap();
+        let source = format!(
+            "{PURE_NUMERIC_PROBE}\nmod primitives {{ pub(super) use super::{{add,mul,powi,truth}}; }}\nmod generated {{\n{}\n}}\nfn main() {{ let ctx = Context(std::marker::PhantomData); assert_eq!(generated::evaluate(&[1.,2.,0.],&ctx),[0.5,2.]); assert_eq!(generated::evaluate(&[0.,0.,4.],&ctx),[0.25,4.]); assert_eq!(POW_CALLS.load(std::sync::atomic::Ordering::Relaxed),2); }}",
+            module.source
+        );
+        compile_probe(&source);
     }
 
     #[test]

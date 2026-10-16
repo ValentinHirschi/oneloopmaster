@@ -39,6 +39,45 @@ fn dual() -> symbolica::evaluate::ExpressionEvaluator<Complex<Rational>> {
         .unwrap()
 }
 
+fn lazy_exact() -> symbolica::evaluate::ExpressionEvaluator<Complex<Rational>> {
+    Atom::evaluator_multiple(
+        &[
+            symbolica::parse!(
+                "if(c,batch_lazy::f(d,x,y),x+pi+polylog(2,1/2)+1/100000000000000000000)"
+            ),
+            symbolica::parse!("if(c,x+y,x-y)"),
+            symbolica::parse!("if(c,if(d,x,y),pi)"),
+        ],
+        &[
+            symbolica::parse!("c"),
+            symbolica::parse!("d"),
+            symbolica::parse!("x"),
+            symbolica::parse!("y"),
+        ],
+    )
+    .add_function_with_options(
+        symbolica::symbol!("batch_lazy::g"),
+        vec![symbolica::symbol!("z")],
+        symbolica::parse!("log(z)+sqrt(z)"),
+        FunctionRegistrationOptions::new().inlining(InliningPolicy::Never),
+    )
+    .unwrap()
+    .add_function_with_options(
+        symbolica::symbol!("batch_lazy::f"),
+        vec![
+            symbolica::symbol!("a"),
+            symbolica::symbol!("u"),
+            symbolica::symbol!("v"),
+        ],
+        symbolica::parse!("if(a,batch_lazy::g(u+v),1/v)"),
+        FunctionRegistrationOptions::new().inlining(InliningPolicy::Never),
+    )
+    .unwrap()
+    .cores(1)
+    .build()
+    .unwrap()
+}
+
 fn library(directory: &Path, name: &str) -> std::path::PathBuf {
     // Resolve the exact artifacts linked into this test, not the newest rlib:
     // one target directory can contain different Symbolica feature/revision
@@ -162,6 +201,33 @@ fn generated_batch_numeric_precision_dual_trace_and_allocation_contracts() {
             EmitOptions::default(),
         )
         .unwrap();
+    let lazy = emitter
+        .emit_batch(lazy_exact(), EmitOptions::default())
+        .unwrap();
+    let lazy_dual = emitter
+        .emit_batch(
+            lazy_exact()
+                .vectorize(&Dualizer::new(
+                    HyperDual::<Complex<Rational>>::new(vec![
+                        vec![0, 0],
+                        vec![1, 0],
+                        vec![0, 1],
+                        vec![2, 0],
+                        vec![1, 1],
+                        vec![0, 2],
+                    ]),
+                    vec![],
+                ))
+                .unwrap(),
+            EmitOptions::default(),
+        )
+        .unwrap();
+    assert_eq!((lazy_dual.input_count, lazy_dual.output_count), (24, 18));
+    eprintln!(
+        "lazy source: scalar_plus_batch_bytes={} flattened_dual_bytes={}",
+        lazy.source.len(),
+        lazy_dual.source.len()
+    );
     let mut source = String::from(PROBE);
     for (name, module) in [
         ("ordinary", ordinary),
@@ -170,6 +236,8 @@ fn generated_batch_numeric_precision_dual_trace_and_allocation_contracts() {
         ("constants", constants),
         ("traced", traced),
         ("empty", empty),
+        ("lazy", lazy),
+        ("lazy_derivatives", lazy_dual),
     ] {
         source.push_str(&format!("\nmod {name} {{\n{}\n}}\n", module.source));
     }
@@ -279,6 +347,17 @@ fn exact() -> symbolica::evaluate::ExpressionEvaluator<Complex<Rational>> {
     .add_function_with_options(symbolica::symbol!("batch_test::g"),vec![symbolica::symbol!("batch_test::t")],symbolica::parse!("batch_test::t^2"),FunctionRegistrationOptions::new().inlining(InliningPolicy::Never)).unwrap()
     .add_function_with_options(symbolica::symbol!("batch_test::f"),vec![symbolica::symbol!("batch_test::a"),symbolica::symbol!("batch_test::b")],symbolica::parse!("(batch_test::g(batch_test::a)+batch_test::b)/(1+batch_test::b)"),FunctionRegistrationOptions::new().inlining(InliningPolicy::Never)).unwrap().cores(1).build().unwrap()
 }
+fn lazy_exact() -> symbolica::evaluate::ExpressionEvaluator<Complex<Rational>> {
+    Atom::evaluator_multiple(&[
+        symbolica::parse!("if(c,batch_lazy::f(d,x,y),x+pi+polylog(2,1/2)+1/100000000000000000000)"),
+        symbolica::parse!("if(c,x+y,x-y)"),
+        symbolica::parse!("if(c,if(d,x,y),pi)")
+    ], &[symbolica::parse!("c"),symbolica::parse!("d"),symbolica::parse!("x"),symbolica::parse!("y")])
+    .add_function_with_options(symbolica::symbol!("batch_lazy::g"),vec![symbolica::symbol!("z")],symbolica::parse!("log(z)+sqrt(z)"),FunctionRegistrationOptions::new().inlining(InliningPolicy::Never)).unwrap()
+    .add_function_with_options(symbolica::symbol!("batch_lazy::f"),vec![symbolica::symbol!("a"),symbolica::symbol!("u"),symbolica::symbol!("v")],symbolica::parse!("if(a,batch_lazy::g(u+v),1/v)"),FunctionRegistrationOptions::new().inlining(InliningPolicy::Never)).unwrap()
+    .cores(1).build().unwrap()
+}
+
 fn check<T: NativeFloat>(bits:u32) where C<T>: symbolica::evaluate::EvaluationDomain {
     let prototype=T::zero_at(bits);
     let n=|value:i64| C::new(prototype.from_i64(value),prototype.zero());
@@ -322,9 +401,41 @@ fn check<T: NativeFloat>(bits:u32) where C<T>: symbolica::evaluate::EvaluationDo
         assert!(output[4].re != prototype.zero(),"mixed coefficient unexpectedly absent");
     }
 }
+fn lazy_cases() -> [[i64;4];6] { [[1,1,4,0],[1,0,0,2],[0,1,0,0],[1,1,9,0],[1,0,0,4],[0,0,-2,0]] }
+fn check_lazy<T:NativeFloat>(bits:u32) where C<T>:symbolica::evaluate::EvaluationDomain {
+    let prototype=T::zero_at(bits);let n=|v:i64| C::new(prototype.from_i64(v),prototype.zero());
+    let ctx=Context::<T>::new(table::CONSTANTS,bits).unwrap();let mut workspace=BatchWorkspace::new(prototype.clone());
+    let mut oracle=lazy_exact().map_coeff_with_prec(&|c| C::new(prototype.from_rational(&c.re),prototype.from_rational(&c.im)),bits).into_batch_evaluator();
+    for rows in [0,1,8,32,128,1024,17,3,8,2,1,0] {
+        let input=(0..rows).flat_map(|i|lazy_cases()[(i*5+rows)%6].map(n)).collect::<Vec<_>>();
+        let mut actual=vec![n(99);rows*3];let mut expected=actual.clone();
+        lazy::evaluate_batch(&input,&mut actual,rows,&ctx,&mut workspace).unwrap();oracle.evaluate_batch(&input,&mut expected,rows).unwrap();
+        for row in 0..rows { let scalar=lazy::evaluate(&input[row*4..row*4+4],&ctx);assert_eq!(&actual[row*3..row*3+3],&scalar); }
+        for (a,b) in actual.iter().zip(&expected) { let error=(a.clone()-b.clone()).norm().re.to_f64();assert!(error/(1.0+b.norm().re.to_f64()) < 2.0_f64.powi(-(bits as i32)+14),"lazy interpreter discrepancy {error}"); }
+    }
+    assert_eq!(workspace.capacity(),1024);
+    let mut output=vec![n(99);6];let before=output.clone();
+    for (input,rows) in [(vec![n(1)],2),(vec![],usize::MAX),(vec![],0)] { assert!(lazy::evaluate_batch(&input,&mut output,rows,&ctx,&mut workspace).is_err());assert_eq!(output,before); }
+    let shape=vec![vec![0,0],vec![1,0],vec![0,1],vec![2,0],vec![1,1],vec![0,2]];
+    let mut oracle=lazy_exact().vectorize(&Dualizer::new(HyperDual::<Complex<Rational>>::new(shape),vec![])).unwrap().map_coeff_with_prec(&|c| C::new(prototype.from_rational(&c.re),prototype.from_rational(&c.im)),bits).into_batch_evaluator();
+    for rows in [1,8,32,3] {
+        let input=(0..rows).flat_map(|i| {let v=lazy_cases()[i%6]; [n(v[0]),n(0),n(0),n(0),n(0),n(0),n(v[1]),n(0),n(0),n(0),n(0),n(0),n(v[2]),n(1),n(0),n(0),n(0),n(0),n(v[3]),n(0),n(1),n(0),n(0),n(0)]}).collect::<Vec<_>>();
+        let mut actual=vec![n(99);rows*18];let mut expected=actual.clone();
+        lazy_derivatives::evaluate_batch(&input,&mut actual,rows,&ctx,&mut workspace).unwrap();oracle.evaluate_batch(&input,&mut expected,rows).unwrap();
+        for row in 0..rows { assert_eq!(&actual[row*18..row*18+18],&lazy_derivatives::evaluate(&input[row*24..row*24+24],&ctx)); }
+        for (a,b) in actual.iter().zip(&expected) {let error=(a.clone()-b.clone()).norm().re.to_f64();assert!(error/(1.0+b.norm().re.to_f64()) < 2.0_f64.powi(-(bits as i32)+14),"lazy Dual discrepancy {error}");}
+        // Independent control: g(x+y)=log(x+y)+sqrt(x+y) at x=4,y=0.
+        // Taylor xx/yy coefficients are g''/2=-3/64; the mixed one is -3/32.
+        let rational=|a:i64,b:i64| prototype.from_rational(&(Rational::from(a)/Rational::from(b)));
+        assert_eq!(actual[1].re,rational(1,2));assert_eq!(actual[2].re,rational(1,2));
+        assert_eq!(actual[3].re,rational(-3,64));assert_eq!(actual[4].re,rational(-3,32));assert_eq!(actual[5].re,rational(-3,64));
+    }
+}
+
 fn main() {
     let _ = symbolica::symbol!("batch_codegen_state");
     check::<f64>(53); check::<DoubleFloat>(106);check::<Float>(192);
+    check_lazy::<f64>(53);check_lazy::<DoubleFloat>(106);check_lazy::<Float>(192);
     // Distinct per-component input precision survives packing and output copies.
     let f=|bits,value| Float::with_val(bits,value);
     let input=vec![C::new(f(53,1)+Float::with_val(53,0.5).pow(30),f(320,2)),C::new(f(256,3),f(70,4)),C::new(f(160,5),f(80,6)),C::new(f(240,7),f(96,8))];
@@ -350,6 +461,12 @@ fn main() {
         ordinary::evaluate_batch(&input,&mut output[..6],2,&context,&mut workspace).unwrap();
         for row in 0..2 { assert_eq!(&output[row*3..row*3+3],&ordinary::evaluate(&input[row*2..row*2+2],&context)); }
     }
+    let varied=lazy_cases()[..3].iter().flatten().enumerate().map(|(i,v)| C::new(Float::with_val([53,70,160,256,320][i%5],*v),Float::with_val([80,192,240][i%3],0))).collect::<Vec<_>>();
+    for bits in [320,80,256] {
+        let context=Context::<Float>::new(table::CONSTANTS,bits).unwrap();let mut result=vec![C::new(f(192,0),f(192,0));9];
+        lazy::evaluate_batch(&varied,&mut result,3,&context,&mut workspace).unwrap();
+        for row in 0..3 {let scalar=lazy::evaluate(&varied[row*4..row*4+4],&context);for (a,b) in result[row*3..row*3+3].iter().zip(&scalar) { assert_eq!(a,b);assert_eq!(a.re.get_precision(),b.re.get_precision());assert_eq!(a.im.get_precision(),b.im.get_precision()); }}
+    }
     let ctx=Context::<f64>::new(table::CONSTANTS,53).unwrap(); let mut workspace=BatchWorkspace::new(0.0);
     let input=[C::new(1.,0.),C::new(4.,0.),C::new(9.,0.)]; let mut output=[C::new(0.,0.);3];
     TRACE.lock().unwrap().clear(); traced::evaluate_batch(&input,&mut output,3,&ctx,&mut workspace).unwrap();
@@ -366,5 +483,22 @@ fn main() {
     let allocations=COUNT.with(|count|count.replace(None).unwrap()); assert_eq!(allocations,0,"warmed f64 allocation regression");
     let mut fresh=BatchWorkspace::new(0.0); COUNT.with(|count|count.set(Some(0)));ordinary::evaluate_batch(&input[..2],&mut output[..3],1,&ctx,&mut fresh).unwrap();let allocations=COUNT.with(|count|count.replace(None).unwrap());assert_eq!(allocations,0);assert_eq!(fresh.storage_len(),0);
     println!("warmed f64 allocation count=0; fresh single-row allocation count=0; numeric/precision/Dual controls passed");
+    // Retained stride exceeds current rows; only lanes0/3 reach the nested
+    // logarithm/square-root helper. Inactive log(0) and reciprocal(0) must not run.
+    let input=lazy_cases().into_iter().flatten().map(|v|C::new(v as f64,0.)).collect::<Vec<_>>();let mut result=vec![C::new(0.,0.);18];
+    workspace.prepare(128,1).unwrap();TRACE.lock().unwrap().clear();
+    lazy::evaluate_batch(&input,&mut result,6,&ctx,&mut workspace).unwrap();
+    let trace=TRACE.lock().unwrap().clone();
+    let logarithms=trace.iter().filter(|(name,_)|*name=="log").copied().collect::<Vec<_>>();
+    let roots=trace.iter().filter(|(name,_)|*name=="sqrt").copied().collect::<Vec<_>>();
+    assert_eq!(logarithms,vec![("log",4.),("log",9.)]);assert_eq!(roots,vec![("sqrt",4.),("sqrt",9.)]);
+    let grouped=trace.iter().filter(|(name,_)|*name=="log"||*name=="sqrt").copied().collect::<Vec<_>>();assert!(grouped[..2].iter().all(|x|x.0==grouped[0].0));
+    assert!(!trace.iter().any(|(name,value)|(*name=="log"||*name=="powi")&&*value==0.));
+    println!("lazy active-lane trace={trace:?}; retained stride={}",workspace.capacity());
+    let mut fresh=BatchWorkspace::new(0.0);TRACE.lock().unwrap().reserve(100_000);
+    COUNT.with(|count|count.set(Some(0)));lazy::evaluate_batch(&input[..4],&mut result[..3],1,&ctx,&mut fresh).unwrap();let allocations=COUNT.with(|count|count.replace(None).unwrap());assert_eq!(allocations,0);assert_eq!(fresh.storage_len(),0);
+    COUNT.with(|count|count.set(Some(0)));for rows in [6,3,1,0,6] {lazy::evaluate_batch(&input[..rows*4],&mut result[..rows*3],rows,&ctx,&mut workspace).unwrap();}let allocations=COUNT.with(|count|count.replace(None).unwrap());assert_eq!(allocations,0,"lazy warmed allocation regression");
+    println!("lazy warmed allocation count=0; inactive singular arms skipped");
+
 }
 "#;

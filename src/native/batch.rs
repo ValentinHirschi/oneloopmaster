@@ -3,7 +3,11 @@
 use super::primitives::{C, NativeFloat};
 use symbolica::domains::float::FloatLike;
 
-/// Reusable slot-major storage for generated branch-free batch kernels.
+/// Borrowed numerical storage, parent stride, active lanes and control storage.
+#[doc(hidden)]
+pub type ControlledBatchBuffers<'a, T> = (&'a mut [C<T>], usize, &'a [usize], &'a mut [usize]);
+
+/// Reusable slot-major storage for generated batch kernels.
 ///
 /// Construct once with an explicit precision prototype, including for graphs
 /// without inputs or constants. This prototype only initializes scratch cells;
@@ -15,6 +19,9 @@ pub struct BatchWorkspace<T: NativeFloat> {
     values: Vec<C<T>>,
     capacity: usize,
     slots: usize,
+    lanes: Vec<usize>,
+    control: Vec<usize>,
+    frames: usize,
 }
 
 impl<T: NativeFloat> BatchWorkspace<T> {
@@ -24,6 +31,9 @@ impl<T: NativeFloat> BatchWorkspace<T> {
             values: Vec::new(),
             capacity: 0,
             slots: 0,
+            lanes: Vec::new(),
+            control: Vec::new(),
+            frames: 0,
         }
     }
 
@@ -66,6 +76,61 @@ impl<T: NativeFloat> BatchWorkspace<T> {
         self.slots = slots;
         Ok((&mut self.values, capacity))
     }
+
+    /// Reserve numerical cells and disjoint active/resume columns for lazy
+    /// generated functions. Frame indices follow the exported helper DAG.
+    /// All dimensions are checked before mutating storage or its high-water marks.
+    #[doc(hidden)]
+    pub fn prepare_controlled(
+        &mut self,
+        rows: usize,
+        slots: usize,
+        frames: usize,
+    ) -> Result<ControlledBatchBuffers<'_, T>, String> {
+        if rows == 0 || slots == 0 {
+            return Ok((&mut self.values, self.capacity, &[], &mut self.control));
+        }
+        let capacity = self.capacity.max(rows);
+        let slots = self.slots.max(slots);
+        let frames = self.frames.max(frames);
+        let length = capacity
+            .checked_mul(slots)
+            .ok_or("batch workspace size overflow")?;
+        let controls = frames
+            .checked_mul(2)
+            .and_then(|n| n.checked_mul(capacity))
+            .ok_or("batch control workspace size overflow")?;
+        if length > isize::MAX as usize / std::mem::size_of::<C<T>>().max(1)
+            || capacity > isize::MAX as usize / std::mem::size_of::<usize>()
+            || controls > isize::MAX as usize / std::mem::size_of::<usize>()
+        {
+            return Err("batch workspace byte size overflow".into());
+        }
+        // Reserve all arenas before changing their contents or metadata.
+        self.values
+            .try_reserve(length.saturating_sub(self.values.len()))
+            .map_err(|error| error.to_string())?;
+        self.control
+            .try_reserve(controls.saturating_sub(self.control.len()))
+            .map_err(|error| error.to_string())?;
+        self.lanes
+            .try_reserve(capacity.saturating_sub(self.lanes.len()))
+            .map_err(|error| error.to_string())?;
+        if length > self.values.len() {
+            self.values.resize(length, self.prototype.clone());
+        }
+        self.control.resize(controls, 0);
+        self.lanes.extend(self.lanes.len()..capacity);
+        self.capacity = capacity;
+        self.slots = slots;
+        self.frames = frames;
+        Ok((
+            &mut self.values,
+            capacity,
+            &self.lanes[..rows],
+            &mut self.control,
+        ))
+    }
 }
 
 /// Copy a value without fixing or increasing its tracked precision.
@@ -102,10 +167,88 @@ pub fn copy_column<T: NativeFloat>(
     }
 }
 
+/// Copy only a caller's active lanes, retaining the parent numerical stride.
+#[doc(hidden)]
+#[inline]
+pub fn copy_active_column<T: NativeFloat>(
+    values: &mut [C<T>],
+    stride: usize,
+    lanes: &[usize],
+    target: usize,
+    source: usize,
+) {
+    if target == source || lanes.is_empty() {
+        return;
+    }
+    let target = target * stride;
+    let source = source * stride;
+    let (target, source) = if target > source {
+        let (left, right) = values.split_at_mut(target);
+        (&mut right[..stride], &left[source..source + stride])
+    } else {
+        let (left, right) = values.split_at_mut(source);
+        (&mut left[target..target + stride], &right[..stride])
+    };
+    for &lane in lanes {
+        copy_value(&mut target[lane], &source[lane]);
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use symbolica::domains::float::Float;
+
+    #[test]
+    fn controlled_workspace_reuses_parent_stride_and_keeps_inactive_values() {
+        let mut workspace = BatchWorkspace::new(Float::new(192));
+        {
+            let (values, stride, lanes, control) = workspace.prepare_controlled(8, 3, 2).unwrap();
+            assert_eq!(lanes, &[0, 1, 2, 3, 4, 5, 6, 7]);
+            assert_eq!(control.len(), 32);
+            for lane in 0..stride {
+                values[lane] = C::new(
+                    Float::with_val(53 + lane as u32, lane),
+                    Float::with_val(256, 1),
+                );
+                values[stride + lane] = C::new(Float::with_val(192, -99), Float::with_val(192, 0));
+            }
+            copy_active_column(values, stride, &[1, 5, 7], 1, 0);
+            for lane in 0..stride {
+                if [1, 5, 7].contains(&lane) {
+                    assert_eq!(values[stride + lane], values[lane]);
+                    assert_eq!(values[stride + lane].re.get_precision(), 53 + lane as u32);
+                    assert_eq!(values[stride + lane].im.get_precision(), 256);
+                } else {
+                    assert_eq!(values[stride + lane].re, Float::with_val(192, -99));
+                }
+            }
+        }
+        let before = workspace.values.clone();
+        let control = workspace.control.clone();
+        for (rows, slots, frames) in [(usize::MAX, 3, 2), (8, 3, usize::MAX), (8, usize::MAX, 2)] {
+            assert!(workspace.prepare_controlled(rows, slots, frames).is_err());
+            assert_eq!(workspace.capacity(), 8);
+            assert_eq!(workspace.values, before);
+            assert_eq!(workspace.control, control);
+        }
+        workspace
+            .prepare_controlled(usize::MAX, 0, usize::MAX)
+            .unwrap();
+        workspace
+            .prepare_controlled(0, usize::MAX, usize::MAX)
+            .unwrap();
+        assert_eq!(workspace.capacity(), 8);
+        workspace.prepare(16, 2).unwrap();
+        let (_, stride, lanes, control) = workspace.prepare_controlled(3, 2, 1).unwrap();
+        assert_eq!(stride, 16);
+        assert_eq!(lanes, &[0, 1, 2]);
+        assert_eq!(control.len(), 64);
+        let mut fresh = BatchWorkspace::new(0.0);
+        fresh.prepare_controlled(usize::MAX, 0, usize::MAX).unwrap();
+        fresh.prepare_controlled(2, 1, 1).unwrap();
+        assert_eq!(fresh.capacity(), 2);
+    }
 
     #[test]
     fn workspace_dimensions_overflow_without_mutation_and_copies_preserve_precision() {
