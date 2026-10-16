@@ -167,7 +167,10 @@ fn physical_log(value: &Atom) -> Atom {
     let value = grouped(value);
     let absolute = Symbol::ABS.call((&value,));
     let negative = Symbol::IF.call((&value - &absolute, Atom::num(1), Atom::num(0)));
-    let lower_lip = absolute.log() - Atom::num(-1).sqrt() * Symbol::PI.to_atom() * negative;
+    // ABS selects the lip, but cannot represent the analytic neighborhood:
+    // its derivative discards imaginary seeds at a real primal value.
+    let axis_value = (Atom::num(1) - Atom::num(2) * &negative) * &value;
+    let lower_lip = axis_value.log() - Atom::num(-1).sqrt() * Symbol::PI.to_atom() * negative;
     Symbol::IF.call((&off_axis, value.log(), lower_lip))
 }
 
@@ -178,7 +181,8 @@ fn upper_log(value: &Atom) -> Atom {
     let value = grouped(value);
     let absolute = Symbol::ABS.call((&value,));
     let negative = if_nonzero_else(&(&value - &absolute), Atom::num(1), Atom::num(0));
-    let upper_lip = absolute.log() + sheet_exact::i() * Symbol::PI.to_atom() * negative;
+    let axis_value = (Atom::num(1) - Atom::num(2) * &negative) * &value;
+    let upper_lip = axis_value.log() + sheet_exact::i() * Symbol::PI.to_atom() * negative;
     if_nonzero_else(&off_axis, value.log(), upper_lip)
 }
 
@@ -203,8 +207,8 @@ fn physical_sqrt(value: &Atom) -> Atom {
     let absolute = Symbol::ABS.call((&value,));
     let real_axis = if_nonzero_else(
         &(&value - &absolute),
-        -sheet_exact::i() * absolute.sqrt(),
-        absolute.sqrt(),
+        -sheet_exact::i() * (-&value).sqrt(),
+        value.sqrt(),
     );
     if_nonzero_else(&off_axis, value.sqrt(), real_axis)
 }
@@ -246,6 +250,12 @@ fn x_log_ratio(value: &Atom, mu_squared: &Atom) -> Atom {
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod analytic_continuation_tests;
+
+#[cfg(test)]
+mod removable_log_tests;
 
 static CITATIONS_USED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 

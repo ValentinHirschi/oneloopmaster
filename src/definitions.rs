@@ -151,6 +151,30 @@ impl FunctionMap {
             .get(&(symbol, tags))
             .map(|(args, body, _)| (count, args.as_slice(), body))
     }
+
+    /// Rebuild the recorded map with one untagged helper's body replaced.
+    pub(crate) fn with_replaced_body(&self, name: Symbol, body: Atom) -> Result<Self, String> {
+        if !self.definitions.contains_key(&(name, Vec::new())) {
+            return Err(format!("missing neighborhood helper {}", name.get_name()));
+        }
+        let mut map = Self::new();
+        for ((symbol, tags), (args, original, options)) in &self.definitions {
+            let replacement = if *symbol == name && tags.is_empty() {
+                &body
+            } else {
+                original
+            };
+            map.add_tagged_function_with_options(
+                *symbol,
+                tags.clone(),
+                args.clone(),
+                replacement.clone(),
+                options.clone(),
+            )
+            .map_err(|error| error.to_string())?;
+        }
+        Ok(map)
+    }
 }
 
 impl From<FunctionMap> for SymbolicaFunctionMap {
