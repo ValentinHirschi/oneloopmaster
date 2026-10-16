@@ -134,7 +134,65 @@ pub(crate) fn with_neighborhoods(map: &FunctionMap, order: usize) -> Result<Func
     let local = local
         .replace(variable)
         .with(physical(&arguments[0], &arguments[2]));
-    map.with_replaced_body(log_ratio_symbol(), log_ratio_body(&arguments, local))
+    let mut map = map.with_replaced_body(log_ratio_symbol(), log_ratio_body(&arguments, local))?;
+    let arguments = product_parameters().map(Symbol::to_atom);
+    let parts = product_parts(&arguments, true, false);
+    for (component, body) in parts.into_iter().enumerate() {
+        map = map.with_replaced_body(product_symbol(true, component), body)?;
+    }
+    Ok(map)
+}
+
+fn product_parameters() -> [Symbol; 6] {
+    [
+        "__olo_q_v1",
+        "__olo_q_p1",
+        "__olo_q_o1",
+        "__olo_q_v2",
+        "__olo_q_p2",
+        "__olo_q_o2",
+    ]
+    .map(|s| symbolica::symbol!(s))
+}
+
+fn product_parts(arguments: &[Atom; 6], divide: bool, scalar_zero_ratio: bool) -> [Atom; 3] {
+    let [left, left_phase, left_odd, right, right_phase, right_odd] = arguments;
+    let raw = if divide {
+        let quotient = left / right;
+        // The quotient is linear in its numerator. Its exact local expression
+        // preserves a primal value of one at equal arguments without erasing
+        // independent jets or introducing reciprocal-multiplication roundoff.
+        let centered = quotient
+            .series(product_parameters()[0], right, 1)
+            .expect("a linear quotient has an exact local expansion")
+            .to_atom();
+        let zero_ratio = if scalar_zero_ratio {
+            // Preserve only the historical scalar 0/0 convention.
+            Atom::num(1)
+        } else {
+            // Without a specified common vanishing factor, a 0/0 jet has no
+            // unique continuation. The derivative constructor leaves it nonfinite.
+            quotient.clone()
+        };
+        choose(
+            &(left - right),
+            quotient,
+            choose(right, centered, zero_ratio),
+        )
+    } else {
+        left * right
+    };
+    let n = negative(&re(&raw));
+    let phase = if divide {
+        left_phase - right_phase - &n * sign_nonnegative(&im(right))
+    } else {
+        left_phase + right_phase + &n * sign_nonnegative(&im(right))
+    };
+    [
+        (1 - Atom::num(2) * &n) * raw,
+        phase,
+        xor(&xor(left_odd, right_odd), &n),
+    ]
 }
 
 pub(crate) fn register(function_map: &mut FunctionMap) {
@@ -194,47 +252,10 @@ fn register_impl(function_map: &mut FunctionMap, grouped_predicates: bool) {
             ),
         )
         .unwrap();
-    let args = [
-        "__olo_q_v1",
-        "__olo_q_p1",
-        "__olo_q_o1",
-        "__olo_q_v2",
-        "__olo_q_p2",
-        "__olo_q_o2",
-    ]
-    .map(|s| symbolica::symbol!(s));
+    let args = product_parameters();
     let x = args.map(Symbol::to_atom);
-    let left = SheetAtom {
-        value: x[0].clone(),
-        phase: x[1].clone(),
-        odd: x[2].clone(),
-    };
-    let right = SheetAtom {
-        value: x[3].clone(),
-        phase: x[4].clone(),
-        odd: x[5].clone(),
-    };
     for divide in [false, true] {
-        let raw = if divide {
-            choose(
-                &(&left.value - &right.value),
-                &left.value / &right.value,
-                Atom::num(1),
-            )
-        } else {
-            &left.value * &right.value
-        };
-        let n = negative(&re(&raw));
-        let phase = if divide {
-            &left.phase - &right.phase - &n * sign_nonnegative(&im(&right.value))
-        } else {
-            &left.phase + &right.phase + &n * sign_nonnegative(&im(&right.value))
-        };
-        let parts = [
-            (1 - Atom::num(2) * &n) * raw,
-            phase,
-            xor(&xor(&left.odd, &right.odd), &n),
-        ];
+        let parts = product_parts(&x, divide, true);
         for (k, body) in parts.into_iter().enumerate() {
             function_map
                 .add_function_with_options(
