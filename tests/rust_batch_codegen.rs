@@ -228,8 +228,30 @@ fn generated_batch_numeric_precision_dual_trace_and_allocation_contracts() {
         lazy.source.len(),
         lazy_dual.source.len()
     );
+    // Laurent triangle-to-bubble subtraction contains c*d1^2/d0^3. For
+    // c=d1=d0=1e110 the value is one but binary64 d0^3 overflows. Its
+    // reciprocal must not conceal this overflow as a finite zero.
+    let correction = emitter
+        .emit_batch(
+            Atom::evaluator_multiple(
+                &[
+                    symbolica::parse!("d1^2/d0^3"),
+                    symbolica::parse!("c*d1^2/d0^3"),
+                ],
+                &[
+                    symbolica::parse!("c"),
+                    symbolica::parse!("d1"),
+                    symbolica::parse!("d0"),
+                ],
+            )
+            .build()
+            .unwrap(),
+            EmitOptions::default(),
+        )
+        .unwrap();
     let mut source = String::from(PROBE);
     for (name, module) in [
+        ("correction", correction),
         ("ordinary", ordinary),
         ("derivatives", dual),
         ("identity", identity),
@@ -313,7 +335,7 @@ const PROBE: &str = r#"
 use oneloop::rust_codegen::runtime::{C, Context, NativeFloat as RuntimeFloat, ConstantSpec, BatchWorkspace, batch};
 trait NativeFloat: RuntimeFloat + symbolica::domains::float::RealLike {}
 impl<T:RuntimeFloat + symbolica::domains::float::RealLike> NativeFloat for T {}
-use symbolica::{atom::{Atom, AtomCore}, domains::{dual::HyperDual, float::{Complex, DoubleFloat, Float, FloatLike, Real, RealLike}, rational::Rational}, evaluate::{Dualizer, FunctionRegistrationOptions, InliningPolicy}};
+use symbolica::{atom::{Atom, AtomCore}, domains::{dual::HyperDual, float::{Complex, DoubleFloat, Float, FloatLike, Real, RealLike, SingleFloat}, rational::Rational}, evaluate::{Dualizer, FunctionRegistrationOptions, InliningPolicy}};
 use std::sync::Mutex;
 static TRACE: Mutex<Vec<(&str,f64)>> = Mutex::new(Vec::new());
 mod primitives {
@@ -432,8 +454,47 @@ fn check_lazy<T:NativeFloat>(bits:u32) where C<T>:symbolica::evaluate::Evaluatio
     }
 }
 
+fn check_correction<T: NativeFloat>(bits: u32, from_f64: impl Fn(f64) -> T) {
+    let context = Context::<T>::new(table::CONSTANTS,bits).unwrap();
+    let mut workspace = BatchWorkspace::new(T::zero_at(bits));
+    let expressions=[symbolica::parse!("d1^2/d0^3"),symbolica::parse!("c*d1^2/d0^3")];
+    let mut oracle = Atom::evaluator_multiple(&expressions,&[symbolica::parse!("c"),symbolica::parse!("d1"),symbolica::parse!("d0")]).build().unwrap()
+        .map_coeff_with_prec(&|c| C::new(Float::new(256).from_rational(&c.re),Float::new(256).from_rational(&c.im)),256).into_batch_evaluator();
+    for scale in [1.,1e20,4e102,8e102,1e110,-1e110] {
+        for rows in [1,3] {
+            let input=vec![C::new(from_f64(scale),from_f64(0.));rows*3];
+            let exact_input=vec![C::new(Float::with_val(256,scale),Float::new(256));rows*3];
+            let mut expected=vec![C::new(Float::new(256),Float::new(256));rows*2];
+            oracle.evaluate_batch(&exact_input,&mut expected,rows).unwrap();
+            let mut actual=vec![C::new(from_f64(99.),from_f64(0.));rows*2];
+            correction::evaluate_batch(&input,&mut actual,rows,&context,&mut workspace).unwrap();
+            for row in 0..rows {
+                let scalar=correction::evaluate(&input[row*3..row*3+3],&context);
+                assert!(expected[row*2].is_finite() && expected[row*2+1].is_finite());
+                assert!((expected[row*2+1].re.clone()-Float::with_val(256,1)).norm() < Float::with_val(256,1e-70));
+                for column in 0..2 {
+                    let analytic=if column==0{from_f64(1.)/from_f64(scale)}else{from_f64(1.)};
+                    for result in [&actual[row*2+column],&scalar[column]] {
+                        if result.is_finite() {
+                            let relative=(result.clone()-C::new(analytic.clone(),from_f64(0.))).norm().re/analytic.norm();
+                            let tolerance=if T::FIXED_BITS.is_none(){1e-65}else{1e-12};
+                            assert!(relative.to_f64()<tolerance,"overflow hidden as finite value: bits={bits} scale={scale:e} value={result:?}");
+                        } else {
+                            assert!(T::FIXED_BITS.is_some() && scale.abs()>4e102,"unexpected nonfinite correction: bits={bits} scale={scale:e} value={result:?}");
+                        }
+                    }
+                    for (a,b) in [(&actual[row*2+column].re,&scalar[column].re),(&actual[row*2+column].im,&scalar[column].im)] { assert!(a==b || (a.real_classify()==Some(std::num::FpCategory::Nan) && b.real_classify()==Some(std::num::FpCategory::Nan))); }
+                }
+            }
+        }
+    }
+}
+
 fn main() {
     let _ = symbolica::symbol!("batch_codegen_state");
+    check_correction::<f64>(53,|x|x);
+    check_correction::<DoubleFloat>(106,DoubleFloat::from);
+    check_correction::<Float>(256,|x|Float::with_val(256,x));
     check::<f64>(53); check::<DoubleFloat>(106);check::<Float>(192);
     check_lazy::<f64>(53);check_lazy::<DoubleFloat>(106);check_lazy::<Float>(192);
     // Distinct per-component input precision survives packing and output copies.

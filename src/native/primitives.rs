@@ -271,6 +271,11 @@ fn constant_prototype<T: NativeFloat>(a: &C<T>) -> &T {
 }
 
 fn inverse<T: NativeFloat>(a: &C<T>) -> C<T> {
+    // An overflowing intermediate must stay visible to the caller's finite
+    // checks: the axis shortcuts would otherwise turn infinity into zero.
+    if !a.is_finite() {
+        return a.inv();
+    }
     if a.im.is_fully_zero() {
         return C::new(a.re.inv(), -a.im.clone());
     }

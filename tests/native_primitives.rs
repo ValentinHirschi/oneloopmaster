@@ -4,7 +4,7 @@
 mod primitives;
 
 use primitives::{C, NativeFloat};
-use symbolica::domains::float::{DoubleFloat, Float, FloatLike, Real, RealLike};
+use symbolica::domains::float::{DoubleFloat, Float, FloatLike, Real, RealLike, SingleFloat};
 
 fn dd_float(value: DoubleFloat, bits: u32) -> Float {
     let pair = value.into_inner();
@@ -519,4 +519,64 @@ fn native_primitives_thousand_decimal_digits() {
     // Re sqrt(-1+iy)=|y|/2+O(y^3), checked against the tiny component itself.
     relative(&root.re, &(width.norm() / Float::with_val(BITS, 2)), BITS);
     assert!(primitives::truth(&C::new(Float::new(BITS), width)));
+}
+
+/// Keep exceptional inputs visible while retaining the finite-axis optimization.
+fn reciprocal_axes<T: NativeFloat>(from_f64: impl Fn(f64) -> T) {
+    let zero = from_f64(0.0);
+    for value in [1.0, -1.0, 1e110, -1e110, 1e-110, -1e-110] {
+        let value = from_f64(value);
+        for axis in [
+            C::new(value.clone(), zero.clone()),
+            C::new(zero.clone(), value.clone()),
+        ] {
+            let actual = primitives::powi(&axis, -1, false);
+            assert!(actual.is_finite());
+            if axis.im.is_fully_zero() {
+                assert_eq!(actual.re, value.inv());
+                assert!(actual.im.is_fully_zero());
+            } else {
+                assert!(actual.re.is_fully_zero());
+                assert_eq!(actual.im, -value.inv());
+            }
+        }
+    }
+    for real in [0.0, -0.0] {
+        for imaginary in [0.0, -0.0] {
+            assert!(
+                !primitives::powi(&C::new(from_f64(real), from_f64(imaginary)), -1, false)
+                    .is_finite()
+            );
+        }
+    }
+    for real in [0.0, -0.0, 1.0, f64::INFINITY, f64::NEG_INFINITY, f64::NAN] {
+        for imaginary in [0.0, -0.0, 1.0, f64::INFINITY, f64::NEG_INFINITY, f64::NAN] {
+            if real.is_finite() && imaginary.is_finite() {
+                continue;
+            }
+            let input = C::new(from_f64(real), from_f64(imaginary));
+            let actual = primitives::powi(&input, -1, false);
+            let expected = input.inv();
+            assert!(
+                !actual.is_finite(),
+                "nonfinite input became finite: {input:?} -> {actual:?}"
+            );
+            for (actual, expected) in [(&actual.re, &expected.re), (&actual.im, &expected.im)] {
+                if expected.real_classify() == Some(std::num::FpCategory::Nan) {
+                    assert_eq!(actual.real_classify(), Some(std::num::FpCategory::Nan));
+                } else {
+                    assert_eq!(actual, expected);
+                    assert_eq!(actual.negative_sign(), expected.negative_sign());
+                }
+                assert_eq!(actual.get_precision(), expected.get_precision());
+            }
+        }
+    }
+}
+
+#[test]
+fn native_reciprocal_nonfinite_axes_delegate_to_symbolica() {
+    reciprocal_axes::<f64>(|x| x);
+    reciprocal_axes::<DoubleFloat>(DoubleFloat::from);
+    reciprocal_axes::<Float>(|x| Float::with_val(256, x));
 }
