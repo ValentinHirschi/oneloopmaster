@@ -17,6 +17,8 @@ mod inspection;
 mod inspection_formulas;
 mod native;
 mod precision;
+#[cfg(feature = "rust-codegen")]
+pub mod rust_codegen;
 mod sheet_exact;
 mod triangle_hv;
 pub use backend::{

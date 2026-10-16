@@ -11,6 +11,12 @@ default = ["prebuilt"]
 # Opt into ahead-of-time Rust evaluators instead of the smaller interpreted hooks.
 generated-evaluators = []
 prebuilt = []
+# Reuse the exact Symbolica instruction-to-Rust emitter and its numeric runtime.
+rust-codegen = []
+
+[[example]]
+name = "generate_native"
+required-features = ["rust-codegen"]
 
 [dependencies]
 # Do not impose Symbolica's optional global mimalloc allocator on embedding hosts.

@@ -3,7 +3,7 @@
 //! The generated functions contain ordinary arithmetic and structured Rust
 //! branches. They neither build nor execute a Symbolica/SymJIT evaluator.
 #[cfg_attr(not(feature = "generated-evaluators"), allow(dead_code))]
-mod primitives;
+pub mod primitives;
 #[cfg(feature = "generated-evaluators")]
 mod simple;
 // The emitter has its own stable formatting and mechanically named SSA locals.
@@ -35,28 +35,20 @@ mod generated_constants;
 use crate::ScalarIntegral;
 pub use primitives::NativeFloat;
 use primitives::*;
-#[cfg(feature = "generated-evaluators")]
-use symbolica::domains::{integer::Integer, rational::Rational};
+#[cfg(any(feature = "generated-evaluators", feature = "rust-codegen"))]
+mod constants;
+#[cfg(any(feature = "generated-evaluators", feature = "rust-codegen"))]
+pub use constants::{ConstantContext, ConstantSpec};
 
 #[cfg(not(feature = "generated-evaluators"))]
 mod disabled;
 #[cfg(not(feature = "generated-evaluators"))]
 pub use disabled::NativeEvaluator;
 
-/// Exact initialization data emitted alongside the generated arithmetic.
-/// No strings or rational conversions are used in a warmed scalar call.
-#[allow(dead_code)] // The generator also supports fixed Li2 constants in future formulas.
-#[cfg(feature = "generated-evaluators")]
-enum ConstantSpec {
-    Rational { re: &'static str, im: &'static str },
-    Pi,
-    Polylog2 { re: &'static str, im: &'static str },
-}
-
 #[derive(Clone)]
 #[cfg(feature = "generated-evaluators")]
 struct Context<T: NativeFloat> {
-    constants: Vec<C<T>>,
+    constants: ConstantContext<T>,
     simple: simple::Constants<T>,
 }
 
@@ -64,27 +56,7 @@ struct Context<T: NativeFloat> {
 impl<T: NativeFloat> Context<T> {
     fn new(bits: u32) -> Result<Self, String> {
         let prototype = T::zero_at(bits);
-        let rational = |text: &str| -> Result<T, String> {
-            let (num, den) = text.split_once('/').unwrap_or((text, "1"));
-            let num = num.parse::<Integer>().map_err(|e| e.to_string())?;
-            let den = den.parse::<Integer>().map_err(|e| e.to_string())?;
-            if den == 0 {
-                return Err("invalid generated rational denominator".into());
-            }
-            Ok(prototype.from_rational(&Rational::from((num, den))))
-        };
-        let constants = generated_constants::CONSTANTS
-            .iter()
-            .map(|spec| {
-                Ok(match spec {
-                    ConstantSpec::Rational { re, im } => C::new(rational(re)?, rational(im)?),
-                    ConstantSpec::Pi => C::new(prototype.pi(), prototype.zero()),
-                    ConstantSpec::Polylog2 { re, im } => {
-                        polylog2(&C::new(rational(re)?, rational(im)?))
-                    }
-                })
-            })
-            .collect::<Result<Vec<_>, String>>()?;
+        let constants = ConstantContext::new(generated_constants::CONSTANTS, bits)?;
         Ok(Self {
             constants,
             simple: simple::Constants::new(&prototype),
@@ -93,7 +65,7 @@ impl<T: NativeFloat> Context<T> {
 
     #[inline(always)]
     fn constant(&self, index: usize) -> &C<T> {
-        &self.constants[index]
+        self.constants.constant(index)
     }
 }
 
