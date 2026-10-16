@@ -166,11 +166,7 @@ fn principal_sqrt(value: &Atom) -> Atom {
     let off_axis = off_real_axis(value);
     let value = grouped(value);
     let absolute = Symbol::ABS.call((&value,));
-    let axis = if_nonzero_else(
-        &(&value - &absolute),
-        i() * absolute.sqrt(),
-        absolute.sqrt(),
-    );
+    let axis = if_nonzero_else(&(&value - &absolute), i() * (-&value).sqrt(), value.sqrt());
     // Recover the small rectangular component by the product 2*u*v=Im(z),
     // rather than a cosine near pi/2 or a difference of nearly equal norms.
     let real = re(&value);
@@ -1214,6 +1210,11 @@ pub(crate) fn supported_kinematics(p: [&Atom; 6]) -> Atom {
 mod tests {
     use super::*;
     use symbolica::prelude::{Complex, Float, RealLike};
+
+    #[test]
+    fn principal_sqrt_complex_axis_derivatives() {
+        crate::analytic_continuation_tests::check_complex_axis_germs(principal_sqrt, false, false);
+    }
 
     #[test]
     fn contour_quadratic_roots_preserve_exact_axes() {
