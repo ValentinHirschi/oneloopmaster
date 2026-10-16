@@ -2,8 +2,8 @@
 use super::*;
 use std::sync::OnceLock;
 use symbolica::{
-    domains::{float::Complex, rational::Rational},
-    evaluate::{EvaluationError, ExpressionEvaluator},
+    domains::{dual::DualNumberStructure, float::Complex, rational::Rational},
+    evaluate::{Dualizer, EvaluationError, ExpressionEvaluator},
 };
 
 /// Native definitions shared by any number of triangle and box expressions.
@@ -61,6 +61,24 @@ impl OneLoopExpressions {
         parameters: &[Atom],
     ) -> Result<ExpressionEvaluator<Complex<Rational>>, EvaluationError> {
         compile(expressions, parameters, self.map, false)
+    }
+
+    /// Compiles flattened Dual components after preparing removable helper neighborhoods.
+    ///
+    /// The maximum total derivative order comes from `dual`, so the generated
+    /// local polynomials cover every component of its shape. Inputs and outputs
+    /// use Symbolica's ordinary argument-major/component-minor Dual layout.
+    /// This currently preserves the sheet `log(x)/(1-x)` limit at one. Coincident
+    /// dilogarithm differences and other triangle/box limits still need their own
+    /// neighborhoods; this constructor does not establish a C0/D0 derivative
+    /// domain. Callers must validate their domain independently.
+    pub fn dual_evaluator<D: DualNumberStructure>(
+        &self,
+        expressions: &[Atom],
+        parameters: &[Atom],
+        dual: D,
+    ) -> Result<ExpressionEvaluator<Complex<Rational>>, String> {
+        compile_dual(expressions, parameters, self.map, dual)
     }
 
     /// Compile a manually assembled amplitude with SymJIT O2. The returned
@@ -180,6 +198,30 @@ fn compile(
         .build()
 }
 
+fn compile_dual<D: DualNumberStructure>(
+    expressions: &[Atom],
+    parameters: &[Atom],
+    map: &FunctionMap,
+    dual: D,
+) -> Result<ExpressionEvaluator<Complex<Rational>>, String> {
+    let order = dual
+        .get_shape()
+        .iter()
+        .map(|component| {
+            component.iter().try_fold(0usize, |sum, &degree| {
+                sum.checked_add(degree).ok_or("Dual total order overflow")
+            })
+        })
+        .collect::<Result<Vec<_>, _>>()?
+        .into_iter()
+        .max()
+        .ok_or("Dual shape is empty")?;
+    let map = sheet_exact::with_neighborhoods(map, order)?;
+    compile(expressions, parameters, &map, false)
+        .map_err(|error| error.to_string())?
+        .vectorize(&Dualizer::new(dual, Vec::new()))
+}
+
 impl MappedLaurentSeries {
     /// Compiles the three coefficients using the included definitions.
     pub fn evaluator(
@@ -187,6 +229,17 @@ impl MappedLaurentSeries {
         parameters: &[Atom],
     ) -> Result<ExpressionEvaluator<Complex<Rational>>, EvaluationError> {
         compile(self.coefficients(), parameters, self.function_map, false)
+    }
+
+    /// Compiles shape-derived helper neighborhoods and flattened Dual components.
+    /// See [OneLoopExpressions::dual_evaluator] for the currently covered helper
+    /// and the remaining triangle/box derivative-domain limitations.
+    pub fn dual_evaluator<D: DualNumberStructure>(
+        &self,
+        parameters: &[Atom],
+        dual: D,
+    ) -> Result<ExpressionEvaluator<Complex<Rational>>, String> {
+        compile_dual(self.coefficients(), parameters, self.function_map, dual)
     }
 
     /// Compile all three coefficients for scalar or batched SymJIT evaluation.

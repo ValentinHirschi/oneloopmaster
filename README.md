@@ -146,6 +146,23 @@ Symbolica directly. Compact function calls alone are not self-contained formulas
 The context caches the native definitions once per process; cyclic mass sectors
 reuse canonical formulas instead of constructing copies.
 
+`OneLoopExpressions::dual_evaluator(expressions, parameters, dual_shape)` and
+`MappedLaurentSeries::dual_evaluator(parameters, dual_shape)` prepare local
+neighborhoods before invoking Symbolica's `Dualizer`. They infer the required
+total degree from a static Dual or dynamic HyperDual shape, without a fixed
+derivative-order limit. The resulting evaluator takes and returns flattened
+components in Symbolica's usual order; its coefficients can be mapped to the
+desired precision and its instructions can be evaluated in batches.
+
+This currently covers the mapped sheet helper `log(x)/(1-x)` at `x=1` on a
+sheet whose continued logarithm vanishes there. Its local polynomial is generated
+by Symbolica's `Atom::series`; a nonzero logarithm at one remains a pole.
+Constructing a scalar evaluator and then dualizing it cannot recover derivatives
+discarded by a scalar limit. Other limits still need neighborhoods, including
+coincident dilogarithm differences, the separate plain-expression log-ratio
+helper, and inspection formulas. Complete C0/D0 derivative-domain coverage is
+not established by these constructors; callers must validate their domain.
+
 For a self-contained formula, `oneloop::get_expression(master_call)` (also
 `family.get_expression(arguments)` for a Rust `ScalarIntegral`) returns the three exact Laurent coefficients
 with every OneLOop helper expanded into Symbolica primitives. It preserves the

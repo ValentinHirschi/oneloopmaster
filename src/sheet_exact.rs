@@ -96,6 +96,47 @@ fn dilog_symbol() -> Symbol {
     symbolica::symbol!("__olo_sheet_dilog")
 }
 
+fn log_ratio_symbol() -> Symbol {
+    symbolica::symbol!("__olo_sheet_log_over_one_minus")
+}
+
+fn sheet_parameters() -> [Symbol; 3] {
+    [
+        symbolica::symbol!("__olo_sheet_value"),
+        symbolica::symbol!("__olo_sheet_phase"),
+        symbolica::symbol!("__olo_sheet_odd"),
+    ]
+}
+
+fn log_ratio_body(arguments: &[Atom; 3], neighborhood: Atom) -> Atom {
+    let difference = Atom::num(1) - physical(&arguments[0], &arguments[2]);
+    let logarithm = log_symbol().call(arguments.as_slice());
+    let quotient = &logarithm / &difference;
+    // A nonzero sheet logarithm at one is a pole, not a removable limit.
+    let at_one = choose(&logarithm, quotient.clone(), neighborhood);
+    choose(&difference, quotient, at_one)
+}
+
+/// Generate the complete local polynomial before Dualizer selects a zero primal.
+/// The requested order is the largest total degree of the actual Dual shape.
+pub(crate) fn with_neighborhoods(map: &FunctionMap, order: usize) -> Result<FunctionMap, String> {
+    let variable = symbolica::symbol!("__olo_log_ratio_neighborhood");
+    let x = variable.to_atom();
+    let local = (x.log() / (Atom::num(1) - &x))
+        .series(
+            variable,
+            1,
+            symbolica::poly::series::SeriesDepth::absolute(order),
+        )
+        .map_err(|error| error.to_string())?
+        .to_atom();
+    let arguments = sheet_parameters().map(Symbol::to_atom);
+    let local = local
+        .replace(variable)
+        .with(physical(&arguments[0], &arguments[2]));
+    map.with_replaced_body(log_ratio_symbol(), log_ratio_body(&arguments, local))
+}
+
 pub(crate) fn register(function_map: &mut FunctionMap) {
     register_impl(function_map, false);
 }
@@ -205,11 +246,7 @@ fn register_impl(function_map: &mut FunctionMap, grouped_predicates: bool) {
                 .unwrap();
         }
     }
-    let variables = [
-        symbolica::symbol!("__olo_sheet_value"),
-        symbolica::symbol!("__olo_sheet_phase"),
-        symbolica::symbol!("__olo_sheet_odd"),
-    ];
+    let variables = sheet_parameters();
     let atoms = variables.map(Symbol::to_atom);
     function_map
         .add_function_with_options(
@@ -219,6 +256,14 @@ fn register_impl(function_map: &mut FunctionMap, grouped_predicates: bool) {
             super::native_function_options(),
         )
         .expect("unique sheet logarithm");
+    function_map
+        .add_function_with_options(
+            log_ratio_symbol(),
+            variables.to_vec(),
+            log_ratio_body(&atoms, Atom::num(-1)),
+            super::native_function_options(),
+        )
+        .expect("unique sheet logarithm ratio");
     function_map
         .add_function_with_options(
             dilog_symbol(),
@@ -281,8 +326,7 @@ impl SheetAtom {
     }
 
     pub(crate) fn log_over_one_minus(&self) -> Atom {
-        let difference = Atom::num(1) - self.value();
-        choose(&difference, self.log() / &difference, Atom::num(-1))
+        log_ratio_symbol().call((&self.value, &self.phase, &self.odd))
     }
 
     pub(crate) fn dilog(&self) -> Atom {

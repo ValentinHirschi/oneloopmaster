@@ -50,6 +50,42 @@ fn interpreted_log_retains_accuracy_with_a_weak_tiny_component() {
 }
 
 #[test]
+fn replacing_a_helper_keeps_tagged_callees_and_the_original_map() {
+    let x = symbol!("replaced_helper_x");
+    let f = symbol!("replaced_helper_f");
+    let g = symbol!("replaced_helper_g");
+    let mut original = FunctionMap::new();
+    let options = FunctionRegistrationOptions::new().inlining(InliningPolicy::Never);
+    original
+        .add_tagged_function_with_options(
+            f,
+            vec![Atom::num(2)],
+            vec![x],
+            x.to_atom() + Symbol::PI,
+            options.clone(),
+        )
+        .unwrap();
+    original
+        .add_function_with_options(g, vec![x], f.call((2, x)), options)
+        .unwrap();
+    let replaced = original.with_replaced_body(g, 2 * f.call((2, x))).unwrap();
+    assert!(original.with_replaced_body(f, Atom::num(0)).is_err());
+    for (map, factor) in [(original, 1.), (replaced, 2.)] {
+        let mut evaluator = g
+            .call((x,))
+            .evaluator(&[x.to_atom()])
+            .function_map(map.into())
+            .build()
+            .unwrap()
+            .map_coeff(&|c| c.re.to_f64());
+        assert_eq!(
+            evaluator.evaluate_single(&[1.]),
+            factor * (1. + std::f64::consts::PI)
+        );
+    }
+}
+
+#[test]
 fn interpreted_log_retains_the_precise_small_real_part_near_one() {
     let x = symbol!("mixed_precision_near_unit_argument").to_atom();
     let map = FunctionMap::new();
