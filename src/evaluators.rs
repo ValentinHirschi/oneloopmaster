@@ -1,9 +1,15 @@
 //! Portable evaluator source caches and row-major batched numerical evaluation.
 use crate::{ScalarIntegral, masters};
-use std::sync::{Arc, Mutex, OnceLock};
+use std::{
+    collections::HashSet,
+    sync::{Arc, Mutex, OnceLock},
+};
 use symbolica::{
     domains::{float::Complex, rational::Rational},
-    evaluate::{ExpressionEvaluator, JITCompilationSettings, JITCompiledEvaluator},
+    evaluate::{
+        ExportedInstructions, ExpressionEvaluator, Instruction, JITCompilationSettings,
+        JITCompiledEvaluator,
+    },
 };
 
 type C = Complex<f64>;
@@ -74,6 +80,51 @@ pub fn jit_settings() -> JITCompilationSettings {
         .with_option("enable_simd512", "false")
 }
 
+fn max_call_arity<T>(program: &ExportedInstructions<T>) -> usize {
+    let mut pending = vec![program];
+    let mut visited = HashSet::new();
+    let mut maximum = 0;
+    while let Some(program) = pending.pop() {
+        for instruction in &program.instructions {
+            if let Instruction::Fun(_, function, _) = instruction {
+                maximum = maximum.max(function.2.len());
+            }
+        }
+        for body in &program.sub_evaluators {
+            if visited.insert(Arc::as_ptr(&body.instructions)) {
+                pending.push(body.instructions.as_ref());
+            }
+        }
+    }
+    maximum
+}
+
+fn checked_argument_slots(complex_arguments: usize) -> Result<u32, String> {
+    // SymJIT lowers every complex call argument to two real __Arg slots,
+    // including arguments captured by shared evaluator bodies. The top-level
+    // input count does not bound calls inside those bodies.
+    let slots = complex_arguments
+        .checked_mul(2)
+        .and_then(|slots| u32::try_from(slots).ok())
+        .ok_or("JIT function argument slot count overflow")?;
+    let mut config = symjit::Config::default();
+    config.set_num_args(slots);
+    let accepted = config.num_args();
+    if accepted < slots {
+        return Err(format!(
+            "JIT function requires {slots} real argument slots, but SymJIT accepts only {accepted}"
+        ));
+    }
+    Ok(accepted)
+}
+
+fn jit_settings_for(source: &ExpressionEvaluator<C>) -> Result<JITCompilationSettings, String> {
+    let slots = checked_argument_slots(max_call_arity(&source.export_instructions()))?;
+    // Symbolica applies these options to the main evaluator and all shared
+    // bodies. Keep every other part of the portable compilation policy intact.
+    Ok(jit_settings().with_option("num_args", slots.to_string()))
+}
+
 /// A reusable evaluator for arbitrary combinations of native expressions.
 /// Inputs and outputs of a batch are row-major, one complete point per row.
 #[derive(Clone)]
@@ -99,7 +150,7 @@ impl JitEvaluator {
                 "compiled evaluator dimensions disagree with requested expression shape".into(),
             );
         }
-        let inner = source.jit_compile(jit_settings())?;
+        let inner = source.jit_compile(jit_settings_for(&source)?)?;
         Ok(Self {
             inner,
             source: Arc::new(source),
@@ -194,7 +245,7 @@ impl JitEvaluator {
         if source.get_input_len() != inputs || source.get_output_len() != outputs {
             return Err("evaluator cache dimensions disagree with executable".into());
         }
-        let inner = source.jit_compile(jit_settings())?;
+        let inner = source.jit_compile(jit_settings_for(&source)?)?;
         Ok(Self {
             inputs,
             outputs,
@@ -465,6 +516,105 @@ pub fn rebuild_cached_evaluator(family: ScalarIntegral) -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn jit_argument_slots_reject_overflow_and_backend_clamping() {
+        assert!(checked_argument_slots(usize::MAX).is_err());
+        assert!(checked_argument_slots(u32::MAX as usize).is_err());
+        let mut backend = symjit::Config::default();
+        backend.set_num_args(u32::MAX);
+        let too_many = backend.num_args() as usize / 2 + 1;
+        assert!(
+            checked_argument_slots(too_many)
+                .unwrap_err()
+                .contains("SymJIT accepts only")
+        );
+        assert!(checked_argument_slots(35).unwrap() >= 70);
+    }
+
+    #[test]
+    fn jit_nested_wide_calls_survive_source_cache_and_mixed_batches() {
+        use symbolica::{
+            evaluate::{FunctionMap, FunctionRegistrationOptions, InliningPolicy},
+            prelude::*,
+        };
+
+        let x = symbol!("jit_wide_outer_x");
+        let leaf = symbol!("jit_wide_leaf");
+        let first = symbol!("jit_wide_first");
+        let second = symbol!("jit_wide_second");
+        let parameters: Vec<_> = (0..35)
+            .map(|index| symbol!(format!("jit_wide_argument_{index}")))
+            .collect();
+        let body = parameters.iter().fold(Atom::num(0), |sum, &argument| {
+            sum + argument.to_atom() * argument
+        });
+        let options = FunctionRegistrationOptions::new().inlining(InliningPolicy::Never);
+        let mut map = FunctionMap::new();
+        map.add_function_with_options(leaf, parameters, body, options.clone())
+            .unwrap();
+        // Repeated argument slots introduce no captured scalar constants. Thus
+        // the public expression calls only narrow helpers; only their nested
+        // calls require the enlarged argument storage.
+        let arguments = vec![x.to_atom(); 35];
+        let call = leaf.call(arguments.as_slice());
+        map.add_function_with_options(first, vec![x], call.clone(), options.clone())
+            .unwrap();
+        map.add_function_with_options(second, vec![x], call + x, options)
+            .unwrap();
+        let expression = first.call((x,)) + second.call((2 * x.to_atom(),));
+        let exact = expression
+            .evaluator(&[x.to_atom()])
+            .function_map(map)
+            .direct_translation(true)
+            .horner_iterations(0)
+            .build()
+            .unwrap();
+        assert_eq!(exact.get_input_len(), 1);
+        let exported = exact.export_instructions();
+        assert!(
+            exported
+                .sub_evaluators
+                .iter()
+                .all(|body| body.input_count < 35)
+        );
+        assert!(max_call_arity(&exported) >= 35);
+        let mut interpreted = exact
+            .clone()
+            .map_coeff(&|value| C::new(value.re.to_f64(), value.im.to_f64()));
+        let fresh = JitEvaluator::compile(&exact, 1, 1).unwrap();
+        let bytes = fresh.to_bytes().unwrap();
+        let restored = JitEvaluator::from_bytes(&bytes).unwrap();
+        let arguments = [
+            C::new(0., 0.),
+            C::new(1., 0.),
+            C::new(-2., 3.),
+            C::new(0., -0.125),
+            C::new(0.03125, 8.),
+            C::new(-0.25, -0.5),
+            C::new(17., 0.),
+        ];
+        let expected: Vec<_> = arguments
+            .iter()
+            .map(|argument| interpreted.evaluate_single(std::slice::from_ref(argument)))
+            .collect();
+        for mut evaluator in [fresh, restored] {
+            evaluator.evaluate_batch(&[], &mut [], 0).unwrap();
+            for batch in [1, 3, 8] {
+                let mut actual = [C::new(f64::NAN, f64::NAN); 7];
+                for (input, output) in arguments.chunks(batch).zip(actual.chunks_mut(batch)) {
+                    evaluator
+                        .evaluate_batch(input, output, input.len())
+                        .unwrap();
+                }
+                for (actual, expected) in actual.iter().zip(&expected) {
+                    let scale = 1. + expected.re.abs() + expected.im.abs();
+                    assert!((actual.re - expected.re).abs() <= 1e-12 * scale);
+                    assert!((actual.im - expected.im).abs() <= 1e-12 * scale);
+                }
+            }
+        }
+    }
 
     fn counted_evaluate(
         group: &mut CoefficientGroups,

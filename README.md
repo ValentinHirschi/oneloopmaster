@@ -657,10 +657,14 @@ for compiled f64/DoubleFloat/Float and flattened-Dual comparisons, an explicit
 instruction-major primitive trace, warmed f64 allocation checks, and generated
 source-size/optimized-compilation measurements.
 
-SymJIT has a compatible minimum requirement of `2.26.0`; the consuming
+SymJIT has a compatible minimum requirement of `2.27.3`; the consuming
 application's `Cargo.lock` selects the concrete version. The six previously
-reported standalone defects passed their regressions in 2.26.0. Production retains
-ordinary compilation, packed complex arithmetic, `fastmath=false` and scalar
+reported standalone defects passed their regressions in 2.26.0. The newer
+minimum supports configurable call argument storage: portable evaluators size
+it from all nested function calls, counting two real slots per complex
+argument, and reject requests above the backend's accepted capacity. Source
+cache loading recomputes this size before compiling on the receiving host.
+Production retains ordinary compilation, packed complex arithmetic, `fastmath=false` and scalar
 batches while the broader backend matrix is audited. Complex square-root
 callbacks remain necessary for extreme scales. See the
 [dependency audit](patches/upstream-status-2026-09-21.md) for reproduced remaining

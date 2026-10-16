@@ -5,6 +5,19 @@ use oneloop::{ScalarEvaluator, ScalarIntegral};
 use symbolica::domains::float::Complex;
 
 #[test]
+fn eager_initialization_compiles_every_shared_master_body() {
+    std::thread::Builder::new()
+        .stack_size(128 * 1024 * 1024)
+        .spawn(|| {
+            oneloop::initialize().unwrap();
+            assert!(oneloop::is_initialized());
+        })
+        .unwrap()
+        .join()
+        .unwrap();
+}
+
+#[test]
 fn portable_scalar_caches_and_mixed_batches_match_original_fixtures() {
     std::thread::Builder::new()
         .stack_size(128 * 1024 * 1024)
