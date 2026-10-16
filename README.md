@@ -191,9 +191,14 @@ continuation formulas and retain their cancellation and precision requirements.
 Shared-body Dual evaluation requires Symbolica's recursive vectorizer
 ([PR82](https://github.com/symbolica-dev/symbolica/pull/82)) and its optimizer
 scope correction for branches with multiple results
-([PR83](https://github.com/symbolica-dev/symbolica/pull/83)). A massive Euclidean
-C0 regression verifies scalar-primal preservation and zero derivative seeds at
-f64 and 256-bit precision; it does not validate a general C0/D0 derivative domain.
+([PR83](https://github.com/symbolica-dev/symbolica/pull/83)). Massive spacelike
+C0 controls cover unequal/equal positive masses, both Källén signs, nonlinear
+higher/mixed complex seeds, scale independence and mixed-branch batches at four
+fixed real kinematic points. Symbolica-derived scaling controls and converged
+384-bit real-axis differences are independent oracles. See
+[C0_DERIVATIVE_AUDIT.md](C0_DERIVATIVE_AUDIT.md) for the precise scope and a
+separate scalar complex-invariant continuation limitation. These tests do not
+establish a general C0/D0 derivative domain.
 
 Constructing a scalar evaluator and then dualizing it cannot recover derivatives
 discarded by a scalar limit. Other limits still need neighborhoods, including
