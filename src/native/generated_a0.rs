@@ -8,14 +8,14 @@ use super::primitives::{inline_add as add, inline_mul as mul};
 pub(super) fn evaluate<T: NativeFloat>(input: &[C<T>], ctx: &Context<T>) -> [C<T>; 3] {
     let a0 = &input[0];
     let a1 = &input[1];
-    let v0 = helper_0(a0, a1, ctx.constant(2), ctx.constant(1), ctx.constant(0), ctx.constant(3), ctx.constant(4), ctx);
+    let v0 = helper_0(a0, a1, ctx.constant(2), ctx.constant(1), ctx.constant(0), ctx.constant(3), ctx.constant(4), ctx.constant(5), ctx);
     let v1 = helper_1(a0, a1, ctx);
     let v2 = helper_2(a0, a1, ctx.constant(2), ctx);
     [(*(&v0)).clone(), (*(&v1)).clone(), (*(&v2)).clone()]
 }
 
-fn helper_0<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<T>, a5: &C<T>, a6: &C<T>, ctx: &Context<T>) -> C<T> {
-    let v23 = if truth(a0) {
+fn helper_0<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<T>, a5: &C<T>, a6: &C<T>, a7: &C<T>, ctx: &Context<T>) -> C<T> {
+    let v28 = if truth(a0) {
         let v0 = powi(a1, -1, false);
         let v1 = mul(a0, &v0);
         let v2 = if truth(&v1) {
@@ -26,32 +26,35 @@ fn helper_0<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<T
         let v4 = conj(&v2);
         let v5 = mul(a3, &v4);
         let v6 = add(&v2, &v5);
-        let v19 = if truth(&v6) {
+        let v24 = if truth(&v6) {
             let v8 = log(&v2);
             (*(&v8)).clone()
         } else {
-            let v10 = abs(&v2);
-            let v11 = log(&v10);
-            let v13 = mul(a3, &v10);
-            let v14 = add(&v2, &v13);
-            let v15 = if truth(&v14) {
+            let v11 = abs(&v2);
+            let v12 = mul(a3, &v11);
+            let v13 = add(&v2, &v12);
+            let v14 = if truth(&v13) {
                 (*(a4)).clone()
             } else {
                 (*(a2)).clone()
             };
-            let v16 = mul(a5, a6);
-            let v17 = mul(&v16, &v15);
-            let v18 = add(&v11, &v17);
-            (*(&v18)).clone()
+            let v15 = mul(a5, &v14);
+            let v16 = add(a4, &v15);
+            let v18 = mul(&v16, &v2);
+            let v19 = log(&v18);
+            let v21 = mul(a6, a7);
+            let v22 = mul(&v21, &v14);
+            let v23 = add(&v19, &v22);
+            (*(&v23)).clone()
         };
-        let v20 = mul(a3, &v19);
-        let v21 = add(a4, &v20);
-        let v22 = mul(a0, &v21);
-        (*(&v22)).clone()
+        let v25 = mul(a3, &v24);
+        let v26 = add(a4, &v25);
+        let v27 = mul(a0, &v26);
+        (*(&v27)).clone()
     } else {
         (*(a2)).clone()
     };
-    (*(&v23)).clone()
+    (*(&v28)).clone()
 }
 
 fn helper_1<T: NativeFloat>(a0: &C<T>, a1: &C<T>, ctx: &Context<T>) -> C<T> {
