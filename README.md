@@ -197,8 +197,9 @@ higher/mixed complex seeds, scale independence and mixed-branch batches at four
 fixed real kinematic points. Symbolica-derived scaling controls and converged
 384-bit real-axis differences are independent oracles. See
 [C0_DERIVATIVE_AUDIT.md](C0_DERIVATIVE_AUDIT.md) for the precise scope and a
-separate scalar complex-invariant continuation limitation. These tests do not
-establish a general C0/D0 derivative domain.
+distinction between unsupported complex scalar invariants and validated complex
+derivative seeds at real centers. These tests do not establish a general C0/D0
+derivative domain.
 
 Constructing a scalar evaluator and then dualizing it cannot recover derivatives
 discarded by a scalar limit. Other limits still need neighborhoods, including

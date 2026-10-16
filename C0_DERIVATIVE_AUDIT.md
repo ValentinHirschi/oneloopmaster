@@ -55,8 +55,19 @@ real-direction coefficient multiplied by the corresponding powers of the
 complex seeds. This permits an independent complex-seed check using accurate
 scalar evaluations with real invariants and masses.
 
-This distinction matters: direct scalar evaluation at complex external
-invariants has a continuation limitation. At
+This distinction matters: arbitrary complex external invariants are outside the
+scalar input contract. [The original OneLOop paper, section 2.3](https://arxiv.org/abs/1007.4716),
+requires their imaginary parts to vanish; its Fortran wrapper reports an error
+and discards nonzero imaginary parts. Squared masses instead allow non-positive
+imaginary parts. The current README states this same domain, and
+`NativeEvaluator`, `PrecisionEvaluator`, explicit backend dispatch and master
+callbacks validate it. No supported complex-invariant domain is established by
+using a complex numerical carrier.
+
+The diagnostic below deliberately bypasses those checks through
+`OneLoopExpressions::c0(...).coefficients()` and
+`OneLoopExpressions::evaluator(...).map_coeff_with_prec(..., 384)`. It evaluates
+all seven arguments as independently supplied `Complex<Float>` parameters. At
 `[-1,-5,-4,2,3,5,1]`, the finite scalar C0 is approximately
 `-0.12562502313360096`. Perturbing only the first invariant by
 `-i*2^-24` approaches this value, with imaginary part about `1.9963e-10`.
@@ -65,8 +76,29 @@ The perturbation `+i*2^-24` instead gives approximately
 The positive-Källén control also has a discontinuity for this positive imaginary
 perturbation. Direct complex-invariant scalar differences are consequently not
 used as the derivative oracle, and these controls make no claim that such
-complex scalar inputs are supported. The discontinuity requires a separate
-continuation audit and fix.
+complex scalar inputs are supported. This is unsupported raw-expression
+extrapolation, not an observed failure of the advertised scalar domain. Supporting it would be a separate continuation
+extension; no such extension is needed to establish the tested local derivatives.
+
+There is also a direct independent continuity control. Equations (14)–(17) of
+[the same paper](https://arxiv.org/abs/1007.4716) give the finite triangle as the
+negative simplex integral of `1/F`, where
+`F = sum(xj*mj²) - p1²*x1*x2 - p2²*x2*x3 - p3²*x1*x3` and
+`x1+x2+x3=1`. At both diagnostic centers, `F >= 2`. A perturbation
+`p1² -> p1² + i*h` preserves this positive real part. Using `x1*x2 <= 1/4`
+and simplex area `1/2` bounds the change by `|h|/32`, or less than `1.87e-9`
+for `h=2^-24`. Thus the analytic integral is continuous on both sides and obeys
+complex conjugation there. The raw-expression jump cannot represent that local
+continuation, irrespective of numerical precision. This bound avoids relying on
+another dilogarithm implementation or a stochastic integration estimate.
+
+The formula implementation contains predicates intended for real arguments:
+`negative(lambda)` selects the Källén representation, and the HV representation
+sorts squared invariants with the same predicate. `sign_nonnegative(x)` tests
+`x-abs(x)` for zero; non-real values are not a continuation of real ordering.
+These assumptions are consistent with the advertised real-invariant domain,
+but explain why evaluating arbitrary complex inputs through unchecked exact
+expressions does not extend the domain.
 
 ## Reproduction and limitations
 
