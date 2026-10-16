@@ -157,6 +157,13 @@ desired precision and its instructions can be evaluated in batches.
 This currently covers the mapped sheet helper `log(x)/(1-x)` at `x=1` on a
 sheet whose continued logarithm vanishes there. Its local polynomial is generated
 by Symbolica's `Atom::series`; a nonzero logarithm at one remains a pole.
+Shared-body Dual evaluation requires Symbolica's recursive vectorizer
+([PR82](https://github.com/symbolica-dev/symbolica/pull/82)) and its optimizer
+scope correction for branches with multiple results
+([PR83](https://github.com/symbolica-dev/symbolica/pull/83)). A massive Euclidean
+C0 regression verifies scalar-primal preservation and zero derivative seeds at
+f64 and 256-bit precision; it does not validate a general C0/D0 derivative domain.
+
 Constructing a scalar evaluator and then dualizing it cannot recover derivatives
 discarded by a scalar limit. Other limits still need neighborhoods, including
 coincident dilogarithm differences, the separate plain-expression log-ratio

@@ -6,7 +6,7 @@ use symbolica::{
     create_hyperdual_from_depths,
     domains::{
         dual::HyperDual,
-        float::{Complex, Float, FloatLike, Real},
+        float::{Complex, Float, FloatLike, Real, SingleFloat},
     },
 };
 
@@ -39,6 +39,81 @@ fn oracle_polynomial(depth: usize, offset: &Atom) -> Atom {
         result += coefficient * offset.pow(degree as i64);
     }
     result
+}
+
+#[test]
+fn euclidean_c0_preserves_primal_and_zero_seeds() {
+    let context = OneLoopExpressions::new();
+    let parameters: Vec<_> = (0..7)
+        .map(|i| symbolica::symbol!(format!("c0_primal_control_{i}")).to_atom())
+        .collect();
+    let series = context.c0(
+        [&parameters[0], &parameters[1], &parameters[2]],
+        [&parameters[3], &parameters[4], &parameters[5]],
+        &parameters[6],
+    );
+    let scalar = context
+        .evaluator(series.coefficients(), &parameters)
+        .unwrap();
+    let exact = context
+        .dual_evaluator(
+            series.coefficients(),
+            &parameters,
+            HyperDual::<f64>::new(vec![
+                vec![0, 0],
+                vec![1, 0],
+                vec![0, 1],
+                vec![2, 0],
+                vec![1, 1],
+            ]),
+        )
+        .unwrap();
+    let values = [-1., -5., -4., 2., 3., 5., 1.].map(|v| c(v, 0.));
+    let mut input = vec![c(0., 0.); 35];
+    for (row, value) in input.chunks_exact_mut(5).zip(values) {
+        row[0] = value;
+    }
+    let mut expected = [c(0., 0.); 3];
+    let mut output = [c(0., 0.); 15];
+    scalar
+        .clone()
+        .map_coeff(&|v| c(v.re.to_f64(), v.im.to_f64()))
+        .evaluate(&values, &mut expected);
+    exact
+        .clone()
+        .map_coeff(&|v| c(v.re.to_f64(), v.im.to_f64()))
+        .evaluate(&input, &mut output);
+    for (components, expected) in output.chunks_exact(5).zip(expected) {
+        close(components[0], expected);
+        assert!(components[1..].iter().all(|v| *v == c(0., 0.)));
+    }
+    let map = |v: &Complex<symbolica::domains::rational::Rational>| {
+        Complex::new(v.re.to_multi_prec_float(256), v.im.to_multi_prec_float(256))
+    };
+    let precise =
+        |v: &Complex<f64>| Complex::new(Float::with_val(256, v.re), Float::with_val(256, v.im));
+    let zero = Complex::new(Float::new(256), Float::new(256));
+    let mut expected = vec![zero.clone(); 3];
+    let mut output = vec![zero; 15];
+    scalar.map_coeff_with_prec(&map, 256).evaluate(
+        &values.iter().map(precise).collect::<Vec<_>>(),
+        &mut expected,
+    );
+    exact
+        .map_coeff_with_prec(&map, 256)
+        .evaluate(&input.iter().map(precise).collect::<Vec<_>>(), &mut output);
+    let tolerance = Float::with_val(256, 2).pow(180).inv();
+    for (components, expected) in output.chunks_exact(5).zip(expected) {
+        assert!((components[0].re.clone() - expected.re).norm() < tolerance);
+        assert!((components[0].im.clone() - expected.im).norm() < tolerance);
+        assert!(
+            components[1..]
+                .iter()
+                .all(|v| v.re.is_zero() && v.im.is_zero())
+        );
+    }
+    // This checks evaluator semantics, not a general C0 derivative domain.
+    // Coincident dilogarithm differences still need analytic neighborhoods.
 }
 
 #[test]

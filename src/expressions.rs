@@ -72,6 +72,8 @@ impl OneLoopExpressions {
     /// dilogarithm differences and other triangle/box limits still need their own
     /// neighborhoods; this constructor does not establish a C0/D0 derivative
     /// domain. Callers must validate their domain independently.
+    /// Shared-body Dual evaluation requires Symbolica's recursive vectorizer
+    /// and control-flow scope fix for branches with multiple result components.
     pub fn dual_evaluator<D: DualNumberStructure>(
         &self,
         expressions: &[Atom],
