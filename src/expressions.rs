@@ -71,9 +71,12 @@ impl OneLoopExpressions {
     /// This currently preserves equal nonzero sheet quotient jets and the sheet
     /// `log(x)/(1-x)` limit at one. An unresolved `0/0` sheet quotient stays
     /// nonfinite instead of inheriting the historical scalar convention. Coincident
-    /// dilogarithm differences and other triangle/box limits still need their own
-    /// neighborhoods; this constructor does not establish a C0/D0 derivative
-    /// domain. Callers must validate their domain independently.
+    /// mapped sheet dilogarithm differences retain independent argument jets,
+    /// including the joint unit limit on the unwound sheet. At coincidence the
+    /// sheet tags must match; zero arguments and wound unit points remain
+    /// nonanalytic. Other triangle/box limits still need their own neighborhoods;
+    /// this constructor does not establish a C0/D0 derivative domain. Callers
+    /// must validate their domain independently.
     /// Shared-body Dual evaluation requires Symbolica's recursive vectorizer
     /// and control-flow scope fix for branches with multiple result components.
     pub fn dual_evaluator<D: DualNumberStructure>(
