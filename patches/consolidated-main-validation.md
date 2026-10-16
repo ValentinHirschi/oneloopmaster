@@ -31,7 +31,7 @@ the initial Rust test build have identical git tree
 published git pin use identical source content, though Cargo assigns different
 source identities to their artifacts.
 
-Both tracked Python lockfiles were refreshed. The changes replace the three
+Both tracked Python lockfiles were refreshed. The initial changes replace the three
 registry package sources with this git pin, and update Graphica from 3.0.0 to
 the integration's 3.0.1. No other package versions changed. The following
 standalone checks used the actual git patches, without local source overrides:
@@ -69,11 +69,16 @@ It completed in 24.03 seconds, including its generated Rust compilation.
 The full-expansion target passed all three tests. Formatting and
 `git diff --check` passed.
 
-The full integration run is still in progress; this record is not a claim that
-the whole suite passed.
+The complete pre-fix run finished all 35 targets: 169 tests passed, six failed,
+and six were ignored. All six failures reported the same D0 JIT argument-limit
+error described below. The ignored tests include fresh-process helpers run by
+their parent tests, as well as existing diagnostic tests; they are not six
+additional passing checks. The original batch-emitter probe also passed when
+reached by this complete serial run.
 
-The evaluator and initialization targets reproduced the eager D0 initialization
-failure:
+The `evaluators`, `initialization`, `master_callbacks_jit`, `native_hook_errors`,
+`native_hooks`, and `native_startup` targets reproduced the eager D0
+initialization failure:
 
 ```text
 could not initialize D0 evaluator: Could not JIT-compile sub-evaluator
@@ -86,8 +91,37 @@ C0 (125) scalar fixture comparisons and six batch layouts for each family.
 The D0 failure was previously reproduced independently on the unmodified
 scalar-emitter base `de0114a`, as recorded in
 [native batch emitter validation](native-batch-emitter-validation.md).
-Any JIT arity repair requires its own regression tests and a rerun of the
-affected targets; the failure is not treated as a passing result here.
+The pre-fix failures are retained above rather than counted as passing tests.
+
+## JIT argument-storage follow-up
+
+Commit `384b6375fc01fe5de03fd4cd1116f22803e3dffe`, merged as
+`1bdcb2893db667744c437e37add4b7212ff8ab60`, derives the required JIT argument
+storage from the existing exported instructions, including nested complex
+helper bodies. It uses SymJIT's public configuration API and raises the compatible
+minimum SymJIT version to 2.27.3. No integral expressions or numerical tolerances
+change.
+
+The repair's two new unit tests passed, as did the eager-initialization and
+portable-evaluator tests. The latter covers all 293 original scalar fixtures,
+including 139 D0 cases, six batch layouts and serialized-cache restoration.
+The initialization target passed its parent test and all six fresh-process
+entry routes. The bare-master JIT target passed all 293 fixtures in five batch
+layouts, six Laurent-tag orders and original/restored JIT instances.
+
+The three remaining affected targets also passed after the merge in the
+consolidated worktree: `native_hook_errors` (one test), `native_hooks` (one test),
+and `native_startup` (one parent test covering all three fresh-process entry
+routes, plus its intentionally ignored child helper). Thus every failure from
+the complete pre-fix run has a passing focused rerun after the repair. The
+unaffected targets were not redundantly rerun; this combined evidence is not
+reported as a new single full-suite execution.
+
+Both Python `cargo check --locked -j 4` commands passed again after the repair,
+using the actual git-pinned Symbolica integration. Their metadata again resolves
+exactly one Symbolica, Numerica and Graphica, and now one SymJIT 2.27.3. The
+follow-up Python lockfile changes update SymJIT from 2.26.0 to 2.27.3 and add its
+`corosensei`/`scopeguard` dependencies.
 
 The existing formatting-only wrap in `src/epsilon.rs` changes no expression or
 algorithm. It is included so repository-wide formatting checks are reproducible.
@@ -100,5 +134,9 @@ The validation host retains command logs and per-target return codes under
 `python-check.log`, `host-check.log`, `results.json`, and individual test logs.
 The focused targets have separate `priority-results.json` and `priority-*.log`
 records.
+The JIT follow-up uses `jit-followup-results.json`, `jit-followup-*.log`,
+`followup-dependency-resolution.json`, and both `*-followup-check.log` files.
+The repair's initial focused logs are `/tmp/ninjars-jit-arity-evaluators.log`
+and `/tmp/ninjars-jit-arity-additional.log`.
 The build log is `/tmp/ninjars-oneloop-main-build.log`. These temporary host
 paths are audit evidence, not prerequisites for the commands above.
