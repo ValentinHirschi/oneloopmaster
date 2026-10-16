@@ -607,9 +607,39 @@ Generated child modules use the parent imports
 Construct `Context::new(generated_constants::CONSTANTS, bits)` once, then call
 each child's `evaluate`. Constants are parsed directly at working precision;
 inputs are neither converted nor padded. The caller validates input counts and
-precision. This API emits scalar arithmetic: wrapping it in a loop over points
-does not provide an instruction-major batched backend. Shared helper outputs
-must be scalar, and unsupported external functions return an export error.
+precision. `emit` emits scalar arithmetic; wrapping that entry in a row loop remains a
+scalar control. Shared helper outputs must be scalar, and unsupported external
+functions return an export error.
+
+`RustEmitter::emit_batch` emits the scalar entry above and an additional
+instruction-major `evaluate_batch(input, output, rows, ctx, workspace)` entry.
+Re-export `BatchWorkspace` and `batch` from the same runtime in its parent module,
+and construct `BatchWorkspace::new(prototype)` once. Public buffers are row-major;
+retained scratch columns are slot-major. Each instruction runs across all rows,
+including inside shared helpers. Storage follows Symbolica's exported parameter,
+temporary and output slot counts, rather than the number of emitted statements.
+Empty batches do no arithmetic; single-row calls use the scalar entry without
+scratch packing or allocation. Dimension/size errors leave output unchanged.
+
+This first batch emitter **rejects all control flow recursively**, including
+`if`, joins and labels inside shared bodies. It does not silently fall back to
+scalar evaluation for larger batches. Native scalar master evaluators retain
+their existing row-loop behavior; this extension does not make branched masters
+instruction-major. Lazy active-lane branch support requires a separate change.
+
+Scratch initialization uses the explicit prototype, while inputs and constants
+retain their own precision (including different Float precision per component).
+`Context` still owns exact cached constants. A workspace can be reused across
+modules, contexts and batch sizes. Symbolica's `Dualizer` supplies flattened
+higher/mixed Taylor components in its original ordering; no Dual components are
+dropped and no new differentiation rules are implemented. The runtime uses
+existing native primitives, so Float operations may allocate even when the
+outer scratch storage is warm. No SIMD or speedup guarantee is implied.
+
+Run `cargo test --features rust-codegen --test rust_batch_codegen -- --nocapture`
+for compiled f64/DoubleFloat/Float and flattened-Dual comparisons, an explicit
+instruction-major primitive trace, warmed f64 allocation checks, and generated
+source-size/optimized-compilation measurements.
 
 SymJIT has a compatible minimum requirement of `2.26.0`; the consuming
 application's `Cargo.lock` selects the concrete version. The six previously

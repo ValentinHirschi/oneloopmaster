@@ -10,9 +10,12 @@
 //! generated constant table. Build a `Context` once from that table, then call
 //! each child module's `evaluate` with its declared number of input components.
 //! Input length/precision validation belongs to the caller; emitted arithmetic
-//! does not convert or increase input precision. This is a scalar emitter, not
-//! an instruction-major batch backend. Vectorized Dual graphs can be emitted
-//! as scalar components after applying Symbolica's `Dualizer`.
+//! does not convert or increase input precision. [`RustEmitter::emit_batch`]
+//! additionally emits instruction-major kernels for branch-free graphs and
+//! shared helpers. Vectorized Dual graphs use flattened scalar components after
+//! applying Symbolica's `Dualizer`; component order is left unchanged.
+
+mod batch;
 
 use std::{
     collections::{BTreeMap, BTreeSet, HashMap},
@@ -29,11 +32,14 @@ use symbolica::{
 
 /// Existing numerical runtime for emitted modules, with exact cached constants.
 pub mod runtime {
+    pub use crate::native::batch::{self, BatchWorkspace};
     pub use crate::native::{ConstantContext as Context, ConstantSpec, primitives};
     pub use primitives::{C, NativeFloat};
 }
 
-/// One generated entry point and its compilation statistics.
+/// Generated Rust source and statistics for its scalar entry point.
+/// `emit_batch` adds batch code to `source`; these counts still describe the
+/// included scalar graph and its canonical helpers, rather than counting both.
 #[derive(Clone, Debug)]
 pub struct GeneratedModule {
     pub source: String,
@@ -69,6 +75,43 @@ impl RustEmitter {
     ) -> Result<GeneratedModule, String> {
         let graph = export_checked(evaluator)?;
         self.emit_graph(&graph, options)
+    }
+
+    /// Emit scalar and instruction-major batch entry points together.
+    ///
+    /// Every reachable shared body must be branch-free. Control-flow instructions
+    /// are rejected recursively, including joins and unused exported bodies.
+    /// The generated `evaluate_batch(input, output, rows, ctx, workspace)` accepts
+    /// row-major buffers, validates dimensions before writing, and uses the scalar
+    /// entry point when `rows == 1`. Larger batches run each instruction over all
+    /// lanes before continuing. Raw inputs retain their precision and uncertainty.
+    /// Shared bodies currently require one output, as in the scalar emitter.
+    pub fn emit_batch(
+        &mut self,
+        evaluator: ExpressionEvaluator<Complex<Rational>>,
+        options: EmitOptions,
+    ) -> Result<GeneratedModule, String> {
+        let graph = export_checked(evaluator)?;
+        self.emit_batch_graph(&graph, options)
+    }
+
+    fn emit_batch_graph(
+        &mut self,
+        graph: &Graph,
+        options: EmitOptions,
+    ) -> Result<GeneratedModule, String> {
+        // Include both emissions in one transaction. Neither rejection nor a
+        // failed helper export can alter previously assigned constant indices.
+        let mut staged = Self {
+            constants: self.constants.clone(),
+        };
+        batch::check_control_flow(graph)?;
+        let mut module = staged.emit_graph(graph, options)?;
+        module
+            .source
+            .push_str(&batch::emit(graph, &mut staged.constants)?);
+        self.constants = staged.constants;
+        Ok(module)
     }
 
     fn emit_graph(
@@ -113,6 +156,7 @@ impl RustEmitter {
 struct Graph {
     input_count: usize,
     output_count: usize,
+    temporary_count: usize,
     instructions: Vec<Instruction>,
     constants: Vec<Complex<Rational>>,
     constant_functions: Vec<ConstantFunction>,
@@ -137,6 +181,7 @@ impl From<ExportedInstructions<Complex<Rational>>> for Graph {
         Self {
             input_count: graph.input_count,
             output_count: graph.output_count,
+            temporary_count: graph.temporary_count,
             instructions: graph.instructions,
             constants: graph.constants,
             constant_functions: graph
@@ -954,20 +999,7 @@ impl Emitter<'_, '_> {
                             }
                         )
                     } else {
-                        let name = if *symbol == Symbol::LOG {
-                            "log"
-                        } else if *symbol == Symbol::SQRT {
-                            "sqrt"
-                        } else if *symbol == Symbol::ABS {
-                            "abs"
-                        } else if *symbol == Symbol::CONJ {
-                            "conj"
-                        } else if *symbol == symbolica::transcendental::polylog() && tags == &["2"]
-                        {
-                            "polylog2"
-                        } else {
-                            return Err(format!("unsupported native function {symbol} {tags:?}"));
-                        };
+                        let name = primitive_name(*symbol, tags)?;
                         if values.len() != 1 {
                             return Err(format!("unexpected arity for {name}"));
                         }
@@ -994,6 +1026,23 @@ impl Emitter<'_, '_> {
             index += 1;
         }
         Ok(())
+    }
+}
+
+// Keep primitive support and tagged-function matching identical in both emitters.
+fn primitive_name(symbol: Symbol, tags: &[String]) -> Result<&'static str, String> {
+    if symbol == Symbol::LOG {
+        Ok("log")
+    } else if symbol == Symbol::SQRT {
+        Ok("sqrt")
+    } else if symbol == Symbol::ABS {
+        Ok("abs")
+    } else if symbol == Symbol::CONJ {
+        Ok("conj")
+    } else if symbol == symbolica::transcendental::polylog() && tags == ["2"] {
+        Ok("polylog2")
+    } else {
+        Err(format!("unsupported native function {symbol} {tags:?}"))
     }
 }
 
@@ -1053,6 +1102,7 @@ mod tests {
         let mut graph = Graph {
             input_count: 0,
             output_count: 1,
+            temporary_count: 100,
             constants: vec![Complex::new(Rational::from(7), Rational::from(0))],
             constant_functions: Vec::new(),
             sub_evaluators: Vec::new(),
@@ -1071,7 +1121,7 @@ mod tests {
         assert_eq!(emitter.constants().len(), 2);
     }
 
-    const PURE_NUMERIC_PROBE: &str = r#"
+    pub(super) const PURE_NUMERIC_PROBE: &str = r#"
 #![allow(unused_variables, dead_code)]
 trait NativeFloat: Copy + PartialEq + From<f64> + std::ops::Add<Output=Self> + std::ops::Mul<Output=Self> {
     fn integer_power(self, exponent: i32) -> Self;
@@ -1368,6 +1418,7 @@ fn powi<T: NativeFloat>(a: &T, exponent: i64, _: bool) -> T {
             let graph = Graph {
                 input_count: 4,
                 output_count: outputs,
+                temporary_count: 100,
                 instructions,
                 constants: Vec::new(),
                 constant_functions: Vec::new(),
@@ -1488,6 +1539,7 @@ fn main() {
         let graph = Graph {
             input_count: 7,
             output_count: 2,
+            temporary_count: 100,
             instructions,
             constants: Vec::new(),
             constant_functions: Vec::new(),
@@ -1544,7 +1596,7 @@ fn main() {
         compile_probe(&source);
     }
 
-    fn compile_probe(source: &str) {
+    pub(super) fn compile_probe(source: &str) {
         let unique = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()
