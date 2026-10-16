@@ -48,6 +48,7 @@ struct BatchGenerator<'a> {
     functions: Vec<String>,
     normalized: HashMap<String, Function>,
     controlled: bool,
+    outlines: Outlines,
 }
 
 pub(super) fn emit(graph: &Graph, constants: &mut Constants) -> Result<String, String> {
@@ -57,6 +58,7 @@ pub(super) fn emit(graph: &Graph, constants: &mut Constants) -> Result<String, S
         functions: Vec::new(),
         normalized: HashMap::new(),
         controlled: has_control_flow(graph),
+        outlines: Outlines::default(),
     };
     let root = generator.function(graph, false)?;
     let mut source = if generator.controlled {
@@ -117,6 +119,9 @@ pub(super) fn emit(graph: &Graph, constants: &mut Constants) -> Result<String, S
     for function in generator.functions {
         source.push_str(&function);
     }
+    for function in generator.outlines.functions {
+        source.push_str(&function);
+    }
     Ok(source)
 }
 
@@ -166,12 +171,22 @@ impl BatchGenerator<'_> {
             .chain((0..constants.len()).map(Slot::Const))
             .collect();
         let mut body = String::new();
+        let mut outlined_body = String::new();
+        let mut chunk_start = 0;
         let loop_header = if self.controlled {
             "for &lane in &active[..active_len]"
         } else {
             "for lane in 0..rows"
         };
         for (pc, instruction) in graph.instructions.iter().enumerate() {
+            // Extract only at exported instruction boundaries. Active/resume
+            // state belongs to the caller, so even a branch crossing a chunk
+            // boundary retains its original absolute label destinations.
+            if pc - chunk_start >= 128 || body.len() >= 32 * 1024 {
+                outlined_body.push_str(&self.outlines.factor_batch(&body, self.controlled));
+                body.clear();
+                chunk_start = pc;
+            }
             let (target, arguments) = uses(instruction);
             for argument in arguments {
                 if !defined.contains(&argument) {
@@ -332,6 +347,12 @@ impl BatchGenerator<'_> {
             }
             defined.insert(target);
         }
+        if !outlined_body.is_empty() {
+            if !body.is_empty() {
+                outlined_body.push_str(&self.outlines.factor_batch(&body, self.controlled));
+            }
+            body = outlined_body;
+        }
         for output in 0..graph.output_count {
             if !defined.contains(&Slot::Out(output)) {
                 return Err(format!("undefined batch output {output}"));
@@ -364,6 +385,39 @@ impl BatchGenerator<'_> {
         }
         self.normalized.insert(key, function.clone());
         Ok(function)
+    }
+}
+
+impl Outlines {
+    /// Extract generated batch source without inventing a second instruction
+    /// representation. Unlike scalar SSA arms, all numerical captures already
+    /// reside in the caller's arena; exact source identity is sufficient.
+    fn factor_batch(&mut self, body: &str, controlled: bool) -> String {
+        let key = format!("batch:{controlled}:{body}");
+        let name = if let Some(name) = self.normalized.get(&key) {
+            name.clone()
+        } else {
+            let name = format!("batch_block_{}", self.functions.len());
+            let function = if controlled {
+                format!(
+                    "#[inline(never)]\nfn {name}<T: NativeFloat>(v: &mut [C<T>], stride: usize, lanes: &[usize], active: &mut [usize], count: &mut usize, resume: &mut [usize], children: &mut [usize], base: usize, ctx: &Context<T>) {{\n    let mut active_len = *count;\n{body}    *count = active_len;\n}}\n\n"
+                )
+            } else {
+                format!(
+                    "#[inline(never)]\nfn {name}<T: NativeFloat>(v: &mut [C<T>], stride: usize, rows: usize, base: usize, ctx: &Context<T>) {{\n{body}}}\n\n"
+                )
+            };
+            self.functions.push(function);
+            self.normalized.insert(key, name.clone());
+            name
+        };
+        if controlled {
+            format!(
+                "    {name}(v, stride, lanes, active, &mut active_len, resume, children, base, ctx);\n"
+            )
+        } else {
+            format!("    {name}(v, stride, rows, base, ctx);\n")
+        }
     }
 }
 
@@ -450,6 +504,58 @@ mod tests {
     }
 
     #[test]
+    fn outlined_instruction_boundaries_preserve_branch_state_and_aliased_joins() {
+        let mut instructions = vec![
+            Instruction::IfElse(Slot::Param(0), 1),
+            Instruction::Pow(Slot::Temp(0), Slot::Param(1), -1, false),
+        ];
+        instructions.extend(
+            (0..130)
+                .map(|_| Instruction::Add(Slot::Temp(0), vec![Slot::Temp(0), Slot::Param(3)], 0)),
+        );
+        instructions.extend([
+            Instruction::Goto(2),
+            Instruction::Label(1),
+            Instruction::Pow(Slot::Temp(1), Slot::Param(2), -1, false),
+        ]);
+        instructions.extend(
+            (0..130)
+                .map(|_| Instruction::Add(Slot::Temp(1), vec![Slot::Temp(1), Slot::Param(3)], 0)),
+        );
+        instructions.extend([
+            Instruction::Label(2),
+            Instruction::Join(Slot::Temp(0), Slot::Param(0), Slot::Temp(0), Slot::Temp(1)),
+            Instruction::Join(Slot::Out(0), Slot::Param(0), Slot::Temp(0), Slot::Temp(0)),
+            Instruction::Join(Slot::Out(1), Slot::Param(0), Slot::Param(3), Slot::Param(3)),
+        ]);
+        let graph = Graph {
+            input_count: 4,
+            output_count: 2,
+            temporary_count: 2,
+            instructions,
+            constants: vec![],
+            constant_functions: vec![],
+            sub_evaluators: vec![],
+        };
+        let module = RustEmitter::default()
+            .emit_batch_graph(&graph, EmitOptions::default())
+            .unwrap();
+        assert_eq!(module.source.matches("fn batch_block_").count(), 3);
+        let source = format!(
+            "{}\n{}\nmod primitives {{ pub(super) use super::{{add,mul,powi,truth}}; }}\nmod generated {{\n{}\n}}\nfn main() {{ let ctx = Context(std::marker::PhantomData); let mut workspace = BatchWorkspace {{ values: vec![], lanes: vec![], control: vec![] }}; let mut output = [99.0;4]; generated::evaluate_batch(&[1.0,2.0,0.0,1.0,0.0,0.0,4.0,2.0],&mut output,2,&ctx,&mut workspace).unwrap(); assert_eq!(output,[130.5,1.0,260.25,2.0]); generated::evaluate_batch(&[0.0,0.0,4.0,2.0,1.0,2.0,0.0,1.0],&mut output,2,&ctx,&mut workspace).unwrap(); assert_eq!(output,[260.25,2.0,130.5,1.0]); assert_eq!(POW_CALLS.load(std::sync::atomic::Ordering::Relaxed),4); }}",
+            super::super::tests::PURE_NUMERIC_PROBE,
+            r#"struct BatchWorkspace<T> { values:Vec<T>, lanes:Vec<usize>, control:Vec<usize> }
+impl<T:NativeFloat> BatchWorkspace<T> { fn prepare_controlled(&mut self,rows:usize,slots:usize,frames:usize)->Result<(&mut[T],usize,&[usize],&mut[usize]),String> { let stride=11; assert!(rows<=stride); self.values.resize(stride*slots,T::from(0.0)); self.lanes=(0..rows).collect();self.control.resize(2*frames*stride,0); Ok((&mut self.values,stride,&self.lanes,&mut self.control)) } }
+mod batch {
+ pub fn copy_value<T:Copy>(target:&mut T,source:&T) { *target=*source; }
+ pub fn copy_active_column<T:Copy>(v:&mut[T],stride:usize,lanes:&[usize],target:usize,source:usize) { for &lane in lanes { v[target*stride+lane]=v[source*stride+lane]; } }
+}"#,
+            module.source
+        );
+        super::super::tests::compile_probe(&source);
+    }
+
+    #[test]
     fn reused_slots_and_aliases_keep_operand_order_and_bound_storage() {
         let graph = Graph {
             input_count: 3,
@@ -474,6 +580,7 @@ mod tests {
             .emit_batch_graph(&graph, EmitOptions::default())
             .unwrap();
         assert!(module.source.contains("workspace.prepare(rows, 6)"));
+        assert!(!module.source.contains("fn batch_block_"));
         let source = format!(
             "{}\n{}\nmod primitives {{ pub(super) use super::{{add,mul,powi,truth}}; }}\nmod generated {{\n{}\n}}\nfn main() {{ let ctx = Context(std::marker::PhantomData); let mut workspace = BatchWorkspace {{ values: vec![] }}; let input = [1e16,-1e16,1.0,2.0,3.0,4.0]; let mut output = [99.0;4]; generated::evaluate_batch(&input,&mut output,2,&ctx,&mut workspace).unwrap(); assert_eq!(output,[1.0,1.0,9.0,4.0]); assert_eq!(generated::evaluate(&input[..3],&ctx),[1.0,1.0]); }}",
             super::super::tests::PURE_NUMERIC_PROBE,
