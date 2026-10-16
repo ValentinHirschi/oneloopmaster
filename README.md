@@ -157,6 +157,10 @@ desired precision and its instructions can be evaluated in batches.
 This currently covers the mapped sheet helper `log(x)/(1-x)` at `x=1` on a
 sheet whose continued logarithm vanishes there. Its local polynomial is generated
 by Symbolica's `Atom::series`; a nonzero logarithm at one remains a pole.
+Equal nonzero sheet quotient arguments retain independent derivative components.
+The derivative constructor leaves an unresolved `0/0` quotient nonfinite instead
+of applying the historical scalar convention of assigning it one.
+
 Shared-body Dual evaluation requires Symbolica's recursive vectorizer
 ([PR82](https://github.com/symbolica-dev/symbolica/pull/82)) and its optimizer
 scope correction for branches with multiple results
