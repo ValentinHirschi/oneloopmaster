@@ -2,6 +2,8 @@
 //!
 //! The generated functions contain ordinary arithmetic and structured Rust
 //! branches. They neither build nor execute a Symbolica/SymJIT evaluator.
+#[cfg(feature = "rust-codegen")]
+pub mod batch;
 #[cfg_attr(not(feature = "generated-evaluators"), allow(dead_code))]
 pub mod primitives;
 #[cfg(feature = "generated-evaluators")]
