@@ -26,8 +26,8 @@ bincode = "2.0"
 symjit = "2.27.3"
 
 [patch.crates-io]
-# Temporary, tested integration of upstream Symbolica PRs #82, #83, #84 and #87.
+# Temporary, tested integration of upstream Symbolica PRs #82, #83, #84, #87 and #88.
 # Keep all three packages on one source; embedding hosts supply their own patch.
-symbolica = { git = "https://github.com/ValentinHirschi/symbolica", rev = "fd7bced5307e94e994d5deba63c60b8380aa7d02" }
-numerica = { git = "https://github.com/ValentinHirschi/symbolica", rev = "fd7bced5307e94e994d5deba63c60b8380aa7d02" }
-graphica = { git = "https://github.com/ValentinHirschi/symbolica", rev = "fd7bced5307e94e994d5deba63c60b8380aa7d02" }
+symbolica = { git = "https://github.com/ValentinHirschi/symbolica", rev = "2c06f245835d57535418b5d78f711fe191db49cc" }
+numerica = { git = "https://github.com/ValentinHirschi/symbolica", rev = "2c06f245835d57535418b5d78f711fe191db49cc" }
+graphica = { git = "https://github.com/ValentinHirschi/symbolica", rev = "2c06f245835d57535418b5d78f711fe191db49cc" }

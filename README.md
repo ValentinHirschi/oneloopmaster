@@ -51,7 +51,7 @@ of the finite-order evaluators documented below.
 
 The direct Symbolica dependency remains versioned, but the Rust and both Python
 build roots pin Symbolica, Numerica and Graphica to one tested integration through
-`[patch.crates-io]`. The current integration is `fd7bced5` from
+`[patch.crates-io]`. The current integration is `2c06f245` from
 [`ValentinHirschi/symbolica`](https://github.com/ValentinHirschi/symbolica), on
 `codex/oneloopmaster-integration`. Cargo fetches this source automatically; no
 sibling checkout is required for the standalone build.
@@ -59,9 +59,12 @@ sibling checkout is required for the standalone build.
 This integration combines the recursive shared-function Dual support and vector
 branch-scoping repairs with the native polylog-at-zero series needed for the
 coincident dilogarithm neighborhood. It also includes exact Dual constant-pool
-interning and temporary-stack reuse for shared evaluator bodies. The version
+interning, temporary-stack reuse for shared evaluator bodies, and caching of
+completed conditionals within their existing branch scope. Conditional reuse
+does not reorder arithmetic or evaluate inactive branches. The version
 string `3.0.1` alone does not identify these unreleased fixes. The constructor/Dual and Rust-emitter validation
-must use this integration or a tested successor containing those changes. See the [shared-helper integration validation](patches/shared-helper-stack-pin-validation.md) for the combined checks.
+must use this integration or a tested successor containing those changes. See the [combined conditional-cache/C0 validation](patches/conditional-cache-c0-pin-validation.md) for the current checks and the
+[shared-helper integration validation](patches/shared-helper-stack-pin-validation.md) for the preceding checkpoint.
 
 An embedding workspace controls its own `[patch.crates-io]` table: patches in a
 dependency's manifest do not propagate to the workspace root. Select compatible
