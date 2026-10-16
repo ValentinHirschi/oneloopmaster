@@ -25,7 +25,13 @@ fn s3(a: &Atom, m1: &Atom, m2: &Atom, y: &Atom) -> Atom {
     let correction = eta(&(-&roots[0]), &(-&roots[1]), &(m2 / a))
         - eta(&(y - &roots[0]), &(y - &roots[1]), &z)
         - Atom::num(2) * i() * Symbol::PI.to_atom() * negative(a) * negative(&im(&z));
-    term(&roots[0]) + term(&roots[1]) + correction * Q::upper((y - 1) / y).log()
+    // The sheet correction is locally constant. Its inactive logarithm may
+    // have a removable projective singularity (for example y=0 on the
+    // Euclidean sheet), so preserve the same lazy branch used by the other
+    // sheet primitives rather than evaluating zero times a nonfinite value.
+    term(&roots[0])
+        + term(&roots[1])
+        + if_nonzero(&correction, &correction * Q::upper((y - 1) / y).log())
 }
 
 fn s3_call(a: &Atom, m1: &Atom, m2: &Atom, t1: Atom, t2: Atom, lambda_root: &Atom) -> Atom {
@@ -161,6 +167,38 @@ mod tests {
             ];
             let mut out = [Complex::new(0., 0.); 3];
             e.evaluate(&input, &mut out);
+            let corrections = parts
+                .iter()
+                .map(|call| {
+                    let symbolica::atom::AtomView::Fun(call) = call.as_view() else {
+                        panic!("s3 call")
+                    };
+                    let args = call.iter().map(|a| a.to_owned()).collect::<Vec<_>>();
+                    let exact = s3(&args[0], &args[1], &args[2], &args[3]);
+                    let symbolica::atom::AtomView::Add(sum) = exact.as_view() else {
+                        panic!("s3 sum")
+                    };
+                    sum.iter()
+                        .find_map(|term| {
+                            if let symbolica::atom::AtomView::Fun(f) = term
+                                && f.get_symbol() == Symbol::IF
+                            {
+                                return Some(f.iter().next().unwrap().to_owned());
+                            }
+                            None
+                        })
+                        .unwrap()
+                })
+                .collect::<Vec<_>>();
+            let mut correction_evaluator = compile(&corrections);
+            let mut correction_values = [Complex::new(0., 0.); 3];
+            correction_evaluator.evaluate(&input, &mut correction_values);
+            // Keep this fixture on the active correction branch; the expected
+            // continued values below therefore also guard against omitting it.
+            for correction in correction_values {
+                assert_eq!(correction.re, 0.);
+                assert!((correction.im + 2. * std::f64::consts::PI).abs() < 1e-14);
+            }
             let expected = [
                 (0.2132537392379703, 0.6879516129916667),
                 (-0.07964316856308251, 0.3777241269650248),

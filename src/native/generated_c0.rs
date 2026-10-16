@@ -547,50 +547,55 @@ fn helper_5<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<T
     let v235 = mul(&v234, &v232);
     let v236 = add(&v194, &v220);
     let v237 = add(&v236, &v235);
-    let v238 = powi(a3, -1, false);
-    let v239 = add(a3, a4);
-    let v240 = mul(&v238, &v239);
-    let v241 = conj(&v240);
-    let v242 = add(&v240, &v241);
-    let v243 = mul(a8, &v242);
-    let v244 = abs(&v243);
-    let v245 = mul(a4, &v244);
-    let v246 = add(&v243, &v245);
-    let v247 = if truth(&v246) {
-        (*(a4)).clone()
-    } else {
-        (*(a7)).clone()
-    };
-    let v248 = mul(a4, &v247);
-    let v249 = add(a7, &v248);
-    let v250 = mul(a4, &v249);
-    let v251 = add(a7, &v250);
-    let v252 = mul(&v240, &v251);
-    let v253 = mul(a4, &v241);
-    let v254 = add(&v240, &v253);
-    let v255 = mul(a9, &v254);
-    let v260 = if truth(&v255) {
-        let v256 = abs(&v255);
-        let v257 = mul(a4, &v256);
-        let v258 = add(&v255, &v257);
-        let v259 = if truth(&v258) {
+    let v265 = if truth(&v237) {
+        let v238 = powi(a3, -1, false);
+        let v239 = add(a3, a4);
+        let v240 = mul(&v238, &v239);
+        let v241 = conj(&v240);
+        let v242 = add(&v240, &v241);
+        let v243 = mul(a8, &v242);
+        let v244 = abs(&v243);
+        let v245 = mul(a4, &v244);
+        let v246 = add(&v243, &v245);
+        let v247 = if truth(&v246) {
             (*(a4)).clone()
         } else {
             (*(a7)).clone()
         };
-        (*(&v259)).clone()
+        let v248 = mul(a4, &v247);
+        let v249 = add(a7, &v248);
+        let v250 = mul(a4, &v249);
+        let v251 = add(a7, &v250);
+        let v252 = mul(&v240, &v251);
+        let v253 = mul(a4, &v241);
+        let v254 = add(&v240, &v253);
+        let v255 = mul(a9, &v254);
+        let v260 = if truth(&v255) {
+            let v256 = abs(&v255);
+            let v257 = mul(a4, &v256);
+            let v258 = add(&v255, &v257);
+            let v259 = if truth(&v258) {
+                (*(a4)).clone()
+            } else {
+                (*(a7)).clone()
+            };
+            (*(&v259)).clone()
+        } else {
+            (*(a7)).clone()
+        };
+        let v261 = mul(a8, &v249);
+        let v262 = mul(&v261, &v260);
+        let v263 = helper_4(&v252, &v262, &v261, a4, a9, a16, a7, a12, a13, a10, ctx);
+        let v264 = mul(&v237, &v263);
+        (*(&v264)).clone()
     } else {
-        (*(a7)).clone()
+        (*(a16)).clone()
     };
-    let v261 = mul(a8, &v249);
-    let v262 = mul(&v261, &v260);
-    let v263 = helper_4(&v252, &v262, &v261, a4, a9, a16, a7, a12, a13, a10, ctx);
-    let v264 = mul(&v237, &v263);
-    let v265 = add(&v64, &v118);
-    let v266 = add(&v265, &v144);
-    let v267 = add(&v266, &v170);
-    let v268 = add(&v267, &v264);
-    (*(&v268)).clone()
+    let v266 = add(&v64, &v118);
+    let v267 = add(&v266, &v144);
+    let v268 = add(&v267, &v170);
+    let v269 = add(&v268, &v265);
+    (*(&v269)).clone()
 }
 
 fn helper_6<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<T>, a5: &C<T>, a6: &C<T>, a7: &C<T>, a8: &C<T>, a9: &C<T>, a10: &C<T>, a11: &C<T>, a12: &C<T>, a13: &C<T>, a14: &C<T>, a15: &C<T>, a16: &C<T>, a17: &C<T>, a18: &C<T>, a19: &C<T>, ctx: &Context<T>) -> C<T> {
