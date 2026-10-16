@@ -302,9 +302,8 @@ dependencies = [
 
 [[package]]
 name = "graphica"
-version = "3.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "afa7211a7cfdba21893f634868e19459e5d1882e5957f98d7c084875a6e70ab6"
+version = "3.0.1"
+source = "git+https://github.com/ValentinHirschi/symbolica?rev=8e23925ed7b5cbb91607c8633dda114cb43be8ce#8e23925ed7b5cbb91607c8633dda114cb43be8ce"
 dependencies = [
  "ahash",
  "dyn-clone",
@@ -556,8 +555,7 @@ dependencies = [
 [[package]]
 name = "numerica"
 version = "3.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "836accdb415b7667573bd12676e0b2eb4440e3f60b110038d96a9086f5651c15"
+source = "git+https://github.com/ValentinHirschi/symbolica?rev=8e23925ed7b5cbb91607c8633dda114cb43be8ce#8e23925ed7b5cbb91607c8633dda114cb43be8ce"
 dependencies = [
  "ahash",
  "bincode",
@@ -1143,8 +1141,7 @@ checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
 [[package]]
 name = "symbolica"
 version = "3.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0965398bbe5063c00b3a0d078d7d3dc57b61819b97e960b73e9a7e9602662795"
+source = "git+https://github.com/ValentinHirschi/symbolica?rev=8e23925ed7b5cbb91607c8633dda114cb43be8ce#8e23925ed7b5cbb91607c8633dda114cb43be8ce"
 dependencies = [
  "ahash",
  "append-only-vec",

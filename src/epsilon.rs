@@ -70,7 +70,8 @@ fn one_massless(p: &Atom, mass: &Atom, scale: &Atom) -> Atom {
     let l0: Atom = physical_log(&(&shifted / scale));
     let l: Atom = log_with_sign(&(1 - Atom::num(1) / &root), p);
     let (j, k) = log_moments(&root, &l);
-    let mixed: Atom = 2 + (&root - 1) * &l - &root * dilog_with_sign(&(Atom::num(1) / &root), &(-p));
+    let mixed: Atom =
+        2 + (&root - 1) * &l - &root * dilog_with_sign(&(Atom::num(1) / &root), &(-p));
     let ordinary: Atom = &l0 * &l0 + 2 * &l0 * (j - 1) + k + 2 + 2 * mixed;
     if_nonzero_else(&shifted, ordinary, on_shell)
 }

@@ -20,3 +20,10 @@ community = ["symbolica/python_export"]
 oneloop = { path = "..", default-features = false }
 pyo3 = "0.28"
 symbolica = { version = "3.0.1", default-features = false, features = ["tracing_max_level_info", "integer-gmp", "float-mpfr", "native_code_generation", "bincode"] }
+
+[patch.crates-io]
+# Temporary, tested integration of upstream Symbolica PRs #82, #83 and #84.
+# Keep all three packages on one source; embedding hosts supply their own patch.
+symbolica = { git = "https://github.com/ValentinHirschi/symbolica", rev = "8e23925ed7b5cbb91607c8633dda114cb43be8ce" }
+numerica = { git = "https://github.com/ValentinHirschi/symbolica", rev = "8e23925ed7b5cbb91607c8633dda114cb43be8ce" }
+graphica = { git = "https://github.com/ValentinHirschi/symbolica", rev = "8e23925ed7b5cbb91607c8633dda114cb43be8ce" }
