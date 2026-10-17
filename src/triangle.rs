@@ -264,6 +264,43 @@ fn r_function_inverse_gap_body(
     )
 }
 
+/// `s_j/s_i - r` for the root `r` of [r_function_of]: exactly `-δ` (zero at
+/// `p = 0`) when `r = s_j/s_i = E`, see [r_function_inverse_gap].
+pub(crate) fn r_function_ratio_gap(
+    momentum: &Atom,
+    mass_i: &Atom,
+    mass_j: &Atom,
+    sqrt_i: &Atom,
+    sqrt_j: &Atom,
+    root: &Atom,
+) -> Atom {
+    helper_call(
+        "rfun_ratio_gap",
+        &[momentum, mass_i, mass_j, sqrt_i, sqrt_j, root],
+    )
+}
+
+fn r_function_ratio_gap_body(
+    momentum: &Atom,
+    mass_i: &Atom,
+    mass_j: &Atom,
+    sqrt_i: &Atom,
+    sqrt_j: &Atom,
+    root: &Atom,
+) -> Atom {
+    let regular = sqrt_j / sqrt_i - root;
+    let [nearer_ratio, _, delta] = zero_momentum_root(momentum, mass_i, mass_j, sqrt_i, sqrt_j);
+    if_nonzero_else(
+        momentum,
+        regular.clone(),
+        if_nonzero_else(
+            &(mass_i - mass_j),
+            if_nonzero_else(&nearer_ratio, -delta, regular),
+            Atom::num(0),
+        ),
+    )
+}
+
 /// `[selects s_j/s_i, E, δ]` for the r-function root near `p = 0` with
 /// unequal masses `m_i != m_j`.
 ///
@@ -562,7 +599,10 @@ pub(crate) fn triangle_finite_two_masses(
     let (r24, d24) = r_function_of(p23, mass_2, mass_4, &sqrt_2, &sqrt_4);
     let a = &r34 / &r24 - &r23;
     let b = -&d24 / &sqrt_3 + &r34 / &sqrt_2 - &r23 / &sqrt_4;
-    let c = (&sqrt_4 / &sqrt_2 - &r24) / (&sqrt_3 * &sqrt_4);
+    // c vanishes identically at p23 = 0 when r24 = s4/s2; keep that zero
+    // exact (a rounded residue would make the second root noise, and the
+    // root term divides by it).
+    let c = r_function_ratio_gap(p23, mass_2, mass_4, &sqrt_2, &sqrt_4, &r24) / (&sqrt_3 * &sqrt_4);
     // Algebraically b² - 4ac = lambda/(m2 m4 |m2|). Test that polynomial for
     // an exact zero, keeping Gram-degenerate roots exactly coincident. Away
     // from it the rounded b² - 4ac splits nearly coincident roots by about
@@ -967,6 +1007,11 @@ pub(crate) fn register_helpers(map: &mut FunctionMap) {
             "rfun_inverse_gap",
             6,
             r_function_inverse_gap_body(&x[0], &x[1], &x[2], &x[3], &x[4], &x[5]),
+        ),
+        (
+            "rfun_ratio_gap",
+            6,
+            r_function_ratio_gap_body(&x[0], &x[1], &x[2], &x[3], &x[4], &x[5]),
         ),
         ("ordered_root_1", 4, root_1),
         ("ordered_root_2", 4, root_2),

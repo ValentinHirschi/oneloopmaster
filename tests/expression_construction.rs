@@ -9,7 +9,7 @@
 //! about 60 MB (largest body 19 MB), built in well under a second.
 use oneloop::OneLoopExpressions;
 use std::time::Instant;
-use symbolica::atom::{Atom, AtomCore};
+use symbolica::atom::Atom;
 
 #[test]
 fn definitions_and_evaluators_stay_compact() {
