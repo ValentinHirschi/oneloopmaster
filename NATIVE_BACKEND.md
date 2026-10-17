@@ -53,8 +53,11 @@ against 256 bits); axes, non-finite values and extreme scales keep the scaled
 algorithms. They avoid converting arbitrary-precision predicates through
 f64. Dilogarithms call the same state-free native Symbolica numerical kernels:
 binary64 calls `symbolica::transcendental::dilog_complex_f64` directly (a
-Bernoulli-series kernel with Symbolica's lips and signed zeros, about 2.5 ulp,
-Symbolica PR89), without the registered-callback lookup or MPFR. DoubleFloat's
+Bernoulli-series kernel with Symbolica's lips and signed zeros, Symbolica PR89),
+without the registered-callback lookup or MPFR. Its normwise relative error is at
+most 1.2e-15 (about 10 units of 2^-53, reached next to Re z = 1/2 where the
+reflection cancels; 99.86% of points within 4 units) on a 200,745-point review
+grid against mpmath, where the previous MPFR route was correctly rounded. DoubleFloat's
 dilogarithm uses a precision-preserving MPFR conversion of both
 compensated components, while ordinary generated arithmetic remains DoubleFloat.
 This is not a runtime scalar-master evaluator callback.
@@ -69,7 +72,12 @@ like `(m²/p²)^rank` at small momenta, while OneLOop's root-pair representation
 with the logarithmic `bnlog` series stays accurate there. It keeps OneLOop's
 mass ordering and reconstruction, replaces its `10*EPSN` degeneracy tolerances by
 exact zero tests and its `IEPS` regulator by explicit lips, and shares
-`log(1-1/x)` between ranks. Validation and timings are in
+`log(1-1/x)` between ranks. A massless propagator's unit root `x = 1` is formed
+exactly (`(p²-m²)/p²` is divided, not scaled by `1/p²`). Besides OneLOop's
+values and Ninja's B111 formulas, `tests/native_tensor.rs` checks all four
+bubble coefficients against direct Feynman-parameter integrals (595 rows,
+`tests/generate_tensor_feynman_fixtures.py`, mpmath): 320-bit results agree
+to 3e-27. Validation and timings are in
 [the 2026-10-17 report](performance/2026-10-17-claude/README.md).
 
 ## Verification and performance gates
