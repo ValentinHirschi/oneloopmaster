@@ -301,9 +301,14 @@ impl<T: NativeFloat> TensorKernel<T> {
                 }
             } else {
                 // x1 = m1/(m1-m0); OneLOop's -i*EPSN^2*|m1| in the numerator
-                // puts real roots on the lip opposite to Re(m1-m0).
+                // puts real roots on the lip opposite to Re(m1-m0). A massless
+                // m0 gives the unit root exactly: m1 * (1/m1) need not be 1.
                 let difference = m1.clone() - m0;
-                let x1 = mul(m1, &inverse(&difference));
+                let x1 = if is_zero(m0) {
+                    self.complex(self.one.clone())
+                } else {
+                    mul(m1, &inverse(&difference))
+                };
                 self.bnlog(&x1, difference.re < self.zero, rank, &mut roots[0]);
                 for (n, value) in finite.iter_mut().enumerate().take(rank + 1) {
                     *value = Self::scale(&(lna.clone() - &roots[0][n]), &self.inverse[n]);
@@ -326,11 +331,11 @@ impl<T: NativeFloat> TensorKernel<T> {
                 let shifted_mass = C::new(m1.re.clone() - momentum, m1.im.clone());
                 let lna = -self.mass_log(&shifted_mass, mu_squared);
                 // x1 = (p²-m1)/p²; the regulator +i*EPSN^2*|m1|/p² selects
-                // the lip with the sign of p².
-                let reciprocal = self.one.clone() / momentum;
+                // the lip with the sign of p². Divide rather than scale by
+                // 1/p², so that a massless m1 gives the unit root exactly.
                 let x1 = C::new(
-                    -shifted_mass.re.clone() * &reciprocal,
-                    -shifted_mass.im.clone() * &reciprocal,
+                    -shifted_mass.re.clone() / momentum,
+                    -shifted_mass.im.clone() / momentum,
                 );
                 self.bnlog(&x1, *momentum > self.zero, rank, &mut roots[0]);
                 for (n, value) in finite.iter_mut().enumerate().take(rank + 1) {
