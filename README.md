@@ -531,7 +531,10 @@ The arithmetic is a hand-written port of OneLOop's `bub0`-`bub111`, `bnlog`,
 dispatch and explicit real-axis lips replace OneLOop's `EPSN` tolerances and
 `IEPS` regulator, and `log(1-1/x)` is shared by all ranks of a root, with
 OneLOop's logarithmic series of `bnlog` for `|log(1-1/x)| < 1/2`. It needs no
-generated code, so it is available without `generated-evaluators`. The
+generated code, so it is available without `generated-evaluators`. For `f64`
+the same algorithm runs as a binary64 specialization (real arithmetic for real
+kinematics, Estrin's scheme for the series), at most 0.6x of OneLOop's
+`olo_b11` time on every bubble call of Ninja's benchmark streams. The
 [tensor tests](tests/native_tensor.rs) compare all coefficients with original
 OneLOop (366 rows from [the tensor oracle](tests/support/tensor_oracle.f90)), with
 320-bit evaluation, with the exact symbolic `an`/`b0`/`b1`/`b11`/`b111`

@@ -25,12 +25,19 @@
 //! `mu²` (the scale is passed squared, unlike OneLOop's `rmu`). Coefficients are
 //! `[finite, 1/epsilon, 1/epsilon²]` in OneLOop's normalization, the same as the
 //! scalar masters of this crate.
+//!
+//! `f64` evaluators use the binary64 specialization of the same algorithm in
+//! [`binary64`] (real arithmetic for real kinematics, one `bnlog` for
+//! complex-conjugate roots, Estrin's scheme for the series); `DoubleFloat`
+//! and `Float` use the generic code below.
 use super::primitives::{C, NativeFloat, inverse, log, mul, sqrt};
 use symbolica::domains::{
     float::{Float, Real, RealLike, SingleFloat},
     integer::Integer,
     rational::Rational,
 };
+
+mod binary64;
 
 /// Highest supported longitudinal bubble rank (`B111`).
 pub(crate) const MAX_BUBBLE_RANK: usize = 3;
@@ -514,6 +521,8 @@ pub struct NativeTensorEvaluator<T: NativeFloat> {
     family: TensorIntegral,
     bits: u32,
     kernel: TensorKernel<T>,
+    /// The binary64 kernels, present exactly for `T = f64`.
+    binary64: Option<binary64::Binary64>,
     arguments: Vec<C<T>>,
 }
 
@@ -540,10 +549,31 @@ impl<T: NativeFloat> NativeTensorEvaluator<T> {
             family,
             bits,
             kernel: TensorKernel::new(bits)?,
+            binary64: Self::binary64_kernel()?,
             arguments: (0..family.arity())
                 .map(|_| C::new(T::zero_at(bits), T::zero_at(bits)))
                 .collect(),
         })
+    }
+
+    fn binary64_kernel() -> Result<Option<binary64::Binary64>, String> {
+        if std::any::TypeId::of::<T>() == std::any::TypeId::of::<f64>() {
+            binary64::Binary64::new().map(Some)
+        } else {
+            Ok(None)
+        }
+    }
+
+    /// Select the binary64 kernels (the `f64` default) or the generic code
+    /// for `f64`; other types always use the generic code. For validation only.
+    #[doc(hidden)]
+    pub fn set_binary64(&mut self, enabled: bool) -> Result<(), String> {
+        self.binary64 = if enabled {
+            Self::binary64_kernel()?
+        } else {
+            None
+        };
+        Ok(())
     }
 
     /// Family represented by this evaluator.
@@ -586,7 +616,13 @@ impl<T: NativeFloat> NativeTensorEvaluator<T> {
         Ok(())
     }
 
+    #[inline]
     fn evaluate_row(&mut self, input: &[C<T>], output: &mut [C<T>]) {
+        if let Some(kernel) = &self.binary64
+            && binary64_row(kernel, self.family, input, output)
+        {
+            return;
+        }
         let input = if T::FIXED_BITS.is_some() {
             input
         } else {
@@ -603,6 +639,7 @@ impl<T: NativeFloat> NativeTensorEvaluator<T> {
         }
     }
 
+    #[inline]
     fn validate_shape(&self, inputs: usize, outputs: usize, rows: usize) -> Result<(), String> {
         let expected_inputs = rows
             .checked_mul(self.family.arity())
@@ -616,5 +653,39 @@ impl<T: NativeFloat> NativeTensorEvaluator<T> {
             ));
         }
         Ok(())
+    }
+}
+
+/// One validated row through the binary64 kernels; `false` (nothing written)
+/// unless `T` is `f64` and the shapes are the family's.
+#[inline]
+fn binary64_row<T: NativeFloat>(
+    kernel: &binary64::Binary64,
+    family: TensorIntegral,
+    input: &[C<T>],
+    output: &mut [C<T>],
+) -> bool {
+    use std::any::Any;
+    fn cast<'a, T: 'static, const N: usize, const M: usize>(
+        input: &'a [C<T>],
+        output: &'a mut [C<T>],
+    ) -> Option<(&'a [C<f64>; N], &'a mut [C<f64>; M])> {
+        let input: &[C<T>; N] = input.try_into().ok()?;
+        let output: &mut [C<T>; M] = output.try_into().ok()?;
+        Some((
+            (input as &dyn Any).downcast_ref()?,
+            (output as &mut dyn Any).downcast_mut()?,
+        ))
+    }
+    match family {
+        TensorIntegral::An => cast::<T, 2, 9>(input, output)
+            .map(|(input, output)| kernel.tadpole(input, output))
+            .is_some(),
+        TensorIntegral::B11 => cast::<T, 4, 9>(input, output)
+            .map(|(input, output)| kernel.bubble::<2>(input, output))
+            .is_some(),
+        TensorIntegral::B111 => cast::<T, 4, 12>(input, output)
+            .map(|(input, output)| kernel.bubble::<3>(input, output))
+            .is_some(),
     }
 }

@@ -99,7 +99,16 @@ with the logarithmic `bnlog` series stays accurate there. It keeps OneLOop's
 mass ordering and reconstruction, replaces its `10*EPSN` degeneracy tolerances by
 exact zero tests and its `IEPS` regulator by explicit lips, and shares
 `log(1-1/x)` between ranks. A massless propagator's unit root `x = 1` is formed
-exactly (`(p²-m²)/p²` is divided, not scaled by `1/p²`). Besides OneLOop's
+exactly (`(p²-m²)/p²` is divided, not scaled by `1/p²`). `f64` evaluators run
+a binary64 specialization of the same algorithm
+([`tensor/binary64.rs`](src/native/tensor/binary64.rs)): real kinematics in
+real arithmetic, one `bnlog` (`2 Re`) for the complex-conjugate roots of real
+masses below threshold, and the `bnlog` series by Estrin's scheme on a fixed
+8, 16 or 24 coefficients instead of Horner's rule; `DoubleFloat` and `Float`
+keep the generic code. `tests/native_tensor_binary64.rs` compares it with the
+generic binary64 code and 320 bits on 8,000 random rows over every sector, with
+the symbolic `b0`-`b111`/`an` expressions at 256 bits, and with OneLOop on every
+bubble/tadpole call of Ninja's recorded streams. Besides OneLOop's
 values and Ninja's B111 formulas, `tests/native_tensor.rs` checks all four
 bubble coefficients against direct Feynman-parameter integrals (595 rows,
 `tests/generate_tensor_feynman_fixtures.py`, mpmath): 320-bit results agree
