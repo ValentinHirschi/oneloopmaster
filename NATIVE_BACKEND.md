@@ -47,7 +47,10 @@ Symbolica `DoubleFloat`, and arbitrary-precision `Float`. The core still has onl
 Symbolica as a direct dependency. Complex masses use `Complex<T>`.
 
 The native primitives preserve exact complex zero tests and principal square-root
-and logarithm lips. They avoid converting arbitrary-precision predicates through
+and logarithm lips. For binary64 off the axes and inside `[2^-500, 2^500]`, complex
+reciprocals use one division and norms `sqrt(x²+y²)` (within a few ulps; tested
+against 256 bits); axes, non-finite values and extreme scales keep the scaled
+algorithms. They avoid converting arbitrary-precision predicates through
 f64. Dilogarithms call the same state-free native Symbolica numerical kernels:
 binary64 calls `symbolica::transcendental::dilog_complex_f64` directly (a
 Bernoulli-series kernel with Symbolica's lips and signed zeros, about 2.5 ulp,

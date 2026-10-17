@@ -25,7 +25,10 @@ fn rows() -> Vec<Row> {
         if line.starts_with('#') || line.trim().is_empty() {
             continue;
         }
-        let values: Vec<f64> = line.split_whitespace().map(|v| v.parse().unwrap()).collect();
+        let values: Vec<f64> = line
+            .split_whitespace()
+            .map(|v| v.parse().unwrap())
+            .collect();
         let family = match values[0] {
             5. => TensorIntegral::An,
             6. => TensorIntegral::B11,
@@ -34,7 +37,10 @@ fn rows() -> Vec<Row> {
         };
         let mu_squared = Complex::new(values[1], 0.);
         let (input, rest) = match family {
-            TensorIntegral::An => (vec![Complex::new(values[2], values[3]), mu_squared], &values[4..]),
+            TensorIntegral::An => (
+                vec![Complex::new(values[2], values[3]), mu_squared],
+                &values[4..],
+            ),
             _ => (
                 vec![
                     Complex::new(values[2], 0.),
@@ -50,7 +56,10 @@ fn rows() -> Vec<Row> {
             name: std::mem::take(&mut name),
             family,
             input,
-            expected: rest.chunks_exact(2).map(|v| Complex::new(v[0], v[1])).collect(),
+            expected: rest
+                .chunks_exact(2)
+                .map(|v| Complex::new(v[0], v[1]))
+                .collect(),
         });
     }
     rows
@@ -138,7 +147,10 @@ fn binary64_matches_original_oneloop() {
             }
         }
     }
-    eprintln!("worst relative difference to Fortran: {:e} at {}", worst.0, worst.1);
+    eprintln!(
+        "worst relative difference to Fortran: {:e} at {}",
+        worst.0, worst.1
+    );
     eprintln!(
         "{} outputs differ from Fortran by more than 1e-12 where this port matches 320 bits: {}",
         attributed.len(),
@@ -169,7 +181,8 @@ fn momentum_sensitivity(row: &Row, reference: &[Complex<Float>], bits: i32) -> V
         input[0].re = input[0].re.clone() * factor;
         let mut output = vec![to_float(Complex::new(0., 0.), 320); row.family.outputs()];
         evaluator.evaluate(&input, &mut output).unwrap();
-        for (value, (shifted, original)) in sensitivity.iter_mut().zip(output.iter().zip(reference)) {
+        for (value, (shifted, original)) in sensitivity.iter_mut().zip(output.iter().zip(reference))
+        {
             *value = value.max(difference(shifted, original));
         }
     }
@@ -289,7 +302,11 @@ fn arbitrary_precision_matches_symbolic_expressions() {
             );
         let mut checked = 0;
         for row in rows().iter().filter(|row| row.family == family) {
-            let input: Vec<_> = row.input.iter().map(|&z| to_float(z, SYMBOLIC_BITS)).collect();
+            let input: Vec<_> = row
+                .input
+                .iter()
+                .map(|&z| to_float(z, SYMBOLIC_BITS))
+                .collect();
             let mut expected =
                 vec![to_float(Complex::new(0., 0.), SYMBOLIC_BITS); family.outputs()];
             evaluator.evaluate(&input, &mut expected);
@@ -312,7 +329,14 @@ fn arbitrary_precision_matches_symbolic_expressions() {
             }
             checked += 1;
         }
-        assert!(checked >= if family == TensorIntegral::An { 18 } else { 100 });
+        assert!(
+            checked
+                >= if family == TensorIntegral::An {
+                    18
+                } else {
+                    100
+                }
+        );
     }
 }
 
@@ -321,7 +345,10 @@ fn arbitrary_precision_matches_symbolic_expressions() {
 #[test]
 fn zero_momentum_imaginary_parts_match_feynman_parameters() {
     let mut checked = 0;
-    for row in rows().iter().filter(|row| row.family == TensorIntegral::B111) {
+    for row in rows()
+        .iter()
+        .filter(|row| row.family == TensorIntegral::B111)
+    {
         let (p, m0, m1) = (row.input[0], row.input[1], row.input[2]);
         if p.re != 0. || m0.im != 0. || m1.im != 0. || (m0.re == 0. && m1.re == 0.) {
             continue;
@@ -384,7 +411,8 @@ fn ninja_b111(row: &Row, bits: u32) -> [Complex<Float>; 3] {
                 (i2q2 - p2.clone() * &b11[i]) * &quarter
             })
             .collect();
-        let rational = -(p2.clone() * &p2) * (p2.clone() - m1.clone() * float(2.) - m2.clone() * float(4.))
+        let rational = -(p2.clone() * &p2)
+            * (p2.clone() - m1.clone() * float(2.) - m2.clone() * float(4.))
             / float(3.)
             + p2.clone() * (m1.clone() * &m1 - m2.clone() * &m2) * float(0.5);
         let c1 = -(p2.clone() * &p2 * &m1) * float(4.);
@@ -440,7 +468,10 @@ fn ninja_b111(row: &Row, bits: u32) -> [Complex<Float>; 3] {
 fn rank_three_bubble_matches_ninja_formulas() {
     const BITS: u32 = 400;
     let mut checked = 0;
-    for row in rows().iter().filter(|row| row.family == TensorIntegral::B111) {
+    for row in rows()
+        .iter()
+        .filter(|row| row.family == TensorIntegral::B111)
+    {
         // Ninja replaces 0 < |p²| <= 1e-8 by its p²=0 form, which has no
         // scaleless limit; compare where it is exact.
         let p = row.input[0].re;
@@ -468,9 +499,16 @@ fn rank_three_bubble_matches_ninja_formulas() {
 #[test]
 fn batches_validate_rows_and_match_single_rows() {
     let rows = rows();
-    for family in [TensorIntegral::An, TensorIntegral::B11, TensorIntegral::B111] {
+    for family in [
+        TensorIntegral::An,
+        TensorIntegral::B11,
+        TensorIntegral::B111,
+    ] {
         let selected: Vec<_> = rows.iter().filter(|row| row.family == family).collect();
-        let input: Vec<_> = selected.iter().flat_map(|row| row.input.iter().copied()).collect();
+        let input: Vec<_> = selected
+            .iter()
+            .flat_map(|row| row.input.iter().copied())
+            .collect();
         let mut evaluator = NativeTensorEvaluator::<f64>::new(family).unwrap();
         let mut output = vec![Complex::new(f64::NAN, f64::NAN); selected.len() * family.outputs()];
         evaluator
@@ -491,10 +529,18 @@ fn batches_validate_rows_and_match_single_rows() {
                 .is_err()
         );
         assert!(untouched.iter().all(|z| *z == Complex::new(7.0, 7.0)));
-        assert!(evaluator.evaluate_batch(&input, &mut output[1..], selected.len()).is_err());
+        assert!(
+            evaluator
+                .evaluate_batch(&input, &mut output[1..], selected.len())
+                .is_err()
+        );
         let mut positive_width = selected[0].input.clone();
         positive_width[family.arity() - 2].im = 0.5;
-        assert!(evaluator.evaluate(&positive_width, &mut output[..family.outputs()]).is_err());
+        assert!(
+            evaluator
+                .evaluate(&positive_width, &mut output[..family.outputs()])
+                .is_err()
+        );
     }
     assert!(NativeTensorEvaluator::<f64>::with_binary_precision(TensorIntegral::B11, 64).is_err());
     assert!(NativeTensorEvaluator::<Float>::with_binary_precision(TensorIntegral::B11, 0).is_err());

@@ -143,7 +143,12 @@ impl<T: NativeFloat> TensorKernel<T> {
             counts: std::array::from_fn(|k| prototype.from_i64(k as i64 + 1)),
             inverse: std::array::from_fn(|k| rational(1, k as i64 + 1)),
             inverse_squared: std::array::from_fn(|k| rational(1, (k as i64 + 1).pow(2))),
-            harmonic: [rational(1, 1), rational(3, 2), rational(11, 6), rational(25, 12)],
+            harmonic: [
+                rational(1, 1),
+                rational(3, 2),
+                rational(11, 6),
+                rational(25, 12),
+            ],
             series: [
                 BnlogSeries::new(0, bits, &prototype)?,
                 BnlogSeries::new(1, bits, &prototype)?,
@@ -407,10 +412,7 @@ impl<T: NativeFloat> TensorKernel<T> {
         // tadpn: A00 = m/4 (A0 + m/2) and A0000 = m²/24 (A0 + 5m/6), with
         // poles m²/4 and m³/24.
         let first = Self::scale(mass, &self.inverse[3]);
-        let second = Self::scale(
-            &mul(&first, mass),
-            &(self.inverse[2].clone() * &self.half),
-        );
+        let second = Self::scale(&mul(&first, mass), &(self.inverse[2].clone() * &self.half));
         let first_shift = self.half.clone();
         let second_shift = self.half.clone() + &self.inverse[2];
         let a00 = mul(&first, &(a0.clone() + &Self::scale(mass, &first_shift)));
@@ -525,7 +527,9 @@ impl<T: NativeFloat> NativeTensorEvaluator<T> {
         if let Some(fixed) = T::FIXED_BITS
             && bits != fixed
         {
-            return Err(format!("this numeric type has fixed precision {fixed} bits"));
+            return Err(format!(
+                "this numeric type has fixed precision {fixed} bits"
+            ));
         }
         Ok(Self {
             family,

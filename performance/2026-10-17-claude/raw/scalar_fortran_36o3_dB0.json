@@ -1,0 +1,2528 @@
+{
+  "schema": "oneloop_fortran_benchmark_v1",
+  "created_utc": "2026-10-17T13:26:15Z",
+  "machine": {
+    "platform": "Linux-6.18.45-x86_64-with-glibc2.42",
+    "machine": "x86_64",
+    "processor": "AMD EPYC 9754 128-Core Processor",
+    "logical_cpus": 384,
+    "python": "3.14.7",
+    "affinity": [
+      300
+    ]
+  },
+  "numeric_domain": "original OneLOop DP (binary64 complex)",
+  "fixtures_path": "/shared/external/ninja/references/oneloopmaster_claude_native/tests/data/benchmark.txt",
+  "fixtures_sha256": "23ff8c35b099bdf54b0296be9eb3e5c492ff1101511d64d2b84b70eb4a6dd2e6",
+  "selected_fixture_sha256": "886b1bf5cfbadba3a0f698743329cb826440a92ee540ad89a557453b9a8699e5",
+  "driver_source_sha256": "932535341bfe6a4b270dc591f59d10b4158e540dce65652a912bc0ff4c1c05ab",
+  "library_path": null,
+  "library_sha256": null,
+  "library_build_flags": "unverified: prebuilt archive reused unchanged",
+  "iterations": 262144,
+  "warmup": 256,
+  "repetitions": 9,
+  "timing_contract": {
+    "all_three_laurent_outputs": true,
+    "input_decode_and_sqrt_mu_outside_timing": true,
+    "explicit_per_call_unsquared_scale": true,
+    "timed_checksum": "sum of finite complex coefficient",
+    "compile_and_initialization_excluded": true,
+    "simd_batch_size": 1,
+    "same_mode": "repeat one row",
+    "hetero_mode": "cycle same-family rows in fixture order; restart at first row each repetition",
+    "loop_and_accumulator_overhead_included": true
+  },
+  "compiler": null,
+  "driver_compile_command": null,
+  "executable_sha256": "f5de9ba813fae24b64474d64d25b226308d06bb73e36932b705900b4bf01b36e",
+  "subprocess_wall_seconds_not_benchmark_time": 2.7048421609797515,
+  "correctness": "all fixture outputs, batch-final outputs and finite checksums passed",
+  "clock": {
+    "ticks_per_second": 1000000000,
+    "maximum_tick": 9223372036854775807,
+    "resolution_ns": 1.0
+  },
+  "fixtures": [
+    {
+      "id": 1,
+      "name": "dB0_euclidean",
+      "source": "tests/data/scalar_audit.txt:5",
+      "kind": -2,
+      "family": "dB0",
+      "mu_squared": 1.0,
+      "momenta": [
+        -3.0
+      ],
+      "masses": [
+        [
+          1.0,
+          0.0
+        ],
+        [
+          1.0,
+          0.0
+        ]
+      ],
+      "expected": [
+        [
+          0.10539758405634522,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ],
+      "normalization": 3.0,
+      "row": "-2 1.00000000000000000e+00 -3.00000000000000000e+00 1.00000000000000000e+00 0.00000000000000000e+00 1.00000000000000000e+00 0.00000000000000000e+00 1.05397584056345223e-01 0.00000000000000000e+00 0.00000000000000000e+00 0.00000000000000000e+00 0.00000000000000000e+00 0.00000000000000000e+00",
+      "actual": [
+        [
+          0.10539758405634522,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "id": 2,
+      "name": "dB0_timelike",
+      "source": "tests/data/scalar_audit.txt:121",
+      "kind": -2,
+      "family": "dB0",
+      "mu_squared": 1.0,
+      "momenta": [
+        7.0
+      ],
+      "masses": [
+        [
+          1.0,
+          0.0
+        ],
+        [
+          2.0,
+          0.0
+        ]
+      ],
+      "expected": [
+        [
+          -0.26297303696168023,
+          0.45335540185289447
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ],
+      "normalization": 7.0,
+      "row": "-2 1.00000000000000000e+00 7.00000000000000000e+00 1.00000000000000000e+00 0.00000000000000000e+00 2.00000000000000000e+00 0.00000000000000000e+00 -2.62973036961680229e-01 4.53355401852894468e-01 0.00000000000000000e+00 0.00000000000000000e+00 0.00000000000000000e+00 0.00000000000000000e+00",
+      "actual": [
+        [
+          -0.26297303696168023,
+          0.45335540185289447
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "id": 3,
+      "name": "dB0_complex",
+      "source": "tests/data/scalar_audit.txt:77",
+      "kind": -2,
+      "family": "dB0",
+      "mu_squared": 1.0,
+      "momenta": [
+        3.0
+      ],
+      "masses": [
+        [
+          0.7,
+          -0.03
+        ],
+        [
+          1.4,
+          -0.08
+        ]
+      ],
+      "expected": [
+        [
+          0.43082044173960266,
+          0.06538527913090614
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ],
+      "normalization": 3.0,
+      "row": "-2 1.00000000000000000e+00 3.00000000000000000e+00 6.99999999999999956e-01 -2.99999999999999989e-02 1.39999999999999991e+00 -8.00000000000000017e-02 4.30820441739602655e-01 6.53852791309061376e-02 0.00000000000000000e+00 0.00000000000000000e+00 0.00000000000000000e+00 0.00000000000000000e+00",
+      "actual": [
+        [
+          0.43082044173960266,
+          0.06538527913090614
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "id": 4,
+      "name": "dB0_one_massless_onshell",
+      "source": "tests/data/parity.txt:289",
+      "kind": -2,
+      "family": "dB0",
+      "mu_squared": 1.0,
+      "momenta": [
+        2.0
+      ],
+      "masses": [
+        [
+          0.0,
+          0.0
+        ],
+        [
+          2.0,
+          0.0
+        ]
+      ],
+      "expected": [
+        [
+          -0.32671320486001365,
+          -0.0
+        ],
+        [
+          -0.25,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ],
+      "normalization": 2.0,
+      "row": "-2 1.00000000000000000e+00 2.00000000000000000e+00 0.00000000000000000e+00 0.00000000000000000e+00 2.00000000000000000e+00 0.00000000000000000e+00 -3.26713204860013651e-01 -0.00000000000000000e+00 -2.50000000000000000e-01 -0.00000000000000000e+00 0.00000000000000000e+00 0.00000000000000000e+00",
+      "actual": [
+        [
+          -0.32671320486001365,
+          -0.0
+        ],
+        [
+          -0.25,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "id": 5,
+      "name": "dB0_timelike_mu_0.01",
+      "source": "tests/data/scalar_audit.txt:215",
+      "kind": -2,
+      "family": "dB0",
+      "mu_squared": 0.01,
+      "momenta": [
+        7.0
+      ],
+      "masses": [
+        [
+          1.0,
+          0.0
+        ],
+        [
+          2.0,
+          0.0
+        ]
+      ],
+      "expected": [
+        [
+          -0.26297303696168023,
+          0.45335540185289447
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ],
+      "normalization": 7.0,
+      "row": "-2 1.00000000000000002e-02 7.00000000000000000e+00 1.00000000000000000e+00 0.00000000000000000e+00 2.00000000000000000e+00 0.00000000000000000e+00 -2.62973036961680229e-01 4.53355401852894468e-01 0.00000000000000000e+00 0.00000000000000000e+00 0.00000000000000000e+00 0.00000000000000000e+00",
+      "actual": [
+        [
+          -0.26297303696168023,
+          0.45335540185289447
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "id": 6,
+      "name": "dB0_timelike_mu_10000",
+      "source": "tests/data/scalar_audit.txt:269",
+      "kind": -2,
+      "family": "dB0",
+      "mu_squared": 10000.0,
+      "momenta": [
+        7.0
+      ],
+      "masses": [
+        [
+          1.0,
+          0.0
+        ],
+        [
+          2.0,
+          0.0
+        ]
+      ],
+      "expected": [
+        [
+          -0.26297303696168023,
+          0.45335540185289447
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ],
+      "normalization": 7.0,
+      "row": "-2 1.00000000000000000e+04 7.00000000000000000e+00 1.00000000000000000e+00 0.00000000000000000e+00 2.00000000000000000e+00 0.00000000000000000e+00 -2.62973036961680229e-01 4.53355401852894468e-01 0.00000000000000000e+00 0.00000000000000000e+00 0.00000000000000000e+00 0.00000000000000000e+00",
+      "actual": [
+        [
+          -0.26297303696168023,
+          0.45335540185289447
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    }
+  ],
+  "summaries": [
+    {
+      "mode": "SAME",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 1,
+      "name": "dB0_euclidean",
+      "calls": 262144,
+      "distinct_rows": 1,
+      "wall_ns_per_call_median": 167.7179412841797,
+      "wall_ns_per_call_min": 167.32220077514648,
+      "wall_ns_per_call_max": 168.5635871887207,
+      "cpu_ns_per_call_median": 166.34368896484378
+    },
+    {
+      "mode": "SAME",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 2,
+      "name": "dB0_timelike",
+      "calls": 262144,
+      "distinct_rows": 1,
+      "wall_ns_per_call_median": 166.28929138183594,
+      "wall_ns_per_call_min": 165.43563842773438,
+      "wall_ns_per_call_max": 167.33520889282227,
+      "cpu_ns_per_call_median": 165.0276184082031
+    },
+    {
+      "mode": "SAME",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 3,
+      "name": "dB0_complex",
+      "calls": 262144,
+      "distinct_rows": 1,
+      "wall_ns_per_call_median": 269.11925506591797,
+      "wall_ns_per_call_min": 268.34692764282227,
+      "wall_ns_per_call_max": 270.3896293640137,
+      "cpu_ns_per_call_median": 267.16995239257864
+    },
+    {
+      "mode": "SAME",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 4,
+      "name": "dB0_one_massless_onshell",
+      "calls": 262144,
+      "distinct_rows": 1,
+      "wall_ns_per_call_median": 43.09756088256836,
+      "wall_ns_per_call_min": 42.225135803222656,
+      "wall_ns_per_call_max": 43.817317962646484,
+      "cpu_ns_per_call_median": 42.81616210937462
+    },
+    {
+      "mode": "SAME",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 5,
+      "name": "dB0_timelike_mu_0.01",
+      "calls": 262144,
+      "distinct_rows": 1,
+      "wall_ns_per_call_median": 165.96287155151367,
+      "wall_ns_per_call_min": 165.65578842163086,
+      "wall_ns_per_call_max": 167.02156448364258,
+      "cpu_ns_per_call_median": 164.74914550781253
+    },
+    {
+      "mode": "SAME",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 6,
+      "name": "dB0_timelike_mu_10000",
+      "calls": 262144,
+      "distinct_rows": 1,
+      "wall_ns_per_call_median": 166.35315322875977,
+      "wall_ns_per_call_min": 165.72460556030273,
+      "wall_ns_per_call_max": 167.1840705871582,
+      "cpu_ns_per_call_median": 164.98947143554577
+    },
+    {
+      "mode": "HETERO",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 0,
+      "name": "dB0_heterogeneous",
+      "calls": 262144,
+      "distinct_rows": 6,
+      "wall_ns_per_call_median": 164.41123580932617,
+      "wall_ns_per_call_min": 163.88599014282227,
+      "wall_ns_per_call_max": 165.23685455322266,
+      "cpu_ns_per_call_median": 163.08975219726662
+    }
+  ],
+  "samples": [
+    {
+      "mode": "SAME",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 1,
+      "name": "dB0_euclidean",
+      "repetition": 1,
+      "calls": 262144,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.044059763,
+      "cpu_seconds": 0.043608999999999995,
+      "wall_ns_per_call": 168.07465744018555,
+      "cpu_ns_per_call": 166.3551330566406,
+      "finite_checksum": [
+        27629.344274750358,
+        0.0
+      ],
+      "last_output": [
+        [
+          0.10539758405634522,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 1,
+      "name": "dB0_euclidean",
+      "repetition": 2,
+      "calls": 262144,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.043862511,
+      "cpu_seconds": 0.04342299999999999,
+      "wall_ns_per_call": 167.32220077514648,
+      "cpu_ns_per_call": 165.64559936523435,
+      "finite_checksum": [
+        27629.344274750358,
+        0.0
+      ],
+      "last_output": [
+        [
+          0.10539758405634522,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 1,
+      "name": "dB0_euclidean",
+      "repetition": 3,
+      "calls": 262144,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.044058072,
+      "cpu_seconds": 0.043680999999999984,
+      "wall_ns_per_call": 168.06820678710938,
+      "cpu_ns_per_call": 166.62979125976557,
+      "finite_checksum": [
+        27629.344274750358,
+        0.0
+      ],
+      "last_output": [
+        [
+          0.10539758405634522,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 1,
+      "name": "dB0_euclidean",
+      "repetition": 4,
+      "calls": 262144,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.043969352,
+      "cpu_seconds": 0.04361899999999999,
+      "wall_ns_per_call": 167.72976684570312,
+      "cpu_ns_per_call": 166.39328002929685,
+      "finite_checksum": [
+        27629.344274750358,
+        0.0
+      ],
+      "last_output": [
+        [
+          0.10539758405634522,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 1,
+      "name": "dB0_euclidean",
+      "repetition": 5,
+      "calls": 262144,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.043966252,
+      "cpu_seconds": 0.043606000000000006,
+      "wall_ns_per_call": 167.7179412841797,
+      "cpu_ns_per_call": 166.34368896484378,
+      "finite_checksum": [
+        27629.344274750358,
+        0.0
+      ],
+      "last_output": [
+        [
+          0.10539758405634522,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 1,
+      "name": "dB0_euclidean",
+      "repetition": 6,
+      "calls": 262144,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.043897182,
+      "cpu_seconds": 0.04356899999999997,
+      "wall_ns_per_call": 167.45446014404297,
+      "cpu_ns_per_call": 166.2025451660155,
+      "finite_checksum": [
+        27629.344274750358,
+        0.0
+      ],
+      "last_output": [
+        [
+          0.10539758405634522,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 1,
+      "name": "dB0_euclidean",
+      "repetition": 7,
+      "calls": 262144,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.044187933,
+      "cpu_seconds": 0.04380999999999996,
+      "wall_ns_per_call": 168.5635871887207,
+      "cpu_ns_per_call": 167.1218872070311,
+      "finite_checksum": [
+        27629.344274750358,
+        0.0
+      ],
+      "last_output": [
+        [
+          0.10539758405634522,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 1,
+      "name": "dB0_euclidean",
+      "repetition": 8,
+      "calls": 262144,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.043931442,
+      "cpu_seconds": 0.043586000000000014,
+      "wall_ns_per_call": 167.58515167236328,
+      "cpu_ns_per_call": 166.2673950195313,
+      "finite_checksum": [
+        27629.344274750358,
+        0.0
+      ],
+      "last_output": [
+        [
+          0.10539758405634522,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 1,
+      "name": "dB0_euclidean",
+      "repetition": 9,
+      "calls": 262144,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.043865801,
+      "cpu_seconds": 0.043538999999999994,
+      "wall_ns_per_call": 167.3347511291504,
+      "cpu_ns_per_call": 166.08810424804685,
+      "finite_checksum": [
+        27629.344274750358,
+        0.0
+      ],
+      "last_output": [
+        [
+          0.10539758405634522,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 2,
+      "name": "dB0_timelike",
+      "repetition": 1,
+      "calls": 262144,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.04336796,
+      "cpu_seconds": 0.043038999999999994,
+      "wall_ns_per_call": 165.43563842773438,
+      "cpu_ns_per_call": 164.18075561523435,
+      "finite_checksum": [
+        -68936.80380104497,
+        118844.3984639432
+      ],
+      "last_output": [
+        [
+          -0.26297303696168023,
+          0.45335540185289447
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 2,
+      "name": "dB0_timelike",
+      "repetition": 2,
+      "calls": 262144,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.04351152,
+      "cpu_seconds": 0.043159999999999976,
+      "wall_ns_per_call": 165.9832763671875,
+      "cpu_ns_per_call": 164.64233398437491,
+      "finite_checksum": [
+        -68936.80380104497,
+        118844.3984639432
+      ],
+      "last_output": [
+        [
+          -0.26297303696168023,
+          0.45335540185289447
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 2,
+      "name": "dB0_timelike",
+      "repetition": 3,
+      "calls": 262144,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.043788021,
+      "cpu_seconds": 0.04344600000000004,
+      "wall_ns_per_call": 167.03804397583008,
+      "cpu_ns_per_call": 165.7333374023439,
+      "finite_checksum": [
+        -68936.80380104497,
+        118844.3984639432
+      ],
+      "last_output": [
+        [
+          -0.26297303696168023,
+          0.45335540185289447
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 2,
+      "name": "dB0_timelike",
+      "repetition": 4,
+      "calls": 262144,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.0433877,
+      "cpu_seconds": 0.04305000000000003,
+      "wall_ns_per_call": 165.5109405517578,
+      "cpu_ns_per_call": 164.22271728515636,
+      "finite_checksum": [
+        -68936.80380104497,
+        118844.3984639432
+      ],
+      "last_output": [
+        [
+          -0.26297303696168023,
+          0.45335540185289447
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 2,
+      "name": "dB0_timelike",
+      "repetition": 5,
+      "calls": 262144,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.043560661,
+      "cpu_seconds": 0.043175000000000074,
+      "wall_ns_per_call": 166.17073440551758,
+      "cpu_ns_per_call": 164.69955444335966,
+      "finite_checksum": [
+        -68936.80380104497,
+        118844.3984639432
+      ],
+      "last_output": [
+        [
+          -0.26297303696168023,
+          0.45335540185289447
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 2,
+      "name": "dB0_timelike",
+      "repetition": 6,
+      "calls": 262144,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.043801112,
+      "cpu_seconds": 0.04347500000000004,
+      "wall_ns_per_call": 167.08798217773438,
+      "cpu_ns_per_call": 165.84396362304705,
+      "finite_checksum": [
+        -68936.80380104497,
+        118844.3984639432
+      ],
+      "last_output": [
+        [
+          -0.26297303696168023,
+          0.45335540185289447
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 2,
+      "name": "dB0_timelike",
+      "repetition": 7,
+      "calls": 262144,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.04359174,
+      "cpu_seconds": 0.043260999999999994,
+      "wall_ns_per_call": 166.28929138183594,
+      "cpu_ns_per_call": 165.0276184082031,
+      "finite_checksum": [
+        -68936.80380104497,
+        118844.3984639432
+      ],
+      "last_output": [
+        [
+          -0.26297303696168023,
+          0.45335540185289447
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 2,
+      "name": "dB0_timelike",
+      "repetition": 8,
+      "calls": 262144,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.043689861,
+      "cpu_seconds": 0.043358999999999925,
+      "wall_ns_per_call": 166.66359329223633,
+      "cpu_ns_per_call": 165.4014587402341,
+      "finite_checksum": [
+        -68936.80380104497,
+        118844.3984639432
+      ],
+      "last_output": [
+        [
+          -0.26297303696168023,
+          0.45335540185289447
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 2,
+      "name": "dB0_timelike",
+      "repetition": 9,
+      "calls": 262144,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.043865921,
+      "cpu_seconds": 0.04347000000000001,
+      "wall_ns_per_call": 167.33520889282227,
+      "cpu_ns_per_call": 165.82489013671878,
+      "finite_checksum": [
+        -68936.80380104497,
+        118844.3984639432
+      ],
+      "last_output": [
+        [
+          -0.26297303696168023,
+          0.45335540185289447
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 3,
+      "name": "dB0_complex",
+      "repetition": 1,
+      "calls": 262144,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.070881019,
+      "cpu_seconds": 0.07019500000000001,
+      "wall_ns_per_call": 270.3896293640137,
+      "cpu_ns_per_call": 267.7726745605469,
+      "finite_checksum": [
+        112936.99388012207,
+        17140.358612509666
+      ],
+      "last_output": [
+        [
+          0.43082044173960266,
+          0.06538527913090614
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 3,
+      "name": "dB0_complex",
+      "repetition": 2,
+      "calls": 262144,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.070668738,
+      "cpu_seconds": 0.07012399999999996,
+      "wall_ns_per_call": 269.57984161376953,
+      "cpu_ns_per_call": 267.5018310546874,
+      "finite_checksum": [
+        112936.99388012207,
+        17140.358612509666
+      ],
+      "last_output": [
+        [
+          0.43082044173960266,
+          0.06538527913090614
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 3,
+      "name": "dB0_complex",
+      "repetition": 3,
+      "calls": 262144,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.070660178,
+      "cpu_seconds": 0.07013399999999992,
+      "wall_ns_per_call": 269.5471878051758,
+      "cpu_ns_per_call": 267.53997802734347,
+      "finite_checksum": [
+        112936.99388012207,
+        17140.358612509666
+      ],
+      "last_output": [
+        [
+          0.43082044173960266,
+          0.06538527913090614
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 3,
+      "name": "dB0_complex",
+      "repetition": 4,
+      "calls": 262144,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.070532678,
+      "cpu_seconds": 0.07000100000000009,
+      "wall_ns_per_call": 269.0608139038086,
+      "cpu_ns_per_call": 267.03262329101597,
+      "finite_checksum": [
+        112936.99388012207,
+        17140.358612509666
+      ],
+      "last_output": [
+        [
+          0.43082044173960266,
+          0.06538527913090614
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 3,
+      "name": "dB0_complex",
+      "repetition": 5,
+      "calls": 262144,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.070484228,
+      "cpu_seconds": 0.06994100000000003,
+      "wall_ns_per_call": 268.87599182128906,
+      "cpu_ns_per_call": 266.80374145507824,
+      "finite_checksum": [
+        112936.99388012207,
+        17140.358612509666
+      ],
+      "last_output": [
+        [
+          0.43082044173960266,
+          0.06538527913090614
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 3,
+      "name": "dB0_complex",
+      "repetition": 6,
+      "calls": 262144,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.070547998,
+      "cpu_seconds": 0.07003700000000013,
+      "wall_ns_per_call": 269.11925506591797,
+      "cpu_ns_per_call": 267.16995239257864,
+      "finite_checksum": [
+        112936.99388012207,
+        17140.358612509666
+      ],
+      "last_output": [
+        [
+          0.43082044173960266,
+          0.06538527913090614
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 3,
+      "name": "dB0_complex",
+      "repetition": 7,
+      "calls": 262144,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.070709268,
+      "cpu_seconds": 0.0702290000000001,
+      "wall_ns_per_call": 269.7344512939453,
+      "cpu_ns_per_call": 267.9023742675785,
+      "finite_checksum": [
+        112936.99388012207,
+        17140.358612509666
+      ],
+      "last_output": [
+        [
+          0.43082044173960266,
+          0.06538527913090614
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 3,
+      "name": "dB0_complex",
+      "repetition": 8,
+      "calls": 262144,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.070537798,
+      "cpu_seconds": 0.07001900000000005,
+      "wall_ns_per_call": 269.0803451538086,
+      "cpu_ns_per_call": 267.1012878417971,
+      "finite_checksum": [
+        112936.99388012207,
+        17140.358612509666
+      ],
+      "last_output": [
+        [
+          0.43082044173960266,
+          0.06538527913090614
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 3,
+      "name": "dB0_complex",
+      "repetition": 9,
+      "calls": 262144,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.070345537,
+      "cpu_seconds": 0.06985099999999989,
+      "wall_ns_per_call": 268.34692764282227,
+      "cpu_ns_per_call": 266.4604187011714,
+      "finite_checksum": [
+        112936.99388012207,
+        17140.358612509666
+      ],
+      "last_output": [
+        [
+          0.43082044173960266,
+          0.06538527913090614
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 4,
+      "name": "dB0_one_massless_onshell",
+      "repetition": 1,
+      "calls": 262144,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.011239936,
+      "cpu_seconds": 0.011174000000000017,
+      "wall_ns_per_call": 42.876953125,
+      "cpu_ns_per_call": 42.625427246093814,
+      "finite_checksum": [
+        -85645.90637478477,
+        0.0
+      ],
+      "last_output": [
+        [
+          -0.32671320486001365,
+          -0.0
+        ],
+        [
+          -0.25,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 4,
+      "name": "dB0_one_massless_onshell",
+      "repetition": 2,
+      "calls": 262144,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.011404947,
+      "cpu_seconds": 0.011272999999999866,
+      "wall_ns_per_call": 43.50642013549805,
+      "cpu_ns_per_call": 43.00308227539011,
+      "finite_checksum": [
+        -85645.90637478477,
+        0.0
+      ],
+      "last_output": [
+        [
+          -0.32671320486001365,
+          -0.0
+        ],
+        [
+          -0.25,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 4,
+      "name": "dB0_one_massless_onshell",
+      "repetition": 3,
+      "calls": 262144,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.011256556,
+      "cpu_seconds": 0.011166999999999927,
+      "wall_ns_per_call": 42.94035339355469,
+      "cpu_ns_per_call": 42.5987243652341,
+      "finite_checksum": [
+        -85645.90637478477,
+        0.0
+      ],
+      "last_output": [
+        [
+          -0.32671320486001365,
+          -0.0
+        ],
+        [
+          -0.25,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 4,
+      "name": "dB0_one_massless_onshell",
+      "repetition": 4,
+      "calls": 262144,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.011486447,
+      "cpu_seconds": 0.011414000000000035,
+      "wall_ns_per_call": 43.817317962646484,
+      "cpu_ns_per_call": 43.540954589843885,
+      "finite_checksum": [
+        -85645.90637478477,
+        0.0
+      ],
+      "last_output": [
+        [
+          -0.32671320486001365,
+          -0.0
+        ],
+        [
+          -0.25,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 4,
+      "name": "dB0_one_massless_onshell",
+      "repetition": 5,
+      "calls": 262144,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.011069066,
+      "cpu_seconds": 0.011003999999999792,
+      "wall_ns_per_call": 42.225135803222656,
+      "cpu_ns_per_call": 41.976928710936704,
+      "finite_checksum": [
+        -85645.90637478477,
+        0.0
+      ],
+      "last_output": [
+        [
+          -0.32671320486001365,
+          -0.0
+        ],
+        [
+          -0.25,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 4,
+      "name": "dB0_one_massless_onshell",
+      "repetition": 6,
+      "calls": 262144,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.011297767,
+      "cpu_seconds": 0.0112239999999999,
+      "wall_ns_per_call": 43.09756088256836,
+      "cpu_ns_per_call": 42.81616210937462,
+      "finite_checksum": [
+        -85645.90637478477,
+        0.0
+      ],
+      "last_output": [
+        [
+          -0.32671320486001365,
+          -0.0
+        ],
+        [
+          -0.25,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 4,
+      "name": "dB0_one_massless_onshell",
+      "repetition": 7,
+      "calls": 262144,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.011388537,
+      "cpu_seconds": 0.011310999999999849,
+      "wall_ns_per_call": 43.44382095336914,
+      "cpu_ns_per_call": 43.1480407714838,
+      "finite_checksum": [
+        -85645.90637478477,
+        0.0
+      ],
+      "last_output": [
+        [
+          -0.32671320486001365,
+          -0.0
+        ],
+        [
+          -0.25,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 4,
+      "name": "dB0_one_massless_onshell",
+      "repetition": 8,
+      "calls": 262144,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.011284406,
+      "cpu_seconds": 0.01120600000000005,
+      "wall_ns_per_call": 43.046592712402344,
+      "cpu_ns_per_call": 42.747497558593935,
+      "finite_checksum": [
+        -85645.90637478477,
+        0.0
+      ],
+      "last_output": [
+        [
+          -0.32671320486001365,
+          -0.0
+        ],
+        [
+          -0.25,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 4,
+      "name": "dB0_one_massless_onshell",
+      "repetition": 9,
+      "calls": 262144,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.011407087,
+      "cpu_seconds": 0.011338999999999988,
+      "wall_ns_per_call": 43.514583587646484,
+      "cpu_ns_per_call": 43.25485229492183,
+      "finite_checksum": [
+        -85645.90637478477,
+        0.0
+      ],
+      "last_output": [
+        [
+          -0.32671320486001365,
+          -0.0
+        ],
+        [
+          -0.25,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 5,
+      "name": "dB0_timelike_mu_0.01",
+      "repetition": 1,
+      "calls": 262144,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.043442321,
+      "cpu_seconds": 0.043115000000000014,
+      "wall_ns_per_call": 165.71930313110352,
+      "cpu_ns_per_call": 164.47067260742193,
+      "finite_checksum": [
+        -68936.80380104497,
+        118844.3984639432
+      ],
+      "last_output": [
+        [
+          -0.26297303696168023,
+          0.45335540185289447
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 5,
+      "name": "dB0_timelike_mu_0.01",
+      "repetition": 2,
+      "calls": 262144,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.043425671,
+      "cpu_seconds": 0.043126999999999915,
+      "wall_ns_per_call": 165.65578842163086,
+      "cpu_ns_per_call": 164.51644897460906,
+      "finite_checksum": [
+        -68936.80380104497,
+        118844.3984639432
+      ],
+      "last_output": [
+        [
+          -0.26297303696168023,
+          0.45335540185289447
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 5,
+      "name": "dB0_timelike_mu_0.01",
+      "repetition": 3,
+      "calls": 262144,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.04342865,
+      "cpu_seconds": 0.04312199999999988,
+      "wall_ns_per_call": 165.66715240478516,
+      "cpu_ns_per_call": 164.4973754882808,
+      "finite_checksum": [
+        -68936.80380104497,
+        118844.3984639432
+      ],
+      "last_output": [
+        [
+          -0.26297303696168023,
+          0.45335540185289447
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 5,
+      "name": "dB0_timelike_mu_0.01",
+      "repetition": 4,
+      "calls": 262144,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.043506171,
+      "cpu_seconds": 0.043188000000000004,
+      "wall_ns_per_call": 165.96287155151367,
+      "cpu_ns_per_call": 164.74914550781253,
+      "finite_checksum": [
+        -68936.80380104497,
+        118844.3984639432
+      ],
+      "last_output": [
+        [
+          -0.26297303696168023,
+          0.45335540185289447
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 5,
+      "name": "dB0_timelike_mu_0.01",
+      "repetition": 5,
+      "calls": 262144,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.043577171,
+      "cpu_seconds": 0.04321799999999998,
+      "wall_ns_per_call": 166.23371505737305,
+      "cpu_ns_per_call": 164.86358642578116,
+      "finite_checksum": [
+        -68936.80380104497,
+        118844.3984639432
+      ],
+      "last_output": [
+        [
+          -0.26297303696168023,
+          0.45335540185289447
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 5,
+      "name": "dB0_timelike_mu_0.01",
+      "repetition": 6,
+      "calls": 262144,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.04362355,
+      "cpu_seconds": 0.043331999999999926,
+      "wall_ns_per_call": 166.41063690185547,
+      "cpu_ns_per_call": 165.29846191406222,
+      "finite_checksum": [
+        -68936.80380104497,
+        118844.3984639432
+      ],
+      "last_output": [
+        [
+          -0.26297303696168023,
+          0.45335540185289447
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 5,
+      "name": "dB0_timelike_mu_0.01",
+      "repetition": 7,
+      "calls": 262144,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.043783701,
+      "cpu_seconds": 0.04340400000000022,
+      "wall_ns_per_call": 167.02156448364258,
+      "cpu_ns_per_call": 165.57312011718835,
+      "finite_checksum": [
+        -68936.80380104497,
+        118844.3984639432
+      ],
+      "last_output": [
+        [
+          -0.26297303696168023,
+          0.45335540185289447
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 5,
+      "name": "dB0_timelike_mu_0.01",
+      "repetition": 8,
+      "calls": 262144,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.043496261,
+      "cpu_seconds": 0.04318299999999997,
+      "wall_ns_per_call": 165.92506790161133,
+      "cpu_ns_per_call": 164.73007202148426,
+      "finite_checksum": [
+        -68936.80380104497,
+        118844.3984639432
+      ],
+      "last_output": [
+        [
+          -0.26297303696168023,
+          0.45335540185289447
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 5,
+      "name": "dB0_timelike_mu_0.01",
+      "repetition": 9,
+      "calls": 262144,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.043573821,
+      "cpu_seconds": 0.0432579999999998,
+      "wall_ns_per_call": 166.2209358215332,
+      "cpu_ns_per_call": 165.01617431640548,
+      "finite_checksum": [
+        -68936.80380104497,
+        118844.3984639432
+      ],
+      "last_output": [
+        [
+          -0.26297303696168023,
+          0.45335540185289447
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 6,
+      "name": "dB0_timelike_mu_10000",
+      "repetition": 1,
+      "calls": 262144,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.043685551,
+      "cpu_seconds": 0.04331600000000013,
+      "wall_ns_per_call": 166.64715194702148,
+      "cpu_ns_per_call": 165.237426757813,
+      "finite_checksum": [
+        -68936.80380104497,
+        118844.3984639432
+      ],
+      "last_output": [
+        [
+          -0.26297303696168023,
+          0.45335540185289447
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 6,
+      "name": "dB0_timelike_mu_10000",
+      "repetition": 2,
+      "calls": 262144,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.043657701,
+      "cpu_seconds": 0.04328799999999999,
+      "wall_ns_per_call": 166.54091262817383,
+      "cpu_ns_per_call": 165.13061523437497,
+      "finite_checksum": [
+        -68936.80380104497,
+        118844.3984639432
+      ],
+      "last_output": [
+        [
+          -0.26297303696168023,
+          0.45335540185289447
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 6,
+      "name": "dB0_timelike_mu_10000",
+      "repetition": 3,
+      "calls": 262144,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.043826301,
+      "cpu_seconds": 0.043389000000000344,
+      "wall_ns_per_call": 167.1840705871582,
+      "cpu_ns_per_call": 165.51589965820443,
+      "finite_checksum": [
+        -68936.80380104497,
+        118844.3984639432
+      ],
+      "last_output": [
+        [
+          -0.26297303696168023,
+          0.45335540185289447
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 6,
+      "name": "dB0_timelike_mu_10000",
+      "repetition": 4,
+      "calls": 262144,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.04359132,
+      "cpu_seconds": 0.043250999999999706,
+      "wall_ns_per_call": 166.28768920898438,
+      "cpu_ns_per_call": 164.98947143554577,
+      "finite_checksum": [
+        -68936.80380104497,
+        118844.3984639432
+      ],
+      "last_output": [
+        [
+          -0.26297303696168023,
+          0.45335540185289447
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 6,
+      "name": "dB0_timelike_mu_10000",
+      "repetition": 5,
+      "calls": 262144,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.043608481,
+      "cpu_seconds": 0.0432990000000002,
+      "wall_ns_per_call": 166.35315322875977,
+      "cpu_ns_per_call": 165.17257690429764,
+      "finite_checksum": [
+        -68936.80380104497,
+        118844.3984639432
+      ],
+      "last_output": [
+        [
+          -0.26297303696168023,
+          0.45335540185289447
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 6,
+      "name": "dB0_timelike_mu_10000",
+      "repetition": 6,
+      "calls": 262144,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.043612341,
+      "cpu_seconds": 0.04325000000000001,
+      "wall_ns_per_call": 166.36787796020508,
+      "cpu_ns_per_call": 164.98565673828128,
+      "finite_checksum": [
+        -68936.80380104497,
+        118844.3984639432
+      ],
+      "last_output": [
+        [
+          -0.26297303696168023,
+          0.45335540185289447
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 6,
+      "name": "dB0_timelike_mu_10000",
+      "repetition": 7,
+      "calls": 262144,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.04355677,
+      "cpu_seconds": 0.04321200000000003,
+      "wall_ns_per_call": 166.15589141845703,
+      "cpu_ns_per_call": 164.8406982421876,
+      "finite_checksum": [
+        -68936.80380104497,
+        118844.3984639432
+      ],
+      "last_output": [
+        [
+          -0.26297303696168023,
+          0.45335540185289447
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 6,
+      "name": "dB0_timelike_mu_10000",
+      "repetition": 8,
+      "calls": 262144,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.043443711,
+      "cpu_seconds": 0.04312399999999972,
+      "wall_ns_per_call": 165.72460556030273,
+      "cpu_ns_per_call": 164.50500488281142,
+      "finite_checksum": [
+        -68936.80380104497,
+        118844.3984639432
+      ],
+      "last_output": [
+        [
+          -0.26297303696168023,
+          0.45335540185289447
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 6,
+      "name": "dB0_timelike_mu_10000",
+      "repetition": 9,
+      "calls": 262144,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.04349624,
+      "cpu_seconds": 0.04310999999999998,
+      "wall_ns_per_call": 165.92498779296875,
+      "cpu_ns_per_call": 164.4515991210937,
+      "finite_checksum": [
+        -68936.80380104497,
+        118844.3984639432
+      ],
+      "last_output": [
+        [
+          -0.26297303696168023,
+          0.45335540185289447
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "HETERO",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 0,
+      "name": "dB0_heterogeneous",
+      "repetition": 1,
+      "calls": 262144,
+      "distinct_rows": 6,
+      "heterogeneous_tail_rows": 4,
+      "wall_seconds": 0.042961729,
+      "cpu_seconds": 0.04265899999999956,
+      "wall_ns_per_call": 163.88599014282227,
+      "cpu_ns_per_call": 162.7311706542952,
+      "finite_checksum": [
+        -25314.66379614283,
+        62278.49410690889
+      ],
+      "last_output": [
+        [
+          -0.32671320486001365,
+          -0.0
+        ],
+        [
+          -0.25,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "HETERO",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 0,
+      "name": "dB0_heterogeneous",
+      "repetition": 2,
+      "calls": 262144,
+      "distinct_rows": 6,
+      "heterogeneous_tail_rows": 4,
+      "wall_seconds": 0.0431506,
+      "cpu_seconds": 0.0428320000000002,
+      "wall_ns_per_call": 164.60647583007812,
+      "cpu_ns_per_call": 163.39111328125077,
+      "finite_checksum": [
+        -25314.66379614283,
+        62278.49410690889
+      ],
+      "last_output": [
+        [
+          -0.32671320486001365,
+          -0.0
+        ],
+        [
+          -0.25,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "HETERO",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 0,
+      "name": "dB0_heterogeneous",
+      "repetition": 3,
+      "calls": 262144,
+      "distinct_rows": 6,
+      "heterogeneous_tail_rows": 4,
+      "wall_seconds": 0.043182709,
+      "cpu_seconds": 0.042829999999999924,
+      "wall_ns_per_call": 164.72896194458008,
+      "cpu_ns_per_call": 163.38348388671847,
+      "finite_checksum": [
+        -25314.66379614283,
+        62278.49410690889
+      ],
+      "last_output": [
+        [
+          -0.32671320486001365,
+          -0.0
+        ],
+        [
+          -0.25,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "HETERO",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 0,
+      "name": "dB0_heterogeneous",
+      "repetition": 4,
+      "calls": 262144,
+      "distinct_rows": 6,
+      "heterogeneous_tail_rows": 4,
+      "wall_seconds": 0.043048079,
+      "cpu_seconds": 0.04273799999999994,
+      "wall_ns_per_call": 164.21538925170898,
+      "cpu_ns_per_call": 163.03253173828102,
+      "finite_checksum": [
+        -25314.66379614283,
+        62278.49410690889
+      ],
+      "last_output": [
+        [
+          -0.32671320486001365,
+          -0.0
+        ],
+        [
+          -0.25,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "HETERO",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 0,
+      "name": "dB0_heterogeneous",
+      "repetition": 5,
+      "calls": 262144,
+      "distinct_rows": 6,
+      "heterogeneous_tail_rows": 4,
+      "wall_seconds": 0.04331585,
+      "cpu_seconds": 0.04300299999999968,
+      "wall_ns_per_call": 165.23685455322266,
+      "cpu_ns_per_call": 164.04342651367065,
+      "finite_checksum": [
+        -25314.66379614283,
+        62278.49410690889
+      ],
+      "last_output": [
+        [
+          -0.32671320486001365,
+          -0.0
+        ],
+        [
+          -0.25,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "HETERO",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 0,
+      "name": "dB0_heterogeneous",
+      "repetition": 6,
+      "calls": 262144,
+      "distinct_rows": 6,
+      "heterogeneous_tail_rows": 4,
+      "wall_seconds": 0.04314642,
+      "cpu_seconds": 0.04278200000000032,
+      "wall_ns_per_call": 164.5905303955078,
+      "cpu_ns_per_call": 163.20037841796997,
+      "finite_checksum": [
+        -25314.66379614283,
+        62278.49410690889
+      ],
+      "last_output": [
+        [
+          -0.32671320486001365,
+          -0.0
+        ],
+        [
+          -0.25,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "HETERO",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 0,
+      "name": "dB0_heterogeneous",
+      "repetition": 7,
+      "calls": 262144,
+      "distinct_rows": 6,
+      "heterogeneous_tail_rows": 4,
+      "wall_seconds": 0.043018628,
+      "cpu_seconds": 0.042676999999999854,
+      "wall_ns_per_call": 164.10304260253906,
+      "cpu_ns_per_call": 162.79983520507756,
+      "finite_checksum": [
+        -25314.66379614283,
+        62278.49410690889
+      ],
+      "last_output": [
+        [
+          -0.32671320486001365,
+          -0.0
+        ],
+        [
+          -0.25,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "HETERO",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 0,
+      "name": "dB0_heterogeneous",
+      "repetition": 8,
+      "calls": 262144,
+      "distinct_rows": 6,
+      "heterogeneous_tail_rows": 4,
+      "wall_seconds": 0.043037799,
+      "cpu_seconds": 0.042685000000000084,
+      "wall_ns_per_call": 164.17617416381836,
+      "cpu_ns_per_call": 162.83035278320344,
+      "finite_checksum": [
+        -25314.66379614283,
+        62278.49410690889
+      ],
+      "last_output": [
+        [
+          -0.32671320486001365,
+          -0.0
+        ],
+        [
+          -0.25,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "HETERO",
+      "kind": -2,
+      "family": "dB0",
+      "fixture_id": 0,
+      "name": "dB0_heterogeneous",
+      "repetition": 9,
+      "calls": 262144,
+      "distinct_rows": 6,
+      "heterogeneous_tail_rows": 4,
+      "wall_seconds": 0.043099419,
+      "cpu_seconds": 0.04275300000000026,
+      "wall_ns_per_call": 164.41123580932617,
+      "cpu_ns_per_call": 163.08975219726662,
+      "finite_checksum": [
+        -25314.66379614283,
+        62278.49410690889
+      ],
+      "last_output": [
+        [
+          -0.32671320486001365,
+          -0.0
+        ],
+        [
+          -0.25,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    }
+  ]
+}

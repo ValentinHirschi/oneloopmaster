@@ -1,6 +1,8 @@
 //! Scalar primitives used by the generated native expression DAG.
 
-use symbolica::domains::float::{Complex, DoubleFloat, Float, FloatLike, Real, RealLike, SingleFloat};
+use symbolica::domains::float::{
+    Complex, DoubleFloat, Float, FloatLike, Real, RealLike, SingleFloat,
+};
 
 pub type C<T> = Complex<T>;
 

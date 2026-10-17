@@ -1,0 +1,3 @@
+all-family eager initialization 3.214649763s
+survey route=Native; all three Laurent outputs; warmup=256; interpreted hooks are scalar-only
+route=native C0 exact-constant setup 16.86µs

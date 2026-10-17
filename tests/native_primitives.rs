@@ -621,8 +621,12 @@ fn native_binary64_reciprocal_and_norm_fast_paths_stay_accurate() {
             assert!(error <= 4.0 * f64::EPSILON * scale, "1/{z:?} = {inverse:?}");
         }
         let norm = NativeFloat::hypot(&z.re, &z.im);
-        let expected = (Float::with_val(BITS, z.re).pow(2) + Float::with_val(BITS, z.im).pow(2)).sqrt();
+        let expected =
+            (Float::with_val(BITS, z.re).pow(2) + Float::with_val(BITS, z.im).pow(2)).sqrt();
         let error = (Float::with_val(BITS, norm) - &expected).norm().to_f64();
-        assert!(error <= 2.0 * f64::EPSILON * expected.to_f64(), "|{z:?}| = {norm:e}");
+        assert!(
+            error <= 2.0 * f64::EPSILON * expected.to_f64(),
+            "|{z:?}| = {norm:e}"
+        );
     }
 }

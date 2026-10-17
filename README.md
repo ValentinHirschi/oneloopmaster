@@ -12,7 +12,10 @@ Development status: the expanded audit passes at 256 bits, but retains 14
 fixed-binary64 B0/dB0 disagreements. The measured 1.5×-Fortran performance target
 is also not met across all workloads. See the [native release audit](NATIVE_RELEASE_AUDIT.md)
 and [performance report](performance/2026-09-08-native/README.md). Full scalar parity is not
-established; this is not publication-ready.
+established; this is not publication-ready. The [2026-10-17 report](performance/2026-10-17-claude/README.md)
+measures the current binary64 backend: all mixed scalar workloads and the gg → HHH
+top-loop pentagon (1.21–1.24× per point) are within 1.3× of OneLOop Fortran; single
+real timelike D0 rows remain about 2.2×.
 
 This work is based on **Andreas van Hameren's OneLOop package**. The original
 algorithms, analytic continuation conventions and Fortran reference results are

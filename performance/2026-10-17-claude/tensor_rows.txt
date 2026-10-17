@@ -1,0 +1,39 @@
+# tensor benchmark rows: kind mu_squared arguments...
+# name B11_p0_equal
+6 1.0 0.0 29929.0 0.0 29929.0 0.0
+# name B11_p0_unequal
+6 1.0 0.0 1.0 0.0 2.0 0.0
+# name B11_massless_m0
+6 1.0 3.0 0.0 0.0 1.0 0.0
+# name B11_below_threshold
+6 1.0 15625.0 29929.0 0.0 29929.0 0.0
+# name B11_above_threshold
+6 1.0 200000.0 29929.0 0.0 29929.0 0.0
+# name B11_spacelike
+6 1.0 -3.0 1.0 0.0 2.0 0.0
+# name B11_complex
+6 1.0 3.0 0.7 -0.03 1.4 -0.08
+# name B11_small_p_series
+6 1.0 1e-06 1.0 0.0 2.0 0.0
+# name B111_p0_equal
+7 1.0 0.0 29929.0 0.0 29929.0 0.0
+# name B111_p0_unequal
+7 1.0 0.0 1.0 0.0 2.0 0.0
+# name B111_massless_m0
+7 1.0 3.0 0.0 0.0 1.0 0.0
+# name B111_below_threshold
+7 1.0 15625.0 29929.0 0.0 29929.0 0.0
+# name B111_above_threshold
+7 1.0 200000.0 29929.0 0.0 29929.0 0.0
+# name B111_spacelike
+7 1.0 -3.0 1.0 0.0 2.0 0.0
+# name B111_complex
+7 1.0 3.0 0.7 -0.03 1.4 -0.08
+# name B111_small_p_series
+7 1.0 1e-06 1.0 0.0 2.0 0.0
+# name An_top
+5 1.0 29929.0 0.0
+# name An_negative
+5 1.0 -2.0 0.0
+# name An_complex
+5 1.0 2.0 -0.1

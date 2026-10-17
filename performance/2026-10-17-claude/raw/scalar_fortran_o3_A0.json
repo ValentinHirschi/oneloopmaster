@@ -1,0 +1,2492 @@
+{
+  "schema": "oneloop_fortran_benchmark_v1",
+  "created_utc": "2026-10-17T13:25:57Z",
+  "machine": {
+    "platform": "Linux-6.18.45-x86_64-with-glibc2.42",
+    "machine": "x86_64",
+    "processor": "AMD EPYC 9754 128-Core Processor",
+    "logical_cpus": 384,
+    "python": "3.14.7",
+    "affinity": [
+      300
+    ]
+  },
+  "numeric_domain": "original OneLOop DP (binary64 complex)",
+  "fixtures_path": "/shared/external/ninja/references/oneloopmaster_claude_native/tests/data/benchmark.txt",
+  "fixtures_sha256": "23ff8c35b099bdf54b0296be9eb3e5c492ff1101511d64d2b84b70eb4a6dd2e6",
+  "selected_fixture_sha256": "e567b507abb883328df6cf1cc9dce1c5436b8e8d39118667ca236b0e8d7808ae",
+  "driver_source_sha256": "932535341bfe6a4b270dc591f59d10b4158e540dce65652a912bc0ff4c1c05ab",
+  "library_path": null,
+  "library_sha256": null,
+  "library_build_flags": "unverified: prebuilt archive reused unchanged",
+  "iterations": 524288,
+  "warmup": 256,
+  "repetitions": 9,
+  "timing_contract": {
+    "all_three_laurent_outputs": true,
+    "input_decode_and_sqrt_mu_outside_timing": true,
+    "explicit_per_call_unsquared_scale": true,
+    "timed_checksum": "sum of finite complex coefficient",
+    "compile_and_initialization_excluded": true,
+    "simd_batch_size": 1,
+    "same_mode": "repeat one row",
+    "hetero_mode": "cycle same-family rows in fixture order; restart at first row each repetition",
+    "loop_and_accumulator_overhead_included": true
+  },
+  "compiler": null,
+  "driver_compile_command": null,
+  "executable_sha256": "6326dbdf127cdcdd8f9089143034d7ddd82a8ded2198c42b7f4ac24c01f21a78",
+  "subprocess_wall_seconds_not_benchmark_time": 1.7455385340144858,
+  "correctness": "all fixture outputs, batch-final outputs and finite checksums passed",
+  "clock": {
+    "ticks_per_second": 1000000000,
+    "maximum_tick": 9223372036854775807,
+    "resolution_ns": 1.0
+  },
+  "fixtures": [
+    {
+      "id": 1,
+      "name": "A0_real",
+      "source": "tests/data/scalar_audit.txt:171",
+      "kind": 1,
+      "family": "A0",
+      "mu_squared": 1.0,
+      "momenta": [],
+      "masses": [
+        [
+          2.0,
+          0.0
+        ]
+      ],
+      "expected": [
+        [
+          0.6137056388801094,
+          0.0
+        ],
+        [
+          2.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ],
+      "normalization": 0.5,
+      "row": "1 1.00000000000000000e+00 2.00000000000000000e+00 0.00000000000000000e+00 6.13705638880109428e-01 0.00000000000000000e+00 2.00000000000000000e+00 0.00000000000000000e+00 0.00000000000000000e+00 0.00000000000000000e+00",
+      "actual": [
+        [
+          0.6137056388801094,
+          0.0
+        ],
+        [
+          2.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "id": 2,
+      "name": "A0_negative_axis",
+      "source": "tests/data/scalar_audit.txt:165",
+      "kind": 1,
+      "family": "A0",
+      "mu_squared": 1.0,
+      "momenta": [],
+      "masses": [
+        [
+          -2.0,
+          0.0
+        ]
+      ],
+      "expected": [
+        [
+          -0.6137056388801094,
+          -6.283185307179586
+        ],
+        [
+          -2.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ],
+      "normalization": 0.5,
+      "row": "1 1.00000000000000000e+00 -2.00000000000000000e+00 0.00000000000000000e+00 -6.13705638880109428e-01 -6.28318530717958623e+00 -2.00000000000000000e+00 0.00000000000000000e+00 0.00000000000000000e+00 0.00000000000000000e+00",
+      "actual": [
+        [
+          -0.6137056388801094,
+          -6.283185307179586
+        ],
+        [
+          -2.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "id": 3,
+      "name": "A0_complex",
+      "source": "tests/data/scalar_audit.txt:173",
+      "kind": 1,
+      "family": "A0",
+      "mu_squared": 1.0,
+      "momenta": [],
+      "masses": [
+        [
+          2.0,
+          -0.1
+        ]
+      ],
+      "expected": [
+        [
+          0.6162045982537163,
+          0.06935635350980943
+        ],
+        [
+          2.0,
+          -0.1
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ],
+      "normalization": 0.5,
+      "row": "1 1.00000000000000000e+00 2.00000000000000000e+00 -1.00000000000000006e-01 6.16204598253716318e-01 6.93563535098094264e-02 2.00000000000000000e+00 -1.00000000000000006e-01 0.00000000000000000e+00 0.00000000000000000e+00",
+      "actual": [
+        [
+          0.6162045982537163,
+          0.06935635350980943
+        ],
+        [
+          2.0,
+          -0.1
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "id": 4,
+      "name": "A0_scaleless",
+      "source": "tests/data/parity.txt:266",
+      "kind": 1,
+      "family": "A0",
+      "mu_squared": 1.0,
+      "momenta": [],
+      "masses": [
+        [
+          0.0,
+          0.0
+        ]
+      ],
+      "expected": [
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ],
+      "normalization": 1.0,
+      "row": "1 1.00000000000000000e+00 0.00000000000000000e+00 0.00000000000000000e+00 0.00000000000000000e+00 0.00000000000000000e+00 0.00000000000000000e+00 0.00000000000000000e+00 0.00000000000000000e+00 0.00000000000000000e+00",
+      "actual": [
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "id": 5,
+      "name": "A0_complex_mu_0.01",
+      "source": "tests/data/scalar_audit.txt:211",
+      "kind": 1,
+      "family": "A0",
+      "mu_squared": 0.01,
+      "momenta": [],
+      "masses": [
+        [
+          2.0,
+          -0.1
+        ]
+      ],
+      "expected": [
+        [
+          -8.594135773722465,
+          0.5298733721086185
+        ],
+        [
+          2.0,
+          -0.1
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ],
+      "normalization": 0.5,
+      "row": "1 1.00000000000000002e-02 2.00000000000000000e+00 -1.00000000000000006e-01 -8.59413577372246529e+00 5.29873372108618512e-01 2.00000000000000000e+00 -1.00000000000000006e-01 0.00000000000000000e+00 0.00000000000000000e+00",
+      "actual": [
+        [
+          -8.594135773722465,
+          0.5298733721086185
+        ],
+        [
+          2.0,
+          -0.1
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "id": 6,
+      "name": "A0_complex_mu_10000",
+      "source": "tests/data/scalar_audit.txt:265",
+      "kind": 1,
+      "family": "A0",
+      "mu_squared": 10000.0,
+      "momenta": [],
+      "masses": [
+        [
+          2.0,
+          -0.1
+        ]
+      ],
+      "expected": [
+        [
+          19.036885342206084,
+          -0.8516776836878088
+        ],
+        [
+          2.0,
+          -0.1
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ],
+      "normalization": 0.5,
+      "row": "1 1.00000000000000000e+04 2.00000000000000000e+00 -1.00000000000000006e-01 1.90368853422060837e+01 -8.51677683687808829e-01 2.00000000000000000e+00 -1.00000000000000006e-01 0.00000000000000000e+00 0.00000000000000000e+00",
+      "actual": [
+        [
+          19.036885342206084,
+          -0.8516776836878088
+        ],
+        [
+          2.0,
+          -0.1
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    }
+  ],
+  "summaries": [
+    {
+      "mode": "SAME",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 1,
+      "name": "A0_real",
+      "calls": 524288,
+      "distinct_rows": 1,
+      "wall_ns_per_call_median": 36.54457473754883,
+      "wall_ns_per_call_min": 36.41962432861328,
+      "wall_ns_per_call_max": 36.83821105957031,
+      "cpu_ns_per_call_median": 36.32164001464843
+    },
+    {
+      "mode": "SAME",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 2,
+      "name": "A0_negative_axis",
+      "calls": 524288,
+      "distinct_rows": 1,
+      "wall_ns_per_call_median": 37.28806114196777,
+      "wall_ns_per_call_min": 37.19091987609863,
+      "wall_ns_per_call_max": 37.446258544921875,
+      "cpu_ns_per_call_median": 37.050247192382756
+    },
+    {
+      "mode": "SAME",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 3,
+      "name": "A0_complex",
+      "calls": 524288,
+      "distinct_rows": 1,
+      "wall_ns_per_call_median": 75.79393005371094,
+      "wall_ns_per_call_min": 75.70405578613281,
+      "wall_ns_per_call_max": 76.1908130645752,
+      "cpu_ns_per_call_median": 75.34790039062497
+    },
+    {
+      "mode": "SAME",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 4,
+      "name": "A0_scaleless",
+      "calls": 524288,
+      "distinct_rows": 1,
+      "wall_ns_per_call_median": 10.74233627319336,
+      "wall_ns_per_call_min": 10.72181510925293,
+      "wall_ns_per_call_max": 10.75168228149414,
+      "cpu_ns_per_call_median": 10.662078857422056
+    },
+    {
+      "mode": "SAME",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 5,
+      "name": "A0_complex_mu_0.01",
+      "calls": 524288,
+      "distinct_rows": 1,
+      "wall_ns_per_call_median": 75.86846923828125,
+      "wall_ns_per_call_min": 75.6130199432373,
+      "wall_ns_per_call_max": 76.31425666809082,
+      "cpu_ns_per_call_median": 75.29830932617169
+    },
+    {
+      "mode": "SAME",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 6,
+      "name": "A0_complex_mu_10000",
+      "calls": 524288,
+      "distinct_rows": 1,
+      "wall_ns_per_call_median": 76.90841865539551,
+      "wall_ns_per_call_min": 76.39951515197754,
+      "wall_ns_per_call_max": 77.12993812561035,
+      "cpu_ns_per_call_median": 76.33590698242188
+    },
+    {
+      "mode": "HETERO",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 0,
+      "name": "A0_heterogeneous",
+      "calls": 524288,
+      "distinct_rows": 6,
+      "wall_ns_per_call_median": 55.36160087585449,
+      "wall_ns_per_call_min": 55.20022010803223,
+      "wall_ns_per_call_max": 55.479248046875,
+      "cpu_ns_per_call_median": 54.94499206542974
+    }
+  ],
+  "samples": [
+    {
+      "mode": "SAME",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 1,
+      "name": "A0_real",
+      "repetition": 1,
+      "calls": 524288,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.019313832,
+      "cpu_seconds": 0.019104,
+      "wall_ns_per_call": 36.83821105957031,
+      "cpu_ns_per_call": 36.43798828125,
+      "finite_checksum": [
+        321758.50199588283,
+        0.0
+      ],
+      "last_output": [
+        [
+          0.6137056388801094,
+          0.0
+        ],
+        [
+          2.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 1,
+      "name": "A0_real",
+      "repetition": 2,
+      "calls": 524288,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.019260452,
+      "cpu_seconds": 0.019122999999999998,
+      "wall_ns_per_call": 36.73639678955078,
+      "cpu_ns_per_call": 36.47422790527343,
+      "finite_checksum": [
+        321758.50199588283,
+        0.0
+      ],
+      "last_output": [
+        [
+          0.6137056388801094,
+          0.0
+        ],
+        [
+          2.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 1,
+      "name": "A0_real",
+      "repetition": 3,
+      "calls": 524288,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.019157212,
+      "cpu_seconds": 0.019032,
+      "wall_ns_per_call": 36.53948211669922,
+      "cpu_ns_per_call": 36.3006591796875,
+      "finite_checksum": [
+        321758.50199588283,
+        0.0
+      ],
+      "last_output": [
+        [
+          0.6137056388801094,
+          0.0
+        ],
+        [
+          2.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 1,
+      "name": "A0_real",
+      "repetition": 4,
+      "calls": 524288,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.019154972,
+      "cpu_seconds": 0.019042999999999997,
+      "wall_ns_per_call": 36.53520965576172,
+      "cpu_ns_per_call": 36.32164001464843,
+      "finite_checksum": [
+        321758.50199588283,
+        0.0
+      ],
+      "last_output": [
+        [
+          0.6137056388801094,
+          0.0
+        ],
+        [
+          2.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 1,
+      "name": "A0_real",
+      "repetition": 5,
+      "calls": 524288,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.019109042,
+      "cpu_seconds": 0.018992999999999996,
+      "wall_ns_per_call": 36.44760513305664,
+      "cpu_ns_per_call": 36.226272583007805,
+      "finite_checksum": [
+        321758.50199588283,
+        0.0
+      ],
+      "last_output": [
+        [
+          0.6137056388801094,
+          0.0
+        ],
+        [
+          2.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 1,
+      "name": "A0_real",
+      "repetition": 6,
+      "calls": 524288,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.019226562,
+      "cpu_seconds": 0.019100999999999993,
+      "wall_ns_per_call": 36.671756744384766,
+      "cpu_ns_per_call": 36.43226623535155,
+      "finite_checksum": [
+        321758.50199588283,
+        0.0
+      ],
+      "last_output": [
+        [
+          0.6137056388801094,
+          0.0
+        ],
+        [
+          2.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 1,
+      "name": "A0_real",
+      "repetition": 7,
+      "calls": 524288,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.019094372,
+      "cpu_seconds": 0.018966999999999998,
+      "wall_ns_per_call": 36.41962432861328,
+      "cpu_ns_per_call": 36.17668151855468,
+      "finite_checksum": [
+        321758.50199588283,
+        0.0
+      ],
+      "last_output": [
+        [
+          0.6137056388801094,
+          0.0
+        ],
+        [
+          2.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 1,
+      "name": "A0_real",
+      "repetition": 8,
+      "calls": 524288,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.019264742,
+      "cpu_seconds": 0.019115999999999994,
+      "wall_ns_per_call": 36.74457931518555,
+      "cpu_ns_per_call": 36.460876464843736,
+      "finite_checksum": [
+        321758.50199588283,
+        0.0
+      ],
+      "last_output": [
+        [
+          0.6137056388801094,
+          0.0
+        ],
+        [
+          2.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 1,
+      "name": "A0_real",
+      "repetition": 9,
+      "calls": 524288,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.019159882,
+      "cpu_seconds": 0.019039,
+      "wall_ns_per_call": 36.54457473754883,
+      "cpu_ns_per_call": 36.31401062011719,
+      "finite_checksum": [
+        321758.50199588283,
+        0.0
+      ],
+      "last_output": [
+        [
+          0.6137056388801094,
+          0.0
+        ],
+        [
+          2.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 2,
+      "name": "A0_negative_axis",
+      "repetition": 1,
+      "calls": 524288,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.019513943,
+      "cpu_seconds": 0.019386999999999988,
+      "wall_ns_per_call": 37.219892501831055,
+      "cpu_ns_per_call": 36.977767944335916,
+      "finite_checksum": [
+        -321758.50199588283,
+        -3294198.658369799
+      ],
+      "last_output": [
+        [
+          -0.6137056388801094,
+          -6.283185307179586
+        ],
+        [
+          -2.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 2,
+      "name": "A0_negative_axis",
+      "repetition": 2,
+      "calls": 524288,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.019566733,
+      "cpu_seconds": 0.019441000000000014,
+      "wall_ns_per_call": 37.32058143615723,
+      "cpu_ns_per_call": 37.08076477050784,
+      "finite_checksum": [
+        -321758.50199588283,
+        -3294198.658369799
+      ],
+      "last_output": [
+        [
+          -0.6137056388801094,
+          -6.283185307179586
+        ],
+        [
+          -2.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 2,
+      "name": "A0_negative_axis",
+      "repetition": 3,
+      "calls": 524288,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.019558994,
+      "cpu_seconds": 0.019440000000000013,
+      "wall_ns_per_call": 37.30582046508789,
+      "cpu_ns_per_call": 37.07885742187502,
+      "finite_checksum": [
+        -321758.50199588283,
+        -3294198.658369799
+      ],
+      "last_output": [
+        [
+          -0.6137056388801094,
+          -6.283185307179586
+        ],
+        [
+          -2.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 2,
+      "name": "A0_negative_axis",
+      "repetition": 4,
+      "calls": 524288,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.019498753,
+      "cpu_seconds": 0.019395000000000023,
+      "wall_ns_per_call": 37.19091987609863,
+      "cpu_ns_per_call": 36.99302673339848,
+      "finite_checksum": [
+        -321758.50199588283,
+        -3294198.658369799
+      ],
+      "last_output": [
+        [
+          -0.6137056388801094,
+          -6.283185307179586
+        ],
+        [
+          -2.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 2,
+      "name": "A0_negative_axis",
+      "repetition": 5,
+      "calls": 524288,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.019549683,
+      "cpu_seconds": 0.01942499999999997,
+      "wall_ns_per_call": 37.28806114196777,
+      "cpu_ns_per_call": 37.050247192382756,
+      "finite_checksum": [
+        -321758.50199588283,
+        -3294198.658369799
+      ],
+      "last_output": [
+        [
+          -0.6137056388801094,
+          -6.283185307179586
+        ],
+        [
+          -2.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 2,
+      "name": "A0_negative_axis",
+      "repetition": 6,
+      "calls": 524288,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.019558593,
+      "cpu_seconds": 0.019433000000000034,
+      "wall_ns_per_call": 37.30505561828613,
+      "cpu_ns_per_call": 37.06550598144538,
+      "finite_checksum": [
+        -321758.50199588283,
+        -3294198.658369799
+      ],
+      "last_output": [
+        [
+          -0.6137056388801094,
+          -6.283185307179586
+        ],
+        [
+          -2.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 2,
+      "name": "A0_negative_axis",
+      "repetition": 7,
+      "calls": 524288,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.019632624,
+      "cpu_seconds": 0.01951400000000003,
+      "wall_ns_per_call": 37.446258544921875,
+      "cpu_ns_per_call": 37.22000122070318,
+      "finite_checksum": [
+        -321758.50199588283,
+        -3294198.658369799
+      ],
+      "last_output": [
+        [
+          -0.6137056388801094,
+          -6.283185307179586
+        ],
+        [
+          -2.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 2,
+      "name": "A0_negative_axis",
+      "repetition": 8,
+      "calls": 524288,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.019533933,
+      "cpu_seconds": 0.01941100000000001,
+      "wall_ns_per_call": 37.25802040100098,
+      "cpu_ns_per_call": 37.02354431152346,
+      "finite_checksum": [
+        -321758.50199588283,
+        -3294198.658369799
+      ],
+      "last_output": [
+        [
+          -0.6137056388801094,
+          -6.283185307179586
+        ],
+        [
+          -2.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 2,
+      "name": "A0_negative_axis",
+      "repetition": 9,
+      "calls": 524288,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.019504243,
+      "cpu_seconds": 0.01938099999999998,
+      "wall_ns_per_call": 37.20139122009277,
+      "cpu_ns_per_call": 36.96632385253903,
+      "finite_checksum": [
+        -321758.50199588283,
+        -3294198.658369799
+      ],
+      "last_output": [
+        [
+          -0.6137056388801094,
+          -6.283185307179586
+        ],
+        [
+          -2.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 3,
+      "name": "A0_complex",
+      "repetition": 1,
+      "calls": 524288,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.039737848,
+      "cpu_seconds": 0.039503999999999984,
+      "wall_ns_per_call": 75.79393005371094,
+      "cpu_ns_per_call": 75.34790039062497,
+      "finite_checksum": [
+        323068.67641033034,
+        36362.7038688714
+      ],
+      "last_output": [
+        [
+          0.6162045982537163,
+          0.06935635350980943
+        ],
+        [
+          2.0,
+          -0.1
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 3,
+      "name": "A0_complex",
+      "repetition": 2,
+      "calls": 524288,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.039730288,
+      "cpu_seconds": 0.03948700000000005,
+      "wall_ns_per_call": 75.77951049804688,
+      "cpu_ns_per_call": 75.31547546386729,
+      "finite_checksum": [
+        323068.67641033034,
+        36362.7038688714
+      ],
+      "last_output": [
+        [
+          0.6162045982537163,
+          0.06935635350980943
+        ],
+        [
+          2.0,
+          -0.1
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 3,
+      "name": "A0_complex",
+      "repetition": 3,
+      "calls": 524288,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.039841538,
+      "cpu_seconds": 0.03956500000000002,
+      "wall_ns_per_call": 75.99170303344727,
+      "cpu_ns_per_call": 75.46424865722659,
+      "finite_checksum": [
+        323068.67641033034,
+        36362.7038688714
+      ],
+      "last_output": [
+        [
+          0.6162045982537163,
+          0.06935635350980943
+        ],
+        [
+          2.0,
+          -0.1
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 3,
+      "name": "A0_complex",
+      "repetition": 4,
+      "calls": 524288,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.039840558,
+      "cpu_seconds": 0.03956700000000002,
+      "wall_ns_per_call": 75.98983383178711,
+      "cpu_ns_per_call": 75.46806335449223,
+      "finite_checksum": [
+        323068.67641033034,
+        36362.7038688714
+      ],
+      "last_output": [
+        [
+          0.6162045982537163,
+          0.06935635350980943
+        ],
+        [
+          2.0,
+          -0.1
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 3,
+      "name": "A0_complex",
+      "repetition": 5,
+      "calls": 524288,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.039706799,
+      "cpu_seconds": 0.03945999999999994,
+      "wall_ns_per_call": 75.73470878601074,
+      "cpu_ns_per_call": 75.26397705078114,
+      "finite_checksum": [
+        323068.67641033034,
+        36362.7038688714
+      ],
+      "last_output": [
+        [
+          0.6162045982537163,
+          0.06935635350980943
+        ],
+        [
+          2.0,
+          -0.1
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 3,
+      "name": "A0_complex",
+      "repetition": 6,
+      "calls": 524288,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.039724618,
+      "cpu_seconds": 0.039439,
+      "wall_ns_per_call": 75.76869583129883,
+      "cpu_ns_per_call": 75.22392272949219,
+      "finite_checksum": [
+        323068.67641033034,
+        36362.7038688714
+      ],
+      "last_output": [
+        [
+          0.6162045982537163,
+          0.06935635350980943
+        ],
+        [
+          2.0,
+          -0.1
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 3,
+      "name": "A0_complex",
+      "repetition": 7,
+      "calls": 524288,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.039821439,
+      "cpu_seconds": 0.03952699999999998,
+      "wall_ns_per_call": 75.95336723327637,
+      "cpu_ns_per_call": 75.39176940917964,
+      "finite_checksum": [
+        323068.67641033034,
+        36362.7038688714
+      ],
+      "last_output": [
+        [
+          0.6162045982537163,
+          0.06935635350980943
+        ],
+        [
+          2.0,
+          -0.1
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 3,
+      "name": "A0_complex",
+      "repetition": 8,
+      "calls": 524288,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.039945929,
+      "cpu_seconds": 0.039675000000000016,
+      "wall_ns_per_call": 76.1908130645752,
+      "cpu_ns_per_call": 75.67405700683597,
+      "finite_checksum": [
+        323068.67641033034,
+        36362.7038688714
+      ],
+      "last_output": [
+        [
+          0.6162045982537163,
+          0.06935635350980943
+        ],
+        [
+          2.0,
+          -0.1
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 3,
+      "name": "A0_complex",
+      "repetition": 9,
+      "calls": 524288,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.039690728,
+      "cpu_seconds": 0.039385,
+      "wall_ns_per_call": 75.70405578613281,
+      "cpu_ns_per_call": 75.12092590332031,
+      "finite_checksum": [
+        323068.67641033034,
+        36362.7038688714
+      ],
+      "last_output": [
+        [
+          0.6162045982537163,
+          0.06935635350980943
+        ],
+        [
+          2.0,
+          -0.1
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 4,
+      "name": "A0_scaleless",
+      "repetition": 1,
+      "calls": 524288,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.005636978,
+      "cpu_seconds": 0.005592000000000041,
+      "wall_ns_per_call": 10.75168228149414,
+      "cpu_ns_per_call": 10.665893554687578,
+      "finite_checksum": [
+        0.0,
+        0.0
+      ],
+      "last_output": [
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 4,
+      "name": "A0_scaleless",
+      "repetition": 2,
+      "calls": 524288,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.005621319,
+      "cpu_seconds": 0.005590000000000095,
+      "wall_ns_per_call": 10.72181510925293,
+      "cpu_ns_per_call": 10.662078857422056,
+      "finite_checksum": [
+        0.0,
+        0.0
+      ],
+      "last_output": [
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 4,
+      "name": "A0_scaleless",
+      "repetition": 3,
+      "calls": 524288,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.005633278,
+      "cpu_seconds": 0.005588999999999955,
+      "wall_ns_per_call": 10.744625091552734,
+      "cpu_ns_per_call": 10.660171508788977,
+      "finite_checksum": [
+        0.0,
+        0.0
+      ],
+      "last_output": [
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 4,
+      "name": "A0_scaleless",
+      "repetition": 4,
+      "calls": 524288,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.005629578,
+      "cpu_seconds": 0.005589000000000066,
+      "wall_ns_per_call": 10.737567901611328,
+      "cpu_ns_per_call": 10.660171508789189,
+      "finite_checksum": [
+        0.0,
+        0.0
+      ],
+      "last_output": [
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 4,
+      "name": "A0_scaleless",
+      "repetition": 5,
+      "calls": 524288,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.005622968,
+      "cpu_seconds": 0.005588999999999955,
+      "wall_ns_per_call": 10.724960327148438,
+      "cpu_ns_per_call": 10.660171508788977,
+      "finite_checksum": [
+        0.0,
+        0.0
+      ],
+      "last_output": [
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 4,
+      "name": "A0_scaleless",
+      "repetition": 6,
+      "calls": 524288,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.005634527,
+      "cpu_seconds": 0.005591000000000013,
+      "wall_ns_per_call": 10.747007369995117,
+      "cpu_ns_per_call": 10.663986206054712,
+      "finite_checksum": [
+        0.0,
+        0.0
+      ],
+      "last_output": [
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 4,
+      "name": "A0_scaleless",
+      "repetition": 7,
+      "calls": 524288,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.005624108,
+      "cpu_seconds": 0.005588999999999955,
+      "wall_ns_per_call": 10.727134704589844,
+      "cpu_ns_per_call": 10.660171508788977,
+      "finite_checksum": [
+        0.0,
+        0.0
+      ],
+      "last_output": [
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 4,
+      "name": "A0_scaleless",
+      "repetition": 8,
+      "calls": 524288,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.005634988,
+      "cpu_seconds": 0.005591000000000013,
+      "wall_ns_per_call": 10.747886657714844,
+      "cpu_ns_per_call": 10.663986206054712,
+      "finite_checksum": [
+        0.0,
+        0.0
+      ],
+      "last_output": [
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 4,
+      "name": "A0_scaleless",
+      "repetition": 9,
+      "calls": 524288,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.005632078,
+      "cpu_seconds": 0.005592000000000041,
+      "wall_ns_per_call": 10.74233627319336,
+      "cpu_ns_per_call": 10.665893554687578,
+      "finite_checksum": [
+        0.0,
+        0.0
+      ],
+      "last_output": [
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 5,
+      "name": "A0_complex_mu_0.01",
+      "repetition": 1,
+      "calls": 524288,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.039719028,
+      "cpu_seconds": 0.039466,
+      "wall_ns_per_call": 75.7580337524414,
+      "cpu_ns_per_call": 75.27542114257812,
+      "finite_checksum": [
+        -4505802.25656076,
+        277806.2505180703
+      ],
+      "last_output": [
+        [
+          -8.594135773722465,
+          0.5298733721086185
+        ],
+        [
+          2.0,
+          -0.1
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 5,
+      "name": "A0_complex_mu_0.01",
+      "repetition": 2,
+      "calls": 524288,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.039812409,
+      "cpu_seconds": 0.039529999999999954,
+      "wall_ns_per_call": 75.93614387512207,
+      "cpu_ns_per_call": 75.39749145507804,
+      "finite_checksum": [
+        -4505802.25656076,
+        277806.2505180703
+      ],
+      "last_output": [
+        [
+          -8.594135773722465,
+          0.5298733721086185
+        ],
+        [
+          2.0,
+          -0.1
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 5,
+      "name": "A0_complex_mu_0.01",
+      "repetition": 3,
+      "calls": 524288,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.039837759,
+      "cpu_seconds": 0.03957300000000008,
+      "wall_ns_per_call": 75.98449516296387,
+      "cpu_ns_per_call": 75.47950744628922,
+      "finite_checksum": [
+        -4505802.25656076,
+        277806.2505180703
+      ],
+      "last_output": [
+        [
+          -8.594135773722465,
+          0.5298733721086185
+        ],
+        [
+          2.0,
+          -0.1
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 5,
+      "name": "A0_complex_mu_0.01",
+      "repetition": 4,
+      "calls": 524288,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.039777329,
+      "cpu_seconds": 0.039515999999999996,
+      "wall_ns_per_call": 75.86923408508301,
+      "cpu_ns_per_call": 75.37078857421874,
+      "finite_checksum": [
+        -4505802.25656076,
+        277806.2505180703
+      ],
+      "last_output": [
+        [
+          -8.594135773722465,
+          0.5298733721086185
+        ],
+        [
+          2.0,
+          -0.1
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 5,
+      "name": "A0_complex_mu_0.01",
+      "repetition": 5,
+      "calls": 524288,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.039735168,
+      "cpu_seconds": 0.039443000000000006,
+      "wall_ns_per_call": 75.788818359375,
+      "cpu_ns_per_call": 75.23155212402345,
+      "finite_checksum": [
+        -4505802.25656076,
+        277806.2505180703
+      ],
+      "last_output": [
+        [
+          -8.594135773722465,
+          0.5298733721086185
+        ],
+        [
+          2.0,
+          -0.1
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 5,
+      "name": "A0_complex_mu_0.01",
+      "repetition": 6,
+      "calls": 524288,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.039750198,
+      "cpu_seconds": 0.03945399999999999,
+      "wall_ns_per_call": 75.81748580932617,
+      "cpu_ns_per_call": 75.25253295898436,
+      "finite_checksum": [
+        -4505802.25656076,
+        277806.2505180703
+      ],
+      "last_output": [
+        [
+          -8.594135773722465,
+          0.5298733721086185
+        ],
+        [
+          2.0,
+          -0.1
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 5,
+      "name": "A0_complex_mu_0.01",
+      "repetition": 7,
+      "calls": 524288,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.040010649,
+      "cpu_seconds": 0.03966700000000012,
+      "wall_ns_per_call": 76.31425666809082,
+      "cpu_ns_per_call": 75.65879821777366,
+      "finite_checksum": [
+        -4505802.25656076,
+        277806.2505180703
+      ],
+      "last_output": [
+        [
+          -8.594135773722465,
+          0.5298733721086185
+        ],
+        [
+          2.0,
+          -0.1
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 5,
+      "name": "A0_complex_mu_0.01",
+      "repetition": 8,
+      "calls": 524288,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.039776928,
+      "cpu_seconds": 0.0394779999999999,
+      "wall_ns_per_call": 75.86846923828125,
+      "cpu_ns_per_call": 75.29830932617169,
+      "finite_checksum": [
+        -4505802.25656076,
+        277806.2505180703
+      ],
+      "last_output": [
+        [
+          -8.594135773722465,
+          0.5298733721086185
+        ],
+        [
+          2.0,
+          -0.1
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 5,
+      "name": "A0_complex_mu_0.01",
+      "repetition": 9,
+      "calls": 524288,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.039642999,
+      "cpu_seconds": 0.039369999999999905,
+      "wall_ns_per_call": 75.6130199432373,
+      "cpu_ns_per_call": 75.09231567382794,
+      "finite_checksum": [
+        -4505802.25656076,
+        277806.2505180703
+      ],
+      "last_output": [
+        [
+          -8.594135773722465,
+          0.5298733721086185
+        ],
+        [
+          2.0,
+          -0.1
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 6,
+      "name": "A0_complex_mu_10000",
+      "repetition": 1,
+      "calls": 524288,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.04027797,
+      "cpu_seconds": 0.040022,
+      "wall_ns_per_call": 76.82413101196289,
+      "cpu_ns_per_call": 76.33590698242188,
+      "finite_checksum": [
+        9980810.542306371,
+        -446524.389427956
+      ],
+      "last_output": [
+        [
+          19.036885342206084,
+          -0.8516776836878088
+        ],
+        [
+          2.0,
+          -0.1
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 6,
+      "name": "A0_complex_mu_10000",
+      "repetition": 2,
+      "calls": 524288,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.04034676,
+      "cpu_seconds": 0.04009099999999988,
+      "wall_ns_per_call": 76.95533752441406,
+      "cpu_ns_per_call": 76.4675140380857,
+      "finite_checksum": [
+        9980810.542306371,
+        -446524.389427956
+      ],
+      "last_output": [
+        [
+          19.036885342206084,
+          -0.8516776836878088
+        ],
+        [
+          2.0,
+          -0.1
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 6,
+      "name": "A0_complex_mu_10000",
+      "repetition": 3,
+      "calls": 524288,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.040418231,
+      "cpu_seconds": 0.04011399999999998,
+      "wall_ns_per_call": 77.0916576385498,
+      "cpu_ns_per_call": 76.5113830566406,
+      "finite_checksum": [
+        9980810.542306371,
+        -446524.389427956
+      ],
+      "last_output": [
+        [
+          19.036885342206084,
+          -0.8516776836878088
+        ],
+        [
+          2.0,
+          -0.1
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 6,
+      "name": "A0_complex_mu_10000",
+      "repetition": 4,
+      "calls": 524288,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.040438301,
+      "cpu_seconds": 0.04008500000000015,
+      "wall_ns_per_call": 77.12993812561035,
+      "cpu_ns_per_call": 76.45606994628935,
+      "finite_checksum": [
+        9980810.542306371,
+        -446524.389427956
+      ],
+      "last_output": [
+        [
+          19.036885342206084,
+          -0.8516776836878088
+        ],
+        [
+          2.0,
+          -0.1
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 6,
+      "name": "A0_complex_mu_10000",
+      "repetition": 5,
+      "calls": 524288,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.040342281,
+      "cpu_seconds": 0.040051999999999977,
+      "wall_ns_per_call": 76.9467945098877,
+      "cpu_ns_per_call": 76.39312744140621,
+      "finite_checksum": [
+        9980810.542306371,
+        -446524.389427956
+      ],
+      "last_output": [
+        [
+          19.036885342206084,
+          -0.8516776836878088
+        ],
+        [
+          2.0,
+          -0.1
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 6,
+      "name": "A0_complex_mu_10000",
+      "repetition": 6,
+      "calls": 524288,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.04016723,
+      "cpu_seconds": 0.039852,
+      "wall_ns_per_call": 76.61291122436523,
+      "cpu_ns_per_call": 76.01165771484375,
+      "finite_checksum": [
+        9980810.542306371,
+        -446524.389427956
+      ],
+      "last_output": [
+        [
+          19.036885342206084,
+          -0.8516776836878088
+        ],
+        [
+          2.0,
+          -0.1
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 6,
+      "name": "A0_complex_mu_10000",
+      "repetition": 7,
+      "calls": 524288,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.04026441,
+      "cpu_seconds": 0.04000399999999993,
+      "wall_ns_per_call": 76.79826736450195,
+      "cpu_ns_per_call": 76.30157470703111,
+      "finite_checksum": [
+        9980810.542306371,
+        -446524.389427956
+      ],
+      "last_output": [
+        [
+          19.036885342206084,
+          -0.8516776836878088
+        ],
+        [
+          2.0,
+          -0.1
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 6,
+      "name": "A0_complex_mu_10000",
+      "repetition": 8,
+      "calls": 524288,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.040055349,
+      "cpu_seconds": 0.039781999999999984,
+      "wall_ns_per_call": 76.39951515197754,
+      "cpu_ns_per_call": 75.87814331054685,
+      "finite_checksum": [
+        9980810.542306371,
+        -446524.389427956
+      ],
+      "last_output": [
+        [
+          19.036885342206084,
+          -0.8516776836878088
+        ],
+        [
+          2.0,
+          -0.1
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "SAME",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 6,
+      "name": "A0_complex_mu_10000",
+      "repetition": 9,
+      "calls": 524288,
+      "distinct_rows": 1,
+      "heterogeneous_tail_rows": 0,
+      "wall_seconds": 0.040322161,
+      "cpu_seconds": 0.039995,
+      "wall_ns_per_call": 76.90841865539551,
+      "cpu_ns_per_call": 76.28440856933594,
+      "finite_checksum": [
+        9980810.542306371,
+        -446524.389427956
+      ],
+      "last_output": [
+        [
+          19.036885342206084,
+          -0.8516776836878088
+        ],
+        [
+          2.0,
+          -0.1
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "HETERO",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 0,
+      "name": "A0_heterogeneous",
+      "repetition": 1,
+      "calls": 524288,
+      "distinct_rows": 6,
+      "heterogeneous_tail_rows": 2,
+      "wall_seconds": 0.029057003,
+      "cpu_seconds": 0.028804000000000052,
+      "wall_ns_per_call": 55.42183494567871,
+      "cpu_ns_per_call": 54.93927001953135,
+      "finite_checksum": [
+        966342.4740436777,
+        -571096.4535364907
+      ],
+      "last_output": [
+        [
+          -0.6137056388801094,
+          -6.283185307179586
+        ],
+        [
+          -2.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "HETERO",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 0,
+      "name": "A0_heterogeneous",
+      "repetition": 2,
+      "calls": 524288,
+      "distinct_rows": 6,
+      "heterogeneous_tail_rows": 2,
+      "wall_seconds": 0.028965723,
+      "cpu_seconds": 0.02873900000000007,
+      "wall_ns_per_call": 55.247732162475586,
+      "cpu_ns_per_call": 54.81529235839857,
+      "finite_checksum": [
+        966342.4740436777,
+        -571096.4535364907
+      ],
+      "last_output": [
+        [
+          -0.6137056388801094,
+          -6.283185307179586
+        ],
+        [
+          -2.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "HETERO",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 0,
+      "name": "A0_heterogeneous",
+      "repetition": 3,
+      "calls": 524288,
+      "distinct_rows": 6,
+      "heterogeneous_tail_rows": 2,
+      "wall_seconds": 0.029021664,
+      "cpu_seconds": 0.02880000000000016,
+      "wall_ns_per_call": 55.35443115234375,
+      "cpu_ns_per_call": 54.931640625000306,
+      "finite_checksum": [
+        966342.4740436777,
+        -571096.4535364907
+      ],
+      "last_output": [
+        [
+          -0.6137056388801094,
+          -6.283185307179586
+        ],
+        [
+          -2.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "HETERO",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 0,
+      "name": "A0_heterogeneous",
+      "repetition": 4,
+      "calls": 524288,
+      "distinct_rows": 6,
+      "heterogeneous_tail_rows": 2,
+      "wall_seconds": 0.029087104,
+      "cpu_seconds": 0.028828999999999994,
+      "wall_ns_per_call": 55.479248046875,
+      "cpu_ns_per_call": 54.98695373535155,
+      "finite_checksum": [
+        966342.4740436777,
+        -571096.4535364907
+      ],
+      "last_output": [
+        [
+          -0.6137056388801094,
+          -6.283185307179586
+        ],
+        [
+          -2.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "HETERO",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 0,
+      "name": "A0_heterogeneous",
+      "repetition": 5,
+      "calls": 524288,
+      "distinct_rows": 6,
+      "heterogeneous_tail_rows": 2,
+      "wall_seconds": 0.029027744,
+      "cpu_seconds": 0.028828000000000076,
+      "wall_ns_per_call": 55.36602783203125,
+      "cpu_ns_per_call": 54.98504638671889,
+      "finite_checksum": [
+        966342.4740436777,
+        -571096.4535364907
+      ],
+      "last_output": [
+        [
+          -0.6137056388801094,
+          -6.283185307179586
+        ],
+        [
+          -2.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "HETERO",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 0,
+      "name": "A0_heterogeneous",
+      "repetition": 6,
+      "calls": 524288,
+      "distinct_rows": 6,
+      "heterogeneous_tail_rows": 2,
+      "wall_seconds": 0.029066584,
+      "cpu_seconds": 0.028807000000000027,
+      "wall_ns_per_call": 55.44010925292969,
+      "cpu_ns_per_call": 54.94499206542974,
+      "finite_checksum": [
+        966342.4740436777,
+        -571096.4535364907
+      ],
+      "last_output": [
+        [
+          -0.6137056388801094,
+          -6.283185307179586
+        ],
+        [
+          -2.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "HETERO",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 0,
+      "name": "A0_heterogeneous",
+      "repetition": 7,
+      "calls": 524288,
+      "distinct_rows": 6,
+      "heterogeneous_tail_rows": 2,
+      "wall_seconds": 0.028940813,
+      "cpu_seconds": 0.028741000000000128,
+      "wall_ns_per_call": 55.20022010803223,
+      "cpu_ns_per_call": 54.819107055664304,
+      "finite_checksum": [
+        966342.4740436777,
+        -571096.4535364907
+      ],
+      "last_output": [
+        [
+          -0.6137056388801094,
+          -6.283185307179586
+        ],
+        [
+          -2.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "HETERO",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 0,
+      "name": "A0_heterogeneous",
+      "repetition": 8,
+      "calls": 524288,
+      "distinct_rows": 6,
+      "heterogeneous_tail_rows": 2,
+      "wall_seconds": 0.029025423,
+      "cpu_seconds": 0.028820999999999986,
+      "wall_ns_per_call": 55.36160087585449,
+      "cpu_ns_per_call": 54.971694946289034,
+      "finite_checksum": [
+        966342.4740436777,
+        -571096.4535364907
+      ],
+      "last_output": [
+        [
+          -0.6137056388801094,
+          -6.283185307179586
+        ],
+        [
+          -2.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "mode": "HETERO",
+      "kind": 1,
+      "family": "A0",
+      "fixture_id": 0,
+      "name": "A0_heterogeneous",
+      "repetition": 9,
+      "calls": 524288,
+      "distinct_rows": 6,
+      "heterogeneous_tail_rows": 2,
+      "wall_seconds": 0.029020654,
+      "cpu_seconds": 0.02882299999999982,
+      "wall_ns_per_call": 55.35250473022461,
+      "cpu_ns_per_call": 54.975509643554346,
+      "finite_checksum": [
+        966342.4740436777,
+        -571096.4535364907
+      ],
+      "last_output": [
+        [
+          -0.6137056388801094,
+          -6.283185307179586
+        ],
+        [
+          -2.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    }
+  ]
+}

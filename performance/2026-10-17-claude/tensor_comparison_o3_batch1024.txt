@@ -1,0 +1,26 @@
+VALUE parity over 19 rows: worst relative difference 9.190e-16 at B11_complex output 6
+batch 1024: median ns per call (native / Fortran)
+mode    family workload                         Fortran      native   ratio
+ALL     ALL   all                                411.1       123.2   0.300
+HETERO  An    all                                 72.5        37.2   0.513
+HETERO  B11   all                                424.9       132.0   0.311
+HETERO  B111  all                                526.9       148.8   0.282
+SAME    An    An_complex                         101.3        51.8   0.511
+SAME    An    An_negative                         60.3        32.1   0.532
+SAME    An    An_top                              60.6        31.6   0.522
+SAME    B11   B11_above_threshold                292.9       138.6   0.473
+SAME    B11   B11_below_threshold               1412.8       171.5   0.121
+SAME    B11   B11_complex                        692.6       215.8   0.312
+SAME    B11   B11_massless_m0                    183.2        93.7   0.512
+SAME    B11   B11_p0_equal                       108.8        39.3   0.361
+SAME    B11   B11_p0_unequal                     170.6        99.4   0.583
+SAME    B11   B11_small_p_series                 267.2       142.6   0.534
+SAME    B11   B11_spacelike                      254.1       152.2   0.599
+SAME    B111  B111_above_threshold               349.1       158.3   0.453
+SAME    B111  B111_below_threshold              1822.2       190.9   0.105
+SAME    B111  B111_complex                       870.5       245.8   0.282
+SAME    B111  B111_massless_m0                   216.0       104.4   0.483
+SAME    B111  B111_p0_equal                      119.8        45.9   0.383
+SAME    B111  B111_p0_unequal                    200.1       110.8   0.553
+SAME    B111  B111_small_p_series                322.4       162.8   0.505
+SAME    B111  B111_spacelike                     303.7       167.8   0.553

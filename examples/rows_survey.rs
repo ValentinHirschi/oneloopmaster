@@ -83,7 +83,10 @@ fn parse(path: &str) -> Vec<Row> {
         if line.starts_with('#') || line.trim().is_empty() {
             continue;
         }
-        let values: Vec<f64> = line.split_whitespace().map(|v| v.parse().unwrap()).collect();
+        let values: Vec<f64> = line
+            .split_whitespace()
+            .map(|v| v.parse().unwrap())
+            .collect();
         let kind = values[0] as usize;
         let (momenta, masses) = match kind {
             1 | 5 => (0, 1),
@@ -93,8 +96,15 @@ fn parse(path: &str) -> Vec<Row> {
             _ => panic!("unsupported row kind {kind}"),
         };
         assert_eq!(values.len(), 2 + momenta + 2 * masses, "{line}");
-        let mut input: Vec<C> = values[2..2 + momenta].iter().map(|&p| C::new(p, 0.)).collect();
-        input.extend(values[2 + momenta..].chunks_exact(2).map(|m| C::new(m[0], m[1])));
+        let mut input: Vec<C> = values[2..2 + momenta]
+            .iter()
+            .map(|&p| C::new(p, 0.))
+            .collect();
+        input.extend(
+            values[2 + momenta..]
+                .chunks_exact(2)
+                .map(|m| C::new(m[0], m[1])),
+        );
         input.push(C::new(values[1], 0.));
         rows.push(Row {
             name: if name.is_empty() {
@@ -116,23 +126,43 @@ struct Stream {
 }
 
 impl Stream {
-    fn new(rows: &[Row], selection: &[usize], calls: usize, evaluators: &[Option<Evaluator>]) -> Self {
+    fn new(
+        rows: &[Row],
+        selection: &[usize],
+        calls: usize,
+        evaluators: &[Option<Evaluator>],
+    ) -> Self {
         let order: Vec<usize> = selection.iter().copied().cycle().take(calls).collect();
         let mut groups = Vec::new();
         for kind in 1..=7 {
-            let Some(evaluator) = &evaluators[kind] else { continue };
-            let members: Vec<_> = order.iter().copied().filter(|&r| rows[r].kind == kind).collect();
+            let Some(evaluator) = &evaluators[kind] else {
+                continue;
+            };
+            let members: Vec<_> = order
+                .iter()
+                .copied()
+                .filter(|&r| rows[r].kind == kind)
+                .collect();
             if members.is_empty() {
                 continue;
             }
-            let input: Vec<C> = members.iter().flat_map(|&r| rows[r].input.iter().copied()).collect();
+            let input: Vec<C> = members
+                .iter()
+                .flat_map(|&r| rows[r].input.iter().copied())
+                .collect();
             let output = vec![C::new(f64::NAN, f64::NAN); members.len() * evaluator.outputs()];
             groups.push((kind, input, output, members.len()));
         }
         Self { order, groups }
     }
 
-    fn run(&mut self, rows: &[Row], evaluators: &mut [Option<Evaluator>], batch: usize, scratch: &mut [C]) -> C {
+    fn run(
+        &mut self,
+        rows: &[Row],
+        evaluators: &mut [Option<Evaluator>],
+        batch: usize,
+        scratch: &mut [C],
+    ) -> C {
         let mut checksum = C::new(0., 0.);
         if batch == 1 {
             for &r in &self.order {
@@ -145,8 +175,15 @@ impl Stream {
             for (kind, input, output, count) in &mut self.groups {
                 let evaluator = evaluators[*kind].as_mut().unwrap();
                 let (arity, width) = (evaluator.arity(), evaluator.outputs());
-                for (chunk_in, chunk_out) in input.chunks(arity * batch).zip(output.chunks_mut(width * batch)) {
-                    evaluator.evaluate_batch(black_box(chunk_in), chunk_out, chunk_in.len() / arity);
+                for (chunk_in, chunk_out) in input
+                    .chunks(arity * batch)
+                    .zip(output.chunks_mut(width * batch))
+                {
+                    evaluator.evaluate_batch(
+                        black_box(chunk_in),
+                        chunk_out,
+                        chunk_in.len() / arity,
+                    );
                 }
                 for row in output.chunks_exact(width).take(*count) {
                     checksum += row[0];
