@@ -152,6 +152,22 @@ impl FunctionMap {
             .map(|(args, body, _)| (count, args.as_slice(), body))
     }
 
+    /// Byte size of every registered body, largest first.
+    pub(crate) fn body_sizes(&self) -> Vec<(String, usize)> {
+        let mut sizes: Vec<(String, usize)> = self
+            .definitions
+            .iter()
+            .map(|((symbol, _), (_, body, _))| {
+                (
+                    symbol.get_name().to_string(),
+                    body.as_view().get_byte_size(),
+                )
+            })
+            .collect();
+        sizes.sort_by(|a, b| b.1.cmp(&a.1).then_with(|| a.0.cmp(&b.0)));
+        sizes
+    }
+
     /// Rebuild the recorded map with one untagged helper's body replaced.
     pub(crate) fn with_replaced_body(&self, name: Symbol, body: Atom) -> Result<Self, String> {
         if !self.definitions.contains_key(&(name, Vec::new())) {

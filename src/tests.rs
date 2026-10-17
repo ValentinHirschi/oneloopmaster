@@ -907,6 +907,7 @@ fn triangle_single_width_regression() {
         let expression = triangle_finite_one_mass(&args[0], &args[1], &args[2], &args[3]);
         let mut map = FunctionMap::new();
         sheet_exact::register(&mut map);
+        crate::triangle::register_helpers(&mut map);
         let mut evaluator = expression
             .evaluator(&args)
             .function_map(map.into())
@@ -1226,7 +1227,7 @@ fn equal_mass_box_vacuum_limit() {
 #[test]
 fn reciprocal_root_real_axis_preserves_its_sheet() {
     let q = parse!("real_axis_root_q");
-    let (root, difference) = r_function(&q);
+    let (root, difference) = crate::triangle::r_function_body(&q);
     for (input, expected) in [
         (-7. / 6_f64.sqrt(), Complex::new(-6_f64.sqrt(), 0.)),
         (3., Complex::new((3. + 5_f64.sqrt()) / 2., 0.)),

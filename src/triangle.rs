@@ -49,6 +49,19 @@ pub(crate) fn ordered_negative_quadratic_roots(
     c: &Atom,
     discriminant: &Atom,
 ) -> (Atom, Atom) {
+    let args = [a, b, c, discriminant];
+    (
+        helper_call("ordered_root_1", &args),
+        helper_call("ordered_root_2", &args),
+    )
+}
+
+fn ordered_negative_quadratic_roots_body(
+    a: &Atom,
+    b: &Atom,
+    c: &Atom,
+    discriminant: &Atom,
+) -> (Atom, Atom) {
     let plus = b + discriminant;
     let minus = b - discriminant;
     let size_difference = grouped(&(Symbol::ABS.call((&plus,)) - Symbol::ABS.call((&minus,))));
@@ -80,6 +93,11 @@ pub(crate) fn root_lip_or(
     velocity: [&Atom; 3],
     fallback: Atom,
 ) -> Atom {
+    let [da, db, dc] = velocity;
+    helper_call("root_lip", &[x, a, b, da, db, dc, &fallback])
+}
+
+fn root_lip_or_body(x: &Atom, a: &Atom, b: &Atom, velocity: [&Atom; 3], fallback: Atom) -> Atom {
     let [da, db, dc] = velocity;
     let numerator = db * x - da * x * x - dc;
     let slope = Atom::num(2) * a * x - b;
@@ -157,6 +175,20 @@ pub(crate) fn r_function_of(
     sqrt_i: &Atom,
     sqrt_j: &Atom,
 ) -> (Atom, Atom) {
+    let args = [momentum, mass_i, mass_j, sqrt_i, sqrt_j];
+    (
+        helper_call("rfun_of_root", &args),
+        helper_call("rfun_of_difference", &args),
+    )
+}
+
+fn r_function_of_body(
+    momentum: &Atom,
+    mass_i: &Atom,
+    mass_j: &Atom,
+    sqrt_i: &Atom,
+    sqrt_j: &Atom,
+) -> (Atom, Atom) {
     let k = (mass_i + mass_j - momentum) / (sqrt_i * sqrt_j);
     let (root, difference) = r_function(&k);
     let unequal = mass_i - mass_j;
@@ -197,6 +229,20 @@ pub(crate) fn r_function_of(
 /// direct difference would be rounding noise, and a later quadratic root
 /// that must vanish (OneLOop's `c = 0` in `trif3`) would become noise as well.
 pub(crate) fn r_function_inverse_gap(
+    momentum: &Atom,
+    mass_i: &Atom,
+    mass_j: &Atom,
+    sqrt_i: &Atom,
+    sqrt_j: &Atom,
+    root: &Atom,
+) -> Atom {
+    helper_call(
+        "rfun_inverse_gap",
+        &[momentum, mass_i, mass_j, sqrt_i, sqrt_j, root],
+    )
+}
+
+fn r_function_inverse_gap_body(
     momentum: &Atom,
     mass_i: &Atom,
     mass_j: &Atom,
@@ -259,6 +305,12 @@ fn zero_momentum_root(
 }
 
 pub(crate) fn r_function(value: &Atom) -> (Atom, Atom) {
+    r_function_body(value)
+}
+
+/// The definition behind [r_function], also for evaluators without the
+/// shared definitions.
+pub(crate) fn r_function_body(value: &Atom) -> (Atom, Atom) {
     // OneLOop selects the root outside the unit circle for non-real q and
     // real |q|>2, but the lower-half-plane root on the real interval [-2,2].
     // Choosing the reciprocal preserves q=r+1/r but changes continued Li2 terms.
@@ -886,7 +938,57 @@ pub fn c0_mapped(p: [&Atom; 3], m: [&Atom; 3], mu_squared: &Atom) -> MappedLaure
     c0(p, m, mu_squared)
 }
 
+/// A call of a registered r-function or quadratic-root helper.
+///
+/// These values enter the finite triangle and box formulas many times (in
+/// every continued product and dilogarithm). Referring to them through a
+/// registered definition keeps those formulas, and the time and memory to
+/// build their evaluators, proportional to the formula instead of to the
+/// product of every nested expansion.
+fn helper_call(name: &str, args: &[&Atom]) -> Atom {
+    symbolica::symbol!(format!("__olo_{name}")).call(
+        args.iter()
+            .map(|a| (*a).clone())
+            .collect::<Vec<_>>()
+            .as_slice(),
+    )
+}
+
+pub(crate) fn register_helpers(map: &mut FunctionMap) {
+    let symbols: [Symbol; 7] =
+        core::array::from_fn(|i| symbolica::symbol!(format!("__olo_helper_arg_{i}")));
+    let x = symbols.map(Symbol::to_atom);
+    let (of_root, of_difference) = r_function_of_body(&x[0], &x[1], &x[2], &x[3], &x[4]);
+    let (root_1, root_2) = ordered_negative_quadratic_roots_body(&x[0], &x[1], &x[2], &x[3]);
+    let definitions = [
+        ("rfun_of_root", 5, of_root),
+        ("rfun_of_difference", 5, of_difference),
+        (
+            "rfun_inverse_gap",
+            6,
+            r_function_inverse_gap_body(&x[0], &x[1], &x[2], &x[3], &x[4], &x[5]),
+        ),
+        ("ordered_root_1", 4, root_1),
+        ("ordered_root_2", 4, root_2),
+        (
+            "root_lip",
+            7,
+            root_lip_or_body(&x[0], &x[1], &x[2], [&x[3], &x[4], &x[5]], x[6].clone()),
+        ),
+    ];
+    for (name, arity, body) in definitions {
+        map.add_function_with_options(
+            symbolica::symbol!(format!("__olo_{name}")),
+            symbols[..arity].to_vec(),
+            body,
+            native_function_options(),
+        )
+        .expect("unique triangle helper");
+    }
+}
+
 pub(crate) fn register_triangles(map: &mut FunctionMap) {
+    register_helpers(map);
     let symbols =
         core::array::from_fn::<_, 7, _>(|i| symbolica::symbol!(format!("__olo_c0_arg_{i}")));
     let x = symbols.map(Symbol::to_atom);

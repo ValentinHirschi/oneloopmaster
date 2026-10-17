@@ -28,6 +28,14 @@ impl OneLoopExpressions {
         }
     }
 
+    /// Byte size of each registered definition body, largest first. Building
+    /// evaluators traverses these bodies, so their size bounds the time and
+    /// memory of every evaluator construction.
+    #[doc(hidden)]
+    pub fn definition_sizes(&self) -> Vec<(String, usize)> {
+        self.map.body_sizes()
+    }
+
     /// Returns the shared transparent Symbolica definitions.
     pub fn function_map(&self) -> &symbolica::evaluate::FunctionMap {
         self.map.as_symbolica()
