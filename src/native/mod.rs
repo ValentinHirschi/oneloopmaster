@@ -10,6 +10,8 @@ mod tensor;
 pub use tensor::{NativeTensorEvaluator, TensorIntegral};
 #[cfg(feature = "generated-evaluators")]
 mod simple;
+#[cfg(feature = "generated-evaluators")]
+mod handwritten;
 // The emitter has its own stable formatting and mechanically named SSA locals.
 #[rustfmt::skip]
 #[allow(clippy::all)]
@@ -54,6 +56,7 @@ pub use disabled::NativeEvaluator;
 struct Context<T: NativeFloat> {
     constants: ConstantContext<T>,
     simple: simple::Constants<T>,
+    hand: handwritten::Constants<T>,
 }
 
 #[cfg(feature = "generated-evaluators")]
@@ -64,6 +67,7 @@ impl<T: NativeFloat> Context<T> {
         Ok(Self {
             constants,
             simple: simple::Constants::new(&prototype),
+            hand: handwritten::Constants::new(&prototype),
         })
     }
 
@@ -86,6 +90,7 @@ pub struct NativeEvaluator<T: NativeFloat> {
     bits: u32,
     context: Context<T>,
     arguments: Vec<C<T>>,
+    handwritten: bool,
 }
 
 #[cfg(feature = "generated-evaluators")]
@@ -115,7 +120,18 @@ impl<T: NativeFloat> NativeEvaluator<T> {
             arguments: (0..family.arity())
                 .map(|_| C::new(T::zero_at(bits), T::zero_at(bits)))
                 .collect(),
+            // Binary64 uses the hand-written sector kernels. Tracked-precision
+            // types keep the generated expression code: their exact-zero tests
+            // and precision bookkeeping follow the expression's own grouping.
+            handwritten: T::FIXED_BITS == Some(53),
         })
+    }
+
+    /// Select the hand-written sector kernels (the binary64 default) or the
+    /// generated expression code for every sector. For validation only.
+    #[doc(hidden)]
+    pub fn set_handwritten(&mut self, enabled: bool) {
+        self.handwritten = enabled;
     }
 
     /// Integral family represented by this implementation.
@@ -180,8 +196,18 @@ impl<T: NativeFloat> NativeEvaluator<T> {
             ScalarIntegral::B0 => generated_b0::evaluate(input, &self.context),
             ScalarIntegral::DB0 => generated_db0::evaluate(input, &self.context),
             ScalarIntegral::C0 => simple::massless_triangle(input, &self.context.simple)
+                .or_else(|| {
+                    self.handwritten
+                        .then(|| handwritten::c0(input, &self.context.hand))
+                        .flatten()
+                })
                 .unwrap_or_else(|| generated_c0::evaluate(input, &self.context)),
             ScalarIntegral::D0 => simple::massless_onshell_box(input, &self.context.simple)
+                .or_else(|| {
+                    self.handwritten
+                        .then(|| handwritten::d0(input, &self.context.hand))
+                        .flatten()
+                })
                 .unwrap_or_else(|| generated_d0::evaluate(input, &self.context)),
         };
         for (out, value) in output.iter_mut().zip(values) {

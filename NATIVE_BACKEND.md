@@ -30,6 +30,32 @@ box. They retain separate continued logarithms. For example, with
 `[(2 L_s L_t - pi²)/(s t), -2(L_s+L_t)/(s t), 4/(s t)]`.
 Exact zero dispatch is used, not a small-parameter cutoff.
 
+## Hand-written binary64 sector kernels
+
+For `f64`, the dominant massive sectors use hand-written kernels in
+[`src/native/handwritten/`](src/native/handwritten/) instead of the generated
+code: the three-mass triangle (`triangle.rs`'s `trif3` representation, nonzero
+momenta with a nonnegative Källén function), and for three or four massive
+propagators the contour box of `box_complex.rs` (OneLOop `boxc`) and the
+four-mass Denner-Nierste-Scharf box (`boxf4`), with the same channel exchange
+and contour selection as `box_series`. Each is a branch-for-branch transcription
+of the expressions: the same exact zero tests (`x - |x|` sign tests included),
+infinitesimal directions, root labels and continued sheets (`sheet.rs` mirrors
+`sheet_exact.rs`). They evaluate one sector dispatch per call and never an
+inactive branch, which makes them two to five times faster than the generated
+code. Where a quadratic root of the triangle cancels in rounding, its value is
+taken from the product of the roots (identical in exact arithmetic), so that an
+exact zero produced by roundoff cannot reach a logarithm. Every other sector,
+and every sector for `DoubleFloat` and `Float` (whose tracked precision follows
+the expression's own grouping), uses the generated code. Regenerating the
+expressions does not update these kernels: an expression change in these
+sectors must be transcribed as well. `tests/native_handwritten.rs` checks them
+against the generated expressions at 256 bits on randomized kinematics and on
+every distinct C0/D0 call of the recorded Ninja benchmark streams
+(`tests/data/ninja_master_rows.txt`); `src/native/handwritten/box_contour.rs`
+checks each contour-box definition against its registered expression. Timings:
+[performance/2026-10-17-claude-c0d0](performance/2026-10-17-claude-c0d0/README.md).
+
 This keeps the expression implementation as the mathematical source. The older
 dependency-free numerical port is not copied into production: its finite-width
 regulators and then-unrepaired sectors would undo repairs already made here.
