@@ -22,7 +22,7 @@ pyo3 = "0.28"
 symbolica = { version = "3.0.1", default-features = false, features = ["tracing_max_level_info", "integer-gmp", "float-mpfr", "native_code_generation", "bincode"] }
 
 [patch.crates-io]
-# Temporary, tested integration of upstream Symbolica PRs #82, #83, #84, #87 and #88.
+# Temporary, tested integration of upstream Symbolica PRs #82, #83, #84, #87, #88 and #89.
 # Keep all three packages on one source; embedding hosts supply their own patch.
 symbolica = { git = "https://github.com/ValentinHirschi/symbolica", rev = "e679e8c129ce15ec50c46ffb4ff4b59aeb7813b8" }
 numerica = { git = "https://github.com/ValentinHirschi/symbolica", rev = "e679e8c129ce15ec50c46ffb4ff4b59aeb7813b8" }
