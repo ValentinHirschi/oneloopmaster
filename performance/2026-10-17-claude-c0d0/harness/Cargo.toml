@@ -1,0 +1,23 @@
+[package]
+name = "olbench"
+version = "0.1.0"
+edition = "2024"
+publish = false
+build = "build.rs"
+
+[workspace]
+
+[dependencies]
+oneloop = { path = "OLM", default-features = false, features = ["generated-evaluators"] }
+symbolica = { version = "3.0.1", default-features = false, features = ["integer-gmp", "float-mpfr", "bincode", "serde", "tracing_max_level_info"] }
+serde_json = "1"
+
+[patch.crates-io]
+symbolica = { path = "/shared/external/ninja/references/claude_reference/target/benchmark/masters-native-src/symbolica-e679e8c1" }
+numerica = { path = "/shared/external/ninja/references/claude_reference/target/benchmark/masters-native-src/symbolica-e679e8c1/lib/numerica" }
+graphica = { path = "/shared/external/ninja/references/claude_reference/target/benchmark/masters-native-src/symbolica-e679e8c1/lib/graphica" }
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+debug = 1

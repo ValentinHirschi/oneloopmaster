@@ -1,0 +1,1006 @@
+{
+ "executable": "/tmp/claude-1134/-shared-external-ninja/191aef8e-9579-487f-b79d-13d6de4c94fa/scratchpad/rows_bench_36o3",
+ "rows": "/shared/external/ninja/references/oneloopmaster_claude_perf/performance/2026-10-17-claude/review/hgg_rows.txt",
+ "real_interfaces": true,
+ "cpu": 60,
+ "clock_ticks_per_second": 1000000000,
+ "warmup": 256,
+ "calls": 1024,
+ "repetitions": 9,
+ "names": [
+  "hgg_C0",
+  "hgg_B11_0",
+  "hgg_B11_1",
+  "hgg_B11_2",
+  "hgg_A0_0",
+  "hgg_A0_1",
+  "hgg_A0_2"
+ ],
+ "values": {
+  "1": [
+   -1.748829596281933e-05,
+   -2.1316282072803003e-20,
+   0.0,
+   0.0,
+   0.0,
+   0.0
+  ],
+  "2": [
+   -0.0,
+   -0.0,
+   1.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   -0.5,
+   -0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.3333333333333333,
+   0.0,
+   0.0,
+   0.0
+  ],
+  "3": [
+   -0.0,
+   -0.0,
+   1.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   -0.5,
+   -0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.3333333333333333,
+   0.0,
+   0.0,
+   0.0
+  ],
+  "4": [
+   0.09192546525780287,
+   -5.551115123125783e-17,
+   1.0,
+   0.0,
+   0.0,
+   0.0,
+   -0.04596273262890149,
+   -0.0,
+   -0.5,
+   -0.0,
+   0.0,
+   0.0,
+   0.027504315981206506,
+   -2.220446049250313e-16,
+   0.3333333333333333,
+   0.0,
+   0.0,
+   0.0
+  ],
+  "5": [
+   29929.0,
+   0.0,
+   29929.0,
+   0.0,
+   0.0,
+   0.0
+  ],
+  "6": [
+   29929.0,
+   0.0,
+   29929.0,
+   0.0,
+   0.0,
+   0.0
+  ],
+  "7": [
+   29929.0,
+   0.0,
+   29929.0,
+   0.0,
+   0.0,
+   0.0
+  ]
+ },
+ "samples": [
+  {
+   "mode": "SAME",
+   "kind": 3,
+   "name": "hgg_C0",
+   "repetition": 1,
+   "calls": 16616,
+   "distinct": 1,
+   "ns_per_call": 1511.34406596052
+  },
+  {
+   "mode": "SAME",
+   "kind": 3,
+   "name": "hgg_C0",
+   "repetition": 2,
+   "calls": 16616,
+   "distinct": 1,
+   "ns_per_call": 1515.8361819932595
+  },
+  {
+   "mode": "SAME",
+   "kind": 3,
+   "name": "hgg_C0",
+   "repetition": 3,
+   "calls": 16616,
+   "distinct": 1,
+   "ns_per_call": 1523.0334015406836
+  },
+  {
+   "mode": "SAME",
+   "kind": 3,
+   "name": "hgg_C0",
+   "repetition": 4,
+   "calls": 16616,
+   "distinct": 1,
+   "ns_per_call": 1518.0822099181512
+  },
+  {
+   "mode": "SAME",
+   "kind": 3,
+   "name": "hgg_C0",
+   "repetition": 5,
+   "calls": 16616,
+   "distinct": 1,
+   "ns_per_call": 1508.9548025999038
+  },
+  {
+   "mode": "SAME",
+   "kind": 3,
+   "name": "hgg_C0",
+   "repetition": 6,
+   "calls": 16616,
+   "distinct": 1,
+   "ns_per_call": 1520.6579802599904
+  },
+  {
+   "mode": "SAME",
+   "kind": 3,
+   "name": "hgg_C0",
+   "repetition": 7,
+   "calls": 16616,
+   "distinct": 1,
+   "ns_per_call": 1511.8423808377468
+  },
+  {
+   "mode": "SAME",
+   "kind": 3,
+   "name": "hgg_C0",
+   "repetition": 8,
+   "calls": 16616,
+   "distinct": 1,
+   "ns_per_call": 1512.5730621088107
+  },
+  {
+   "mode": "SAME",
+   "kind": 3,
+   "name": "hgg_C0",
+   "repetition": 9,
+   "calls": 16616,
+   "distinct": 1,
+   "ns_per_call": 1513.4643115069812
+  },
+  {
+   "mode": "SAME",
+   "kind": 6,
+   "name": "hgg_B11_0",
+   "repetition": 1,
+   "calls": 253140,
+   "distinct": 1,
+   "ns_per_call": 99.3248123567986
+  },
+  {
+   "mode": "SAME",
+   "kind": 6,
+   "name": "hgg_B11_0",
+   "repetition": 2,
+   "calls": 253140,
+   "distinct": 1,
+   "ns_per_call": 99.17912222485582
+  },
+  {
+   "mode": "SAME",
+   "kind": 6,
+   "name": "hgg_B11_0",
+   "repetition": 3,
+   "calls": 253140,
+   "distinct": 1,
+   "ns_per_call": 99.34827763293039
+  },
+  {
+   "mode": "SAME",
+   "kind": 6,
+   "name": "hgg_B11_0",
+   "repetition": 4,
+   "calls": 253140,
+   "distinct": 1,
+   "ns_per_call": 100.1446748834637
+  },
+  {
+   "mode": "SAME",
+   "kind": 6,
+   "name": "hgg_B11_0",
+   "repetition": 5,
+   "calls": 253140,
+   "distinct": 1,
+   "ns_per_call": 99.99930473255905
+  },
+  {
+   "mode": "SAME",
+   "kind": 6,
+   "name": "hgg_B11_0",
+   "repetition": 6,
+   "calls": 253140,
+   "distinct": 1,
+   "ns_per_call": 99.21621632298333
+  },
+  {
+   "mode": "SAME",
+   "kind": 6,
+   "name": "hgg_B11_0",
+   "repetition": 7,
+   "calls": 253140,
+   "distinct": 1,
+   "ns_per_call": 99.35041083985146
+  },
+  {
+   "mode": "SAME",
+   "kind": 6,
+   "name": "hgg_B11_0",
+   "repetition": 8,
+   "calls": 253140,
+   "distinct": 1,
+   "ns_per_call": 98.89777593426562
+  },
+  {
+   "mode": "SAME",
+   "kind": 6,
+   "name": "hgg_B11_0",
+   "repetition": 9,
+   "calls": 253140,
+   "distinct": 1,
+   "ns_per_call": 99.23071422928024
+  },
+  {
+   "mode": "SAME",
+   "kind": 6,
+   "name": "hgg_B11_1",
+   "repetition": 1,
+   "calls": 254423,
+   "distinct": 1,
+   "ns_per_call": 99.26325057089964
+  },
+  {
+   "mode": "SAME",
+   "kind": 6,
+   "name": "hgg_B11_1",
+   "repetition": 2,
+   "calls": 254423,
+   "distinct": 1,
+   "ns_per_call": 99.37636534432815
+  },
+  {
+   "mode": "SAME",
+   "kind": 6,
+   "name": "hgg_B11_1",
+   "repetition": 3,
+   "calls": 254423,
+   "distinct": 1,
+   "ns_per_call": 99.32967538312181
+  },
+  {
+   "mode": "SAME",
+   "kind": 6,
+   "name": "hgg_B11_1",
+   "repetition": 4,
+   "calls": 254423,
+   "distinct": 1,
+   "ns_per_call": 99.411857418551
+  },
+  {
+   "mode": "SAME",
+   "kind": 6,
+   "name": "hgg_B11_1",
+   "repetition": 5,
+   "calls": 254423,
+   "distinct": 1,
+   "ns_per_call": 100.77797211730072
+  },
+  {
+   "mode": "SAME",
+   "kind": 6,
+   "name": "hgg_B11_1",
+   "repetition": 6,
+   "calls": 254423,
+   "distinct": 1,
+   "ns_per_call": 99.33026495246106
+  },
+  {
+   "mode": "SAME",
+   "kind": 6,
+   "name": "hgg_B11_1",
+   "repetition": 7,
+   "calls": 254423,
+   "distinct": 1,
+   "ns_per_call": 99.36221568018615
+  },
+  {
+   "mode": "SAME",
+   "kind": 6,
+   "name": "hgg_B11_1",
+   "repetition": 8,
+   "calls": 254423,
+   "distinct": 1,
+   "ns_per_call": 99.5228182986601
+  },
+  {
+   "mode": "SAME",
+   "kind": 6,
+   "name": "hgg_B11_1",
+   "repetition": 9,
+   "calls": 254423,
+   "distinct": 1,
+   "ns_per_call": 99.25318465704751
+  },
+  {
+   "mode": "SAME",
+   "kind": 6,
+   "name": "hgg_B11_2",
+   "repetition": 1,
+   "calls": 18061,
+   "distinct": 1,
+   "ns_per_call": 1392.6606500193789
+  },
+  {
+   "mode": "SAME",
+   "kind": 6,
+   "name": "hgg_B11_2",
+   "repetition": 2,
+   "calls": 18061,
+   "distinct": 1,
+   "ns_per_call": 1393.3936659099718
+  },
+  {
+   "mode": "SAME",
+   "kind": 6,
+   "name": "hgg_B11_2",
+   "repetition": 3,
+   "calls": 18061,
+   "distinct": 1,
+   "ns_per_call": 1392.1617296938155
+  },
+  {
+   "mode": "SAME",
+   "kind": 6,
+   "name": "hgg_B11_2",
+   "repetition": 4,
+   "calls": 18061,
+   "distinct": 1,
+   "ns_per_call": 1374.3963789380432
+  },
+  {
+   "mode": "SAME",
+   "kind": 6,
+   "name": "hgg_B11_2",
+   "repetition": 5,
+   "calls": 18061,
+   "distinct": 1,
+   "ns_per_call": 1391.5245003045236
+  },
+  {
+   "mode": "SAME",
+   "kind": 6,
+   "name": "hgg_B11_2",
+   "repetition": 6,
+   "calls": 18061,
+   "distinct": 1,
+   "ns_per_call": 1397.1000498311278
+  },
+  {
+   "mode": "SAME",
+   "kind": 6,
+   "name": "hgg_B11_2",
+   "repetition": 7,
+   "calls": 18061,
+   "distinct": 1,
+   "ns_per_call": 1372.8034438846132
+  },
+  {
+   "mode": "SAME",
+   "kind": 6,
+   "name": "hgg_B11_2",
+   "repetition": 8,
+   "calls": 18061,
+   "distinct": 1,
+   "ns_per_call": 1385.6100437406567
+  },
+  {
+   "mode": "SAME",
+   "kind": 6,
+   "name": "hgg_B11_2",
+   "repetition": 9,
+   "calls": 18061,
+   "distinct": 1,
+   "ns_per_call": 1401.293560710924
+  },
+  {
+   "mode": "SAME",
+   "kind": 1,
+   "name": "hgg_A0_0",
+   "repetition": 1,
+   "calls": 604344,
+   "distinct": 1,
+   "ns_per_call": 41.6927180546179
+  },
+  {
+   "mode": "SAME",
+   "kind": 1,
+   "name": "hgg_A0_0",
+   "repetition": 2,
+   "calls": 604344,
+   "distinct": 1,
+   "ns_per_call": 41.63963404948175
+  },
+  {
+   "mode": "SAME",
+   "kind": 1,
+   "name": "hgg_A0_0",
+   "repetition": 3,
+   "calls": 604344,
+   "distinct": 1,
+   "ns_per_call": 41.76090604026846
+  },
+  {
+   "mode": "SAME",
+   "kind": 1,
+   "name": "hgg_A0_0",
+   "repetition": 4,
+   "calls": 604344,
+   "distinct": 1,
+   "ns_per_call": 41.6981768661557
+  },
+  {
+   "mode": "SAME",
+   "kind": 1,
+   "name": "hgg_A0_0",
+   "repetition": 5,
+   "calls": 604344,
+   "distinct": 1,
+   "ns_per_call": 41.60139423904266
+  },
+  {
+   "mode": "SAME",
+   "kind": 1,
+   "name": "hgg_A0_0",
+   "repetition": 6,
+   "calls": 604344,
+   "distinct": 1,
+   "ns_per_call": 41.62972247594085
+  },
+  {
+   "mode": "SAME",
+   "kind": 1,
+   "name": "hgg_A0_0",
+   "repetition": 7,
+   "calls": 604344,
+   "distinct": 1,
+   "ns_per_call": 41.619860543002
+  },
+  {
+   "mode": "SAME",
+   "kind": 1,
+   "name": "hgg_A0_0",
+   "repetition": 8,
+   "calls": 604344,
+   "distinct": 1,
+   "ns_per_call": 41.858813854361095
+  },
+  {
+   "mode": "SAME",
+   "kind": 1,
+   "name": "hgg_A0_0",
+   "repetition": 9,
+   "calls": 604344,
+   "distinct": 1,
+   "ns_per_call": 41.6655811921687
+  },
+  {
+   "mode": "SAME",
+   "kind": 1,
+   "name": "hgg_A0_1",
+   "repetition": 1,
+   "calls": 604630,
+   "distinct": 1,
+   "ns_per_call": 41.752862080942066
+  },
+  {
+   "mode": "SAME",
+   "kind": 1,
+   "name": "hgg_A0_1",
+   "repetition": 2,
+   "calls": 604630,
+   "distinct": 1,
+   "ns_per_call": 41.629995203678284
+  },
+  {
+   "mode": "SAME",
+   "kind": 1,
+   "name": "hgg_A0_1",
+   "repetition": 3,
+   "calls": 604630,
+   "distinct": 1,
+   "ns_per_call": 41.75779071498272
+  },
+  {
+   "mode": "SAME",
+   "kind": 1,
+   "name": "hgg_A0_1",
+   "repetition": 4,
+   "calls": 604630,
+   "distinct": 1,
+   "ns_per_call": 41.60227411805567
+  },
+  {
+   "mode": "SAME",
+   "kind": 1,
+   "name": "hgg_A0_1",
+   "repetition": 5,
+   "calls": 604630,
+   "distinct": 1,
+   "ns_per_call": 41.63280518664307
+  },
+  {
+   "mode": "SAME",
+   "kind": 1,
+   "name": "hgg_A0_1",
+   "repetition": 6,
+   "calls": 604630,
+   "distinct": 1,
+   "ns_per_call": 41.61821775300597
+  },
+  {
+   "mode": "SAME",
+   "kind": 1,
+   "name": "hgg_A0_1",
+   "repetition": 7,
+   "calls": 604630,
+   "distinct": 1,
+   "ns_per_call": 41.704965019929546
+  },
+  {
+   "mode": "SAME",
+   "kind": 1,
+   "name": "hgg_A0_1",
+   "repetition": 8,
+   "calls": 604630,
+   "distinct": 1,
+   "ns_per_call": 41.62513272579925
+  },
+  {
+   "mode": "SAME",
+   "kind": 1,
+   "name": "hgg_A0_1",
+   "repetition": 9,
+   "calls": 604630,
+   "distinct": 1,
+   "ns_per_call": 42.49889023038883
+  },
+  {
+   "mode": "SAME",
+   "kind": 1,
+   "name": "hgg_A0_2",
+   "repetition": 1,
+   "calls": 604773,
+   "distinct": 1,
+   "ns_per_call": 41.63007277110585
+  },
+  {
+   "mode": "SAME",
+   "kind": 1,
+   "name": "hgg_A0_2",
+   "repetition": 2,
+   "calls": 604773,
+   "distinct": 1,
+   "ns_per_call": 41.720782839180984
+  },
+  {
+   "mode": "SAME",
+   "kind": 1,
+   "name": "hgg_A0_2",
+   "repetition": 3,
+   "calls": 604773,
+   "distinct": 1,
+   "ns_per_call": 41.6583792596561
+  },
+  {
+   "mode": "SAME",
+   "kind": 1,
+   "name": "hgg_A0_2",
+   "repetition": 4,
+   "calls": 604773,
+   "distinct": 1,
+   "ns_per_call": 41.83785155752654
+  },
+  {
+   "mode": "SAME",
+   "kind": 1,
+   "name": "hgg_A0_2",
+   "repetition": 5,
+   "calls": 604773,
+   "distinct": 1,
+   "ns_per_call": 41.645896890238156
+  },
+  {
+   "mode": "SAME",
+   "kind": 1,
+   "name": "hgg_A0_2",
+   "repetition": 6,
+   "calls": 604773,
+   "distinct": 1,
+   "ns_per_call": 41.69058969233084
+  },
+  {
+   "mode": "SAME",
+   "kind": 1,
+   "name": "hgg_A0_2",
+   "repetition": 7,
+   "calls": 604773,
+   "distinct": 1,
+   "ns_per_call": 41.62385556233496
+  },
+  {
+   "mode": "SAME",
+   "kind": 1,
+   "name": "hgg_A0_2",
+   "repetition": 8,
+   "calls": 604773,
+   "distinct": 1,
+   "ns_per_call": 41.66509252231829
+  },
+  {
+   "mode": "SAME",
+   "kind": 1,
+   "name": "hgg_A0_2",
+   "repetition": 9,
+   "calls": 604773,
+   "distinct": 1,
+   "ns_per_call": 41.64655664191358
+  },
+  {
+   "mode": "HETERO",
+   "kind": 1,
+   "name": "all",
+   "repetition": 1,
+   "calls": 604773,
+   "distinct": 3,
+   "ns_per_call": 41.6786199119339
+  },
+  {
+   "mode": "HETERO",
+   "kind": 1,
+   "name": "all",
+   "repetition": 2,
+   "calls": 604773,
+   "distinct": 3,
+   "ns_per_call": 41.68372761350126
+  },
+  {
+   "mode": "HETERO",
+   "kind": 1,
+   "name": "all",
+   "repetition": 3,
+   "calls": 604773,
+   "distinct": 3,
+   "ns_per_call": 41.72559621543951
+  },
+  {
+   "mode": "HETERO",
+   "kind": 1,
+   "name": "all",
+   "repetition": 4,
+   "calls": 604773,
+   "distinct": 3,
+   "ns_per_call": 41.60168029988111
+  },
+  {
+   "mode": "HETERO",
+   "kind": 1,
+   "name": "all",
+   "repetition": 5,
+   "calls": 604773,
+   "distinct": 3,
+   "ns_per_call": 41.72758043100469
+  },
+  {
+   "mode": "HETERO",
+   "kind": 1,
+   "name": "all",
+   "repetition": 6,
+   "calls": 604773,
+   "distinct": 3,
+   "ns_per_call": 41.6450850153694
+  },
+  {
+   "mode": "HETERO",
+   "kind": 1,
+   "name": "all",
+   "repetition": 7,
+   "calls": 604773,
+   "distinct": 3,
+   "ns_per_call": 41.64280482098242
+  },
+  {
+   "mode": "HETERO",
+   "kind": 1,
+   "name": "all",
+   "repetition": 8,
+   "calls": 604773,
+   "distinct": 3,
+   "ns_per_call": 41.71142395576522
+  },
+  {
+   "mode": "HETERO",
+   "kind": 1,
+   "name": "all",
+   "repetition": 9,
+   "calls": 604773,
+   "distinct": 3,
+   "ns_per_call": 41.7389880169915
+  },
+  {
+   "mode": "HETERO",
+   "kind": 3,
+   "name": "all",
+   "repetition": 1,
+   "calls": 16389,
+   "distinct": 1,
+   "ns_per_call": 1508.1288059064007
+  },
+  {
+   "mode": "HETERO",
+   "kind": 3,
+   "name": "all",
+   "repetition": 2,
+   "calls": 16389,
+   "distinct": 1,
+   "ns_per_call": 1505.8382451644395
+  },
+  {
+   "mode": "HETERO",
+   "kind": 3,
+   "name": "all",
+   "repetition": 3,
+   "calls": 16389,
+   "distinct": 1,
+   "ns_per_call": 1508.4222954420648
+  },
+  {
+   "mode": "HETERO",
+   "kind": 3,
+   "name": "all",
+   "repetition": 4,
+   "calls": 16389,
+   "distinct": 1,
+   "ns_per_call": 1504.6129721154432
+  },
+  {
+   "mode": "HETERO",
+   "kind": 3,
+   "name": "all",
+   "repetition": 5,
+   "calls": 16389,
+   "distinct": 1,
+   "ns_per_call": 1506.2897675269999
+  },
+  {
+   "mode": "HETERO",
+   "kind": 3,
+   "name": "all",
+   "repetition": 6,
+   "calls": 16389,
+   "distinct": 1,
+   "ns_per_call": 1504.88266520227
+  },
+  {
+   "mode": "HETERO",
+   "kind": 3,
+   "name": "all",
+   "repetition": 7,
+   "calls": 16389,
+   "distinct": 1,
+   "ns_per_call": 1505.6149246445787
+  },
+  {
+   "mode": "HETERO",
+   "kind": 3,
+   "name": "all",
+   "repetition": 8,
+   "calls": 16389,
+   "distinct": 1,
+   "ns_per_call": 1513.0655927756422
+  },
+  {
+   "mode": "HETERO",
+   "kind": 3,
+   "name": "all",
+   "repetition": 9,
+   "calls": 16389,
+   "distinct": 1,
+   "ns_per_call": 1503.4110073830009
+  },
+  {
+   "mode": "HETERO",
+   "kind": 6,
+   "name": "all",
+   "repetition": 1,
+   "calls": 47215,
+   "distinct": 3,
+   "ns_per_call": 526.6708249496982
+  },
+  {
+   "mode": "HETERO",
+   "kind": 6,
+   "name": "all",
+   "repetition": 2,
+   "calls": 47215,
+   "distinct": 3,
+   "ns_per_call": 528.4475908080059
+  },
+  {
+   "mode": "HETERO",
+   "kind": 6,
+   "name": "all",
+   "repetition": 3,
+   "calls": 47215,
+   "distinct": 3,
+   "ns_per_call": 533.0664619294715
+  },
+  {
+   "mode": "HETERO",
+   "kind": 6,
+   "name": "all",
+   "repetition": 4,
+   "calls": 47215,
+   "distinct": 3,
+   "ns_per_call": 525.2755056655724
+  },
+  {
+   "mode": "HETERO",
+   "kind": 6,
+   "name": "all",
+   "repetition": 5,
+   "calls": 47215,
+   "distinct": 3,
+   "ns_per_call": 523.9718945250451
+  },
+  {
+   "mode": "HETERO",
+   "kind": 6,
+   "name": "all",
+   "repetition": 6,
+   "calls": 47215,
+   "distinct": 3,
+   "ns_per_call": 528.9131208302447
+  },
+  {
+   "mode": "HETERO",
+   "kind": 6,
+   "name": "all",
+   "repetition": 7,
+   "calls": 47215,
+   "distinct": 3,
+   "ns_per_call": 528.8783861061104
+  },
+  {
+   "mode": "HETERO",
+   "kind": 6,
+   "name": "all",
+   "repetition": 8,
+   "calls": 47215,
+   "distinct": 3,
+   "ns_per_call": 527.6277242401779
+  },
+  {
+   "mode": "HETERO",
+   "kind": 6,
+   "name": "all",
+   "repetition": 9,
+   "calls": 47215,
+   "distinct": 3,
+   "ns_per_call": 526.1942814783438
+  },
+  {
+   "mode": "ALL",
+   "kind": 0,
+   "name": "all",
+   "repetition": 1,
+   "calls": 53090,
+   "distinct": 7,
+   "ns_per_call": 467.53236014315314
+  },
+  {
+   "mode": "ALL",
+   "kind": 0,
+   "name": "all",
+   "repetition": 2,
+   "calls": 53090,
+   "distinct": 7,
+   "ns_per_call": 474.73559992465624
+  },
+  {
+   "mode": "ALL",
+   "kind": 0,
+   "name": "all",
+   "repetition": 3,
+   "calls": 53090,
+   "distinct": 7,
+   "ns_per_call": 468.76705594273875
+  },
+  {
+   "mode": "ALL",
+   "kind": 0,
+   "name": "all",
+   "repetition": 4,
+   "calls": 53090,
+   "distinct": 7,
+   "ns_per_call": 467.4413825579205
+  },
+  {
+   "mode": "ALL",
+   "kind": 0,
+   "name": "all",
+   "repetition": 5,
+   "calls": 53090,
+   "distinct": 7,
+   "ns_per_call": 470.14773026935393
+  },
+  {
+   "mode": "ALL",
+   "kind": 0,
+   "name": "all",
+   "repetition": 6,
+   "calls": 53090,
+   "distinct": 7,
+   "ns_per_call": 468.84013938594836
+  },
+  {
+   "mode": "ALL",
+   "kind": 0,
+   "name": "all",
+   "repetition": 7,
+   "calls": 53090,
+   "distinct": 7,
+   "ns_per_call": 468.2034846487097
+  },
+  {
+   "mode": "ALL",
+   "kind": 0,
+   "name": "all",
+   "repetition": 8,
+   "calls": 53090,
+   "distinct": 7,
+   "ns_per_call": 468.8194198530797
+  },
+  {
+   "mode": "ALL",
+   "kind": 0,
+   "name": "all",
+   "repetition": 9,
+   "calls": 53090,
+   "distinct": 7,
+   "ns_per_call": 468.2912601243172
+  }
+ ]
+}
