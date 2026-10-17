@@ -32,7 +32,7 @@ use symbolica::{
 
 /// Existing numerical runtime for emitted modules, with exact cached constants.
 pub mod runtime {
-    pub use crate::native::batch::{self, BatchWorkspace};
+    pub use crate::native::batch::{self, BatchExecutionPolicy, BatchWorkspace};
     pub use crate::native::{ConstantContext as Context, ConstantSpec, primitives};
     pub use primitives::{C, NativeFloat};
 }

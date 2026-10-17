@@ -1,7 +1,88 @@
 //! Storage for emitted instruction-major kernels. No evaluator or IR is retained.
 
 use super::primitives::{C, NativeFloat};
+use std::num::NonZeroUsize;
 use symbolica::domains::float::FloatLike;
+
+/// Explicit execution policy for an emitted row-major batch kernel.
+///
+/// The default retains one generated call for the complete batch. Fixed blocks
+/// keep each row intact, including every flattened Dual component. This is an
+/// execution/storage choice; it does not change the emitted arithmetic.
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+pub enum BatchExecutionPolicy {
+    #[default]
+    Whole,
+    FixedRows(NonZeroUsize),
+}
+
+impl BatchExecutionPolicy {
+    /// Invoke an unchanged emitted batch entry point on complete row slices.
+    /// `dimensions` contains the input and output component counts per row,
+    /// including all derivative components when the graph is Dual-transformed.
+    ///
+    /// Both complete buffers and their products are validated before workspace
+    /// mutation or any output write. Empty batches still make one empty call.
+    /// Fixed blocks have natural tails, so a final single row uses the emitted
+    /// scalar path. Each generated call initializes its own lazy branch masks.
+    ///
+    /// An oversized workspace is released when applying a fixed bound, including
+    /// after prior whole-batch calls or a larger bound. Subsequent generated calls
+    /// see at most the requested row count. The callback must use that row count
+    /// with this workspace; directly calling `prepare` can bypass the policy.
+    /// This bounds the retained row stride, not a kernel's number of slots.
+    ///
+    /// Only this policy's complete-buffer checks are transactional. A callback
+    /// error is returned directly without rollback: the failing block can have
+    /// written output, as can earlier blocks. Callers requiring whole-batch
+    /// domain validation must perform it before this method.
+    pub fn evaluate<T: NativeFloat>(
+        self,
+        input: &[C<T>],
+        output: &mut [C<T>],
+        rows: usize,
+        dimensions: (usize, usize),
+        workspace: &mut BatchWorkspace<T>,
+        mut evaluate: impl FnMut(
+            &[C<T>],
+            &mut [C<T>],
+            usize,
+            &mut BatchWorkspace<T>,
+        ) -> Result<(), String>,
+    ) -> Result<(), String> {
+        let (inputs, outputs) = dimensions;
+        let input_len = rows
+            .checked_mul(inputs)
+            .ok_or("batch input size overflow")?;
+        let output_len = rows
+            .checked_mul(outputs)
+            .ok_or("batch output size overflow")?;
+        if input.len() != input_len || output.len() != output_len {
+            return Err("batch buffer shape mismatch".into());
+        }
+        let Self::FixedRows(block) = self else {
+            return evaluate(input, output, rows, workspace);
+        };
+        let block = block.get();
+        workspace.release_oversized_rows(block);
+        if rows == 0 {
+            return evaluate(input, output, 0, workspace);
+        }
+        let mut first = 0;
+        while first < rows {
+            let count = (rows - first).min(block);
+            let end = first + count;
+            evaluate(
+                &input[first * inputs..end * inputs],
+                &mut output[first * outputs..end * outputs],
+                count,
+                workspace,
+            )?;
+            first = end;
+        }
+        Ok(())
+    }
+}
 
 /// Borrowed numerical storage, parent stride, active lanes and control storage.
 #[doc(hidden)]
@@ -45,6 +126,17 @@ impl<T: NativeFloat> BatchWorkspace<T> {
     /// Number of retained numerical cells (not the number of instructions).
     pub fn storage_len(&self) -> usize {
         self.values.len()
+    }
+
+    fn release_oversized_rows(&mut self, maximum: usize) {
+        if self.capacity > maximum {
+            self.values = Vec::new();
+            self.lanes = Vec::new();
+            self.control = Vec::new();
+            self.capacity = 0;
+            self.slots = 0;
+            self.frames = 0;
+        }
     }
 
     /// Reserve disjoint root/helper slots and borrow their storage and stride.
@@ -198,6 +290,210 @@ pub fn copy_active_column<T: NativeFloat>(
 mod tests {
     use super::*;
     use symbolica::domains::float::Float;
+
+    #[test]
+    fn fixed_policy_checks_complete_shapes_before_reset_or_writes() {
+        let mut workspace = BatchWorkspace::new(0.0);
+        workspace.prepare_controlled(128, 4, 3).unwrap();
+        let before = (
+            workspace.capacity(),
+            workspace.values.clone(),
+            workspace.control.clone(),
+            workspace.lanes.clone(),
+        );
+        let policy = BatchExecutionPolicy::FixedRows(NonZeroUsize::new(32).unwrap());
+        let input = vec![C::new(1.0, -0.0); 130];
+        let mut output = vec![C::new(99.0, 7.0); 65];
+        for (rows, dimensions, input_length) in [
+            (65, (2, 1), 129),
+            (64, (2, 1), 128),
+            (usize::MAX, (2, 1), 0),
+            (usize::MAX, (0, 2), 0),
+        ] {
+            assert!(
+                policy
+                    .evaluate(
+                        &input[..input_length],
+                        &mut output,
+                        rows,
+                        dimensions,
+                        &mut workspace,
+                        |_, _, _, _| panic!("invalid complete buffers must not invoke a block")
+                    )
+                    .is_err()
+            );
+            assert_eq!(output, vec![C::new(99.0, 7.0); 65]);
+            assert_eq!(
+                (
+                    workspace.capacity(),
+                    workspace.values.clone(),
+                    workspace.control.clone(),
+                    workspace.lanes.clone()
+                ),
+                before
+            );
+        }
+    }
+
+    #[test]
+    fn policy_calls_whole_once_and_returns_block_errors_in_row_order() {
+        let input: Vec<_> = (0..17).map(|i| C::new(i as f64, -0.0)).collect();
+        for policy in [
+            BatchExecutionPolicy::Whole,
+            BatchExecutionPolicy::FixedRows(NonZeroUsize::new(8).unwrap()),
+        ] {
+            let mut workspace = BatchWorkspace::new(0.0);
+            let mut output = vec![C::new(-99.0, 1.0); input.len()];
+            let mut calls = Vec::new();
+            let failing_call = if policy == BatchExecutionPolicy::Whole {
+                1
+            } else {
+                2
+            };
+            let error = policy
+                .evaluate(
+                    &input,
+                    &mut output,
+                    17,
+                    (1, 1),
+                    &mut workspace,
+                    |input, output, rows, _| {
+                        calls.push((input[0].re as usize, rows));
+                        if calls.len() == failing_call {
+                            output[0] = input[0];
+                            return Err("callback failure is preserved".into());
+                        }
+                        output.clone_from_slice(input);
+                        Ok(())
+                    },
+                )
+                .unwrap_err();
+            assert_eq!(error, "callback failure is preserved");
+            if policy == BatchExecutionPolicy::Whole {
+                assert_eq!(calls, [(0, 17)]);
+                assert_eq!(output[0], input[0]);
+                assert!(output[1..].iter().all(|v| *v == C::new(-99.0, 1.0)));
+            } else {
+                assert_eq!(calls, [(0, 8), (8, 8)]);
+                assert_eq!(&output[..9], &input[..9]);
+                assert!(output[9..].iter().all(|v| *v == C::new(-99.0, 1.0)));
+            }
+        }
+    }
+
+    #[test]
+    fn fixed_policy_preserves_rows_order_tails_and_releases_all_oversized_arenas() {
+        let mut workspace = BatchWorkspace::new(0.0);
+        for (policy, rows, expected_calls) in [
+            (BatchExecutionPolicy::Whole, 129, vec![129]),
+            (
+                BatchExecutionPolicy::FixedRows(NonZeroUsize::new(32).unwrap()),
+                65,
+                vec![32, 32, 1],
+            ),
+            (
+                BatchExecutionPolicy::FixedRows(NonZeroUsize::new(8).unwrap()),
+                17,
+                vec![8, 8, 1],
+            ),
+            (
+                BatchExecutionPolicy::FixedRows(NonZeroUsize::new(8).unwrap()),
+                3,
+                vec![3],
+            ),
+            (
+                BatchExecutionPolicy::FixedRows(NonZeroUsize::new(8).unwrap()),
+                0,
+                vec![0],
+            ),
+            (
+                BatchExecutionPolicy::FixedRows(NonZeroUsize::new(16).unwrap()),
+                33,
+                vec![16, 16, 1],
+            ),
+            (BatchExecutionPolicy::Whole, 129, vec![129]),
+            (
+                BatchExecutionPolicy::FixedRows(NonZeroUsize::new(4).unwrap()),
+                0,
+                vec![0],
+            ),
+            (
+                BatchExecutionPolicy::FixedRows(NonZeroUsize::new(4).unwrap()),
+                1,
+                vec![1],
+            ),
+        ] {
+            // Five components per row model a flattened higher/mixed Dual graph.
+            let input: Vec<_> = (0..rows * 5).map(|i| C::new(i as f64, -0.0)).collect();
+            let mut output = vec![C::new(-99.0, 99.0); input.len()];
+            let mut calls = Vec::new();
+            policy
+                .evaluate(
+                    &input,
+                    &mut output,
+                    rows,
+                    (5, 5),
+                    &mut workspace,
+                    |input, output, rows, workspace| {
+                        calls.push(rows);
+                        if rows > 1 {
+                            let (_, _, lanes, _) = workspace.prepare_controlled(rows, 7, 2)?;
+                            assert_eq!(lanes, (0..rows).collect::<Vec<_>>());
+                        }
+                        output.clone_from_slice(input);
+                        Ok(())
+                    },
+                )
+                .unwrap();
+            assert_eq!(calls, expected_calls);
+            for (actual, expected) in output.iter().zip(&input) {
+                assert_eq!(actual.re.to_bits(), expected.re.to_bits());
+                assert_eq!(actual.im.to_bits(), expected.im.to_bits());
+            }
+            if let BatchExecutionPolicy::FixedRows(bound) = policy {
+                assert!(workspace.capacity <= bound.get());
+                assert!(workspace.values.len() <= bound.get() * 7);
+                assert!(workspace.lanes.len() <= bound.get());
+                assert!(workspace.control.len() <= bound.get() * 4);
+                if rows == 0 && bound.get() == 4 {
+                    assert_eq!(workspace.values.capacity(), 0);
+                    assert_eq!(workspace.lanes.capacity(), 0);
+                    assert_eq!(workspace.control.capacity(), 0);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn fixed_policy_retains_prototype_and_input_precision() {
+        let mut workspace = BatchWorkspace::new(Float::new(177));
+        workspace.prepare_controlled(128, 9, 7).unwrap();
+        let input: Vec<_> = (0..33)
+            .map(|i| C::new(Float::with_val(53 + i, i), Float::with_val(256 - i, -1)))
+            .collect();
+        let mut output = vec![C::new(Float::new(96), Float::new(96)); input.len()];
+        BatchExecutionPolicy::FixedRows(NonZeroUsize::new(8).unwrap())
+            .evaluate(&input, &mut output, 33, (1, 1), &mut workspace, |input, output, rows, workspace| {
+                if rows > 1 {
+                    let (values, _, _, _) = workspace.prepare_controlled(rows, 2, 1)?;
+                    assert!(values.iter().all(|v| v.re.get_precision() == 177 && v.im.get_precision() == 177));
+                }
+                for (target, source) in output.iter_mut().zip(input) {
+                    copy_value(target, source);
+                }
+                Ok(())
+            }).unwrap();
+        for (actual, expected) in output.iter().zip(&input) {
+            assert_eq!(actual, expected);
+            assert_eq!(actual.re.get_precision(), expected.re.get_precision());
+            assert_eq!(actual.im.get_precision(), expected.im.get_precision());
+        }
+        assert_eq!(workspace.capacity(), 8);
+        assert_eq!(workspace.values.len(), 16);
+        assert_eq!(workspace.lanes.len(), 8);
+        assert_eq!(workspace.control.len(), 16);
+        assert_eq!(workspace.frames, 1);
+    }
 
     #[test]
     fn controlled_workspace_reuses_parent_stride_and_keeps_inactive_values() {
