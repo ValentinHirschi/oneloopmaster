@@ -278,10 +278,29 @@ fn equal_mass_b0_becomes_if_free_and_remains_parametric_for_float_integer_and_fr
             assert_eq!(selected[1], Atom::num(1));
             assert_eq!(selected[2], Atom::num(0));
             if sample_float > 0.0 && sample_float < 4.0 {
-                assert_eq!(
-                    selected[0], below_threshold,
-                    "the selected parametric root/log formula"
-                );
+                // The selected formula is the parametric root/log form. Its roots
+                // are evaluated without cancellation, so compare the closed forms
+                // as functions at parametric points below threshold.
+                for (momentum_value, mass_value) in [(sample_float, 1.0), (1.3, 0.9), (0.4, 2.0)] {
+                    let rules = [
+                        Replacement::new(
+                            s.clone(),
+                            Atom::num(Float::with_val(128, momentum_value)),
+                        ),
+                        Replacement::new(mass.clone(), Atom::num(Float::with_val(128, mass_value))),
+                    ];
+                    let value = |expression: &Atom| -> Complex<f64> {
+                        expression
+                            .replace_multiple(&rules)
+                            .evaluate::<Atom, _>(&std::collections::HashMap::new())
+                            .unwrap()
+                    };
+                    let (actual, expected) = (value(&selected[0]), value(&below_threshold));
+                    assert!(
+                        (actual.re - expected.re).hypot(actual.im - expected.im) < 1e-12,
+                        "the selected parametric root/log formula at ({momentum_value}, {mass_value}): {actual:?} vs {expected:?}"
+                    );
+                }
             }
             let variables = selected[0].get_all_symbols(false);
             assert!(

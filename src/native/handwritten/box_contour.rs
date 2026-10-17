@@ -332,6 +332,15 @@ fn s3(y1: &Cont, y2: &Cont, d: Z, e: Z, a: Z, b: Z, c: Z, db: Z, dc: Z, k: &Cons
             let rea = sgn(a.re);
             let mut z1 = continued_root(root1, a, b, db, dc, ZERO);
             let mut z2 = continued_root(root2, a, b, db, dc, ZERO);
+            if !nz(b * b - r(4.0) * a * c) {
+                // An exact double root splits like sqrt(eps), one root up and
+                // one down, dominating every first-order shift of y1 and y2.
+                let size = |z: Z| z.re.hypot(z.im);
+                let dominant = 2.0 * (1.0 + size(y1.f) + size(y1.s) + size(y2.f) + size(y2.s));
+                let centre = z1.v;
+                z1 = Cont { v: centre, f: Z { re: 0.0, im: dominant }, s: ZERO };
+                z2 = Cont { v: centre, f: Z { re: 0.0, im: -dominant }, s: ZERO };
+            }
             let fallback1 = simc * rea * sgn(z2.v.re);
             let fallback2 = simc * rea * sgn(z1.v.re);
             for (z, fallback) in [(&mut z1, fallback1), (&mut z2, fallback2)] {
@@ -371,7 +380,9 @@ fn s3(y1: &Cont, y2: &Cont, d: Z, e: Z, a: Z, b: Z, c: Z, db: Z, dc: Z, k: &Cons
     value * inv_e
 }
 
-fn planar(y1: &Cont, y2: &Cont, p1: bool, p2: bool, a: Z, b: Z, c: Z, dc: Z, k: &Constants<f64>) -> Z {
+/// `planar`; `real` marks exactly real logarithm arguments
+/// (`real_intersections_absent`).
+fn planar(y1: &Cont, y2: &Cont, p1: bool, p2: bool, a: Z, b: Z, c: Z, dc: Z, real: bool, k: &Constants<f64>) -> Z {
     if !p1 && !p2 {
         return ZERO;
     }
@@ -381,8 +392,9 @@ fn planar(y1: &Cont, y2: &Cont, p1: bool, p2: bool, a: Z, b: Z, c: Z, dc: Z, k: 
         let first = b * y.f + dc;
         let second = b * y.s;
         let v2 = value * value;
+        let ratio = dv(a, value);
         Cont {
-            v: dv(a, value),
+            v: if real { r(ratio.re) } else { ratio },
             f: -dv(a * first, v2),
             s: dv(a * first * first, v2 * value) - dv(a * second, v2),
         }
@@ -523,6 +535,26 @@ fn beta_data(beta: Z, b: Z, c: Z, g: Z, h: Z, d: Z, e: Z, f: Z, j: Z, dd_: Z, de
     }
 }
 
+/// `real_intersections_absent`: real coefficients whose line and conic meet at
+/// complex conjugate points (`n^T adj(M) n > 0`).
+fn real_intersections_absent(coefficients: [Z; 9]) -> bool {
+    if coefficients.iter().any(|z| z.im != 0.0) {
+        return false;
+    }
+    let [a, b, c, g, h, d, e, f, j] = coefficients.map(|z| z.re);
+    let adj11 = b * f - e * e / 4.0;
+    let adj22 = a * f - d * d / 4.0;
+    let adj33 = a * b - c * c / 4.0;
+    let adj12 = d * e / 4.0 - c * f / 2.0;
+    let adj13 = c * e / 4.0 - b * d / 2.0;
+    let adj23 = c * d / 4.0 - a * e / 2.0;
+    let delta = g * g * adj11
+        + h * h * adj22
+        + j * j * adj33
+        + 2.0 * (g * h * adj12 + g * j * adj13 + h * j * adj23);
+    negative(-delta)
+}
+
 fn tfun_selected(
     a: Z, b: Z, c: Z, g: Z, h: Z, d: Z, e: Z, f: Z, j: Z, dpe: Z, dpf: Z, beta: Z,
     data: &BetaData, dd_: Z, de: Z, df: Z, dj: Z, ddpe: Z, ddpf: Z, k: &Constants<f64>,
@@ -536,7 +568,8 @@ fn tfun_selected(
         - s3(y1, y2, beta, ONE, b, c + e, a + dpf, de, ddpf, k)
         + s3(y1, y2, ZERO, ONE - beta, a + b + c, dpe, f, ddpe, df, k)
         - s3(y1, y2, ZERO, -beta, a, d, f, dd_, df, k);
-    let residue = planar(y1, y2, p1, p2, data.a, data.b, data.c, data.dc, k);
+    let real = real_intersections_absent([a, b, c, g, h, d, e, f, j]);
+    let residue = planar(y1, y2, p1, p2, data.a, data.b, data.c, data.dc, real, k);
     let residue = if negative(0.0 - beta.im) { -residue } else { residue };
     dv(integral + residue, data.k)
 }
@@ -1151,14 +1184,15 @@ mod expression_tests {
             );
             compare(
                 "planar",
-                12,
+                13,
                 2000,
                 0,
-                |x| planar(&cont(&x[0..3]), &cont(&x[3..6]), nz(x[6]), nz(x[7]), x[8], x[9], x[10], x[11], &c),
+                |x| planar(&cont(&x[0..3]), &cont(&x[3..6]), nz(x[6]), nz(x[7]), x[8], x[9], x[10], x[11], nz(x[12]), &c),
                 &|rng: &mut Rng| {
-                    let mut x = any(12)(rng);
+                    let mut x = any(13)(rng);
                     x[6] = r(rng.below(2) as f64);
                     x[7] = r(rng.below(2) as f64);
+                    x[12] = r(rng.below(2) as f64);
                     x
                 },
             );

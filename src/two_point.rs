@@ -1,49 +1,42 @@
 //! Tadpole and bubble coefficients.
 use super::*;
 
-pub(crate) fn bnlog(rank: usize, root: &Atom) -> Atom {
-    bnlog_with_real_axis_lip(rank, root, false)
-}
-
-fn bnlog_with_real_axis_lip(rank: usize, root: &Atom, upper_lip: bool) -> Atom {
+/// OneLOop's `bnlog(rank, x)` at `x = mass/difference`, the zero-momentum
+/// root of the tensor-bubble anchors, with `difference = mass - other_mass`.
+///
+/// OneLOop forms `x = (mass - i eps |mass|)/difference`, so a real `x` in
+/// `(0, 1)`, where `log(1 - 1/x)` sits on its cut, approaches from below
+/// for a positive `difference` and from above for a negative one. The latter
+/// occurs for real masses of opposite sign.
+pub(crate) fn bnlog(rank: usize, mass: &Atom, difference: &Atom) -> Atom {
     debug_assert!(rank <= 4);
-    if root.is_zero() {
+    let root = mass / difference;
+    if mass.is_zero() {
         return Atom::num(0);
     }
 
-    let one = Atom::num(1);
     let harmonic = || {
         -(1..=rank + 1)
             .map(|index| Atom::num(1) / index)
             .fold(Atom::num(0), |sum, term| sum + term)
     };
-    if root == &one {
-        return harmonic();
-    }
-
-    let one_minus_root = 1 - root;
+    let one_minus_root = 1 - &root;
     let mut root_power = Atom::num(1);
     let mut polynomial = Atom::num(0);
     for power in 0..=rank {
         polynomial += &root_power / (rank + 1 - power);
-        root_power *= root;
+        root_power *= &root;
     }
-    let argument: Atom = 1 - Atom::num(1) / root;
-    let logarithm = if upper_lip {
-        upper_log(&argument)
-    } else {
-        physical_log(&argument)
-    };
+    let argument: Atom = 1 - Atom::num(1) / &root;
+    let real_difference = grouped(&((difference + difference.conj()) / 2));
+    let below = &real_difference - Symbol::ABS.call((&real_difference,));
+    let logarithm = if_nonzero_else(&below, upper_log(&argument), physical_log(&argument));
     let regular = (1 - &root_power) * logarithm - polynomial;
     if_nonzero_else(
-        root,
+        &root,
         if_nonzero_else(&one_minus_root, regular, harmonic()),
         Atom::num(0),
     )
-}
-
-pub(crate) fn bnlog0(root: &Atom) -> Atom {
-    bnlog(0, root)
 }
 
 pub(crate) fn b0_at_zero_momentum(mass_0: &Atom, mass_1: &Atom, mu_squared: &Atom) -> Atom {
@@ -63,6 +56,23 @@ pub(crate) fn b0_with_first_mass_zero(momentum: &Atom, mass_1: &Atom, mu_squared
     2 - (x_log_ratio(mass_1, mu_squared) - x_log_ratio(&shifted_mass, mu_squared)) / momentum
 }
 
+/// The labelled roots `x` of `p x² + (m1 - m0 - p) x + m0` and `x - 1`,
+/// each from its own quadratic so that neither loses precision when a root
+/// approaches zero or one. Both share the discriminant `λ(p, m0, m1)`.
+fn bubble_roots(
+    momentum: &Atom,
+    mass_0: &Atom,
+    mass_1: &Atom,
+    discriminant: &Atom,
+) -> [(Atom, Atom); 2] {
+    let linear = mass_1 - mass_0 - momentum;
+    let shifted_linear = mass_1 - mass_0 + momentum;
+    [
+        labelled_quadratic_roots(momentum, &linear, mass_0, discriminant),
+        labelled_quadratic_roots(momentum, &shifted_linear, mass_1, discriminant),
+    ]
+}
+
 pub(crate) fn b0_with_nonzero_momentum_and_mass(
     momentum: &Atom,
     mass_0: &Atom,
@@ -71,15 +81,26 @@ pub(crate) fn b0_with_nonzero_momentum_and_mass(
 ) -> Atom {
     let linear = mass_1 - mass_0 - momentum;
     let discriminant = (&linear * &linear - Atom::num(4) * momentum * mass_0).sqrt();
-    let denominator = Atom::num(2) * momentum;
-    let root_plus = (-&linear + &discriminant) / &denominator;
-    let root_minus = (-linear - discriminant) / denominator;
+    let [(root_plus, root_minus), (shifted_plus, shifted_minus)] =
+        bubble_roots(momentum, mass_0, mass_1, &discriminant);
 
+    // bnlog(0, x) = (1 - x) log(1 - 1/x) - 1 = -y log(y/x) - 1 with y = x - 1.
+    // Forming 1 - 1/x from a root within an ulp of one cancels completely,
+    // e.g. log(0) for m1 << m0; the product y log(y/x) vanishes with y.
     // With the Feynman -i0 in the quadratic, real roots approach from
     // opposite sides: root_plus from above and root_minus from below.
-    -physical_log(&(mass_0 / mu_squared))
-        - bnlog_with_real_axis_lip(0, &root_plus, true)
-        - bnlog0(&root_minus)
+    let term = |shifted: &Atom, root: &Atom, upper: bool| {
+        let ratio = shifted / root;
+        let logarithm = if upper {
+            upper_log(&ratio)
+        } else {
+            physical_log(&ratio)
+        };
+        if_nonzero(shifted, shifted * logarithm)
+    };
+    Atom::num(2) - physical_log(&(mass_0 / mu_squared))
+        + term(&shifted_plus, &root_plus, true)
+        + term(&shifted_minus, &root_minus, false)
 }
 
 pub(crate) fn b0_with_nonzero_momentum(
@@ -89,12 +110,23 @@ pub(crate) fn b0_with_nonzero_momentum(
     mu_squared: &Atom,
 ) -> Atom {
     if mass_0.is_zero() {
-        b0_with_first_mass_zero(momentum, mass_1, mu_squared)
-    } else {
-        let massive = b0_with_nonzero_momentum_and_mass(momentum, mass_0, mass_1, mu_squared);
-        let massless = b0_with_first_mass_zero(momentum, mass_1, mu_squared);
-        if_nonzero_else(mass_0, massive, massless)
+        return b0_with_first_mass_zero(momentum, mass_1, mu_squared);
     }
+    // B0 is symmetric in its masses; OneLOop orders them so that a massless
+    // line is always handled by the one-mass formula. The two-mass roots at
+    // m1 = 0 are exactly m0/p and 1, but the rounded quadratic formula can
+    // return 1 - ulp there, turning bnlog's log(1 - 1/x) into log(0).
+    let second_massless = b0_with_first_mass_zero(momentum, mass_0, mu_squared);
+    if mass_1.is_zero() {
+        return second_massless;
+    }
+    let massive = b0_with_nonzero_momentum_and_mass(momentum, mass_0, mass_1, mu_squared);
+    let first_massless = b0_with_first_mass_zero(momentum, mass_1, mu_squared);
+    if_nonzero_else(
+        mass_0,
+        if_nonzero_else(mass_1, massive, second_massless),
+        first_massless,
+    )
 }
 
 pub(crate) fn ordinary_log3(value: &Atom) -> Atom {
@@ -166,14 +198,42 @@ pub(crate) fn db0_with_two_masses(
     let linear = &mass_difference - momentum;
     let discriminant_squared = &linear * &linear - Atom::num(4) * momentum * mass_0;
     let discriminant = discriminant_squared.sqrt();
-    let denominator = Atom::num(2) * momentum;
-    let root_plus = (-&linear + &discriminant) / &denominator;
-    let root_minus = (-linear - &discriminant) / denominator;
-    // The ratios are positive for real roots outside [0,1], avoiding a
-    // subtraction of negative-axis logs with different IEEE signed zeros.
-    // Inside the interval, the plus/minus roots require upper/lower lips.
-    let plus_ratio = Atom::num(1) - Atom::num(1) / root_plus;
-    let minus_ratio = Atom::num(1) - Atom::num(1) / root_minus;
+    let [(root_plus, root_minus), (shifted_plus, shifted_minus)] =
+        bubble_roots(momentum, mass_0, mass_1, &discriminant);
+    // The ratios 1 - 1/x = (x - 1)/x are positive for real roots outside
+    // [0,1], avoiding a subtraction of negative-axis logs with different IEEE
+    // signed zeros. Inside the interval, the plus/minus roots require
+    // upper/lower lips.
+    //
+    // They are the roots (k ± d)/(2 m0) of m0 r² - k r + m1 = 0, with
+    // k = m0 + m1 - p. Both are evaluated directly unless one of them cancels
+    // (|k ± d| below a quarter of |k ∓ d|, e.g. for m1 << m0); that one is
+    // then the quotient of the cancellation-free roots, y/x. Near the
+    // pseudo-threshold, where d is small, the direct pair keeps the rounding
+    // errors of both ratios correlated in the divided difference
+    // (log r+ - log r-)/d below, which a Vieta quotient would decorrelate.
+    // Both forms are exact; the choice only affects rounding.
+    let k = mass_0 + mass_1 - momentum;
+    let ratio_numerators = [&k + &discriminant, &k - &discriminant];
+    let sizes = ratio_numerators
+        .each_ref()
+        .map(|numerator| Symbol::ABS.call((numerator,)));
+    // Nonzero exactly when 4 |own| < |other|.
+    let cancels = |own: &Atom, other: &Atom| {
+        let margin = grouped(&(Atom::num(4) * own - other));
+        &margin - Symbol::ABS.call((&margin,))
+    };
+    let [plus_numerator, minus_numerator] = ratio_numerators;
+    let plus_ratio = if_nonzero_else(
+        &cancels(&sizes[0], &sizes[1]),
+        shifted_plus / root_plus,
+        plus_numerator / (Atom::num(2) * mass_0),
+    );
+    let minus_ratio = if_nonzero_else(
+        &cancels(&sizes[1], &sizes[0]),
+        shifted_minus / root_minus,
+        minus_numerator / (Atom::num(2) * mass_0),
+    );
     let inverse_quadratic_integral =
         (upper_log(&plus_ratio) - physical_log(&minus_ratio)) / &discriminant;
     let momentum_squared = momentum * momentum;
@@ -431,7 +491,7 @@ pub fn db0(
 pub(crate) fn b1_zero_momentum_anchor(mass_0: &Atom, mass_1: &Atom, mu_squared: &Atom) -> Atom {
     let logarithm = physical_log(&(mass_1 / mu_squared));
     let difference = mass_1 - mass_0;
-    let unequal = (&logarithm + bnlog(1, &(mass_1 / &difference))) / 2;
+    let unequal = (&logarithm + bnlog(1, mass_1, &difference)) / 2;
     if_nonzero_else(&difference, unequal, logarithm / 2)
 }
 
@@ -533,7 +593,7 @@ pub fn b00(
 pub(crate) fn b11_zero_momentum_anchor(mass_0: &Atom, mass_1: &Atom, mu_squared: &Atom) -> Atom {
     let logarithm = physical_log(&(mass_1 / mu_squared));
     let difference = mass_1 - mass_0;
-    let unequal = (-&logarithm - bnlog(2, &(mass_1 / &difference))) / 3;
+    let unequal = (-&logarithm - bnlog(2, mass_1, &difference)) / 3;
     if_nonzero_else(&difference, unequal, -logarithm / 3)
 }
 
@@ -635,7 +695,7 @@ pub fn b001(
 pub(crate) fn b111_zero_momentum_anchor(mass_0: &Atom, mass_1: &Atom, mu_squared: &Atom) -> Atom {
     let logarithm = physical_log(&(mass_1 / mu_squared));
     let difference = mass_1 - mass_0;
-    let unequal = (&logarithm + bnlog(3, &(mass_1 / &difference))) / 4;
+    let unequal = (&logarithm + bnlog(3, mass_1, &difference)) / 4;
     if_nonzero_else(&difference, unequal, logarithm / 4)
 }
 
@@ -762,7 +822,7 @@ pub fn b0011(
 pub(crate) fn b1111_zero_momentum_anchor(mass_0: &Atom, mass_1: &Atom, mu_squared: &Atom) -> Atom {
     let logarithm = physical_log(&(mass_1 / mu_squared));
     let difference = mass_1 - mass_0;
-    let unequal = (-&logarithm - bnlog(4, &(mass_1 / &difference))) / 5;
+    let unequal = (-&logarithm - bnlog(4, mass_1, &difference)) / 5;
     if_nonzero_else(&difference, unequal, -logarithm / 5)
 }
 
@@ -774,11 +834,16 @@ pub(crate) fn b1111_at_zero_momentum(mass_0: &Atom, mass_1: &Atom, mu_squared: &
         return b1111_zero_momentum_anchor(mass_1, mass_0, mu_squared);
     }
 
-    let anchored_at_mass_1 = -b1111_zero_momentum_anchor(mass_0, mass_1, mu_squared)
-        - Atom::num(4) * b111_zero_momentum_anchor(mass_0, mass_1, mu_squared)
-        - Atom::num(6) * b11_zero_momentum_anchor(mass_0, mass_1, mu_squared)
-        - Atom::num(4) * b1_zero_momentum_anchor(mass_0, mass_1, mu_squared)
-        - b0_at_zero_momentum(mass_0, mass_1, mu_squared);
+    // Reflection x -> 1-x of the Feynman parameter: with B_n = (-1)^n ∫x^n f,
+    // ∫(1-x)^4 f = B0 + 4 B1 + 6 B11 + 4 B111 + B1111. OneLOop's bub1111
+    // negates this sum in its mass-swap reconstruction (taken when m1 is the
+    // larger mass), so its zero-momentum B1111 has the wrong sign there and
+    // disagrees with the p² -> 0 limit and with ∫x^4 [1/eps - log D].
+    let anchored_at_mass_1 = b1111_zero_momentum_anchor(mass_0, mass_1, mu_squared)
+        + Atom::num(4) * b111_zero_momentum_anchor(mass_0, mass_1, mu_squared)
+        + Atom::num(6) * b11_zero_momentum_anchor(mass_0, mass_1, mu_squared)
+        + Atom::num(4) * b1_zero_momentum_anchor(mass_0, mass_1, mu_squared)
+        + b0_at_zero_momentum(mass_0, mass_1, mu_squared);
     if mass_0.is_zero() {
         return anchored_at_mass_1;
     }

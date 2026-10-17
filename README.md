@@ -17,9 +17,14 @@ measures the current binary64 backend: all mixed scalar workloads, the gg → HH
 top-loop pentagon (1.15–1.24× per point), the gg → HH box and the H → gg triangle
 are within 1.3× of OneLOop Fortran; the γγ → γγ top box is not (1.6–1.7× per
 diagram: its massless-leg D0 about 2.1×, C0 1.8×), and single real timelike D0
-rows remain about 2.2×. Known defect: some four-mass real-mass D0
-rows with `s12 · s23 < 0` have a wrong real part in every evaluation route
-(`tests/native_d0_four_mass_defect.rs`, ignored).
+rows remain about 2.2×. The four-mass real-mass D0 rows with `s12 · s23 < 0`
+that had a wrong real part are fixed in the expressions
+(`tests/native_d0_four_mass_defect.rs`), together with further continuation
+defects found by a OneLOop sweep (`tests/oracle_sweep.py`,
+`tests/permutation_regressions.rs`). Two of them are OneLOop 3.6's own: the
+sign of its zero-momentum `B1111` when the second mass is the heavier one, and
+real-mass contour boxes whose value differs from OneLOop's vanishing-width
+limit (`tests/data/real_mass_limits.txt`); the expressions follow the limit.
 
 This work is based on **Andreas van Hameren's OneLOop package**. The original
 algorithms, analytic continuation conventions and Fortran reference results are

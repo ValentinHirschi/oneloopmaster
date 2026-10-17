@@ -16,13 +16,6 @@ impl SheetAtom {
     pub(crate) fn upper(value: Atom) -> Self {
         Self::with_sign(value, Atom::num(1))
     }
-    pub(crate) fn with_real_axis_sign(value: Atom, upper: bool) -> Self {
-        if upper {
-            Self::upper(value)
-        } else {
-            Self::lower(value)
-        }
-    }
     pub(crate) fn with_sign(value: Atom, zero_sign: Atom) -> Self {
         let logarithm =
             symbolica::symbol!("__olo_inspect_sheet_initial_log").call((&value, zero_sign));

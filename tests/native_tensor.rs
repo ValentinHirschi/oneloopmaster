@@ -312,11 +312,6 @@ fn arbitrary_precision_matches_symbolic_expressions() {
             evaluator.evaluate(&input, &mut expected);
             let actual = evaluate_float(row, BITS);
             for index in 0..family.outputs() {
-                // The symbolic zero-momentum B1/B11/B111 anchors put real
-                // opposite-sign masses on the wrong lip; see the analytic test.
-                if row.name.contains("p0_opposite_signs") && index >= 3 {
-                    continue;
-                }
                 let size = float_norm(&expected[index]) + 1e-3 * magnitude(row, index / 3);
                 let error = difference(&actual[index], &expected[index]) / size;
                 assert!(

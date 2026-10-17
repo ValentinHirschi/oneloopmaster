@@ -1,15 +1,16 @@
 # Portable scalar evaluators
 
-Regenerated on 2026-09-29 with released Symbolica and Numerica 3.0.1 and
-SymJIT 2.26.0. No dependency source patches are applied.
+Regenerated on 2026-10-17 from the expressions with the continuation fixes of
+`tests/permutation_regressions.rs` (Symbolica snapshot `e679e8c1` and SymJIT 2.27.3 pinned in
+`Cargo.toml`). The generator validated all five families against all 293
+acceptance and 31 benchmark rows before writing them; the regression rows,
+`tests/data/real_mass_limits.txt` and `tests/native_d0_four_mass_defect.rs`
+check the SymJIT backend as well.
 
-The C0 asset was regenerated on 2026-09-22 after restoring the zero-root
-ordering of the finite three-mass triangle. Its round-trip validation passed
-all existing C0 acceptance and benchmark rows. An additional regression checks
-45 equal-mass kinematic points, including both sides of the timelike threshold,
-through the native, expression and portable SymJIT backends; native, expression
-and public master callbacks also agree with independent analytic values to
-110 decimal digits.
+Previous generations: 2026-09-29 with released Symbolica and Numerica 3.0.1 and
+SymJIT 2.26.0, and the C0 asset of 2026-09-22 (zero-root ordering of the finite
+three-mass triangle, with 45 equal-mass regression points through the native,
+expression and portable SymJIT backends).
 
 These files contain bincode-serialized numerical `ExpressionEvaluator` graphs,
 including nested definitions and registered callback metadata. They contain no
@@ -29,18 +30,17 @@ exhaustive analytic-region coverage.
 
 | Family | Bytes | SHA-256 |
 | --- | ---: | --- |
-| A0 | 1,891 | `8a3a160b9e0909a60461179f2327f4bddd85153d79679b4ed1e5b8a73e3edf71` |
-| B0 | 14,880 | `cc8611afca806d3d28f16e566da9601963dcf1f4340c99c1f00f6968bf3563c2` |
-| dB0 | 71,901 | `5aa2786250a8e131d0b751d7e05b6c89431b55e624dc3e5e07cee9a7e2779f77` |
-| C0 | 179,716 | `506ec67a01cc34eaa378b1c3fea3b5092a9a8cd738f3ddac1e0595ad502bb09a` |
-| D0 | 4,333,475 | `af637c421c71922dbda4e34c0bb4ee22c72d52c52eba4f438b9963fa5d325869` |
+| A0 | 1,488 | `b034aa19e48f3f62b7029f2c88ad4f14e19ff6d9580979d43868349c5e651a0d` |
+| B0 | 15,375 | `0730c8a390d31c508fbece0760186627dc851b8ccf2da787072f8c2788f50354` |
+| dB0 | 61,566 | `5f145ba984ffe2bdffb9355557a9272c3006d0a601e845cd48877d5d19ea4d77` |
+| C0 | 135,287 | `3c30ad2fb2b7be7cf9e541106b32870c85b56b69d0aae9772b76e005244348b2` |
+| D0 | 1,899,115 | `35f66163246cb11d138181fe34137e8b1dd2af7a273fe6968b8d19f396853c89` |
 
-The embedded files retain the `oneloop-evaluator-v2` discriminator. Its old
-SymJIT version field describes their producer; loading always recompiles the
-Symbolica IR with the current backend. New saves use `oneloop-evaluator-v3`,
-which binds the Symbolica IR schema and strict compilation policy without
-claiming backend binary compatibility. Only the known v2 source formats are
-accepted for migration. Original helper symbols and signatures are preserved. Upstream shares
+The embedded files use the `oneloop-evaluator-v3` discriminator, which binds
+the Symbolica IR schema and strict compilation policy without claiming backend
+binary compatibility; loading always recompiles the Symbolica IR with the
+current backend. The known `oneloop-evaluator-v2` source formats of earlier
+generations are still accepted for migration. Original helper symbols and signatures are preserved. Upstream shares
 non-inlined bodies, so explicit-pi aliases and padded argument lists are no
 longer needed. Symbol ordering still controls floating-point operation order.
 

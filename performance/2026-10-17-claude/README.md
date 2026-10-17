@@ -30,6 +30,11 @@ original OneLOop Fortran, after the changes on `claude/native-masters`:
 > timings stand but the binary64 D0 is not validated outside the measured
 > rows. Reproducer: `tests/native_d0_four_mass_defect.rs` (ignored; run with
 > `--include-ignored`).
+>
+> **Update:** fixed in the expressions after these measurements: the finite
+> four-mass box placed exactly real roots on fallback lips instead of the lips
+> OneLOop derives from its infinitesimal shift of the invariants. The
+> reproducer now runs by default.
 
 ## Headline: the gg → HHH top-loop pentagon (graph26)
 

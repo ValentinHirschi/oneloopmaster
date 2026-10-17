@@ -13,9 +13,7 @@
 //! `Float`: those types track precision through the expression's own grouping.
 //!
 //! The triangle kernel is generic over [`NativeFloat`]; the box kernels are
-//! binary64 only. Where the expression divides by a root of a quadratic that
-//! can cancel to an exact zero in rounding, the triangle kernel takes that root
-//! from the product of roots instead (identical in exact arithmetic).
+//! binary64 only.
 use super::primitives::{C, NativeFloat, inverse, mul, sqrt};
 
 mod box_contour;
@@ -107,12 +105,6 @@ pub(crate) fn div<T: NativeFloat>(a: &C<T>, b: &C<T>) -> C<T> {
     mul(a, &inverse(b))
 }
 
-/// |z|² (no square root).
-#[inline]
-pub(crate) fn norm<T: NativeFloat>(z: &C<T>) -> T {
-    z.re.clone() * &z.re + z.im.clone() * &z.im
-}
-
 #[inline]
 pub(crate) fn real<T: NativeFloat>(x: T) -> C<T> {
     let zero = x.zero();
@@ -133,33 +125,32 @@ pub(crate) fn physical_sqrt<T: NativeFloat>(z: &C<T>) -> C<T> {
 }
 
 /// `triangle::r_function`: the root r of r + 1/r = k selected like OneLOop's
-/// rfun, and r - 1/r.
+/// rfun, and r - 1/r, taken directly from the square root added to k (it is
+/// exactly zero at a threshold and keeps its sign next to one).
 #[inline]
 pub(crate) fn r_function<T: NativeFloat>(k: &C<T>, c: &Constants<T>) -> (C<T>, C<T>) {
-    let root = if !k.im.is_fully_zero() {
+    if !k.im.is_fully_zero() {
         let two = real(c.two.clone());
         let difference = mul(&sqrt(&sub(k, &two)), &sqrt(&add(k, &two)));
-        scale(&add(k, &difference), &c.half)
+        (scale(&add(k, &difference), &c.half), difference)
     } else {
         let x = &k.re;
         let discriminant = x.clone() * x - &c.four;
         if negative(&discriminant) {
-            C::new(
-                x.clone() * &c.half,
-                -((-discriminant).sqrt() * &c.half),
+            let root = (-discriminant).sqrt();
+            (
+                C::new(x.clone() * &c.half, -(root.clone() * &c.half)),
+                C::new(x.zero(), -root),
             )
         } else {
             let root = discriminant.sqrt();
-            let sum = if negative(x) {
-                x.clone() - &root
-            } else {
-                x.clone() + &root
-            };
-            C::new(sum * &c.half, x.zero())
+            let difference = if negative(x) { -root } else { root };
+            (
+                C::new((x.clone() + &difference) * &c.half, x.zero()),
+                C::new(difference, x.zero()),
+            )
         }
-    };
-    let difference = sub(&root, &inverse(&root));
-    (root, difference)
+    }
 }
 
 /// C0 `[finite, pole, double pole]` for the covered sectors: three massive

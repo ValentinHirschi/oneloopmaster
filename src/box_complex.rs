@@ -333,6 +333,29 @@ fn s3(x: [&Atom; 13]) -> Atom {
     let rea = sign_nonnegative(&re(a));
     let mut z1 = continued_root(root1, a, b, db, dc, &Atom::num(0));
     let mut z2 = continued_root(root2, a, b, db, dc, &Atom::num(0));
+    // An exact double root has no first-order continuation (2 a z + b = 0).
+    // Infinitesimal widths split it like sqrt(eps): one root moves up and
+    // the other down, which dominates every first-order shift. Only the
+    // signs are used, so encode the split as a first-order direction that
+    // exceeds those of the poles y1, y2 it is combined with.
+    let double = if_nonzero_else(
+        &(b * b - Atom::num(4) * a * c),
+        Atom::num(0),
+        if_nonzero(a, Atom::num(1)),
+    );
+    let dominant = Atom::num(2)
+        * (Atom::num(1)
+            + [&y1.first, &y1.second, &y2.first, &y2.second]
+                .into_iter()
+                .fold(Atom::num(0), |sum, v| sum + Symbol::ABS.call((v,))));
+    // The first root is evaluated as -b/(2a) there; use it for both roots
+    // so that they coincide exactly.
+    let centre = z1.value.clone();
+    for (z, direction) in [(&mut z1, Atom::num(1)), (&mut z2, Atom::num(-1))] {
+        z.value = if_nonzero_else(&double, centre.clone(), z.value.clone());
+        z.first = if_nonzero_else(&double, i() * direction * &dominant, z.first.clone());
+        z.second = if_nonzero_else(&double, Atom::num(0), z.second.clone());
+    }
     let fallback1 = &simc * &rea * sign_nonnegative(&re(&z2.value));
     let fallback2 = &simc * &rea * sign_nonnegative(&re(&z1.value));
     for (z, fallback) in [(&mut z1, fallback1), (&mut z2, fallback2)] {
@@ -392,17 +415,22 @@ fn s3(x: [&Atom; 13]) -> Atom {
     )
 }
 
-fn planar(x: [&Atom; 12]) -> Atom {
+/// Residues of the poles enclosed by the contour (OneLOop's `plnr`).
+///
+/// `real` (the last argument) is nonzero when the logarithm arguments
+/// `a/(b y + c)` are exactly real; see [real_intersections_absent].
+fn planar(x: [&Atom; 13]) -> Atom {
     let y1 = Continued::from_args([x[0], x[1], x[2]]);
     let y2 = Continued::from_args([x[3], x[4], x[5]]);
-    let [p1, p2, a, b, c, dc] = [x[6], x[7], x[8], x[9], x[10], x[11]];
+    let [p1, p2, a, b, c, dc, real] = [x[6], x[7], x[8], x[9], x[10], x[11], x[12]];
     let x1 = b * &y1.value + c;
     let x2 = b * &y2.value + c;
     let sheet = |y: &Continued, value: &Atom| {
         let first = b * &y.first + dc;
         let second = b * &y.second;
+        let ratio = a / value;
         Continued {
-            value: a / value,
+            value: if_nonzero_else(real, re(&ratio), ratio),
             first: -a * &first / (value * value),
             second: a * &first * &first / (value * value * value) - a * second / (value * value),
         }
@@ -561,6 +589,36 @@ fn beta_data(
     }
 }
 
+/// Nonzero when the real line `g x + h y + j = 0` meets the real conic
+/// `a x² + b y² + c x y + d x + e y + f = 0` at complex conjugate points.
+///
+/// The residue logarithms of `tfun` take `q = a1/(b1 y + c1)` at a pole `y`,
+/// where `a1 = L(P + s w)/s` and `b1 y + c1 = Q(P + s w)/s` for the
+/// intersection point `P` belonging to `y`, the direction `w = (1, beta)` and
+/// every `s` (the conic has no `s²` term along `w`). For a non-real `P` and
+/// non-real `beta` one `s` makes `P + s w` real, so `q = L/Q` there is real.
+/// For exactly real masses `q` is then exactly real, while its rounded
+/// imaginary part is noise that would otherwise choose its lip (and add
+/// `±2 pi i` to a residue). The lip must follow the infinitesimal widths.
+/// The intersections are complex iff `n^T adj(M) n > 0`, with `M` the conic's
+/// symmetric matrix and `n = (g, h, j)`.
+fn real_intersections_absent(coefficients: [&Atom; 9]) -> Atom {
+    let real = 1 - any_nonzero(coefficients.map(im));
+    let [a, b, c, g, h, d, e, f, j] = coefficients.map(re);
+    let quarter = |x: Atom| x / 4;
+    let adj11 = &b * &f - quarter(&e * &e);
+    let adj22 = &a * &f - quarter(&d * &d);
+    let adj33 = &a * &b - quarter(&c * &c);
+    let adj12 = quarter(&d * &e) - &c * &f / 2;
+    let adj13 = quarter(&c * &e) - &b * &d / 2;
+    let adj23 = quarter(&c * &d) - &a * &e / 2;
+    let delta = &g * &g * adj11
+        + &h * &h * adj22
+        + &j * &j * adj33
+        + Atom::num(2) * (&g * &h * adj12 + &g * &j * adj13 + &h * &j * adj23);
+    real * negative(&grouped(&-delta))
+}
+
 fn tfun_selected(
     [
         a,
@@ -595,11 +653,12 @@ fn tfun_selected(
         - s3_call(y1, y2, beta, &one, b, &(c + e), &(a + dpf), de, ddpf)
         + s3_call(y1, y2, &zero, &(1 - beta), &(a + b + c), dpe, f, ddpe, df)
         - s3_call(y1, y2, &zero, &(-beta), a, d, f, dd, df);
+    let real = real_intersections_absent([a, b, c, g, h, d, e, f, j]);
     let residue = call(
         "planar",
         [
             &y1.value, &y1.first, &y1.second, &y2.value, &y2.first, &y2.second, &p1, &p2, &data.a,
-            &data.b, &data.c, &data.dc,
+            &data.b, &data.c, &data.dc, &real,
         ],
     );
     (integral + if_nonzero_else(&less(&Atom::num(0), &im(beta)), -&residue, residue)) / data.k
@@ -1142,7 +1201,7 @@ pub(crate) fn register(map: &mut FunctionMap) {
     define(map, "s3_double_real", 4, |x| {
         s3_double_real(core::array::from_fn(|idx| &x[idx]))
     });
-    define(map, "planar", 12, |x| {
+    define(map, "planar", 13, |x| {
         planar(core::array::from_fn(|idx| &x[idx]))
     });
     define(map, "inside", 4, |x| {

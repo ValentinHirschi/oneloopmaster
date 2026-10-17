@@ -410,30 +410,16 @@ fn symbolic(family: TensorIntegral, bits: u32) -> Symbolic {
     })
 }
 
-/// Real masses of opposite sign at zero momentum: the symbolic zero-momentum
-/// B1/B11/B111 anchors of `d10eaa0` put them on the wrong lip (see
-/// `tests/native_tensor.rs`); the native code agrees with the
-/// Feynman-parameter integrals there.
-fn opposite_sign_anchor(family: TensorIntegral, input: &[C], index: usize) -> bool {
-    family != TensorIntegral::An
-        && index >= 3
-        && input[0].re == 0.
-        && input[1].im == 0.
-        && input[2].im == 0.
-        && input[1].re * input[2].re < 0.
-}
-
 /// Every regression row (Ninja's streams, random bubbles and tadpoles) in
 /// binary64 against the symbolic expressions at 256 bits. Where the
 /// expressions themselves cancel beyond 256 bits (Passarino-Veltman forms at
 /// tiny p², like `(m²/p²)^rank`) the 1024-bit evaluation is the reference.
 ///
-/// Two expression defects of `d10eaa0` are reported, not failed: the
-/// opposite-sign anchors above, and non-finite values of the two-mass B0
-/// formula at `m1² = 0`, whose root `x = 1` can round to `1 - ulp` so that
-/// `log(1 - 1/x) = log(0)` (e.g. `B(5937.799487939787; 29929, 0)` at 256
-/// bits). Both are repaired on `claude/expression-fixes`, where these lists
-/// are empty.
+/// This also checks two repaired expression defects of `d10eaa0`: the
+/// zero-momentum B1/B11/B111 anchors with real masses of opposite sign took
+/// the wrong lip, and the two-mass B0 formula at `m1² = 0` was not finite
+/// where its root `x = 1` rounded to `1 - ulp`, so that `log(1 - 1/x) =
+/// log(0)` (e.g. `B(5937.799487939787; 29929, 0)` at 256 bits).
 #[test]
 fn binary64_kernels_match_symbolic_expressions() {
     let mut rows: Vec<(TensorIntegral, Vec<C>)> = stream_rows()
@@ -460,8 +446,7 @@ fn binary64_kernels_match_symbolic_expressions() {
     let mut at_256: Vec<Symbolic> = families.iter().map(|&f| symbolic(f, 256)).collect();
     let mut at_1024: Vec<Symbolic> = families.iter().map(|&f| symbolic(f, 1024)).collect();
     let (mut worst, mut worst_generic, mut beyond_256) = (0.0_f64, 0.0_f64, 0);
-    let (mut anchors, mut nonfinite, mut limited, mut failures) =
-        (Vec::new(), Vec::new(), Vec::new(), Vec::new());
+    let (mut nonfinite, mut limited, mut failures) = (Vec::new(), Vec::new(), Vec::new());
     for (family, input) in &rows {
         let slot = families.iter().position(|f| f == family).unwrap();
         let actual = evaluate_f64(*family, input, true);
@@ -516,8 +501,6 @@ fn binary64_kernels_match_symbolic_expressions() {
             // algorithm loses digits (e.g. the root pair at p² << m²).
             if error < BINARY64_TOLERANCE {
                 worst = worst.max(error);
-            } else if opposite_sign_anchor(*family, input, index) {
-                anchors.push(message);
             } else if error <= 4. * generic_error {
                 limited.push(message);
             } else {
@@ -529,24 +512,16 @@ fn binary64_kernels_match_symbolic_expressions() {
         "{} rows against the symbolic expressions: worst binary64 error {worst:e} \
          below the target; {} outputs above it as for the generic binary64 code \
          (worst generic error {worst_generic:e}):\n{}\n\
-         {beyond_256} outputs need more than 256 bits of the expressions; \
-         {} zero-momentum opposite-sign outputs differ (expression anchors):\n{}\n\
-         {} outputs where the expression is not finite:\n{}",
+         {beyond_256} outputs need more than 256 bits of the expressions",
         rows.len(),
         limited.len(),
         limited.join("\n"),
-        anchors.len(),
-        anchors.join("\n"),
-        nonfinite.len(),
-        nonfinite.join("\n")
     );
     assert!(failures.is_empty(), "{}", failures.join("\n"));
-    // Only the m1² = 0 two-mass formula may lose finiteness.
     assert!(
-        nonfinite
-            .iter()
-            .all(|row| row.contains("(0.0+0.0i), (") && !row.starts_with("An")),
-        "{}",
+        nonfinite.is_empty(),
+        "{} outputs where the expression is not finite:\n{}",
+        nonfinite.len(),
         nonfinite.join("\n")
     );
 }

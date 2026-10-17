@@ -49,6 +49,13 @@ validation. Regenerating the expressions does not update these kernels; an
 expression change in these sectors (such as the pending fixes on
 `claude/expression-fixes`) has to be transcribed too.
 
+> **Update (expression fixes):** the expressions now take the cancelling
+> triangle root from the product of roots as well, so the generated code no
+> longer differs there, and the kernels were re-transcribed with the fixed
+> expressions (`trif3` roots, chart choice and root lips, `boxf4` root lips,
+> the contour box's double-root split and its exactly real residue
+> logarithms, exact r-function roots at zero momenta and thresholds).
+
 ## Per diagram and per family (Ninja's master-call streams)
 
 µs per phase-space point (one lane's calls, lanes cycled) on exactly the calls

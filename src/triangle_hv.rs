@@ -3,67 +3,101 @@
 use super::*;
 use sheet_exact::{SheetAtom as Q, i, im, negative, sign_nonnegative};
 
-pub(crate) fn eta(a: &Atom, b: &Atom, c: &Atom) -> Atom {
-    let sa = sign_nonnegative(&im(a));
-    let sb = sign_nonnegative(&im(b));
-    let sc = sign_nonnegative(&im(c));
-    i() * Symbol::PI.to_atom() * &sc * (1 + &sa * &sb) * (1 - sa * sc) / 2
+/// 't Hooft--Veltman eta function from the imaginary-part signs of its
+/// arguments, with a vanishing imaginary part resolved by the caller.
+fn eta(sa: &Atom, sb: &Atom, sc: &Atom) -> Atom {
+    i() * Symbol::PI.to_atom() * sc * (1 + sa * sb) * (1 - sa * sc) / 2
 }
 
-fn s3(a: &Atom, m1: &Atom, m2: &Atom, y: &Atom) -> Atom {
+/// Sign of the imaginary part of `z`, or `real_axis` when it vanishes.
+fn im_sign(z: &Atom, real_axis: &Atom) -> Atom {
+    let imaginary = im(z);
+    if_nonzero_else(&imaginary, sign_nonnegative(&imaginary), real_axis.clone())
+}
+
+/// int_0^1 [log(a y² + b y + c) - log(a y0² + b y0 + c)]/(y - y0) dy with
+/// b = m1 - m2 - a and c = m2, where `z = (a y0² + b y0 + c)/a`.
+///
+/// Real quantities take their lips from the Feynman prescription, masses
+/// m - i delta with a common delta: c and z move by -i delta and -i delta/a,
+/// while the roots y± = (-b ± d)/(2a) move by ±i delta/d. Distinct real
+/// roots therefore separate upwards and downwards, as do coincident roots at
+/// a threshold, whose shift is ±sqrt(i delta/a).
+fn s3(a: &Atom, m1: &Atom, m2: &Atom, y: &Atom, z: &Atom) -> Atom {
     let b = m1 - m2 - a;
     let disc = (&b * &b - Atom::num(4) * a * m2).sqrt();
     let roots = [
         (-&b + &disc) / (Atom::num(2) * a),
         (-&b - &disc) / (Atom::num(2) * a),
     ];
-    let term = |r: &Atom| {
-        let qy = Q::upper(y - r);
-        (&Q::upper(-r) / &qy).dilog() - (&Q::upper(1 - r) / &qy).dilog()
+    // Imaginary-part signs of -y± (and of 1 - y±, y0 - y±) on the real axis.
+    let lips = [Atom::num(-1), Atom::num(1)];
+    let term = |r: &Atom, lip: &Atom| {
+        let qy = Q::with_sign(y - r, lip.clone());
+        (&Q::with_sign(-r, lip.clone()) / &qy).dilog()
+            - (&Q::with_sign(1 - r, lip.clone()) / &qy).dilog()
     };
-    let z = (y * (a * y + &b) + m2) / a;
-    let correction = eta(&(-&roots[0]), &(-&roots[1]), &(m2 / a))
-        - eta(&(y - &roots[0]), &(y - &roots[1]), &z)
-        - Atom::num(2) * i() * Symbol::PI.to_atom() * negative(a) * negative(&im(&z));
+    let below_a = -sign_nonnegative(a);
+    let z_sign = im_sign(z, &below_a);
+    let correction = eta(
+        &im_sign(&(-&roots[0]), &lips[0]),
+        &im_sign(&(-&roots[1]), &lips[1]),
+        &im_sign(&(m2 / a), &below_a),
+    ) - eta(
+        &im_sign(&(y - &roots[0]), &lips[0]),
+        &im_sign(&(y - &roots[1]), &lips[1]),
+        &z_sign,
+    ) - Atom::num(2) * i() * Symbol::PI.to_atom() * negative(a) * (1 - &z_sign)
+        / 2;
     // The sheet correction is locally constant. Its inactive logarithm may
     // have a removable projective singularity (for example y=0 on the
     // Euclidean sheet), so preserve the same lazy branch used by the other
     // sheet primitives rather than evaluating zero times a nonfinite value.
-    term(&roots[0])
-        + term(&roots[1])
+    term(&roots[0], &lips[0])
+        + term(&roots[1], &lips[1])
         + if_nonzero(&correction, &correction * Q::upper((y - 1) / y).log())
 }
 
-fn s3_call(a: &Atom, m1: &Atom, m2: &Atom, t1: Atom, t2: Atom, lambda_root: &Atom) -> Atom {
-    let alpha = (-t2 + lambda_root) / (Atom::num(2) * a);
-    let y = -(t1 + (m1 - m2 - a) * alpha) / lambda_root;
-    symbolica::symbol!("__olo_hv_s3").call((a, m1, m2, y))
+fn s3_call(a: &Atom, m1: &Atom, m2: &Atom, t1: Atom, t2: Atom, lambda: &Atom) -> Atom {
+    // The Källén function is negative here and OneLOop takes its square
+    // root on the upper lip; spell this out instead of trusting the IEEE
+    // sign of a zero imaginary part.
+    let lambda_root = sheet_exact::i() * (-lambda).sqrt();
+    let alpha = (-&t2 + &lambda_root) / (Atom::num(2) * a);
+    let b = m1 - m2 - a;
+    let y = -(&t1 + &b * alpha) / &lambda_root;
+    // a y² + b y + m2 at this y equals a u²/lambda + m2 - b²/(4a), with
+    // u = t1 - b t2/(2a). Evaluating that real form keeps rounding noise out
+    // of the sign of Im z, which selects the continuation below.
+    let u = t1 - &b * t2 / (Atom::num(2) * a);
+    let z = &u * &u / lambda + m2 / a - &b * &b / (Atom::num(4) * a * a);
+    symbolica::symbol!("__olo_hv_s3").call((a, m1, m2, &y, &z))
 }
 
 fn body(p: [&Atom; 3], m: [&Atom; 3]) -> Atom {
     let lambda = (p[2] - p[0] - p[1]).pow(2) - Atom::num(4) * p[0] * p[1];
-    let root = lambda.sqrt();
+    let root = sheet_exact::i() * (-&lambda).sqrt();
     -(s3_call(
         p[0],
         m[0],
         m[1],
         m[1] - m[2] + p[1],
         p[2] - p[0] - p[1],
-        &root,
+        &lambda,
     ) - s3_call(
         p[2],
         m[0],
         m[2],
         -(m[0] - m[1]) + p[2] - p[1],
         p[1] - p[0] - p[2],
-        &root,
+        &lambda,
     ) + s3_call(
         p[1],
         m[1],
         m[2],
         -(m[0] - m[1]) + p[2] - p[1],
         p[0] + p[1] - p[2],
-        &root,
+        &lambda,
     )) / root
 }
 
@@ -79,8 +113,8 @@ pub(crate) fn register(map: &mut FunctionMap) {
     let x = symbols.map(Symbol::to_atom);
     map.add_function_with_options(
         symbolica::symbol!("__olo_hv_s3"),
-        symbols[..4].to_vec(),
-        s3(&x[0], &x[1], &x[2], &x[3]),
+        symbols[..5].to_vec(),
+        s3(&x[0], &x[1], &x[2], &x[3], &x[4]),
         native_function_options(),
     )
     .unwrap();
@@ -118,7 +152,7 @@ mod tests {
         super::super::tests::large_stack(|| {
             let x = ["hv_p1", "hv_p2", "hv_p3", "hv_m1", "hv_m2", "hv_m3"]
                 .map(|s| symbolica::symbol!(s).to_atom());
-            let l = ((&x[2] - &x[0] - &x[1]).pow(2) - Atom::num(4) * &x[0] * &x[1]).sqrt();
+            let l = (&x[2] - &x[0] - &x[1]).pow(2) - Atom::num(4) * &x[0] * &x[1];
             let parts = [
                 s3_call(
                     &x[0],
@@ -174,7 +208,7 @@ mod tests {
                         panic!("s3 call")
                     };
                     let args = call.iter().map(|a| a.to_owned()).collect::<Vec<_>>();
-                    let exact = s3(&args[0], &args[1], &args[2], &args[3]);
+                    let exact = s3(&args[0], &args[1], &args[2], &args[3], &args[4]);
                     let symbolica::atom::AtomView::Add(sum) = exact.as_view() else {
                         panic!("s3 sum")
                     };

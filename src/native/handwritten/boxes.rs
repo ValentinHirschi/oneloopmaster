@@ -4,6 +4,49 @@ use super::box_contour::{Z, boxc, dv, negative, nz, r, supported_kinematics};
 use super::sheet::{Sheet, dd};
 use super::{Constants, physical_sqrt, r_function};
 
+/// `triangle::r_function_velocities`: `[D(r), D(d)]` of each r-function for
+/// a velocity `D(k)`, and the weight of the first-order velocities (zero when
+/// an r-function sits at a threshold, where it moves like `sqrt(eps)`).
+fn r_function_velocities(functions: [[Z; 4]; 2]) -> [[Z; 2]; 3] {
+    let singular = functions.map(|[_, _, d, dk]| !nz(d) && nz(dk));
+    let any_singular = singular.iter().any(|&s| s);
+    let velocities: [[Z; 2]; 2] = core::array::from_fn(|index| {
+        let [k, r_, d, dk] = functions[index];
+        if any_singular {
+            if singular[index] {
+                let step = -dk.re.hypot(dk.im).sqrt();
+                [r(step), r(2.0 * step)]
+            } else {
+                [r(0.0), r(0.0)]
+            }
+        } else if nz(d) {
+            [dv(r_ * dk, d), dv(k * dk, d)]
+        } else {
+            [r(0.0), r(0.0)]
+        }
+    });
+    let weight = r(if any_singular { 0.0 } else { 1.0 });
+    [velocities[0], velocities[1], [weight, weight]]
+}
+
+/// `triangle::root_lip_or`: the lip of a real root `x` of `a x² - b x + c`
+/// from its first-order shift `D(x)`, or `fallback` when that vanishes.
+fn root_lip_or(x: Z, a: Z, b: Z, [da, db, dc]: [Z; 3], fallback: i32) -> i32 {
+    let numerator = db * x - da * x * x - dc;
+    let slope = r(2.0) * a * x - b;
+    let shift = (numerator
+        * Z {
+            re: slope.re,
+            im: -slope.im,
+        })
+    .re;
+    if shift != 0.0 {
+        if negative(shift) { -1 } else { 1 }
+    } else {
+        fallback
+    }
+}
+
 /// `box_finite_four_masses` (OneLOop boxf4, Denner-Nierste-Scharf), the
 /// representation used outside the contour box's kinematics.
 fn four_masses_dns(p: [Z; 6], m: [Z; 4], k: &Constants<f64>) -> Z {
@@ -33,8 +76,42 @@ fn four_masses_dns(p: [Z; 6], m: [Z; 4], k: &Constants<f64>) -> Z {
     let x2 = dv(b - discriminant, two_a);
     let base = (k23 - r13 * k12 - r24 * k34 + r13 * r24 * k14).re * a.re;
     let sign = |x: f64| if negative(x) { -1 } else { 1 };
-    let qx1 = Sheet::with_sign(x1, sign(base * x2.re));
-    let qx2 = Sheet::with_sign(x2, sign(base * x1.re));
+    // Real roots inherit their lips from OneLOop's p -> p(1 + i eps); its
+    // explicit sign applies only when that first-order shift vanishes.
+    let lip = |root: Z, other: Z| {
+        if root.im != 0.0 || !negative(root.re) {
+            // Sheet::with_sign ignores the lip off the negative real axis.
+            return 1;
+        }
+        let dk = |momentum: Z, i: usize, j: usize| -dv(momentum, roots[i] * roots[j]);
+        let (dk13, dk24) = (dk(p[4], 0, 2), dk(p[5], 1, 3));
+        let [[dr13, dd13], [dr24, dd24], weight] =
+            r_function_velocities([[k13, r13, d13, dk13], [k24, r24, d24, dk24]]);
+        let weight = weight[0];
+        let [dk12, dk14, dk23, dk34] = [
+            dk(p[0], 0, 1),
+            dk(p[3], 0, 3),
+            dk(p[1], 1, 2),
+            dk(p[2], 2, 3),
+        ]
+        .map(|v| v * weight);
+        let r24_2 = r24 * r24;
+        let r13_2 = r13 * r13;
+        let da = dv(dk34, r24) - dv(k34 * dr24, r24_2) + dr13 * k12 + r13 * dk12
+            - dv(dk14 * r13, r24)
+            - dv(k14 * dr13, r24)
+            + dv(k14 * r13 * dr24, r24_2)
+            - dk23;
+        let db = dd13 * d24 + d13 * dd24 + dk12 * k34 + k12 * dk34 - dk14 * k23 - k14 * dk23;
+        let dc = dv(dk12, r13) - dv(k12 * dr13, r13_2) + dr24 * k34 + r24 * dk34
+            - dv(dk14 * r24, r13)
+            - dv(k14 * dr24, r13)
+            + dv(k14 * r24 * dr13, r13_2)
+            - dk23;
+        root_lip_or(root, a, b, [da, db, dc], sign(base * other.re))
+    };
+    let qx1 = Sheet::with_sign(x1, lip(x1, x2));
+    let qx2 = Sheet::with_sign(x2, lip(x2, x1));
     let [q12, q13, q14, q23, q24, q34] = [r12, r13, r14, r23, r24, r34].map(Sheet::lower);
     let y1 = qx1.div(&q24);
     let y2 = qx2.div(&q24);

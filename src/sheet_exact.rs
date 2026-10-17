@@ -456,10 +456,6 @@ impl SheetAtom {
         Self::with_sign(value, if upper { Atom::num(1) } else { Atom::num(-1) })
     }
 
-    pub(crate) fn with_real_axis_sign(value: Atom, upper: bool) -> Self {
-        Self::from_value(value, upper)
-    }
-
     pub(crate) fn scale_positive(&self, scale: &Atom) -> Self {
         Self {
             value: &self.value * scale,

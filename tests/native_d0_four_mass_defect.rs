@@ -1,16 +1,17 @@
-//! Known defect: four-mass D0 rows with real masses where every evaluation
-//! route of this crate (symbolic expression at 256 bits, SymJIT, native f64,
-//! native 256-bit Float) returns a wrong real part while the imaginary part is
-//! right. OneLOop 3.6 and COLLIER (COLI and DD) agree on the references below
-//! to about 1e-14; OneLOop 3.4 also agrees except on `n6_r6_c`, which this
-//! crate gets right. Every failing row has s12 * s23 < 0, but that alone is not
-//! sufficient (tests/native_graph26.rs has s12 < 0 < s23 and is correct).
-//! DoubleFloat's native route happens to return the right value on four rows.
-//! Rows from the fast-engine bench cases (claude/engine-alt, 82596cf,
-//! validation/fast/evidence/d0_native_vs_oneloop.json).
+//! Four-mass D0 rows with real masses (all with s12 * s23 < 0) whose real
+//! part every evaluation route of this crate used to get wrong while the
+//! imaginary part was right. The finite four-mass formula (OneLOop's boxf4)
+//! placed exactly real roots on lips chosen by a fallback sign, where OneLOop
+//! inherits them from its infinitesimal `p -> p (1 + i eps)`; the expression
+//! now derives that first-order shift exactly. OneLOop 3.6 and COLLIER (COLI
+//! and DD) agree on the references below to about 1e-14; OneLOop 3.4 also
+//! agrees except on `n6_r6_c`. Rows from the fast-engine bench cases
+//! (claude/engine-alt, 82596cf, validation/fast/evidence/d0_native_vs_oneloop.json).
 #![cfg(feature = "generated-evaluators")]
-use oneloop::{NativeEvaluator, ScalarIntegral};
-use symbolica::domains::float::Complex;
+use oneloop::{
+    EvaluationBackend, NativeEvaluator, PrecisionEvaluator, ScalarIntegral, evaluate_with_backend,
+};
+use symbolica::domains::float::{Complex, Float, RealLike};
 
 /// `[p1², p2², p3², p4², s12, s23, m0², m1², m2², m3², mu²]` (real), and the
 /// finite part from OneLOop 3.6 `olo_d0` with `rmu = sqrt(mu²)`.
@@ -289,19 +290,72 @@ const ROWS: [(&str, [f64; 11], [f64; 2]); 16] = [
     ),
 ];
 
+/// Every evaluation route: the native code (hand-written binary64 kernels and
+/// generated code), the interpreted expressions, SymJIT, and 256-bit native
+/// and interpreted expressions.
 #[test]
-#[ignore = "known defect: wrong real part of four-mass D0 with s12 * s23 < 0"]
 fn four_mass_boxes_with_opposite_sign_invariants_match_oneloop() {
-    let mut evaluator = NativeEvaluator::<f64>::new(ScalarIntegral::D0).unwrap();
+    std::thread::Builder::new()
+        .stack_size(128 * 1024 * 1024)
+        .spawn(check_every_route)
+        .unwrap()
+        .join()
+        .unwrap();
+}
+
+fn check_every_route() {
     let mut failures = Vec::new();
-    for (name, arguments, expected) in ROWS {
-        let input = arguments.map(|x| Complex::new(x, 0.0));
-        let mut output = [Complex::new(0.0, 0.0); 3];
-        evaluator.evaluate(&input, &mut output).unwrap();
-        let error = (output[0].re - expected[0]).hypot(output[0].im - expected[1]);
-        if error > 1e-10 * expected[0].hypot(expected[1]) {
-            failures.push(format!("{name}: {:?} vs {expected:?}", output[0]));
+    let mut check = |route: &str, name: &str, value: Complex<f64>, expected: [f64; 2]| {
+        let error = (value.re - expected[0]).hypot(value.im - expected[1]);
+        if !(error <= 1e-10 * expected[0].hypot(expected[1])) {
+            failures.push(format!("{route} {name}: {value:?} vs {expected:?}"));
         }
+    };
+    for handwritten in [true, false] {
+        let mut evaluator = NativeEvaluator::<f64>::new(ScalarIntegral::D0).unwrap();
+        evaluator.set_handwritten(handwritten);
+        for (name, arguments, expected) in ROWS {
+            let input = arguments.map(|x| Complex::new(x, 0.0));
+            let mut output = [Complex::new(0.0, 0.0); 3];
+            evaluator.evaluate(&input, &mut output).unwrap();
+            check(
+                &format!("native (hand-written: {handwritten})"),
+                name,
+                output[0],
+                expected,
+            );
+        }
+    }
+    for backend in [EvaluationBackend::Expression, EvaluationBackend::SymJit] {
+        for (name, arguments, expected) in ROWS {
+            let input = arguments.map(|x| Complex::new(x, 0.0));
+            let mut output = [Complex::new(0.0, 0.0); 3];
+            evaluate_with_backend(ScalarIntegral::D0, &input, &mut output, backend).unwrap();
+            check(backend.name(), name, output[0], expected);
+        }
+    }
+    let bits = 256;
+    let mut native =
+        NativeEvaluator::<Float>::with_binary_precision(ScalarIntegral::D0, bits).unwrap();
+    let mut expression = PrecisionEvaluator::with_binary_precision_and_backend(
+        ScalarIntegral::D0,
+        bits,
+        EvaluationBackend::Expression,
+    )
+    .unwrap();
+    for (name, arguments, expected) in ROWS {
+        let input = arguments.map(|x| Complex::new(Float::with_val(bits, x), Float::new(bits)));
+        let fresh = || {
+            core::array::from_fn::<_, 3, _>(|_| Complex::new(Float::new(bits), Float::new(bits)))
+        };
+        let mut output = fresh();
+        native.evaluate(&input, &mut output).unwrap();
+        let value = Complex::new(output[0].re.to_f64(), output[0].im.to_f64());
+        check("native 256 bits", name, value, expected);
+        let mut output = fresh();
+        expression.evaluate(&input, &mut output).unwrap();
+        let value = Complex::new(output[0].re.to_f64(), output[0].im.to_f64());
+        check("expression 256 bits", name, value, expected);
     }
     assert!(failures.is_empty(), "{}", failures.join("\n"));
 }

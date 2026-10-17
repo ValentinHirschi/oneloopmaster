@@ -199,10 +199,6 @@ fn dilog_atom(value: impl AtomCore) -> Atom {
     polylog_symbol().call((2, value.as_atom_view()))
 }
 
-fn physical_dilog(value: &Atom) -> Atom {
-    dilog_atom(value.conj()).conj()
-}
-
 fn physical_sqrt(value: &Atom) -> Atom {
     let off_axis = off_real_axis(value);
     let value = grouped(value);
@@ -227,19 +223,6 @@ fn log_over_one_minus(value: &Atom) -> Atom {
         physical_log(value) / &difference,
         Atom::num(-1),
     )
-}
-
-fn dilog_complement(value: &Atom) -> Atom {
-    physical_dilog(&(1 - value))
-}
-
-fn dilog_divided_difference(first: &Atom, second: &Atom) -> Atom {
-    let difference = first - second;
-    if difference.is_zero() {
-        return log_over_one_minus(first);
-    }
-    let unequal = (dilog_complement(first) - dilog_complement(second)) / &difference;
-    if_nonzero_else(&difference, unequal, log_over_one_minus(first))
 }
 
 fn x_log_ratio(value: &Atom, mu_squared: &Atom) -> Atom {

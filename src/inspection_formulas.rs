@@ -8,8 +8,8 @@
 
 use crate::{
     Atom, AtomCore, FunctionMap, LaurentSeries, MappedLaurentSeries, OneLoopExpressions, Symbol,
-    any_nonzero, dilog_complement, dilog_divided_difference, grouped, if_nonzero, if_nonzero_else,
-    log_over_one_minus, native_function_options, off_real_axis, physical_log,
+    any_nonzero, grouped, if_nonzero, if_nonzero_else, log_over_one_minus, native_function_options,
+    off_real_axis, physical_log,
 };
 
 #[path = "inspection_sheet.rs"]

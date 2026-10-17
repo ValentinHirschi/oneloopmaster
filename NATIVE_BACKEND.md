@@ -43,13 +43,16 @@ of the expressions: the same exact zero tests (`x - |x|` sign tests included),
 infinitesimal directions, root labels and continued sheets (`sheet.rs` mirrors
 `sheet_exact.rs`). They evaluate one sector dispatch per call and never an
 inactive branch, which makes them two to five times faster than the generated
-code. Where a quadratic root of the triangle cancels in rounding, its value is
-taken from the product of the roots (identical in exact arithmetic), so that an
-exact zero produced by roundoff cannot reach a logarithm. Every other sector,
+code. Like the expression, the triangle takes the quadratic root that would
+cancel in `(b ± d)/(2a)` from the product of the roots (OneLOop's `solabc`), so
+that an exact zero produced by roundoff cannot reach a logarithm. Every other sector,
 and every sector for `DoubleFloat` and `Float` (whose tracked precision follows
 the expression's own grouping), uses the generated code. Regenerating the
 expressions does not update these kernels: an expression change in these
-sectors must be transcribed as well. `tests/native_handwritten.rs` checks them
+sectors must be transcribed as well (as were the continuation fixes checked by
+`tests/permutation_regressions.rs`: exact r-function roots at zero momenta and
+thresholds, the roots, chart choice and root lips of `trif3`, the root lips of
+`boxf4`, and the contour box's double-root split and real residue logarithms). `tests/native_handwritten.rs` checks them
 against the generated expressions at 256 bits on randomized kinematics and on
 every distinct C0/D0 call of the recorded Ninja benchmark streams
 (`tests/data/ninja_master_rows.txt`); `src/native/handwritten/box_contour.rs`

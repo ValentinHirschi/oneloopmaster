@@ -1,7 +1,7 @@
 //! C0 with three nonzero internal masses (`register_triangles` sector 7).
-use super::super::primitives::{C, NativeFloat, mul};
+use super::super::primitives::{C, NativeFloat, inverse, mul};
 use super::sheet::{Sheet, dd};
-use super::{Constants, add, div, is_zero, negative, norm, physical_sqrt, r_function, real, scale, sub};
+use super::{Constants, add, div, is_zero, neg, negative, physical_sqrt, r_function, real, scale, sub};
 
 /// The finite part of sector 7, or `None` where the generated code is used.
 pub(crate) fn three_masses<T: NativeFloat>(
@@ -46,6 +46,13 @@ fn resultant<T: NativeFloat>(p: [&C<T>; 3], m: [&C<T>; 3]) -> C<T> {
     add(&sub(&first, &second), &third)
 }
 
+/// A chart with a nonzero leading coefficient that is not a double root at
+/// zero (vanishing Källén function with p3 = 0).
+#[inline]
+fn usable<T: NativeFloat>(p: [&C<T>; 3], m: [&C<T>; 3], c: &Constants<T>) -> bool {
+    !is_zero(&resultant(p, m)) && (!kallen(p, c).is_fully_zero() || !is_zero(p[2]))
+}
+
 fn select<T: NativeFloat>(p: [&C<T>; 3], m: [&C<T>; 3], c: &Constants<T>) -> C<T> {
     // trif3's relabeling when the middle propagator has the largest width
     // (always on the real axis).
@@ -53,16 +60,164 @@ fn select<T: NativeFloat>(p: [&C<T>; 3], m: [&C<T>; 3], c: &Constants<T>) -> C<T
         !negative(&(m[0].im.clone() - &m[1].im)) && !negative(&(m[2].im.clone() - &m[1].im));
     let (p, m) = if middle_largest { rotate(p, m) } else { (p, m) };
     // first(p, m)
-    if !is_zero(&resultant(p, m)) {
+    if usable(p, m, c) {
         return ordered(p, m, c);
     }
     // second(R(p, m))
     let (p, m) = rotate(p, m);
-    if !is_zero(&resultant(p, m)) {
+    if usable(p, m, c) {
         return ordered(p, m, c);
     }
     let (p, m) = rotate(p, m);
     ordered(p, m, c)
+}
+
+/// Modulus of a complex value (`Symbol::ABS`).
+#[inline]
+fn modulus<T: NativeFloat>(z: &C<T>) -> T {
+    <T as NativeFloat>::hypot(&z.re, &z.im)
+}
+
+/// `triangle::zero_momentum_root` at `p = 0`: the exact root `E` (`s_j/s_i`
+/// or `s_i/s_j`, nearest to the computed root) and whether it is `s_j/s_i`.
+/// Its shift `δ` vanishes exactly at `p = 0`.
+fn zero_momentum_root<T: NativeFloat>(
+    mass_i: &C<T>,
+    mass_j: &C<T>,
+    sqrt_i: &C<T>,
+    sqrt_j: &C<T>,
+    c: &Constants<T>,
+) -> (C<T>, bool) {
+    let ratio = div(sqrt_j, sqrt_i);
+    let inverse = div(sqrt_i, sqrt_j);
+    let (root_zero, _) = r_function(&div(&add(mass_i, mass_j), &mul(sqrt_i, sqrt_j)), c);
+    let nearer_ratio =
+        !negative(&(modulus(&sub(&root_zero, &inverse)) - &modulus(&sub(&root_zero, &ratio))));
+    (if nearer_ratio { ratio } else { inverse }, nearer_ratio)
+}
+
+/// `triangle::r_function_of`: exact roots at `p = 0` and at (pseudo-)
+/// thresholds, [r_function] of `k = (m_i + m_j - p)/(s_i s_j)` otherwise.
+fn r_function_of<T: NativeFloat>(
+    momentum: &C<T>,
+    mass_i: &C<T>,
+    mass_j: &C<T>,
+    sqrt_i: &C<T>,
+    sqrt_j: &C<T>,
+    k: &C<T>,
+    c: &Constants<T>,
+) -> (C<T>, C<T>) {
+    let zero = || real(c.one.zero());
+    let unequal = !is_zero(&sub(mass_i, mass_j));
+    if !is_zero(momentum) {
+        // Equal masses test p - 4 m directly: the Källén form would round 3 m.
+        let threshold = if unequal {
+            let shifted = sub(&sub(momentum, mass_i), mass_j);
+            sub(
+                &mul(&shifted, &shifted),
+                &scale(&mul(mass_i, mass_j), &c.four),
+            )
+        } else {
+            sub(momentum, &scale(mass_i, &c.four))
+        };
+        if is_zero(&threshold) {
+            let one = if negative(&k.re) {
+                -c.one.clone()
+            } else {
+                c.one.clone()
+            };
+            return (real(one), zero());
+        }
+        return r_function(k, c);
+    }
+    if !unequal {
+        return (real(c.one.clone()), zero());
+    }
+    let (exact, nearer_ratio) = zero_momentum_root(mass_i, mass_j, sqrt_i, sqrt_j, c);
+    let ratio = div(sqrt_j, sqrt_i);
+    let inverse = div(sqrt_i, sqrt_j);
+    let difference = if nearer_ratio {
+        sub(&ratio, &inverse)
+    } else {
+        sub(&inverse, &ratio)
+    };
+    (exact, difference)
+}
+
+/// `triangle::r_function_inverse_gap`: `s_i/s_j - 1/r`, exactly zero at
+/// `p = 0` when `r = s_j/s_i` (equal masses included).
+fn r_function_inverse_gap<T: NativeFloat>(
+    momentum: &C<T>,
+    mass_i: &C<T>,
+    mass_j: &C<T>,
+    sqrt_i: &C<T>,
+    sqrt_j: &C<T>,
+    root: &C<T>,
+    c: &Constants<T>,
+) -> C<T> {
+    let regular = || sub(&div(sqrt_i, sqrt_j), &inverse(root));
+    if !is_zero(momentum) {
+        return regular();
+    }
+    if is_zero(&sub(mass_i, mass_j)) || zero_momentum_root(mass_i, mass_j, sqrt_i, sqrt_j, c).1 {
+        return real(c.one.zero());
+    }
+    regular()
+}
+
+/// `triangle::ordered_negative_quadratic_roots`: roots `X1, X2` of
+/// `a X² - b X + c` in OneLOop's solabc order, `X2` from Vieta's product,
+/// and `X1 = b/a - X2` at `c = 0`.
+fn ordered_roots<T: NativeFloat>(
+    a: &C<T>,
+    b: &C<T>,
+    cc: &C<T>,
+    discriminant: &C<T>,
+    c: &Constants<T>,
+) -> (C<T>, C<T>) {
+    let plus = add(b, discriminant);
+    let minus = sub(b, discriminant);
+    let larger = if negative(&(modulus(&plus) - &modulus(&minus))) {
+        minus
+    } else {
+        plus
+    };
+    let small = if is_zero(&larger) {
+        real(c.one.zero())
+    } else {
+        div(&scale(cc, &c.two), &larger)
+    };
+    let first = if is_zero(cc) {
+        sub(&div(b, a), &small)
+    } else {
+        div(&larger, &scale(a, &c.two))
+    };
+    let second = if is_zero(discriminant) {
+        first.clone()
+    } else {
+        small
+    };
+    (first, second)
+}
+
+/// `triangle::root_lip_or` with fallback 1 (`root_lip`).
+fn root_lip<T: NativeFloat>(
+    x: &C<T>,
+    a: &C<T>,
+    b: &C<T>,
+    [da, db, dc]: [&C<T>; 3],
+    c: &Constants<T>,
+) -> i32 {
+    let numerator = sub(&sub(&mul(db, x), &mul(&mul(da, x), x)), dc);
+    let slope = sub(&mul(&scale(a, &c.two), x), b);
+    let shift = numerator.re.clone() * &slope.re + numerator.im.clone() * &slope.im;
+    if shift.is_fully_zero() {
+        1
+    } else if negative(&shift) {
+        -1
+    } else {
+        1
+    }
 }
 
 /// `triangle_finite_three_masses_ordered` (OneLOop trif3, DNS representation).
@@ -73,9 +228,9 @@ fn ordered<T: NativeFloat>(p: [&C<T>; 3], m: [&C<T>; 3], c: &Constants<T>) -> C<
     let k12 = div(&sub(&add(m[0], m[1]), p[0]), &mul(&sqrt_1, &sqrt_2));
     let k13 = div(&sub(&add(m[0], m[2]), p[2]), &mul(&sqrt_1, &sqrt_3));
     let k23 = div(&sub(&add(m[1], m[2]), p[1]), &mul(&sqrt_2, &sqrt_3));
-    let (r12, _) = r_function(&k12, c);
-    let (r13, d13) = r_function(&k13, c);
-    let (r23, _) = r_function(&k23, c);
+    let (r12, _) = r_function_of(p[0], m[0], m[1], &sqrt_1, &sqrt_2, &k12, c);
+    let (r13, d13) = r_function_of(p[2], m[0], m[2], &sqrt_1, &sqrt_3, &k13, c);
+    let (r23, _) = r_function_of(p[1], m[1], m[2], &sqrt_2, &sqrt_3, &k23, c);
     let a = add(
         &sub(&div(&sqrt_2, &sqrt_3), &k23),
         &mul(&r13, &sub(&k12, &div(&sqrt_2, &sqrt_1))),
@@ -90,37 +245,49 @@ fn ordered<T: NativeFloat>(p: [&C<T>; 3], m: [&C<T>; 3], c: &Constants<T>) -> C<
     let lambda = kallen(p, c);
     let masses = mul(&mul(m[0], m[1]), m[2]);
     let discriminant = physical_sqrt(&div(&real(lambda), &masses));
-    let two_a = scale(&a, &c.two);
     let cc = div(
-        &sub(&div(&sqrt_1, &sqrt_3), &super::super::primitives::inverse(&r13)),
+        &r_function_inverse_gap(p[2], m[0], m[2], &sqrt_1, &sqrt_3, &r13, c),
         &mul(&sqrt_1, &sqrt_2),
     );
-    let (root_1, root_2) = if is_zero(&cc) {
-        (div(&b, &a), real(c.one.zero()))
-    } else {
-        // (b ± d)/(2a). Where one sum cancels, its root follows from the
-        // product relation x1*x2 = c/a instead (as OneLOop's solabc): identical
-        // in exact arithmetic, but a root cancelled to an exact zero must not
-        // reach the logarithms. Without cancellation the direct formula keeps
-        // exactly coincident (Gram-zero) roots coincident.
-        let plus = add(&b, &discriminant);
-        let minus = sub(&b, &discriminant);
-        let (np, nm) = (norm(&plus), norm(&minus));
-        let sixteenth = c.half.clone() * &c.half * &c.half * &c.half;
-        if nm < np.clone() * &sixteenth {
-            let root_1 = div(&plus, &two_a);
-            (root_1.clone(), div(&div(&cc, &a), &root_1))
-        } else if np < nm.clone() * &sixteenth {
-            let root_2 = div(&minus, &two_a);
-            (div(&div(&cc, &a), &root_2), root_2)
-        } else {
-            (div(&plus, &two_a), div(&minus, &two_a))
+    let (root_1, root_2) = ordered_roots(&a, &b, &cc, &discriminant, c);
+    // Real roots inherit their lips from OneLOop's p -> p(1 + i eps); the lip
+    // only matters on the negative real axis.
+    let lip = |root: &C<T>| -> i32 {
+        if !root.im.is_fully_zero() || !negative(&root.re) {
+            return 1;
         }
+        let velocity = |momentum: &C<T>, si: &C<T>, sj: &C<T>| neg(&div(momentum, &mul(si, sj)));
+        let dk13 = velocity(p[2], &sqrt_1, &sqrt_3);
+        let singular = is_zero(&d13) && !is_zero(&dk13);
+        let zero = real(c.one.zero());
+        let (dr13, dd13, weight) = if singular {
+            let step = -modulus(&dk13).sqrt();
+            (
+                real(step.clone()),
+                real(step.clone() * &c.two),
+                zero.clone(),
+            )
+        } else if is_zero(&d13) {
+            (zero.clone(), zero.clone(), real(c.one.clone()))
+        } else {
+            let ratio = div(&dk13, &d13);
+            (mul(&r13, &ratio), mul(&k13, &ratio), real(c.one.clone()))
+        };
+        let dk12 = mul(&velocity(p[0], &sqrt_1, &sqrt_2), &weight);
+        let dk23 = mul(&velocity(p[1], &sqrt_2, &sqrt_3), &weight);
+        let da = add(
+            &add(&neg(&dk23), &mul(&dr13, &sub(&k12, &div(&sqrt_2, &sqrt_1)))),
+            &mul(&r13, &dk12),
+        );
+        let db = sub(
+            &add(&div(&dd13, &sqrt_2), &div(&dk12, &sqrt_3)),
+            &div(&dk23, &sqrt_1),
+        );
+        let dc = div(&dr13, &mul(&mul(&mul(&r13, &r13), &sqrt_1), &sqrt_2));
+        root_lip(root, &a, &b, [&da, &db, &dc], c)
     };
-    let debug = std::env::var("HW_DEBUG").is_ok();
-    if debug { eprintln!("ordered p={p:?} m={m:?}\n k12={k12:?} k13={k13:?} k23={k23:?}\n r12={r12:?} r13={r13:?} r23={r23:?}\n a={a:?} b={b:?} cc={cc:?} disc={discriminant:?}\n roots {root_1:?} {root_2:?}"); }
-    let qx1 = Sheet::upper(root_1);
-    let qx2 = Sheet::upper(root_2.clone());
+    let qx1 = Sheet::with_sign(root_1.clone(), lip(&root_1));
+    let qx2 = Sheet::with_sign(root_2.clone(), lip(&root_2));
     let q12 = Sheet::lower(r12.clone());
     let q13 = Sheet::lower(r13.clone());
     let q23 = Sheet::lower(r23.clone());
@@ -130,7 +297,6 @@ fn ordered<T: NativeFloat>(p: [&C<T>; 3], m: [&C<T>; 3], c: &Constants<T>) -> C<
 
     let z1 = qx1.mul(&qm2);
     let z2 = qx2.mul(&qm2);
-    if debug { eprintln!(" dd1 {:?} {:?}", dd(&z1.mul(&q12), &z2.mul(&q12), c), dd(&z1.div(&q12), &z2.div(&q12), c)); }
     let mut finite = mul(
         &add(
             &mul(&dd(&z1.mul(&q12), &z2.mul(&q12), c), &r12),
@@ -154,7 +320,6 @@ fn ordered<T: NativeFloat>(p: [&C<T>; 3], m: [&C<T>; 3], c: &Constants<T>) -> C<
             &sqrt_2,
         ),
     );
-    if debug { eprintln!(" after2 {finite:?} t1={t1:?} t2={t2:?} q23={q23:?}"); }
     let y1 = qx1.mul(&q13);
     let y2 = qx2.mul(&q13);
     finite = add(
@@ -164,7 +329,6 @@ fn ordered<T: NativeFloat>(p: [&C<T>; 3], m: [&C<T>; 3], c: &Constants<T>) -> C<
             &mul(&dd(&qx1.mul(&qm1), &qx2.mul(&qm1), c), &sqrt_1),
         ),
     );
-    if debug { eprintln!(" after3 {finite:?}"); }
     if !is_zero(&root_2) {
         let log_m3 = qm3.log(c);
         let log_m1 = qm1.log(c);
@@ -176,10 +340,10 @@ fn ordered<T: NativeFloat>(p: [&C<T>; 3], m: [&C<T>; 3], c: &Constants<T>) -> C<
             &qx1.div(&qx2).log_over_one_minus(c),
             &sub(&add(&qx1.log(c), &qx2.log(c)), &scale(&log_m1, &c.two)),
         );
-        finite = add(&finite, &div(&sub(&first, &second), &scale(&root_2, &c.two)));
+        finite = add(
+            &finite,
+            &div(&sub(&first, &second), &scale(&root_2, &c.two)),
+        );
     }
-    div(
-        &finite,
-        &mul(&mul(&mul(&a, &sqrt_1), &sqrt_2), &sqrt_3),
-    )
+    div(&finite, &mul(&mul(&mul(&a, &sqrt_1), &sqrt_2), &sqrt_3))
 }

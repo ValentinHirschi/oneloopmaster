@@ -13,7 +13,12 @@ pub(crate) fn box_finite_massless(p: [&Atom; 6]) -> Atom {
     let a = &r34 * &r24;
     let b = &r13 * &r24 + &r12 * &r34 - &r14 * &r23;
     let c = &r12 * &r13;
-    let (root_1, root_2) = negative_quadratic_roots(&a, &b, &c);
+    // OneLOop's boxf0 gives the real root (b - d)/(2a) the lip of Re(r23)
+    // and (b + d)/(2a) the opposite one, with d >= 0 for a real positive
+    // discriminant; the formula divides by the latter root.
+    // Both roots are cancellation-free (Vieta), keeping their labels.
+    let discriminant = physical_sqrt(&(&b * &b - Atom::num(4) * &a * &c));
+    let (root_2, root_1) = labelled_quadratic_roots(&a, &(-&b), &c, &discriminant);
     let qx1 = Q::with_sign(root_1.clone(), sign_nonnegative(&r23));
     let qx2 = Q::with_sign(root_2.clone(), -sign_nonnegative(&r23));
     let [q12, q13, q14, q23, q24, q34] =
@@ -58,9 +63,33 @@ pub(crate) fn box_finite_four_masses(p: [&Atom; 6], m: [&Atom; 4]) -> Atom {
     let b = &d13 * &d24 + &k12 * &k34 - &k14 * &k23;
     let c = &k12 / &r13 + &r24 * &k34 - &k14 * &r24 / &r13 - &k23;
     let (x1, x2) = negative_quadratic_roots(&a, &b, &c);
+    // Real roots inherit their lips from OneLOop's p -> p(1 + i eps); its
+    // explicit sign applies only when that first-order shift vanishes.
+    let dk = |p: &Atom, i: usize, j: usize| -p / (&roots[i] * &roots[j]);
+    let (dk12, dk13, dk14) = (dk(p[0], 0, 1), dk(p[4], 0, 2), dk(p[3], 0, 3));
+    let (dk23, dk24, dk34) = (dk(p[1], 1, 2), dk(p[5], 1, 3), dk(p[2], 2, 3));
+    let ([[dr13, dd13], [dr24, dd24]], weight) =
+        r_function_velocities([[&k13, &r13, &d13, &dk13], [&k24, &r24, &d24, &dk24]]);
+    let [dk12, dk14, dk23, dk34] = [dk12, dk14, dk23, dk34].map(|v| v * &weight);
+    let da = &dk34 / &r24 - &k34 * &dr24 / (&r24 * &r24) + &dr13 * &k12 + &r13 * &dk12
+        - &dk14 * &r13 / &r24
+        - &k14 * &dr13 / &r24
+        + &k14 * &r13 * &dr24 / (&r24 * &r24)
+        - &dk23;
+    let db =
+        &dd13 * &d24 + &d13 * &dd24 + &dk12 * &k34 + &k12 * &dk34 - &dk14 * &k23 - &k14 * &dk23;
+    let dc = &dk12 / &r13 - &k12 * &dr13 / (&r13 * &r13) + &dr24 * &k34 + &r24 * &dk34
+        - &dk14 * &r24 / &r13
+        - &k14 * &dr24 / &r13
+        + &k14 * &r24 * &dr13 / (&r13 * &r13)
+        - &dk23;
     let base = re(&(&k23 - &r13 * &k12 - &r24 * &k34 + &r13 * &r24 * &k14)) * re(&a);
-    let qx1 = Q::with_sign(x1.clone(), sign_nonnegative(&(&base * re(&x2))));
-    let qx2 = Q::with_sign(x2.clone(), sign_nonnegative(&(&base * re(&x1))));
+    let lip = |root: &Atom, other: &Atom| {
+        let fallback = sign_nonnegative(&(&base * re(other)));
+        root_lip_or(root, &a, &b, [&da, &db, &dc], fallback)
+    };
+    let qx1 = Q::with_sign(x1.clone(), lip(&x1, &x2));
+    let qx2 = Q::with_sign(x2.clone(), lip(&x2, &x1));
     let [q12, q13, q14, q23, q24, q34] =
         [&r12, &r13, &r14, &r23, &r24, &r34].map(|r| Q::lower(r.clone()));
     let y1 = &qx1 / &q24;
@@ -109,8 +138,17 @@ pub(crate) fn box_finite_one_mass(p: [&Atom; 6], mass: &Atom) -> Atom {
     let b = &r13 * &r24 + &r12 * &r34 - &r14 * &r23;
     let c = &r12 * &r13 - &r23;
     let (x1, x2) = negative_quadratic_roots(&a, &b, &c);
-    let qx1 = Q::upper(x1.clone());
-    let qx2 = Q::upper(x2.clone());
+    // Real roots inherit their lips from OneLOop's p -> p(1 + i eps).
+    let massive = &sr * &sm;
+    let massless = &sr * &sr;
+    let [d12, d13, d14] = [p[3], p[5], p[2]].map(|v| -v / &massive);
+    let [d23, d24, d34] = [p[0], p[4], p[1]].map(|v| -v / &massless);
+    let da = &d34 * &r24 + &r34 * &d24;
+    let db = &d13 * &r24 + &r13 * &d24 + &d12 * &r34 + &r12 * &d34 - &d14 * &r23 - &r14 * &d23;
+    let dc = &d12 * &r13 + &r12 * &d13 - &d23;
+    let lip = |root: &Atom| root_lip(root, &a, &b, [&da, &db, &dc]);
+    let qx1 = Q::with_sign(x1.clone(), lip(&x1));
+    let qx2 = Q::with_sign(x2.clone(), lip(&x2));
     let [q12, q13, q14, q23, q24, q34] =
         [&r12, &r13, &r14, &r23, &r24, &r34].map(|r| Q::lower(r.clone()));
     let lr = (&qx1 / &qx2).log_over_one_minus();
@@ -120,14 +158,38 @@ pub(crate) fn box_finite_one_mass(p: [&Atom; 6], mass: &Atom) -> Atom {
     let r13_nonzero = dd(&(&qx1 * &(&q34 / &q13)), &(&qx2 * &(&q34 / &q13))) * &r34 / &r13;
     let r12_zero = &lr * (&root_log / 2 + q24.log() + q13.log() - q23.log()) / &x2;
     let r12_nonzero = dd(&(&qx1 * &(&q24 / &q12)), &(&qx2 * &(&q24 / &q12))) * &r24 / &r12;
-    let both_nonzero = r13_nonzero + r12_nonzero + &lr * (q12.log() + q13.log() - q23.log()) / &x2;
+    // As in OneLOop's boxf1, a single vanishing r12 or r13 replaces only its
+    // own dilogarithm term by the logarithmic limit; the other term remains.
+    let term_13 = if_nonzero_else(&r13, r13_nonzero, r13_zero);
+    let term_12 = if_nonzero_else(&r12, r12_nonzero, r12_zero);
+    let both_logarithm = &lr * (q12.log() + q13.log() - q23.log()) / &x2;
+    let ordinary = term_13 + term_12 + if_nonzero(&(&r12 * &r13), both_logarithm);
     let neither_both = if_nonzero_else(
-        &r13,
-        if_nonzero_else(&r12, both_nonzero, r12_zero),
-        if_nonzero_else(&r12, r13_zero, both_zero),
+        &r12,
+        ordinary.clone(),
+        if_nonzero_else(&r13, ordinary, both_zero),
     );
     let r14_term = if_nonzero(&r14, dd(&(&qx1 * &q14), &(&qx2 * &q14)) * &r14);
     if_nonzero(&a, -(neither_both - r14_term) / (&a * &sr * &sr * &sr * sm))
+}
+
+/// The leading coefficient `r34/r24 - r23` of [box_finite_three_masses_zero_third];
+/// that representation is degenerate (OneLOop returns zero) when it vanishes.
+fn box_three_masses_zero_third_leading(
+    p: [&Atom; 6],
+    mass_1: &Atom,
+    mass_2: &Atom,
+    mass_4: &Atom,
+) -> Atom {
+    let _ = mass_1;
+    let sm2 = physical_sqrt(mass_2);
+    let sm4 = physical_sqrt(mass_4);
+    let sr = square_root_magnitude(mass_2);
+    let r23 = (mass_2 - p[1]) / (&sm2 * &sr);
+    let k24 = (mass_2 + mass_4 - p[5]) / (&sm2 * &sm4);
+    let r34 = (mass_4 - p[2]) / (&sr * &sm4);
+    let (r24, _) = r_function(&k24);
+    &r34 / &r24 - &r23
 }
 
 pub(crate) fn box_finite_three_masses_zero_third(
@@ -153,8 +215,25 @@ pub(crate) fn box_finite_three_masses_zero_third(
     let b = -&r13 * &d24 + &k12 * &r34 - &k14 * &r23;
     let c = &k12 * &r13 + &r24 * &r34 - &k14 * &r24 * &r13 - &r23;
     let (x1, x2) = negative_quadratic_roots(&a, &b, &c);
-    let qx1 = Q::upper(x1.clone());
-    let qx2 = Q::upper(x2.clone());
+    // Real roots inherit their lips from OneLOop's p -> p(1 + i eps).
+    let dk24 = -p[5] / (&sm2 * &sm4);
+    let [dr24, dd24, weight] = r_function_velocity(&k24, &r24, &d24, &dk24);
+    let dk12 = -p[0] * &weight / (&sm1 * &sm2);
+    let dr13 = -p[4] * &weight / (&sm1 * &sr);
+    let dk14 = -p[3] * &weight / (&sm1 * &sm4);
+    let dr23 = -p[1] * &weight / (&sm2 * &sr);
+    let dr34 = -p[2] * weight / (&sr * &sm4);
+    let da = &dr34 / &r24 - &r34 * &dr24 / (&r24 * &r24) - &dr23;
+    let db =
+        -&dr13 * &d24 - &r13 * dd24 + &dk12 * &r34 + &k12 * &dr34 - &dk14 * &r23 - &k14 * &dr23;
+    let dc = &dk12 * &r13 + &k12 * &dr13 + &dr24 * &r34 + &r24 * &dr34
+        - &dk14 * &r24 * &r13
+        - &k14 * &dr24 * &r13
+        - &k14 * &r24 * &dr13
+        - &dr23;
+    let lip = |root: &Atom| root_lip(root, &a, &b, [&da, &db, &dc]);
+    let qx1 = Q::with_sign(x1.clone(), lip(&x1));
+    let qx2 = Q::with_sign(x2.clone(), lip(&x2));
     let [q12, q13, q14, q23, q24, q34] =
         [&r12, &r13, &r14, &r23, &r24, &r34].map(|r| Q::lower(r.clone()));
     let y1 = &qx1 / &q24;
@@ -196,8 +275,17 @@ pub(crate) fn box_finite_two_adjacent(p: [&Atom; 6], mass_3: &Atom, mass_4: &Ato
     let b = &r13 * &r24 + &r12 * &r34 - &k14 * &r23;
     let c = &r12 * &r13 - &r23;
     let (x1, x2) = negative_quadratic_roots(&a, &b, &c);
-    let qx1 = ExactSheetAtom::upper(x1.clone());
-    let qx2 = ExactSheetAtom::upper(x2.clone());
+    // Real roots inherit their lips from OneLOop's p -> p(1 + i eps).
+    let [d12, d13] = [p[3], p[5]].map(|v| -v / (&sr * &sm4));
+    let dk14 = -p[2] / (&sm3 * &sm4);
+    let d23 = -p[0] / (&sr * &sr);
+    let [d24, d34] = [p[4], p[1]].map(|v| -v / (&sr * &sm3));
+    let da = &d34 * &r24 + &r34 * &d24 - &d23;
+    let db = &d13 * &r24 + &r13 * &d24 + &d12 * &r34 + &r12 * &d34 - &dk14 * &r23 - &k14 * &d23;
+    let dc = &d12 * &r13 + &r12 * &d13 - &d23;
+    let lip = |root: &Atom| root_lip(root, &a, &b, [&da, &db, &dc]);
+    let qx1 = ExactSheetAtom::with_sign(x1.clone(), lip(&x1));
+    let qx2 = ExactSheetAtom::with_sign(x2.clone(), lip(&x2));
     let q12 = ExactSheetAtom::lower(r12.clone());
     let q13 = ExactSheetAtom::lower(r13.clone());
     let q14 = ExactSheetAtom::lower(r14.clone());
@@ -283,6 +371,11 @@ pub(crate) fn box_one_mass_06(
     ))
 }
 
+// The one-mass infrared sectors follow OneLOop's box07-box10 in its continued
+// (qmplx) arithmetic: every invariant carries its own Feynman lip, and ratios
+// and products keep the accumulated phase. A principal logarithm or
+// dilogarithm of a plain ratio loses that phase when invariants of opposite
+// signs meet, e.g. for timelike channels with spacelike external masses.
 pub(crate) fn box_one_mass_07(
     p4: &Atom,
     p12: &Atom,
@@ -293,14 +386,16 @@ pub(crate) fn box_one_mass_07(
     let r13 = -p12;
     let r14 = mass - p4;
     let r24 = mass - p23;
-    let log_mass = physical_log(&(mass / mu_squared));
-    let log_12 = physical_log(&(&r13 / mass));
-    let log_23 = physical_log(&(&r24 / mass));
-    let log_4 = physical_log(&(&r14 / mass));
+    let [q13, q14, q24, qm] = [&r13, &r14, &r24, mass].map(|r| Q::lower(r.clone()));
+    let inverse_mu = Atom::num(1) / mu_squared;
+    let log_mass = qm.scale_positive(&inverse_mu).log();
+    let log_12 = (&q13 / &qm).log();
+    let log_23 = (&q24 / &qm).log();
+    let log_4 = (&q14 / &qm).log();
     let z2 = Atom::num(3) / 2;
     let z1 = -Atom::num(2) * &log_23 - &log_12 + &log_4;
     let pi_squared = Symbol::PI.to_atom() * Symbol::PI.to_atom();
-    let z0 = Atom::num(2) * (&log_12 * &log_23 - dilog_complement(&(&r14 / &r24)))
+    let z0 = Atom::num(2) * (&log_12 * &log_23 - (&q14 / &q24).dilog())
         - &log_4 * &log_4
         - Atom::num(13) * pi_squared / 24;
     let factor = Atom::num(1) / (&r13 * &r24);
@@ -323,23 +418,23 @@ pub(crate) fn box_one_mass_08(
     let r34 = mass - p3;
     let r14 = mass - p4;
     let r24 = mass - p23;
-    let x1 = &r34 / &r24;
-    let x2 = &r14 / &r24;
-    let x3 = &r13 / mu_squared;
-    let z1 = physical_log(&(&x1 * &x2 / &x3));
-    let mut z0 = Atom::num(2)
-        * (physical_log(&(&r24 / mu_squared)) * physical_log(&x3)
-            - dilog_complement(&x1)
-            - dilog_complement(&x2));
-    let scaled_1 = &r34 / mu_squared;
-    let scaled_2 = &r14 / mu_squared;
-    let xx = &scaled_1 * &scaled_2 / &x3;
-    let log_1 = physical_log(&scaled_1);
-    let log_2 = physical_log(&scaled_2);
-    let log_xx = physical_log(&xx);
+    let [q13, q34, q14, q24, qm] = [&r13, &r34, &r14, &r24, mass].map(|r| Q::lower(r.clone()));
+    let inverse_mu = Atom::num(1) / mu_squared;
+    let x1 = &q34 / &q24;
+    let x2 = &q14 / &q24;
+    let x3 = q13.scale_positive(&inverse_mu);
+    let z1 = (&(&x1 * &x2) / &x3).log();
+    let mut z0 =
+        Atom::num(2) * (q24.scale_positive(&inverse_mu).log() * x3.log() - x1.dilog() - x2.dilog());
+    let scaled_1 = q34.scale_positive(&inverse_mu);
+    let scaled_2 = q14.scale_positive(&inverse_mu);
+    let xx = &(&scaled_1 * &scaled_2) / &x3;
+    let log_1 = scaled_1.log();
+    let log_2 = scaled_2.log();
+    let log_xx = xx.log();
     z0 += -&log_1 * &log_1 - &log_2 * &log_2
         + &log_xx * &log_xx / 2
-        + dilog_complement(&(mass / (&xx * mu_squared)));
+        + (&qm / &xx).scale_positive(&inverse_mu).dilog();
     let pi_squared = Symbol::PI.to_atom() * Symbol::PI.to_atom();
     let factor = Atom::num(1) / (&r13 * &r24);
     with_box_normalization(LaurentSeries::new(
@@ -361,14 +456,15 @@ pub(crate) fn box_one_mass_09(
     let r13 = -p12;
     let r34 = mass - p3;
     let r24 = mass - p23;
-    let log_mass = physical_log(&(mass / mu_squared));
-    let q12 = &r13 / &r23;
-    let q23 = &r24 / mass;
+    let [q23, q13, q34, q24, qm] = [&r23, &r13, &r34, &r24, mass].map(|r| Q::lower(r.clone()));
+    let log_mass = qm.scale_positive(&(Atom::num(1) / mu_squared)).log();
+    let q12 = &q13 / &q23;
+    let q23_mass = &q24 / &qm;
     let z2 = Atom::num(1) / 2;
-    let z1 = -physical_log(&q12) - physical_log(&q23);
+    let z1 = -q12.log() - q23_mass.log();
     let pi_squared = Symbol::PI.to_atom() * Symbol::PI.to_atom();
-    let z0 = dilog_complement(&(&q23 * &r34 / &r23))
-        + Atom::num(2) * dilog_complement(&q12)
+    let z0 = (&(&q23_mass * &q34) / &q23).dilog()
+        + Atom::num(2) * q12.dilog()
         + &z1 * &z1
         + pi_squared / 24;
     let factor = Atom::num(1) / (&r13 * &r24);
@@ -388,21 +484,31 @@ pub(crate) fn box_one_mass_10(
     mass: &Atom,
     mu_squared: &Atom,
 ) -> LaurentSeries {
-    let r23 = -p2;
-    let r13 = -p12;
+    // OneLOop's box10 exchanges (p2, p4) with (p12, p23), a relabeling of the
+    // two massless propagators, when that enlarges |p12 (m - p23)|.
+    let first = p12 * (mass - p23);
+    let second = p2 * (mass - p4);
+    let swap = negative(&(Symbol::ABS.call((&first,)) - Symbol::ABS.call((&second,))));
+    let original = [p2.clone(), p4.clone(), p12.clone(), p23.clone()];
+    let [p2, p4, p12, p23] = [2, 3, 0, 1]
+        .map(|k| if_nonzero_else(&swap, original[k].clone(), original[(k + 2) % 4].clone()));
+    let r23 = -&p2;
+    let r13 = -&p12;
     let r34 = mass - p3;
-    let r14 = mass - p4;
-    let r24 = mass - p23;
-    let base = &r34 / mass;
-    let extra = -dilog_divided_difference(&(&base * &r24 / &r23), &(&base * &r14 / &r13)) * &r34
+    let r14 = mass - &p4;
+    let r24 = mass - &p23;
+    let [q23, q13, q34, q14, q24, qm] =
+        [&r23, &r13, &r34, &r14, &r24, mass].map(|r| Q::lower(r.clone()));
+    let base = &q34 / &qm;
+    let extra = -dd(&(&(&base * &q24) / &q23), &(&(&base * &q14) / &q13)) * &r34
         / (Atom::num(2) * mass * &r23);
-    let x1 = &r23 / &r13;
-    let x2 = &r24 / &r14;
+    let x1 = &q23 / &q13;
+    let x2 = &q24 / &q14;
     let xx = &x1 / &x2;
-    let z1 = -log_over_one_minus(&xx) / &r24;
-    let z0 = if_nonzero(&r34, extra) - dilog_divided_difference(&x1, &x2) / &r14
-        + dilog_divided_difference(&xx, &Atom::num(1)) / &r24
-        + &z1 * (physical_log(&(mass / &r24)) - physical_log(&(mass / mu_squared)) / 2);
+    let z1 = -xx.log_over_one_minus() / &r24;
+    let z0 = if_nonzero(&r34, extra) - dd(&x1, &x2) / &r14
+        + dd(&xx, &Q::lower(Atom::num(1))) / &r24
+        + &z1 * ((&qm / &q24).log() - qm.scale_positive(&(Atom::num(1) / mu_squared)).log() / 2);
     with_box_normalization(LaurentSeries::new(
         -Atom::num(2) * z0 / &r13,
         -z1 / r13,
@@ -743,8 +849,21 @@ pub(crate) fn box_three_masses_ir(
 ) -> LaurentSeries {
     let d1 = p[0] - masses[1];
     let d4 = p[3] - masses[3];
-    let finite_p = permute_six(p, [2, 3, 0, 1, 4, 5]);
-    let ordinary = box_finite_three_masses_zero_third(finite_p, masses[2], masses[3], masses[1]);
+    // OneLOop's boxf3 relabels the propagators (m1 = 0, m2, m3, m4) as
+    // (m2, m3, m1, m4) before applying boxf33. Other relabelings are equally
+    // valid for the integral, but not for boxf33's continuation of its real
+    // roots and r-functions: a cyclic relabeling fails in some regions.
+    // When that chart degenerates (its leading coefficient vanishes, e.g. for
+    // a vanishing channel where the contour form is unavailable), use the
+    // cyclic relabeling (m3, m4, m1, m2) instead.
+    let finite_p = permute_six(p, [1, 4, 3, 5, 0, 2]);
+    let leading = box_three_masses_zero_third_leading(finite_p, masses[1], masses[2], masses[3]);
+    let cyclic_p = permute_six(p, [2, 3, 0, 1, 4, 5]);
+    let ordinary = if_nonzero_else(
+        &leading,
+        box_finite_three_masses_zero_third(finite_p, masses[1], masses[2], masses[3]),
+        box_finite_three_masses_zero_third(cyclic_p, masses[2], masses[3], masses[1]),
+    );
     let finite = finite_series(finite_box_representation(p, masses, ordinary));
     let infrared = box_three_masses_16(
         p[1], p[2], p[4], p[5], masses[1], masses[2], masses[3], mu_squared,
@@ -752,20 +871,27 @@ pub(crate) fn box_three_masses_ir(
     if_series(&d1, finite.clone(), if_series(&d4, finite, infrared))
 }
 
+// OneLOop's box03 and box05 in continued (qmplx) arithmetic. Each -p carries
+// its own lower lip; quotients and products keep the accumulated phase.
+fn massless_invariants<const N: usize>(p: [&Atom; N]) -> [ExactSheetAtom; N] {
+    p.map(|v| Q::lower(-v))
+}
+
 pub(crate) fn box_massless_two_opposite(p: [&Atom; 6], mu_squared: &Atom) -> LaurentSeries {
-    let q2 = -p[1];
-    let q4 = -p[3];
-    let q5 = -p[4];
-    let q6 = -p[5];
+    let [q2, q4, q5, q6] = massless_invariants([p[1], p[3], p[4], p[5]]);
     let q26 = &q2 / &q6;
     let q54 = &q5 / &q4;
     let y = &q26 / &q54;
-    let log_y = log_over_one_minus(&y) / (p[4] * p[5]);
+    let log_y = y.log_over_one_minus() / (p[4] * p[5]);
+    let scale = &(&q54 * &q2) * &q6;
     let finite = Atom::num(2)
-        * (dilog_divided_difference(&(&q6 / &q4), &(&q2 / &q5)) / (p[3] * p[4])
-            + dilog_divided_difference(&q54, &q26) / (p[3] * p[5])
-            - dilog_divided_difference(&Atom::num(1), &y) / (p[4] * p[5])
-            - &log_y * physical_log(&(&q54 * &q2 * &q6 / (mu_squared * mu_squared))) / 2);
+        * (dd(&(&q6 / &q4), &(&q2 / &q5)) / (p[3] * p[4]) + dd(&q54, &q26) / (p[3] * p[5])
+            - dd(&y, &Q::lower(Atom::num(1))) / (p[4] * p[5])
+            - &log_y
+                * scale
+                    .scale_positive(&(Atom::num(1) / (mu_squared * mu_squared)))
+                    .log()
+                / 2);
     with_box_normalization(LaurentSeries::new(
         finite,
         Atom::num(2) * log_y,
@@ -774,20 +900,19 @@ pub(crate) fn box_massless_two_opposite(p: [&Atom; 6], mu_squared: &Atom) -> Lau
 }
 
 pub(crate) fn box_massless_three_nonzero(p: [&Atom; 6], mu_squared: &Atom) -> LaurentSeries {
-    let q2 = -p[1];
-    let q3 = -p[2];
-    let q4 = -p[3];
-    let q5 = -p[4];
-    let q6 = -p[5];
+    let [q2, q3, q4, q5, q6] = massless_invariants([p[1], p[2], p[3], p[4], p[5]]);
     let q25 = &q2 / &q5;
     let q64 = &q6 / &q4;
     let y = &q25 / &q64;
-    let log_y = log_over_one_minus(&y) / (p[4] * p[5]);
-    let z = &q64 * &q2 * &q5 * &q6 * &q6 / (&q3 * &q3 * mu_squared * mu_squared);
+    let log_y = y.log_over_one_minus() / (p[4] * p[5]);
+    let z = &(&(&(&(&q64 * &q2) * &q5) * &q6) * &q6) / &(&q3 * &q3);
     let finite = Atom::num(2)
-        * (dilog_divided_difference(&q64, &q25) / (p[3] * p[4])
-            - dilog_divided_difference(&Atom::num(1), &y) / (p[4] * p[5])
-            - &log_y * physical_log(&z) / 4);
+        * (dd(&q64, &q25) / (p[3] * p[4])
+            - dd(&y, &Q::lower(Atom::num(1))) / (p[4] * p[5])
+            - &log_y
+                * z.scale_positive(&(Atom::num(1) / (mu_squared * mu_squared)))
+                    .log()
+                / 4);
     with_box_normalization(LaurentSeries::new(finite, log_y, Atom::num(0)))
 }
 
@@ -807,6 +932,13 @@ pub(crate) fn box_massless_low_case(
     }
 
     let factor = Atom::num(1) / (p[4] * p[5]);
+    // OneLOop's box00 continues Li2(1 - x f), f = (p5 + p6 - p4)/(p5 p6),
+    // for negative real x f on the lip given by the sign of f.
+    let scaled_dilogs = |factor: &Atom| {
+        let scaled = factor * (p[4] + p[5] - p[3]);
+        let lip = sheet_exact::sign_nonnegative(&scaled);
+        [p[3], p[4], p[5]].map(|v| Q::with_sign(v * &scaled, lip.clone()).dilog())
+    };
     let l3 = physical_log(&(-p[2] / mu_squared));
     let l4 = physical_log(&(-p[3] / mu_squared));
     let l5 = physical_log(&(-p[4] / mu_squared));
@@ -824,10 +956,7 @@ pub(crate) fn box_massless_low_case(
             )
         }
         1 => {
-            let scaled = &factor * (p[4] + p[5] - p[3]);
-            let li4 = dilog_complement(&(p[3] * &scaled));
-            let li5 = dilog_complement(&(p[4] * &scaled));
-            let li6 = dilog_complement(&(p[5] * &scaled));
+            let [li4, li5, li6] = scaled_dilogs(&factor);
             (
                 &factor
                     * (&l5 * &l5 + &l6 * &l6 - &l4 * &l4 - &pi_squared / 2
@@ -837,12 +966,10 @@ pub(crate) fn box_massless_low_case(
             )
         }
         2 => {
-            let scaled = &factor * (p[4] + p[5] - p[3]);
-            let li4 = dilog_complement(&(p[3] * &scaled));
-            let li5 = dilog_complement(&(p[4] * &scaled));
-            let li6 = dilog_complement(&(p[5] * &scaled));
-            let li54 = dilog_complement(&(p[3] / p[4]));
-            let li63 = dilog_complement(&(p[2] / p[5]));
+            let [li4, li5, li6] = scaled_dilogs(&factor);
+            let [q3, q4, q5, q6] = massless_invariants([p[2], p[3], p[4], p[5]]);
+            let li54 = (&q4 / &q5).dilog();
+            let li63 = (&q3 / &q6).dilog();
             (
                 &factor
                     * (&l5 * &l5 + &l6 * &l6 - &l3 * &l3 - &l4 * &l4

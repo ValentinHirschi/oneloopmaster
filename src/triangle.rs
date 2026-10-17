@@ -10,6 +10,254 @@ pub(crate) fn negative_quadratic_roots(a: &Atom, b: &Atom, c: &Atom) -> (Atom, A
     )
 }
 
+/// Labelled roots `(-b + d)/(2a)` and `(-b - d)/(2a)` of `a x² + b x + c`,
+/// where `d² = b² - 4ac`.
+///
+/// The root of larger magnitude is evaluated directly and the other one from
+/// Vieta's product `c/a`, as in OneLOop's `solabc`; the direct formula loses
+/// all digits of a small root in `-b ∓ d`. The labels still follow the sign
+/// in front of `d`, so callers keep their analytic lips. Requires `a c ≠ 0`.
+pub(crate) fn labelled_quadratic_roots(a: &Atom, b: &Atom, c: &Atom, d: &Atom) -> (Atom, Atom) {
+    let plus = d - b;
+    let minus = -b - d;
+    let size_difference = grouped(&(Symbol::ABS.call((&plus,)) - Symbol::ABS.call((&minus,))));
+    let minus_larger = &size_difference - Symbol::ABS.call((&size_difference,));
+    let two_a = Atom::num(2) * a;
+    let two_c = Atom::num(2) * c;
+    (
+        if_nonzero_else(&minus_larger, &two_c / &minus, &plus / &two_a),
+        if_nonzero_else(&minus_larger, &minus / &two_a, &two_c / &plus),
+    )
+}
+
+/// Roots `X1, X2` of `a X² - b X + c`, the negated roots of OneLOop's
+/// `solabc(a, b, c)`, in its order: `X1` has the larger magnitude and is
+/// evaluated directly, `X2 = c/(a X1)` from Vieta's product. `X2` is then
+/// exactly zero when `c = 0`, which the finite formulas require (they divide
+/// by `X2` only in terms that vanish with it), and a small root keeps its
+/// digits. The finite formulas are symmetric in the two labels otherwise.
+///
+/// At `c = 0`, `X1` is Vieta's sum `b/a - X2`, OneLOop's `b/a` in value:
+/// the direct formula would add `b` to a square root that equals `±b` only
+/// up to rounding. The difference keeps `X1`'s dependence on `c`.
+///
+/// `discriminant` is a square root of `b² - 4ac`; callers pass it from an
+/// exact kinematic identity so that coincident roots stay exactly equal.
+pub(crate) fn ordered_negative_quadratic_roots(
+    a: &Atom,
+    b: &Atom,
+    c: &Atom,
+    discriminant: &Atom,
+) -> (Atom, Atom) {
+    let plus = b + discriminant;
+    let minus = b - discriminant;
+    let size_difference = grouped(&(Symbol::ABS.call((&plus,)) - Symbol::ABS.call((&minus,))));
+    let minus_larger = &size_difference - Symbol::ABS.call((&size_difference,));
+    let larger = if_nonzero_else(&minus_larger, minus, plus);
+    let small = if_nonzero(&larger, Atom::num(2) * c / &larger);
+    let first = if_nonzero_else(c, &larger / (Atom::num(2) * a), b / a - &small);
+    let second = if_nonzero_else(discriminant, small, first.clone());
+    (first, second)
+}
+
+/// Sign selecting the real-axis lip of a root `x` of `a x² - b x + c`.
+///
+/// OneLOop shifts external invariants as `p -> p (1 + i eps)` and lets the
+/// roots of its finite formulas inherit the imaginary parts. `velocity` holds
+/// `D(a), D(b), D(c)`, where `dq/d eps = i D(q)`. To first order
+/// `Im x = eps D(x)` with `D(x) = (D(b) x - D(a) x² - D(c)) / (2 a x - b)`.
+/// An exactly real root is placed on the upper lip when `D(x)` vanishes, as
+/// by OneLOop's `qonv(x, 1)`. Only real-axis roots use this sign.
+pub(crate) fn root_lip(x: &Atom, a: &Atom, b: &Atom, velocity: [&Atom; 3]) -> Atom {
+    root_lip_or(x, a, b, velocity, Atom::num(1))
+}
+
+/// [root_lip] with an explicit sign for a vanishing first-order shift.
+pub(crate) fn root_lip_or(
+    x: &Atom,
+    a: &Atom,
+    b: &Atom,
+    velocity: [&Atom; 3],
+    fallback: Atom,
+) -> Atom {
+    let [da, db, dc] = velocity;
+    let numerator = db * x - da * x * x - dc;
+    let slope = Atom::num(2) * a * x - b;
+    let shift = grouped(&sheet_exact::re(&(numerator * slope.conj())));
+    if_nonzero_else(&shift, sheet_exact::sign_nonnegative(&shift), fallback)
+}
+
+/// Velocities `D(r), D(d)` of `r_function(k)` for a velocity `D(k)`.
+///
+/// Away from `k = ±2`, `dr = r dk/d` and `dd = k dk/d` with `d = r - 1/r`.
+/// At a threshold `r = ±1` the root instead moves like `sqrt(dk)`, along
+/// `r - i` for both signs (OneLOop's `rfun` keeps `|r| >= 1`), which dominates
+/// every first-order velocity: in units of `sqrt(eps)`, `D(r) = -sqrt|D(k)|`
+/// and `D(d) = 2 D(r)`. The returned weight is zero when any of the
+/// r-functions sits at such a threshold; it multiplies the first-order
+/// velocities, and the regular r-function velocities are dropped as well.
+pub(crate) fn r_function_velocities<const N: usize>(
+    functions: [[&Atom; 4]; N],
+) -> ([[Atom; 2]; N], Atom) {
+    let singular = functions.map(|[_, _, d, dk]| {
+        if_nonzero_else(
+            d,
+            Atom::num(0),
+            if_nonzero_else(dk, Atom::num(1), Atom::num(0)),
+        )
+    });
+    let any_singular = any_nonzero(singular.iter().cloned());
+    let velocities = core::array::from_fn(|index| {
+        let [k, r, d, dk] = functions[index];
+        let step = -Symbol::ABS.call((dk,)).sqrt();
+        // A vanishing D(k) gives no shift, even where d vanishes as well.
+        let regular = [r * dk / d, k * dk / d].map(|v| if_nonzero(d, v));
+        let threshold = [
+            &singular[index] * &step,
+            Atom::num(2) * &singular[index] * &step,
+        ];
+        let [regular_r, regular_d] = regular;
+        let [threshold_r, threshold_d] = threshold;
+        [
+            if_nonzero_else(&any_singular, threshold_r, regular_r),
+            if_nonzero_else(&any_singular, threshold_d, regular_d),
+        ]
+    });
+    (
+        velocities,
+        if_nonzero_else(&any_singular, Atom::num(0), Atom::num(1)),
+    )
+}
+
+/// [r_function_velocities] for a single r-function: `[D(r), D(d), weight]`.
+pub(crate) fn r_function_velocity(k: &Atom, r: &Atom, d: &Atom, dk: &Atom) -> [Atom; 3] {
+    let ([[dr, dd]], weight) = r_function_velocities([[k, r, d, dk]]);
+    [dr, dd, weight]
+}
+
+/// [r_function] of `k = (m_i + m_j - p)/(s_i s_j)`, with `s = sqrt(m)`.
+///
+/// Exactly known roots are returned with their exact values, decided by exact
+/// tests on the inputs rather than on the rounded `k`: near `|k| = 2` a
+/// rounding error in `k` becomes a square-root sized error in `r`, can move a
+/// threshold root off the real axis, and turns exact zeros of later
+/// coefficients into noise. No tolerance is involved.
+///
+/// - At `p = 0` with unequal masses the root is `E + δ` from
+///   [zero_momentum_root]: exactly `E = s_j/s_i` or `s_i/s_j` in value, with
+///   the analytic dependence of the root on every input, including `p`.
+/// - At `p = 0` with equal masses the root is 1, and at a (pseudo-)threshold
+///   `(p - m_i - m_j)² = 4 m_i m_j`, where `k = ±2`, it is `±1`; both with
+///   `r - 1/r = 0`. These are square-root branch points, where the root has
+///   no finite derivatives in `p` anyway.
+pub(crate) fn r_function_of(
+    momentum: &Atom,
+    mass_i: &Atom,
+    mass_j: &Atom,
+    sqrt_i: &Atom,
+    sqrt_j: &Atom,
+) -> (Atom, Atom) {
+    let k = (mass_i + mass_j - momentum) / (sqrt_i * sqrt_j);
+    let (root, difference) = r_function(&k);
+    let unequal = mass_i - mass_j;
+    let [nearer_ratio, exact, delta] = zero_momentum_root(momentum, mass_i, mass_j, sqrt_i, sqrt_j);
+    let ratio = sqrt_j / sqrt_i;
+    let inverse = sqrt_i / sqrt_j;
+    let exact_difference = if_nonzero_else(&nearer_ratio, &ratio - &inverse, inverse - ratio);
+    let shifted = &exact + &delta;
+    // r - 1/r = (E - 1/E) + δ (1 + 1/(E (E + δ))), exactly E - 1/E at p = 0.
+    let shifted_difference =
+        exact_difference + &delta * (Atom::num(1) + Atom::num(1) / (&exact * &shifted));
+    // Equal masses test p - 4 m directly: the Källén form would round 3 m.
+    let off_threshold = if_nonzero_else(
+        &unequal,
+        (momentum - mass_i - mass_j).pow(2) - Atom::num(4) * mass_i * mass_j,
+        momentum - Atom::num(4) * mass_i,
+    );
+    let threshold_root = sheet_exact::sign_nonnegative(&sheet_exact::re(&k));
+    (
+        if_nonzero_else(
+            momentum,
+            if_nonzero_else(&off_threshold, root, threshold_root),
+            if_nonzero_else(&unequal, shifted, Atom::num(1)),
+        ),
+        if_nonzero_else(
+            momentum,
+            if_nonzero_else(&off_threshold, difference, Atom::num(0)),
+            if_nonzero_else(&unequal, shifted_difference, Atom::num(0)),
+        ),
+    )
+}
+
+/// `s_i/s_j - 1/r` for the root `r` of [r_function_of].
+///
+/// It vanishes identically at `p = 0` when `r = s_j/s_i`, and is then formed
+/// as `δ/(E (E + δ))` with the [zero_momentum_root] data, which is exactly
+/// zero there while keeping the analytic dependence on every input. The
+/// direct difference would be rounding noise, and a later quadratic root
+/// that must vanish (OneLOop's `c = 0` in `trif3`) would become noise as well.
+pub(crate) fn r_function_inverse_gap(
+    momentum: &Atom,
+    mass_i: &Atom,
+    mass_j: &Atom,
+    sqrt_i: &Atom,
+    sqrt_j: &Atom,
+    root: &Atom,
+) -> Atom {
+    let regular = sqrt_i / sqrt_j - Atom::num(1) / root;
+    let [nearer_ratio, exact, delta] = zero_momentum_root(momentum, mass_i, mass_j, sqrt_i, sqrt_j);
+    let vanishing = &delta / (&exact * (&exact + &delta));
+    if_nonzero_else(
+        momentum,
+        regular.clone(),
+        if_nonzero_else(
+            &(mass_i - mass_j),
+            if_nonzero_else(&nearer_ratio, vanishing, regular),
+            Atom::num(0),
+        ),
+    )
+}
+
+/// `[selects s_j/s_i, E, δ]` for the r-function root near `p = 0` with
+/// unequal masses `m_i != m_j`.
+///
+/// At `p = 0`, `k = R + 1/R` with `R = s_j/s_i`, so the root is `E = R` or
+/// `1/R`, the one nearest to the computed root (the first entry is 1 when it
+/// is `R`). Writing the root as `E + δ`, the quadratic `s_i s_j r² - (m_i +
+/// m_j - p) r + s_i s_j = 0` becomes `s_i s_j δ² + B δ + p E = 0` with
+/// `B = m_E - m_o + p`, where `m_E = s_i s_j E` is the mass in the numerator of
+/// `E` and `m_o` the other one. Its small root
+/// `δ = -2 p E / (B (1 + sqrt(1 - 4 p m_E / B²)))` is exactly zero at `p = 0`
+/// (`B = m_E - m_o != 0`) and analytic around it.
+fn zero_momentum_root(
+    momentum: &Atom,
+    mass_i: &Atom,
+    mass_j: &Atom,
+    sqrt_i: &Atom,
+    sqrt_j: &Atom,
+) -> [Atom; 3] {
+    let ratio = sqrt_j / sqrt_i;
+    let inverse = sqrt_i / sqrt_j;
+    let (root_zero, _) = r_function(&((mass_i + mass_j) / (sqrt_i * sqrt_j)));
+    let nearer_ratio = 1 - sheet_exact::negative(
+        &(Symbol::ABS.call((&(&root_zero - &inverse),))
+            - Symbol::ABS.call((&(&root_zero - &ratio),))),
+    );
+    let small_root = |exact: &Atom, numerator_mass: &Atom, other_mass: &Atom| {
+        let linear = numerator_mass - other_mass + momentum;
+        let radicand =
+            Atom::num(1) - Atom::num(4) * momentum * numerator_mass / (&linear * &linear);
+        Atom::num(-2) * momentum * exact / (&linear * (Atom::num(1) + radicand.sqrt()))
+    };
+    let delta = if_nonzero_else(
+        &nearer_ratio,
+        small_root(&ratio, mass_j, mass_i),
+        small_root(&inverse, mass_i, mass_j),
+    );
+    let exact = if_nonzero_else(&nearer_ratio, ratio, inverse);
+    [nearer_ratio, exact, delta]
+}
+
 pub(crate) fn r_function(value: &Atom) -> (Atom, Atom) {
     // OneLOop selects the root outside the unit circle for non-real q and
     // real |q|>2, but the lower-half-plane root on the real interval [-2,2].
@@ -20,19 +268,27 @@ pub(crate) fn r_function(value: &Atom) -> (Atom, Atom) {
     // Keep the real-axis formulas on their exact axes: multiplying two
     // numerically evaluated negative-real square roots can leak a tiny
     // imaginary component and incorrectly select a continuation sheet.
-    let real_inside = (value - sheet_exact::i() * (-&discriminant).sqrt()) / 2;
-    let real_outside = (value + sheet_exact::sign_nonnegative(value) * discriminant.sqrt()) / 2;
-    let root = if_nonzero_else(
-        &sheet_exact::im(value),
-        outside,
+    let inside_difference = -sheet_exact::i() * (-&discriminant).sqrt();
+    let outside_difference = sheet_exact::sign_nonnegative(value) * discriminant.sqrt();
+    let select = |off_axis: Atom, inside: Atom, outside: Atom| {
         if_nonzero_else(
-            &sheet_exact::negative(&discriminant),
-            real_inside,
-            real_outside,
-        ),
+            &sheet_exact::im(value),
+            off_axis,
+            if_nonzero_else(&sheet_exact::negative(&discriminant), inside, outside),
+        )
+    };
+    // r - 1/r is exactly the square root added to q in each branch. Taking it
+    // directly keeps d = 0 exactly at a threshold and its sign reliable next
+    // to one, where forming r - 1/r cancels and can even flip the sign.
+    let root = select(
+        outside,
+        (value + &inside_difference) / 2,
+        (value + &outside_difference) / 2,
     );
-    let inverse = Atom::num(1) / &root;
-    (root.clone(), root - inverse)
+    (
+        root,
+        select(difference, inside_difference, outside_difference),
+    )
 }
 
 pub(crate) fn triangle_ir_one(mass: &Atom, mu_squared: &Atom) -> LaurentSeries {
@@ -186,8 +442,15 @@ pub(crate) fn triangle_finite_one_mass(p1: &Atom, p2: &Atom, p3: &Atom, mass: &A
     let b = &r24 / &sqrt_real + &r34 / &sqrt_real - &r23 / &sqrt_mass;
     let c = Atom::num(1) / (&sqrt_real * &sqrt_real);
     let (root_1, root_2) = negative_quadratic_roots(&a, &b, &c);
-    let qx1 = SheetAtom::with_real_axis_sign(root_1.clone(), true);
-    let qx2 = SheetAtom::with_real_axis_sign(root_2.clone(), true);
+    // Real roots inherit their lips from OneLOop's p -> p(1 + i eps).
+    let dr23 = -p2_internal / (&sqrt_real * &sqrt_real);
+    let dr24 = -p23 / (&sqrt_real * &sqrt_mass);
+    let dr34 = -p3_internal / (&sqrt_real * &sqrt_mass);
+    let da = &dr34 * &r24 + &r34 * &dr24 - &dr23;
+    let db = &dr24 / &sqrt_real + &dr34 / &sqrt_real - &dr23 / &sqrt_mass;
+    let lip = |root: &Atom| root_lip(root, &a, &b, [&da, &db, &Atom::num(0)]);
+    let qx1 = SheetAtom::with_sign(root_1.clone(), lip(&root_1));
+    let qx2 = SheetAtom::with_sign(root_2.clone(), lip(&root_2));
     let q23 = SheetAtom::lower(r23.clone());
     let q24 = SheetAtom::lower(r24.clone());
     let q34 = SheetAtom::lower(r34.clone());
@@ -244,13 +507,29 @@ pub(crate) fn triangle_finite_two_masses(
     let r23 = (mass_2 - p2_internal) / (&sqrt_2 * &sqrt_3);
     let k24 = (mass_2 + mass_4 - p23) / (&sqrt_2 * &sqrt_4);
     let r34 = (mass_4 - p3_internal) / (&sqrt_3 * &sqrt_4);
-    let (r24, d24) = r_function(&k24);
+    let (r24, d24) = r_function_of(p23, mass_2, mass_4, &sqrt_2, &sqrt_4);
     let a = &r34 / &r24 - &r23;
     let b = -&d24 / &sqrt_3 + &r34 / &sqrt_2 - &r23 / &sqrt_4;
     let c = (&sqrt_4 / &sqrt_2 - &r24) / (&sqrt_3 * &sqrt_4);
-    let (root_1, root_2) = negative_quadratic_roots(&a, &b, &c);
-    let qx1 = SheetAtom::with_real_axis_sign(root_1.clone(), true);
-    let qx2 = SheetAtom::with_real_axis_sign(root_2.clone(), true);
+    // Algebraically b² - 4ac = lambda/(m2 m4 |m2|). Test that polynomial for
+    // an exact zero, keeping Gram-degenerate roots exactly coincident. Away
+    // from it the rounded b² - 4ac splits nearly coincident roots by about
+    // sqrt(eps) instead of eps, which conditions the divided differences far
+    // better than the exact but tiny split.
+    let lambda = (p3 - p1 - p2).pow(2) - Atom::num(4) * p1 * p2;
+    let discriminant = if_nonzero(&lambda, physical_sqrt(&(&b * &b - Atom::num(4) * &a * &c)));
+    let (root_1, root_2) = ordered_negative_quadratic_roots(&a, &b, &c, &discriminant);
+    // Real roots inherit their lips from OneLOop's p -> p(1 + i eps).
+    let dk24 = -p23 / (&sqrt_2 * &sqrt_4);
+    let [dr24, dd24, weight] = r_function_velocity(&k24, &r24, &d24, &dk24);
+    let dr23 = -p2_internal * &weight / (&sqrt_2 * &sqrt_3);
+    let dr34 = -p3_internal * weight / (&sqrt_3 * &sqrt_4);
+    let da = &dr34 / &r24 - &r34 * &dr24 / (&r24 * &r24) - &dr23;
+    let db = -dd24 / &sqrt_3 + &dr34 / &sqrt_2 - &dr23 / &sqrt_4;
+    let dc = -dr24 / (&sqrt_3 * &sqrt_4);
+    let lip = |root: &Atom| root_lip(root, &a, &b, [&da, &db, &dc]);
+    let qx1 = SheetAtom::with_sign(root_1.clone(), lip(&root_1));
+    let qx2 = SheetAtom::with_sign(root_2.clone(), lip(&root_2));
     let q23 = SheetAtom::lower(r23.clone());
     let q24 = SheetAtom::lower(r24.clone());
     let q34 = SheetAtom::lower(r34.clone());
@@ -318,11 +597,21 @@ fn register_three_mass_triangle(
     // R=r13*sqrt(m3/m1). This polynomial detects a zero leading
     // coefficient before rounded square roots can lift its exact zero.
     let resultant = m[0] * &u * &u - (m[0] + m[2] - p[2]) * &u * &v + m[2] * &v * &v;
+    // At a vanishing Gram determinant with p3 = 0 (then p1 = p2), c and b
+    // can both vanish: the quadratic degenerates to a double root at zero,
+    // where the dilogarithm divided differences are singular. Such a chart
+    // is skipped like one with a vanishing leading coefficient.
+    let lambda = (p[2] - p[0] - p[1]).pow(2) - Atom::num(4) * p[0] * p[1];
+    let usable = if_nonzero_else(
+        &resultant,
+        any_nonzero([lambda, p[2].clone()]),
+        Atom::num(0),
+    );
     let ordered = three_mass_triangle_call("ordered", p, m);
     let ordered_rotated = three_mass_triangle_call("ordered", rotated_p, rotated_m);
-    let second = if_nonzero_else(&resultant, ordered.clone(), ordered_rotated);
+    let second = if_nonzero_else(&usable, ordered.clone(), ordered_rotated);
     let first = if_nonzero_else(
-        &resultant,
+        &usable,
         ordered,
         three_mass_triangle_call("second", rotated_p, rotated_m),
     );
@@ -362,9 +651,9 @@ fn triangle_finite_three_masses_ordered(momenta: [&Atom; 3], masses: [&Atom; 3])
     let k12 = (masses[0] + masses[1] - momenta[0]) / (&sqrt_1 * &sqrt_2);
     let k13 = (masses[0] + masses[2] - momenta[2]) / (&sqrt_1 * &sqrt_3);
     let k23 = (masses[1] + masses[2] - momenta[1]) / (&sqrt_2 * &sqrt_3);
-    let (r12, _) = r_function(&k12);
-    let (r13, d13) = r_function(&k13);
-    let (r23, _) = r_function(&k23);
+    let (r12, _) = r_function_of(momenta[0], masses[0], masses[1], &sqrt_1, &sqrt_2);
+    let (r13, d13) = r_function_of(momenta[2], masses[0], masses[2], &sqrt_1, &sqrt_3);
+    let (r23, _) = r_function_of(momenta[1], masses[1], masses[2], &sqrt_2, &sqrt_3);
     let a = &sqrt_2 / &sqrt_3 - &k23 + &r13 * (&k12 - &sqrt_2 / &sqrt_1);
     let b = &d13 / &sqrt_2 + &k12 / &sqrt_3 - &k23 / &sqrt_1;
     // Algebraically b²-4ac = lambda/(m1*m2*m3). Evaluating this
@@ -373,17 +662,29 @@ fn triangle_finite_three_masses_ordered(momenta: [&Atom; 3], masses: [&Atom; 3])
     let lambda =
         (momenta[2] - momenta[0] - momenta[1]).pow(2) - Atom::num(4) * momenta[0] * momenta[1];
     let discriminant = physical_sqrt(&(lambda / (masses[0] * masses[1] * masses[2])));
-    let root_1 = (&b + &discriminant) / (Atom::num(2) * &a);
-    let root_2 = (&b - discriminant) / (Atom::num(2) * &a);
     // The logarithmic root term assumes that an exactly zero root is second,
-    // as in OneLOop's solabc. The direct quadratic formula reverses that order
-    // for timelike equal-mass triangles with two on-shell external legs.
-    let c = (&sqrt_1 / &sqrt_3 - Atom::num(1) / &r13) / (&sqrt_1 * &sqrt_2);
-    let (root_1, root_2) = (if_nonzero_else(&c, root_1, &b / &a), if_nonzero(&c, root_2));
+    // as in OneLOop's solabc. c vanishes identically at p3 = 0 when
+    // r13 = sqrt(m3/m1); r_function_inverse_gap keeps that zero exact (the
+    // direct difference is rounding noise, and log(0) of a noisy second root
+    // is NaN) while keeping c's dependence on every input.
+    let c = r_function_inverse_gap(momenta[2], masses[0], masses[2], &sqrt_1, &sqrt_3, &r13)
+        / (&sqrt_1 * &sqrt_2);
+    let (root_1, root_2) = ordered_negative_quadratic_roots(&a, &b, &c, &discriminant);
 
     use sheet_exact::{SheetAtom as Q, divided_difference as dd};
-    let qx1 = Q::upper(root_1.clone());
-    let qx2 = Q::upper(root_2.clone());
+    // Real roots inherit their lips from OneLOop's p -> p(1 + i eps).
+    let dk12 = -momenta[0] / (&sqrt_1 * &sqrt_2);
+    let dk13 = -momenta[2] / (&sqrt_1 * &sqrt_3);
+    let dk23 = -momenta[1] / (&sqrt_2 * &sqrt_3);
+    let [dr13, dd13, weight] = r_function_velocity(&k13, &r13, &d13, &dk13);
+    let dk12 = dk12 * &weight;
+    let dk23 = dk23 * weight;
+    let da = -&dk23 + &dr13 * (&k12 - &sqrt_2 / &sqrt_1) + &r13 * &dk12;
+    let db = dd13 / &sqrt_2 + &dk12 / &sqrt_3 - &dk23 / &sqrt_1;
+    let dc = &dr13 / (&r13 * &r13 * &sqrt_1 * &sqrt_2);
+    let lip = |root: &Atom| root_lip(root, &a, &b, [&da, &db, &dc]);
+    let qx1 = Q::with_sign(root_1.clone(), lip(&root_1));
+    let qx2 = Q::with_sign(root_2.clone(), lip(&root_2));
     let [q12, q13, q23, qm1, qm2, qm3] =
         [&r12, &r13, &r23, &sqrt_1, &sqrt_2, &sqrt_3].map(|r| Q::lower(r.clone()));
     let z1 = &qx1 * &qm2;
