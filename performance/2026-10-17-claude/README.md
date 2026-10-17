@@ -149,3 +149,52 @@ with the Fortran values of these rows to 9.2e-16.
   there reference local scratch paths.
 - Each SAME/HETERO/ALL workload calibrates its block size to at least 25 ms
   (rows drivers) before nine timed repetitions; medians are reported.
+
+## Review re-measurement (independent builds, three more diagrams)
+
+Re-measured after the review fixes (`claude/native-masters-review`, unchanged
+native scalar code; the tensor fix only touches massless bubbles) on logical CPU
+241 (its SMT sibling idle, nothing else of ours running), with OneLOop drivers
+rebuilt from the same sources (`-O2`/`-O3 -fno-fast-math`, 2024 snapshot
+sha256 `196e3533…`, 3.6 `f3cd1a8a…`). Each set ran twice, native and Fortran
+interleaved; medians of nine blocks of at least 25 ms (rows) or 20 ms
+(scalar fixtures). Tables: [`review/`](review/) (`<set>_<fortran>_batch<b>.txt`,
+`scalar_<family>_<fortran>_batch<b>.txt`, `summary_rows.txt` with both rounds,
+where `ALL/pt` is in µs and the families in ns per call). The extra diagrams are
+`tests/generate_bench_rows.py hgg|aaaa|gghh` (same per-diagram requests as
+Ninja: box 1 D0 + 4 C0 + 6 rank-two bubbles + 4 A0, triangle 1 C0 + 3 + 3).
+
+Per diagram (or point), native / Fortran over the three builds and two rounds:
+
+| Workload | Fortran µs | native µs (b1 / b1024) | ratio b1 | ratio b1024 |
+| --- | ---: | ---: | ---: | ---: |
+| gg → HHH pentagon (graph26) | 109.3–112.0 | 131.2–131.3 / 129.0–129.6 | 1.17–1.20 | 1.15–1.18 |
+| gg → HH top box | 33.0–34.8 | 34.6 / 34.2–34.3 | 0.99–1.05 | 0.98–1.04 |
+| H → gg top triangle | 3.2–3.3 | 2.0 / 1.9 | 0.61–0.62 | 0.58–0.59 |
+| **γγ → γγ top box** | 8.6–8.9 | 14.7–14.8 / 14.2–14.3 | **1.66–1.72** | **1.60–1.66** |
+
+Per family on those rows (batch 1, ns per call, ratio range over builds):
+
+| Diagram | D0 | C0 | B11 vs `olo_b11` | A0 |
+| --- | --- | --- | --- | --- |
+| graph26 | 19,503–19,647 vs 12,871–13,360 (1.46–1.52) | 2,882 vs 3,331–3,463 (0.83–0.87) | 132 (0.18) | 43–44 (0.75–0.81) |
+| gg → HH | 22,645–22,714 vs 16,030–16,747 (1.36–1.42) | 2,666–2,667 (0.89–0.92) | 119 (0.15–0.18) | 44 (0.81) |
+| H → gg | — | 1,617–1,620 vs 1,484–1,540 (1.05–1.09) | 78–80 (0.14–0.15) | 35 (0.83–0.85) |
+| γγ → γγ | 6,947–6,990 vs 3,232–3,420 (2.03–2.15) | 1,692–1,720 vs 914–936 (1.81–1.88) | 75–76 (0.32–0.34) | 43–44 (0.79–0.81) |
+
+The graph26 gate result is reproduced (1.15–1.20× here against 1.21–1.24×
+above), and the mixed scalar fixtures agree with the table above within a few
+per cent: HETERO A0 0.80–0.81, B0 0.81–0.86, dB0 0.88–0.92, C0 0.82–0.86,
+D0 1.10–1.16 at batch 1 (0.68–0.69, 0.72–0.76, 0.85–0.89, 0.81–0.85,
+1.10–1.16 at batch 1,024), with the same three single-row misses
+(`D0_real_timelike` 2.18×, `A0_scaleless` 1.53×, `dB0_one_massless_onshell`
+1.31× against 2024 `-O3`). Native values agree with OneLOop 3.6 on every row
+to 1.8e-14 (the 2024 snapshot again differs only on `sqrt_s_600_D0_1234`).
+
+**The γγ → γγ top box does not meet the 1.3× gate.** Its boxes
+`D0(0,0,0,0,s,t; m_t²×4)` take about twice OneLOop's time, as the
+`D0_real_timelike` fixture does, and its two-massless-leg triangles
+`C0(0,0,s; m_t²×3)` and `C0(0,0,t; m_t²×3)` 1.8×: OneLOop takes 0.9 µs for
+these triangles against 3.4 µs for graph26's, the native code 1.7 µs against
+2.9 µs. The gg → HH box passes only because its C0 and bubbles compensate
+D0's 1.4×.

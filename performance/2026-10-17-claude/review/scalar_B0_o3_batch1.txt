@@ -1,0 +1,9 @@
+mode	family	name	batch	fortran_ns	native_ns	ratio	status
+SAME	B0	B0_euclidean	1	120.664	122.854	1.0181	PASS
+SAME	B0	B0_timelike	1	123.862	123.139	0.9942	PASS
+SAME	B0	B0_complex	1	309.659	193.034	0.6234	PASS
+SAME	B0	B0_one_massless_onshell	1	52.054	56.561	1.0866	PASS
+SAME	B0	B0_scaleless	1	18.047	19.936	1.1047	PASS
+SAME	B0	B0_timelike_mu_0.01	1	132.024	126.092	0.9551	PASS
+SAME	B0	B0_timelike_mu_10000	1	131.524	126.293	0.9602	PASS
+HETERO	B0	all	1	133.254	109.685	0.8231	PASS

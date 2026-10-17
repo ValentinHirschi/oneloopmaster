@@ -1,0 +1,27 @@
+VALUE parity over 19 rows: worst relative difference 9.190e-16 at B11_complex output 6
+batch 1: median ns per call (native / Fortran)
+mode    family workload                         Fortran      native   ratio
+ALL     ALL   all                                415.1       121.8   0.293
+              per point                         7887.8      2314.5   0.293
+HETERO  An    all                                 72.1        37.4   0.518
+HETERO  B11   all                                424.5       128.7   0.303
+HETERO  B111  all                                531.5       144.6   0.272
+SAME    An    An_complex                         102.1        52.2   0.511
+SAME    An    An_negative                         60.0        32.2   0.536
+SAME    An    An_top                              60.3        29.9   0.496
+SAME    B11   B11_above_threshold                289.4       132.2   0.457
+SAME    B11   B11_below_threshold               1407.5       165.1   0.117
+SAME    B11   B11_complex                        697.4       217.3   0.312
+SAME    B11   B11_massless_m0                    184.1        87.1   0.473
+SAME    B11   B11_p0_equal                       108.6        39.0   0.359
+SAME    B11   B11_p0_unequal                     169.8       105.4   0.621
+SAME    B11   B11_small_p_series                 267.3       140.6   0.526
+SAME    B11   B11_spacelike                      254.8       144.7   0.568
+SAME    B111  B111_above_threshold               348.5       150.5   0.432
+SAME    B111  B111_below_threshold              1848.0       183.3   0.099
+SAME    B111  B111_complex                       867.8       235.0   0.271
+SAME    B111  B111_massless_m0                   216.6        94.5   0.436
+SAME    B111  B111_p0_equal                      119.9        43.4   0.362
+SAME    B111  B111_p0_unequal                    200.9       114.7   0.571
+SAME    B111  B111_small_p_series                325.3       162.8   0.500
+SAME    B111  B111_spacelike                     305.0       163.1   0.535

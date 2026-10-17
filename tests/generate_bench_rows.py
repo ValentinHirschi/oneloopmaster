@@ -13,6 +13,12 @@ A `# name` comment precedes each row.
 point, the 5 boxes, 10 triangles, 10 rank-two bubbles and 5 tadpoles that Ninja
 requests for loop shifts V = {0, -p1, -p1-p2, -p1-p2+p3, -p1-p2+p3+p4}, with all
 internal squared masses 173^2 and mu^2 from the pool.
+
+`hgg`, `aaaa` and `gghh` are single top-loop diagrams with the same requests
+per diagram: the H -> gg triangle (1 C0, 3 rank-two bubbles, 3 A0 at
+p² = 0, 0, 125²; mu² = 173²) and the gamma gamma -> gamma gamma and gg -> HH
+boxes (1 D0, 4 C0, 6 bubbles, 4 A0 for legs p1, p2, -p3, -p4; mu² = 10⁴) at
+sqrt(s) in {250, 500, 1000} and {300, 400, 700} GeV and three angles each.
 """
 
 import argparse
@@ -77,12 +83,60 @@ def graph26_rows(pool_path):
     return rows
 
 
+def box_rows(tag, external, s, t, mu2):
+    """Ninja's requests for one top-loop box: legs with squares `external`,
+    s = (p1+p2)^2 and t = (p2+p3)^2."""
+    invariants = {(0, 1): external[0], (1, 2): external[1], (2, 3): external[2],
+                  (0, 3): external[3], (0, 2): s, (1, 3): t}
+    inv = lambda i, j: invariants[(min(i, j), max(i, j))]
+    mass = [TOP, 0.0]
+    rows = [(f"{tag}_D0", [4, mu2, *external, s, t, *mass * 4])]
+    for i, j, k in combinations(range(4), 3):
+        rows.append((f"{tag}_C0_{i}{j}{k}", [3, mu2, inv(i, j), inv(j, k), inv(k, i), *mass * 3]))
+    for i, j in combinations(range(4), 2):
+        rows.append((f"{tag}_B11_{i}{j}", [6, mu2, inv(i, j), *mass * 2]))
+    for i in range(4):
+        rows.append((f"{tag}_A0_{i}", [1, mu2, *mass]))
+    return rows
+
+
+def diagram_rows(name):
+    higgs = 125.0**2
+    mass = [TOP, 0.0]
+    if name == "hgg":
+        external = [0.0, 0.0, higgs]
+        rows = [("hgg_C0", [3, TOP, *external, *mass * 3])]
+        rows += [(f"hgg_B11_{k}", [6, TOP, external[k], *mass * 2]) for k in range(3)]
+        rows += [(f"hgg_A0_{k}", [1, TOP, *mass]) for k in range(3)]
+        return rows
+    rows = []
+    if name == "aaaa":
+        for root_s in [250.0, 500.0, 1000.0]:
+            s = root_s * root_s
+            for cosine in [0.5, 0.0, -0.7]:
+                t = -s * (1 - cosine) / 2
+                rows += box_rows(f"aaaa_{root_s:g}_{cosine:g}", [0.0] * 4, s, t, 1e4)
+    else:
+        for root_s in [300.0, 400.0, 700.0]:
+            s = root_s * root_s
+            momentum = (s / 4 - higgs) ** 0.5
+            for cosine in [0.6, 0.0, -0.4]:
+                t = higgs - s / 2 + root_s * momentum * cosine
+                rows += box_rows(f"gghh_{root_s:g}_{cosine:g}", [0.0, 0.0, higgs, higgs], s, t, 1e4)
+    return rows
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("set", choices=["tensor", "graph26"])
+    parser.add_argument("set", choices=["tensor", "graph26", "hgg", "aaaa", "gghh"])
     parser.add_argument("--pool")
     args = parser.parse_args()
-    rows = tensor_rows() if args.set == "tensor" else graph26_rows(args.pool)
+    if args.set == "tensor":
+        rows = tensor_rows()
+    elif args.set == "graph26":
+        rows = graph26_rows(args.pool)
+    else:
+        rows = diagram_rows(args.set)
     out = sys.stdout
     out.write(f"# {args.set} benchmark rows: kind mu_squared arguments...\n")
     for name, values in rows:

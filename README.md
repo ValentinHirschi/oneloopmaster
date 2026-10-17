@@ -13,9 +13,11 @@ fixed-binary64 B0/dB0 disagreements. The measured 1.5×-Fortran performance targ
 is also not met across all workloads. See the [native release audit](NATIVE_RELEASE_AUDIT.md)
 and [performance report](performance/2026-09-08-native/README.md). Full scalar parity is not
 established; this is not publication-ready. The [2026-10-17 report](performance/2026-10-17-claude/README.md)
-measures the current binary64 backend: all mixed scalar workloads and the gg → HHH
-top-loop pentagon (1.21–1.24× per point) are within 1.3× of OneLOop Fortran; single
-real timelike D0 rows remain about 2.2×. Known defect: some four-mass real-mass D0
+measures the current binary64 backend: all mixed scalar workloads, the gg → HHH
+top-loop pentagon (1.15–1.24× per point), the gg → HH box and the H → gg triangle
+are within 1.3× of OneLOop Fortran; the γγ → γγ top box is not (1.6–1.7× per
+diagram: its massless-leg D0 about 2.1×, C0 1.8×), and single real timelike D0
+rows remain about 2.2×. Known defect: some four-mass real-mass D0
 rows with `s12 · s23 < 0` have a wrong real part in every evaluation route
 (`tests/native_d0_four_mass_defect.rs`, ignored).
 

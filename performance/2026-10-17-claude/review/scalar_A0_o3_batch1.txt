@@ -1,0 +1,8 @@
+mode	family	name	batch	fortran_ns	native_ns	ratio	status
+SAME	A0	A0_real	1	36.766	43.149	1.1736	PASS
+SAME	A0	A0_negative_axis	1	38.068	42.030	1.1041	PASS
+SAME	A0	A0_complex	1	77.781	56.498	0.7264	PASS
+SAME	A0	A0_scaleless	1	11.124	16.970	1.5255	FAIL
+SAME	A0	A0_complex_mu_0.01	1	76.621	57.228	0.7469	PASS
+SAME	A0	A0_complex_mu_10000	1	77.368	56.726	0.7332	PASS
+HETERO	A0	all	1	55.387	44.669	0.8065	PASS

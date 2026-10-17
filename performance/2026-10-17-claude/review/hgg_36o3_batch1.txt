@@ -1,0 +1,15 @@
+VALUE parity over 7 rows: worst relative difference 2.798e-15 at hgg_C0 output 0
+batch 1: median ns per call (native / Fortran)
+mode    family workload                         Fortran      native   ratio
+ALL     ALL   all                                462.6       287.3   0.621
+              per point                         3238.2      2011.0   0.621
+HETERO  A0    all                                 41.8        35.2   0.842
+HETERO  C0    all                               1484.3      1616.7   1.089
+HETERO  B11   all                                530.4        80.0   0.151
+SAME    A0    hgg_A0_0                            41.6        35.3   0.849
+SAME    A0    hgg_A0_1                            41.6        35.4   0.850
+SAME    A0    hgg_A0_2                            41.6        35.3   0.849
+SAME    C0    hgg_C0                            1489.6      1620.3   1.088
+SAME    B11   hgg_B11_0                           97.9        34.2   0.349
+SAME    B11   hgg_B11_1                           97.7        34.2   0.350
+SAME    B11   hgg_B11_2                         1397.5       164.0   0.117
