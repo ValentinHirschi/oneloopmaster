@@ -17,6 +17,20 @@ original OneLOop Fortran, after the changes on `claude/native-masters`:
    a port of OneLOop's `tadpn`/`bub*` routines (see the
    [README](../../README.md#tensor-coefficients)).
 
+> **Known correctness defect (found after these measurements).** For 15
+> four-mass D0 rows with real masses from the fast-engine bench cases, every
+> route of this crate (symbolic expression at 256 bits, SymJIT, native f64 and
+> 256-bit Float) returns a wrong real part (the imaginary part is right), e.g.
+> a gg → HHH-like `D0(0, 15625, 15625, -3.55e5, -8.11e4, 5.77e5; 173²×4;
+> mu² = 15625)` gives `-5.23e-10` instead of `+1.53e-12`. OneLOop 3.6 and
+> COLLIER (COLI and DD) agree with each other on all of them. Every failing row
+> has `s12 · s23 < 0`, which is not sufficient: the graph26 rows below include
+> such boxes and are correct. The defect is in the D0 expression, not in this
+> branch's primitives (the previous `main` gives the same values), so the
+> timings stand but the binary64 D0 is not validated outside the measured
+> rows. Reproducer: `tests/native_d0_four_mass_defect.rs` (ignored; run with
+> `--include-ignored`).
+
 ## Headline: the gg → HHH top-loop pentagon (graph26)
 
 Per phase-space point, Ninja requests 5 D0, 10 C0, 10 rank-two bubbles

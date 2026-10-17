@@ -15,7 +15,9 @@ and [performance report](performance/2026-09-08-native/README.md). Full scalar p
 established; this is not publication-ready. The [2026-10-17 report](performance/2026-10-17-claude/README.md)
 measures the current binary64 backend: all mixed scalar workloads and the gg → HHH
 top-loop pentagon (1.21–1.24× per point) are within 1.3× of OneLOop Fortran; single
-real timelike D0 rows remain about 2.2×.
+real timelike D0 rows remain about 2.2×. Known defect: some four-mass real-mass D0
+rows with `s12 · s23 < 0` have a wrong real part in every evaluation route
+(`tests/native_d0_four_mass_defect.rs`, ignored).
 
 This work is based on **Andreas van Hameren's OneLOop package**. The original
 algorithms, analytic continuation conventions and Fortran reference results are
