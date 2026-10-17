@@ -55,8 +55,20 @@ pub trait NativeFloat: Real + RealLike + SingleFloat + PartialOrd + Send + Sync 
     }
 
     #[doc(hidden)]
+    #[inline]
+    fn complex_inverse(a: &C<Self>) -> C<Self> {
+        scaled_inverse(a)
+    }
+
+    #[doc(hidden)]
     fn exact_i64(&self) -> Option<i64>;
 }
+
+/// Binary64 magnitudes whose squares neither overflow nor underflow, and for
+/// which the square of the smaller component may only underflow when it is
+/// negligible against the larger one.
+const F64_SAFE_MIN: f64 = 3.054936363499605e-151; // 2^-500
+const F64_SAFE_MAX: f64 = 3.273390607896142e150; // 2^500
 
 impl NativeFloat for f64 {
     const FIXED_BITS: Option<u32> = Some(53);
@@ -84,8 +96,32 @@ impl NativeFloat for f64 {
         } else if *self == 0.0 {
             other.abs()
         } else {
-            f64::hypot(*self, *other)
+            // In the safe range the direct form is within about one ulp,
+            // without libm's rescaling; NaN/Inf and extreme scales keep hypot.
+            let (x, y) = (self.abs(), other.abs());
+            let largest = x.max(y);
+            if largest > F64_SAFE_MIN && largest < F64_SAFE_MAX {
+                (x * x + y * y).sqrt()
+            } else {
+                f64::hypot(*self, *other)
+            }
         }
+    }
+    #[inline]
+    fn complex_inverse(a: &C<Self>) -> C<Self> {
+        // Off the axes and in the safe range, one division replaces the
+        // scaled algorithm's dependent divisions (within about two ulps).
+        // Axes, NaN/Inf (including overflowing intermediates, which must stay
+        // visible) and extreme scales keep the scaled algorithm.
+        let (x, y) = (a.re.abs(), a.im.abs());
+        if x > 0.0 && y > 0.0 {
+            let largest = x.max(y);
+            if largest > F64_SAFE_MIN && largest < F64_SAFE_MAX {
+                let scale = 1.0 / (a.re * a.re + a.im * a.im);
+                return C::new(a.re * scale, -a.im * scale);
+            }
+        }
+        scaled_inverse(a)
     }
     #[inline]
     fn dilog(z: &C<Self>) -> C<Self> {
@@ -263,7 +299,12 @@ fn constant_prototype<T: NativeFloat>(a: &C<T>) -> &T {
     }
 }
 
+#[inline]
 pub(crate) fn inverse<T: NativeFloat>(a: &C<T>) -> C<T> {
+    T::complex_inverse(a)
+}
+
+fn scaled_inverse<T: NativeFloat>(a: &C<T>) -> C<T> {
     // An overflowing intermediate must stay visible to the caller's finite
     // checks: the axis shortcuts would otherwise turn infinity into zero.
     if !a.is_finite() {

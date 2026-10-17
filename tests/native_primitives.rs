@@ -580,3 +580,49 @@ fn native_reciprocal_nonfinite_axes_delegate_to_symbolica() {
     reciprocal_axes::<DoubleFloat>(DoubleFloat::from);
     reciprocal_axes::<Float>(|x| Float::with_val(256, x));
 }
+
+#[test]
+fn native_binary64_reciprocal_and_norm_fast_paths_stay_accurate() {
+    // Off-axis binary64 values in [2^-500, 2^500] use one division for the
+    // reciprocal and sqrt(x²+y²) for the norm; other values keep the scaled
+    // algorithms. Both must stay within a few ulps of a 256-bit reference.
+    const BITS: u32 = 256;
+    let reference_inverse = |z: C<f64>| {
+        let (x, y) = (Float::with_val(BITS, z.re), Float::with_val(BITS, z.im));
+        let norm = x.clone() * &x + y.clone() * &y;
+        (x / &norm, -y / norm)
+    };
+    let mut state = 0x9e37_79b9_7f4a_7c15_u64;
+    let mut next = || {
+        state ^= state << 13;
+        state ^= state >> 7;
+        state ^= state << 17;
+        (state >> 11) as f64 / (1u64 << 53) as f64
+    };
+    let mut points = Vec::new();
+    for _ in 0..20_000 {
+        let magnitude = 2f64.powf(1200. * next() - 600.);
+        let ratio = 2f64.powf(120. * next() - 60.);
+        let signs = [(1., 1.), (-1., 1.), (1., -1.), (-1., -1.)][(4. * next()) as usize % 4];
+        points.push(C::new(signs.0 * magnitude, signs.1 * magnitude * ratio));
+    }
+    points.extend([
+        C::new(1e300, 1e300),
+        C::new(-1e-300, 1e-300),
+        C::new(3e150, 1.0),
+        C::new(3.1e-151, -2e-160),
+    ]);
+    for z in points {
+        let inverse = primitives::inverse(&z);
+        let (re, im) = reference_inverse(z);
+        let scale = re.to_f64().abs().max(im.to_f64().abs());
+        for (value, expected) in [(inverse.re, re), (inverse.im, im)] {
+            let error = (Float::with_val(BITS, value) - expected).norm().to_f64();
+            assert!(error <= 4.0 * f64::EPSILON * scale, "1/{z:?} = {inverse:?}");
+        }
+        let norm = NativeFloat::hypot(&z.re, &z.im);
+        let expected = (Float::with_val(BITS, z.re).pow(2) + Float::with_val(BITS, z.im).pow(2)).sqrt();
+        let error = (Float::with_val(BITS, norm) - &expected).norm().to_f64();
+        assert!(error <= 2.0 * f64::EPSILON * expected.to_f64(), "|{z:?}| = {norm:e}");
+    }
+}
