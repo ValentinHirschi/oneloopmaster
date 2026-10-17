@@ -1,6 +1,6 @@
 //! Scalar primitives used by the generated native expression DAG.
 
-use symbolica::domains::float::{Complex, DoubleFloat, Float, FloatLike, Real, SingleFloat};
+use symbolica::domains::float::{Complex, DoubleFloat, Float, FloatLike, Real, RealLike, SingleFloat};
 
 pub type C<T> = Complex<T>;
 
@@ -19,16 +19,6 @@ fn resolve_dilog<T: symbolica::evaluate::EvaluationDomain>()
     .expect("Symbolica provides complex polylog evaluation")
 }
 
-fn dilog_f64_callback() -> &'static dyn symbolica::evaluate::ExternalFunction<C<f64>> {
-    static CALLBACK: std::sync::OnceLock<Box<dyn symbolica::evaluate::ExternalFunction<C<f64>>>> =
-        std::sync::OnceLock::new();
-    if let Some(callback) = CALLBACK.get() {
-        return callback.as_ref();
-    }
-    let _ = symbolica::get_symbol!("symbolica::polylog");
-    CALLBACK.get_or_init(resolve_dilog).as_ref()
-}
-
 fn dilog_float_callback() -> &'static dyn symbolica::evaluate::ExternalFunction<C<Float>> {
     static CALLBACK: std::sync::OnceLock<Box<dyn symbolica::evaluate::ExternalFunction<C<Float>>>> =
         std::sync::OnceLock::new();
@@ -40,7 +30,7 @@ fn dilog_float_callback() -> &'static dyn symbolica::evaluate::ExternalFunction<
 }
 
 /// A real scalar supported by the native integral evaluator.
-pub trait NativeFloat: Real + SingleFloat + PartialOrd + Send + Sync + 'static {
+pub trait NativeFloat: Real + RealLike + SingleFloat + PartialOrd + Send + Sync + 'static {
     const FIXED_BITS: Option<u32>;
     const DEFAULT_BITS: u32;
 
@@ -97,8 +87,11 @@ impl NativeFloat for f64 {
             f64::hypot(*self, *other)
         }
     }
+    #[inline]
     fn dilog(z: &C<Self>) -> C<Self> {
-        dilog_f64_callback()(std::slice::from_ref(z))
+        // Symbolica's binary64 kernel, also behind its registered polylog(2, z)
+        // callback; calling it directly skips the callback and its lookup.
+        symbolica::transcendental::dilog_complex_f64(*z)
     }
     #[inline]
     fn exact_i64(&self) -> Option<i64> {
@@ -270,7 +263,7 @@ fn constant_prototype<T: NativeFloat>(a: &C<T>) -> &T {
     }
 }
 
-fn inverse<T: NativeFloat>(a: &C<T>) -> C<T> {
+pub(crate) fn inverse<T: NativeFloat>(a: &C<T>) -> C<T> {
     // An overflowing intermediate must stay visible to the caller's finite
     // checks: the axis shortcuts would otherwise turn infinity into zero.
     if !a.is_finite() {

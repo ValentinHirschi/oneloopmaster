@@ -36,7 +36,7 @@ pub use inspection::{
     get_expression_shared_with_options, get_expression_with_options, master_arguments,
     select_branch_shared,
 };
-pub use native::{NativeEvaluator, NativeFloat};
+pub use native::{NativeEvaluator, NativeFloat, NativeTensorEvaluator, TensorIntegral};
 pub use precision::PrecisionEvaluator;
 
 symbolica::initialize!(

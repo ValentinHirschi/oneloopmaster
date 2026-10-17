@@ -51,10 +51,12 @@ of the finite-order evaluators documented below.
 
 The direct Symbolica dependency remains versioned, but the Rust and both Python
 build roots pin Symbolica, Numerica and Graphica to one tested integration through
-`[patch.crates-io]`. The current integration is `2c06f245` from
+`[patch.crates-io]`. The current integration is `28eebf1b` from
 [`ValentinHirschi/symbolica`](https://github.com/ValentinHirschi/symbolica), on
-`codex/oneloopmaster-integration`. Cargo fetches this source automatically; no
-sibling checkout is required for the standalone build.
+`claude/oneloopmaster-integration-dilog`: the previous integration `2c06f245`
+(`codex/oneloopmaster-integration`) plus the binary64 dilogarithm kernel of
+[PR89](https://github.com/symbolica-dev/symbolica/pull/89). Cargo fetches this
+source automatically; no sibling checkout is required for the standalone build.
 
 This integration combines the recursive shared-function Dual support and vector
 branch-scoping repairs with the native polylog-at-zero series needed for the
@@ -475,7 +477,9 @@ parameters are runtime inputs, including
 
 `NativeEvaluator` requires `generated-evaluators` and owns reusable constants
 and a workspace. Its arithmetic runs
-in generated Rust. Dilogarithms use Symbolica's registered polylog callback;
+in generated Rust. Binary64 dilogarithms call Symbolica's
+`transcendental::dilog_complex_f64` kernel directly (no callback lookup, no
+MPFR); `DoubleFloat` and `Float` use Symbolica's registered polylog callback, so
 first use can initialize Symbolica and the requested OneLOop backend. Rational
 constants are converted directly at construction.
 Clones have independent workspaces; batches run the generated scalar function
@@ -494,6 +498,46 @@ let input = [-1., 1., 1., 4.].map(|x| {
 let zero = Complex::new(DoubleFloat::from(0.), DoubleFloat::from(0.));
 let mut output = [zero; 3];
 evaluator.evaluate(&input, &mut output)?;
+```
+
+### Tensor coefficients
+
+`NativeTensorEvaluator<T>` evaluates OneLOop's tensor coefficients together, in
+the same generic domains and with the same batch contract as `NativeEvaluator`
+(row-major input with `mu²` **last and squared**, every row validated before any
+output is written, shape/domain errors leave the output unchanged):
+
+| `TensorIntegral` | Input row | Output row (Laurent triples, in order) | OneLOop routine |
+| --- | --- | --- | --- |
+| `An` | `[m², mu²]` | `A0, A00, A0000` | `olo_an`, rank 4 |
+| `B11` | `[p², m0², m1², mu²]` | `B0, B1, B11` | `olo_b11` (without `B00`) |
+| `B111` | `[p², m0², m1², mu²]` | `B0, B1, B11, B111` | `olo_bn`, rank 3 |
+
+Bubble denominators are `(q²-m0²)((q+p)²-m1²)`, with `q^mu -> p^mu B1` and
+`q^mu q^nu -> g^{mu nu} B00 + p^mu p^nu B11`, in OneLOop's normalization; each
+coefficient is `[finite, 1/epsilon, 1/epsilon²]`. `B11` is what a rank-`n`
+reduction such as Ninja's requests; `B111` serves rank `n+1`, where Ninja's own
+Passarino-Veltman reconstruction divides by `p⁶`.
+
+The arithmetic is a hand-written port of OneLOop's `bub0`-`bub111`, `bnlog`,
+`solabc` and `tadpn` (see [the module](src/native/tensor.rs)): exact zero
+dispatch and explicit real-axis lips replace OneLOop's `EPSN` tolerances and
+`IEPS` regulator, and `log(1-1/x)` is shared by all ranks of a root, with
+OneLOop's logarithmic series of `bnlog` for `|log(1-1/x)| < 1/2`. It needs no
+generated code, so it is available without `generated-evaluators`. The
+[tensor tests](tests/native_tensor.rs) compare all coefficients with original
+OneLOop (366 rows from [the tensor oracle](tests/support/tensor_oracle.f90)), with
+320-bit evaluation, with the exact symbolic `an`/`b0`/`b1`/`b11`/`b111`
+expressions at 256 bits, and with Ninja's rank-three formulas.
+
+```rust,ignore
+use oneloop::{NativeTensorEvaluator, TensorIntegral};
+use symbolica::domains::float::Complex;
+
+let mut bubbles = NativeTensorEvaluator::<f64>::new(TensorIntegral::B11)?;
+let input = [15625., 29929., 29929., 10000.].map(|x| Complex::new(x, 0.));
+let mut output = [Complex::new(0., 0.); 9]; // B0, B1, B11
+bubbles.evaluate(&input, &mut output)?;
 ```
 
 For `NativeEvaluator`, fixed precisions are 53 bits (`f64`) and 106 bits

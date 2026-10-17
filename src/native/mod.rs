@@ -6,6 +6,8 @@
 pub mod batch;
 #[cfg_attr(not(feature = "generated-evaluators"), allow(dead_code))]
 pub mod primitives;
+mod tensor;
+pub use tensor::{NativeTensorEvaluator, TensorIntegral};
 #[cfg(feature = "generated-evaluators")]
 mod simple;
 // The emitter has its own stable formatting and mechanically named SSA locals.

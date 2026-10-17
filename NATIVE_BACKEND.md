@@ -48,10 +48,26 @@ Symbolica as a direct dependency. Complex masses use `Complex<T>`.
 
 The native primitives preserve exact complex zero tests and principal square-root
 and logarithm lips. They avoid converting arbitrary-precision predicates through
-f64. Dilogarithms call the same state-free native Symbolica numerical kernels;
-DoubleFloat's dilogarithm uses a precision-preserving MPFR conversion of both
+f64. Dilogarithms call the same state-free native Symbolica numerical kernels:
+binary64 calls `symbolica::transcendental::dilog_complex_f64` directly (a
+Bernoulli-series kernel with Symbolica's lips and signed zeros, about 2.5 ulp,
+Symbolica PR89), without the registered-callback lookup or MPFR. DoubleFloat's
+dilogarithm uses a precision-preserving MPFR conversion of both
 compensated components, while ordinary generated arithmetic remains DoubleFloat.
 This is not a runtime scalar-master evaluator callback.
+
+## Tensor coefficients
+
+[`tensor.rs`](src/native/tensor.rs) is a hand-written generic port of OneLOop's
+bubble tensor routines (`bub0`-`bub111`, `bnlog`, `solabc`) and `tadpn`, exposed
+as `NativeTensorEvaluator<T>` with `TensorIntegral::{An, B11, B111}`. It is not
+generated from the symbolic expressions: their Passarino-Veltman forms cancel
+like `(m²/p²)^rank` at small momenta, while OneLOop's root-pair representation
+with the logarithmic `bnlog` series stays accurate there. It keeps OneLOop's
+mass ordering and reconstruction, replaces its `10*EPSN` degeneracy tolerances by
+exact zero tests and its `IEPS` regulator by explicit lips, and shares
+`log(1-1/x)` between ranks. Validation and timings are in
+[the 2026-10-17 report](performance/2026-10-17-claude/README.md).
 
 ## Verification and performance gates
 
