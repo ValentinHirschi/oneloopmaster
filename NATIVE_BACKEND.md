@@ -56,9 +56,11 @@ thresholds, the roots, chart choice and root lips of `trif3`, the root lips of
 and the conditioning fixes of `tests/c0_coincident_roots.rs` and
 `tests/d0_tiny_invariant.rs`: the term-wise dilogarithm divided difference of
 `sheet_exact::near_difference`, `log(x)/(1-x)` next to one through
-`log_one_plus_body`, and the contour box's exact coefficient sums; and the
-contour representation for every real-mass three-mass box it supports, and
-its rounding-level double roots, of `tests/d0_real_mass_orderings.rs`).
+`log_one_plus_body`, and the contour box's exact coefficient sums; the
+contour representation for every real-mass three-mass box it supports, of
+`tests/d0_real_mass_orderings.rs`; and the contour box's Källén
+discriminants, massless-end roots, exact line sums and expansion about
+beta = 1 of `tests/d0_contour_thresholds.rs`).
 `tests/native_handwritten.rs` checks them
 against the generated expressions at 256 bits on randomized kinematics and on
 every distinct C0/D0 call of the recorded Ninja benchmark streams

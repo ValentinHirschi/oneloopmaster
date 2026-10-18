@@ -117,7 +117,12 @@ fn mass_directions(m: [Z; 4]) -> [Z; 4] {
 
 #[inline]
 fn continued_root(y: Z, k: Z, l: Z, dl: Z, dn: Z, dn2: Z) -> Cont {
-    let derivative = r(2.0) * k * y + l;
+    continued_root_with_slope(y, r(2.0) * k * y + l, k, dl, dn, dn2)
+}
+
+/// `continued_root` given the slope `2 k y + l` at the root.
+#[inline]
+fn continued_root_with_slope(y: Z, derivative: Z, k: Z, dl: Z, dn: Z, dn2: Z) -> Cont {
     let inv = inverse(&derivative);
     let first = -((dl * y + dn) * inv);
     let second = -((k * first * first + dl * first + dn2) * inv);
@@ -159,6 +164,42 @@ fn principal_sqrt(v: Z) -> Z {
             }
         }
     }
+}
+
+/// `kallen`: λ(p, mi, mj) = (p - (√mi + √mj)²)(p - (√mi - √mj)²), each factor
+/// formed from the invariants (exactly zero at a threshold).
+#[inline]
+fn kallen(p: Z, mi: Z, mj: Z) -> Z {
+    if p.im == 0.0 && mi.im == 0.0 && mj.im == 0.0 && !negative(mi.re) && !negative(mj.re) {
+        // Real masses and invariant: the same operations in real arithmetic.
+        let (p, mi, mj) = (p.re, mi.re, mj.re);
+        let plus = (mi + mj) + 2.0 * (mi * mj).sqrt();
+        let minus = if mj == 0.0 {
+            mi
+        } else if mi == 0.0 {
+            mj
+        } else {
+            (mi - mj) * (mi - mj) / plus
+        };
+        return r((p - plus) * (p - minus));
+    }
+    let plus = (mi + mj) + r(2.0) * principal_sqrt(mi * mj);
+    let minus = if !nz(mj) {
+        mi
+    } else if !nz(mi) {
+        mj
+    } else {
+        let difference = mi - mj;
+        difference * difference * inverse(&plus)
+    };
+    (p - plus) * (p - minus)
+}
+
+/// `edge_kallens`: [λ_a, λ_abc, λ_bc] of a `tfun` conic with corner values
+/// `f`, `q10`, `q11`.
+#[inline]
+fn edge_kallens(a: Z, b: Z, abc: Z, f: Z, q10: Z, q11: Z) -> [Z; 3] {
+    [kallen(a, q10, f), kallen(abc, q11, f), kallen(b, q11, q10)]
 }
 
 /// `root_1`, `root_2` (solabc labels and product relation).
@@ -328,8 +369,13 @@ fn outside_closed_interval(y: Z) -> bool {
     y.im != 0.0 || negative(y.re) || negative(1.0 - y.re)
 }
 
-/// `s3`: the y1, y2 poles are mapped by y -> (d + y)/e.
-fn s3(y1: &Cont, y2: &Cont, d: Z, e: Z, a: Z, b: Z, c: Z, db: Z, dc: Z, k: &Constants<f64>) -> Z {
+/// `s3`: the y1, y2 poles are mapped by y -> (d + y)/e; a quadratic passes
+/// its two-point subgraph `[lambda, p, near, far]` (`Edge`), and a linear
+/// b x + c passes `far` = b + c.
+fn s3(
+    y1: &Cont, y2: &Cont, d: Z, e: Z, a: Z, b: Z, c: Z, db: Z, dc: Z, [lambda, p, near, far]: [Z; 4],
+    k: &Constants<f64>,
+) -> Z {
     if !nz(e) {
         return ZERO;
     }
@@ -344,14 +390,15 @@ fn s3(y1: &Cont, y2: &Cont, d: Z, e: Z, a: Z, b: Z, c: Z, db: Z, dc: Z, k: &Cons
     let y2 = map(y2);
     let fy = r0(&y1, &y2, k);
     let value = if nz(a) {
-        let z0 = -dv(b, r(2.0) * a);
-        // `s3`'s discriminant, zero when it does not change 1024 |b|².
-        let reference = 1024.0 * norm(b);
-        let discriminant = b * b - r(4.0) * a * c;
-        let double = !nz(Z {
-            re: (reference + discriminant.re) - reference,
-            im: discriminant.im,
-        });
+        // A massless end (far = 0 or near = 0) is a root.
+        let z0 = if !nz(far) {
+            ONE
+        } else if !nz(near) {
+            ZERO
+        } else {
+            -dv(b, r(2.0) * a)
+        };
+        let double = !nz(lambda);
         let real_coefficients = a.im == 0.0 && b.im == 0.0 && c.im == 0.0;
         let double_root = double
             && real_coefficients
@@ -363,19 +410,53 @@ fn s3(y1: &Cont, y2: &Cont, d: Z, e: Z, a: Z, b: Z, c: Z, db: Z, dc: Z, k: &Cons
         if double_root {
             s3_double_real(y1.v, y2.v, z0, a, k)
         } else {
-            let [root1, root2] = roots(r(a.re), b, c);
             let rea = sgn(a.re);
-            let mut z1 = continued_root(root1, a, b, db, dc, ZERO);
-            let mut z2 = continued_root(root2, a, b, db, dc, ZERO);
-            if double {
+            let (mut z1, mut z2) = if double {
                 // An exact double root splits like sqrt(eps), one root up and
                 // one down, dominating every first-order shift of y1 and y2.
                 let size = |z: Z| z.re.hypot(z.im);
                 let dominant = 2.0 * (1.0 + size(y1.f) + size(y1.s) + size(y2.f) + size(y2.s));
                 let centre = z0;
-                z1 = Cont { v: centre, f: Z { re: 0.0, im: dominant }, s: ZERO };
-                z2 = Cont { v: centre, f: Z { re: 0.0, im: -dominant }, s: ZERO };
-            }
+                (
+                    Cont { v: centre, f: Z { re: 0.0, im: dominant }, s: ZERO },
+                    Cont { v: centre, f: Z { re: 0.0, im: -dominant }, s: ZERO },
+                )
+            } else if !nz(far) || !nz(near) {
+                // A massless end is a root and the other lies slope/p from it,
+                // with the slope from the invariants; both continue from the
+                // end value's direction.
+                let (end, slope, direction) = if !nz(far) { (ONE, near - p, db + dc) } else { (ZERO, p - far, dc) };
+                let inv_slope = inverse(&slope);
+                let end_first = direction * inv_slope;
+                let near_first = -dv(db, a) - direction * inv_slope;
+                (
+                    Cont {
+                        v: end,
+                        f: end_first,
+                        s: (a * end_first * end_first + db * end_first) * inv_slope,
+                    },
+                    Cont {
+                        v: end + dv(slope, r(p.re)),
+                        f: near_first,
+                        s: dv(near_first * a * direction, slope * slope),
+                    },
+                )
+            } else {
+                // Roots with slopes 2 a z + b = +sqrt(lambda), -sqrt(lambda).
+                let ra = r(a.re);
+                let delta = principal_sqrt(lambda);
+                let plus = -b + delta;
+                let minus = -b - delta;
+                let (root1, root2) = if negative(norm(plus) - norm(minus)) {
+                    (dv(r(2.0) * c, minus), dv(minus, r(2.0) * ra))
+                } else {
+                    (dv(plus, r(2.0) * ra), dv(r(2.0) * c, plus))
+                };
+                (
+                    continued_root_with_slope(root1, delta, a, db, dc, ZERO),
+                    continued_root_with_slope(root2, -delta, a, db, dc, ZERO),
+                )
+            };
             let fallback1 = simc * rea * sgn(z2.v.re);
             let fallback2 = simc * rea * sgn(z1.v.re);
             for (z, fallback) in [(&mut z1, fallback1), (&mut z2, fallback2)] {
@@ -395,7 +476,8 @@ fn s3(y1: &Cont, y2: &Cont, d: Z, e: Z, a: Z, b: Z, c: Z, db: Z, dc: Z, k: &Cons
                 + r1(&z2, &y1, &y2, fy, k)
         }
     } else if nz(b) {
-        let mut z = continued_root(-dv(c, b), ZERO, b, db, dc, ZERO);
+        let root = if nz(far) { -dv(c, b) } else { ONE };
+        let mut z = continued_root(root, ZERO, b, db, dc, ZERO);
         let known = z.v.im != 0.0 || z.f.im != 0.0 || z.s.im != 0.0;
         if !known {
             z.s = Z {
@@ -451,8 +533,15 @@ fn planar(y1: &Cont, y2: &Cont, p1: bool, p2: bool, a: Z, b: Z, c: Z, dc: Z, rea
     }
 }
 
+/// `s3` of a linear `b x + c`, with `far` = b + c.
+#[inline]
+fn s3_linear(y1: &Cont, y2: &Cont, d: Z, e: Z, b: Z, c: Z, dc: Z, far: Z, k: &Constants<f64>) -> Z {
+    s3(y1, y2, d, e, ZERO, b, c, ZERO, dc, [ZERO, ZERO, c, far], k)
+}
+
+/// `t1`; `gh`, `gj`, `ghj` are the line's g + h, g + j, g + h + j.
 fn t1(
-    [a, c, g, h, d, e, f, j, dpe, dd_, de, df, dj, ddpe, ac]: [Z; 15],
+    [a, c, g, h, d, e, f, j, dpe, dd_, de, df, dj, ddpe, ac, lambda_ac, far_ac, lambda_a, far_a, gh, gj, ghj]: [Z; 22],
     k: &Constants<f64>,
 ) -> Z {
     let kk = h * a - c * g;
@@ -464,17 +553,21 @@ fn t1(
     let [r1_, r2_] = roots(kk, l, n);
     let y1 = continued_root(r1_, kk, l, dl, dn, dn2);
     let y2 = continued_root(r2_, kk, l, dl, dn, dn2);
+    let sum = coefficient_sum(&[a, c], ac);
     dv(
-        -s3(&y1, &y2, ZERO, ONE, coefficient_sum(&[a, c], ac), dpe, f, ddpe, df, k)
-            + s3(&y1, &y2, ZERO, ONE, ZERO, g + h, j, ZERO, dj, k)
-            - s3(&y1, &y2, ZERO, ONE, ZERO, g, j, ZERO, dj, k)
-            + s3(&y1, &y2, ZERO, ONE, a, d, f, dd_, df, k),
+        -s3(&y1, &y2, ZERO, ONE, sum, dpe, f, ddpe, df, [lambda_ac, ac, f, far_ac], k)
+            + s3_linear(&y1, &y2, ZERO, ONE, gh, j, dj, ghj, k)
+            - s3_linear(&y1, &y2, ZERO, ONE, g, j, dj, gj, k)
+            + s3(&y1, &y2, ZERO, ONE, a, d, f, dd_, df, [lambda_a, a, f, far_a], k),
         kk,
     )
 }
 
 fn t13(
-    [a, c, g, h, d, e, f, j, dpe, dpj, dpf, dd_, de, df, dj, ddpe, ddpj, ddpf]: [Z; 18],
+    [
+        a, c, g, h, d, e, f, j, dpe, dpj, dpf, dd_, de, df, dj, ddpe, ddpj, ddpf, lambda_ae, lambda_gj,
+        lambda_gh, lambda_ac, far_ae, far_gj, gh, ac,
+    ]: [Z; 26],
     k: &Constants<f64>,
 ) -> Z {
     let kk = h * a - c * g;
@@ -487,10 +580,10 @@ fn t13(
     let y1 = continued_root(r1_, kk, l, dl, dn, dn2);
     let y2 = continued_root(r2_, kk, l, dl, dn, dn2);
     dv(
-        -s3(&y1, &y2, ZERO, ONE, a, e + c, dpf, de, ddpf, k)
-            + s3(&y1, &y2, ZERO, ONE, g, j + h, dpf, dj, ddpf, k)
-            - s3(&y1, &y2, ZERO, ONE, g + h, dpj, f, ddpj, df, k)
-            + s3(&y1, &y2, ZERO, ONE, a + c, dpe, f, ddpe, df, k),
+        -s3(&y1, &y2, ZERO, ONE, a, e + c, dpf, de, ddpf, [lambda_ae, a, dpf, far_ae], k)
+            + s3(&y1, &y2, ZERO, ONE, g, j + h, dpf, dj, ddpf, [lambda_gj, g, dpf, far_gj], k)
+            - s3(&y1, &y2, ZERO, ONE, g + h, dpj, f, ddpj, df, [lambda_gh, gh, f, far_gj], k)
+            + s3(&y1, &y2, ZERO, ONE, a + c, dpe, f, ddpe, df, [lambda_ac, ac, f, far_ae], k),
         kk,
     )
 }
@@ -545,14 +638,20 @@ struct BetaData {
     y: [Cont; 2],
 }
 
-fn beta_data(beta: Z, b: Z, c: Z, g: Z, h: Z, d: Z, e: Z, f: Z, j: Z, dd_: Z, de: Z, df: Z, dj: Z) -> BetaData {
-    let a1 = g + beta * h;
-    let b1 = c + r(2.0) * beta * b;
-    let c1 = d + beta * e;
+/// `beta_data`; `w` is beta - 1, and nearer 1 than 0 the coefficients are
+/// expanded about beta = 1 (`dpe` = d + e, `ddpe` = dd + de).
+fn beta_data(
+    beta: Z, w: Z, b: Z, c: Z, g: Z, h: Z, d: Z, e: Z, f: Z, j: Z, dpe: Z, dd_: Z, de: Z, df: Z,
+    dj: Z, ddpe: Z,
+) -> BetaData {
+    let (a1, b1, c1, dc1) = if negative(norm(w) - norm(beta)) {
+        ((g + h) + w * h, (c + r(2.0) * b) + r(2.0) * w * b, dpe + w * e, ddpe + w * de)
+    } else {
+        (g + beta * h, c + r(2.0) * beta * b, d + beta * e, dd_ + beta * de)
+    };
     let kk = b * a1 - h * b1;
     let l = e * a1 - h * c1 - j * b1;
     let n = f * a1 - j * c1;
-    let dc1 = dd_ + beta * de;
     let dl = de * a1 - h * dc1 - dj * b1;
     let dn = df * a1 - dj * c1 - j * dc1;
     let dn2 = -dj * dc1 - Z { re: 0.0, im: f.re.abs() } * a1;
@@ -590,61 +689,78 @@ fn real_intersections_absent(coefficients: [Z; 9]) -> bool {
     negative(-delta)
 }
 
+/// `tfun_selected`; `w` is beta - 1 and `line` the line's g + h, g + j and
+/// g + h + j.
 fn tfun_selected(
-    a: Z, b: Z, c: Z, g: Z, h: Z, d: Z, e: Z, f: Z, j: Z, dpe: Z, dpf: Z, beta: Z,
-    data: &BetaData, dd_: Z, de: Z, df: Z, dj: Z, ddpe: Z, ddpf: Z, abc: Z, k: &Constants<f64>,
+    a: Z, b: Z, c: Z, g: Z, h: Z, d: Z, e: Z, f: Z, j: Z, dpe: Z, dpf: Z, beta: Z, w: Z,
+    data: &BetaData, dd_: Z, de: Z, df: Z, dj: Z, ddpe: Z, ddpf: Z, abc: Z,
+    [lambda_a, lambda_abc, lambda_bc, q10, q11]: [Z; 5], [gh, gj, ghj]: [Z; 3], k: &Constants<f64>,
 ) -> Z {
     let [y1, y2] = &data.y;
     let p1 = inside(beta, y1);
     let p2 = inside(beta, y2);
-    let integral = s3(y1, y2, beta, ONE, ZERO, h, g + j, ZERO, dj, k)
-        - s3(y1, y2, ZERO, ONE - beta, ZERO, g + h, j, ZERO, dj, k)
-        + s3(y1, y2, ZERO, -beta, ZERO, g, j, ZERO, dj, k)
-        - s3(y1, y2, beta, ONE, b, c + e, a + dpf, de, ddpf, k)
-        + s3(y1, y2, ZERO, ONE - beta, coefficient_sum(&[a, b, c], abc), dpe, f, ddpe, df, k)
-        - s3(y1, y2, ZERO, -beta, a, d, f, dd_, df, k);
+    let sum = coefficient_sum(&[a, b, c], abc);
+    let integral = s3_linear(y1, y2, beta, ONE, h, gj, dj, ghj, k)
+        - s3_linear(y1, y2, ZERO, -w, gh, j, dj, ghj, k)
+        + s3_linear(y1, y2, ZERO, -beta, g, j, dj, gj, k)
+        - s3(y1, y2, beta, ONE, b, c + e, a + dpf, de, ddpf, [lambda_bc, b, q10, q11], k)
+        + s3(y1, y2, ZERO, -w, sum, dpe, f, ddpe, df, [lambda_abc, abc, f, q11], k)
+        - s3(y1, y2, ZERO, -beta, a, d, f, dd_, df, [lambda_a, a, f, q10], k);
     let real = real_intersections_absent([a, b, c, g, h, d, e, f, j]);
     let residue = planar(y1, y2, p1, p2, data.a, data.b, data.c, data.dc, real, k);
     let residue = if negative(0.0 - beta.im) { -residue } else { residue };
     dv(integral + residue, data.k)
 }
 
+/// `tfun`; `edges` holds `[λ_a, λ_abc, λ_bc, q10, q11]` (`edge_kallens` and
+/// the conic's values at the corners (1, 0) and (1, 1)), `line_sums` the
+/// line's g + h, g + j and g + h + j from the invariants.
 fn tfun(
     [a, b, c, gin, hin, d, e, f, jin, dpe, dpf, dd_, de, df, djin, ddpe, ddpf, abc]: [Z; 18],
+    edges: [Z; 5],
+    line_sums: [Z; 3],
     k: &Constants<f64>,
 ) -> Z {
+    let [lambda_a, lambda_abc, lambda_bc, q10, q11] = edges;
     let sj = isign(jin, isign(djin, -1));
     let s = r(-(sj as f64));
     let g = s * gin;
     let h = s * hin;
     let j = s * jin;
     let dj = s * djin;
+    let [gh, gj, ghj] = line_sums.map(|v| s * v);
     let value = if nz(b) {
         if nz(a) {
             let [root1, root2] = roots(b, c, a);
+            // beta - 1, the root nearer 1 from (beta1 - 1)(beta2 - 1) = abc/b.
+            let [o1, o2] = [root1 - ONE, root2 - ONE];
+            let w1 = if negative(norm(o1) - norm(o2)) { dv(abc, b * o2) } else { o1 };
+            let w2 = if negative(norm(o2) - norm(o1)) { dv(abc, b * o1) } else { o2 };
             let swap = negative(norm(root2) - norm(root1));
-            let (beta1, beta2) = if swap { (root2, root1) } else { (root1, root2) };
-            let data1 = beta_data(beta1, b, c, g, h, d, e, f, j, dd_, de, df, dj);
-            let data2 = beta_data(beta2, b, c, g, h, d, e, f, j, dd_, de, df, dj);
+            let ((beta1, w1), (beta2, w2)) = if swap { ((root2, w2), (root1, w1)) } else { ((root1, w1), (root2, w2)) };
+            let data1 = beta_data(beta1, w1, b, c, g, h, d, e, f, j, dpe, dd_, de, df, dj, ddpe);
+            let data2 = beta_data(beta2, w2, b, c, g, h, d, e, f, j, dpe, dd_, de, df, dj, ddpe);
             let min = |x: f64, y: f64| if negative(x - y) { x } else { y };
             let d1 = min(distance(beta1, &data1.y[0]), distance(beta1, &data1.y[1]));
             let d2 = min(distance(beta2, &data2.y[0]), distance(beta2, &data2.y[1]));
             let use_first = if d1 - 1.0 != 0.0 { negative(d2 - d1) } else { true };
-            let (beta, data) = if use_first { (beta1, data1) } else { (beta2, data2) };
-            tfun_selected(a, b, c, g, h, d, e, f, j, dpe, dpf, beta, &data, dd_, de, df, dj, ddpe, ddpf, abc, k)
+            let (beta, w, data) = if use_first { (beta1, w1, data1) } else { (beta2, w2, data2) };
+            tfun_selected(a, b, c, g, h, d, e, f, j, dpe, dpf, beta, w, &data, dd_, de, df, dj, ddpe, ddpf, abc, edges, [gh, gj, ghj], k)
         } else {
-            // a = 0: b + c = abc, and the new a + c is b.
+            // a = 0: b + c = abc, and the new a + c is b. The new conic takes
+            // the values q11, q10 and f at the corners (0, 0), (1, 0), (1, 1),
+            // and the new line (-g - h, g, g + h + j) the sums -h, j, g + j.
             let bc = coefficient_sum(&[b, c], abc);
             t1(
                 [
                     bc,
                     -c,
-                    -g - h,
+                    -gh,
                     g,
                     -dpe - r(2.0) * bc,
                     d + c,
-                    dpe + bc + f,
-                    g + h + j,
+                    q11,
+                    ghj,
                     -e - r(2.0) * b - c,
                     -ddpe,
                     dd_,
@@ -652,13 +768,23 @@ fn tfun(
                     dj,
                     -de,
                     b,
+                    lambda_bc,
+                    q10,
+                    lambda_abc,
+                    f,
+                    -h,
+                    j,
+                    gj,
                 ],
                 k,
             )
         }
     } else {
         // b = 0: a + c = abc.
-        t1([a, c, g, h, d, e, f, j, dpe, dd_, de, df, dj, ddpe, abc], k)
+        t1(
+            [a, c, g, h, d, e, f, j, dpe, dd_, de, df, dj, ddpe, abc, lambda_abc, q11, lambda_a, q10, gh, gj, ghj],
+            k,
+        )
     };
     -(r(sj as f64) * value)
 }
@@ -694,6 +820,8 @@ fn opposite_chart(p: [Z; 6], m: [Z; 4], k: &Constants<f64>) -> Z {
     let dpe = m[0] - m[3] - p[3];
     let dpk = m[1] - m[3] - p[5];
     let dpf = m[2] - p[2];
+    let far_ae = m[0] - p[0] - p[2];
+    let far_gk = m[1] - p[2];
     t13(
         [
             a,
@@ -714,6 +842,15 @@ fn opposite_chart(p: [Z; 6], m: [Z; 4], k: &Constants<f64>) -> Z {
             dm[0] - dm[3],
             dm[1] - dm[3],
             dm[2],
+            kallen(a, dpf, far_ae),
+            kallen(g, dpf, far_gk),
+            // g + h and a + c, simplified as in the expression.
+            kallen(p[5] - p[2], f, far_gk),
+            kallen(p[3] - p[0] - p[2], f, far_ae),
+            far_ae,
+            far_gk,
+            p[5] - p[2],
+            p[3] - p[0] - p[2],
         ],
         k,
     )
@@ -759,6 +896,15 @@ fn zero_external(p: [Z; 6], m: [Z; 4], k: &Constants<f64>) -> Z {
     let epk = m[0] - m[2] + p[2] - p[3];
     let dek = m[0] - m[3] - p[3];
     let dpf = m[2] - p[2];
+    let [lambda_a, lambda_abc, lambda_bc] = edge_kallens(a, b, p[5], f, m[2], m[1]);
+    // b + j, a + b + j + cph and the conic at (1, 1), simplified as in the
+    // expression.
+    let bj = p[4] - p[0];
+    let corner = m[0] - p[0];
+    let lambda_abj = kallen(p[3] - p[0], corner, f);
+    let lambda_bj = kallen(bj, corner, m[2]);
+    // The line (h, j, kk): h + j, h + kk and h + j + kk.
+    let line = [p[3] - p[5] - p[0], m[0] - m[1] + p[1] - p[4], m[0] - m[1] - p[0]];
     tfun(
         [
             a,
@@ -781,11 +927,13 @@ fn zero_external(p: [Z; 6], m: [Z; 4], k: &Constants<f64>) -> Z {
             // a + b + c, simplified as in the expression.
             p[5],
         ],
+        [lambda_a, lambda_abc, lambda_bc, m[2], m[1]],
+        line,
         k,
     ) - tfun(
         [
             a,
-            b + j,
+            bj,
             cph,
             h,
             j,
@@ -803,6 +951,8 @@ fn zero_external(p: [Z; 6], m: [Z; 4], k: &Constants<f64>) -> Z {
             dm[2],
             p[3] - p[0],
         ],
+        [lambda_a, lambda_abj, lambda_bj, m[2], corner],
+        line,
         k,
     )
 }
@@ -834,13 +984,25 @@ fn ordered(p: [Z; 6], m: [Z; 4], k: &Constants<f64>) -> Z {
     let j1 = j + r(2.0) * g * alpha;
     let e1 = e + kk * alpha;
     let de1 = dm[1] - dm[2] + (dm[0] - dm[1]) * alpha;
+    // The six Källén functions of the box (`edge_kallens` of the three tfun).
+    let l01 = kallen(p[0], m[0], m[1]);
+    let l12 = kallen(p[1], m[1], m[2]);
+    let l23 = kallen(p[2], m[2], m[3]);
+    let l03 = kallen(p[3], m[0], m[3]);
+    let l02 = kallen(p[4], m[0], m[2]);
+    let l13 = kallen(p[5], m[1], m[3]);
+    // The lines and their coefficient sums (g + h, g + j, g + h + j).
+    let sums = |[g, h, j]: [Z; 3]| [g + h, g + j, (g + h) + j];
+    let line1 = [c + r(2.0) * b + (h + j) * alpha, j1, e1];
+    let line2 = [c + h * alpha, o1 * j1, e1];
+    let line3 = [c + h * alpha, -j1 * alpha, e1];
     -tfun(
         [
             abc,
             g,
             jph,
-            c + r(2.0) * b + (h + j) * alpha,
-            j1,
+            line1[0],
+            line1[1],
             dpe,
             kk,
             f,
@@ -855,6 +1017,8 @@ fn ordered(p: [Z; 6], m: [Z; 4], k: &Constants<f64>) -> Z {
             dm[1],
             p[3],
         ],
+        [l13, l03, l01, m[1], m[0]],
+        sums(line1),
         k,
     ) + o1
         * tfun(
@@ -862,8 +1026,8 @@ fn ordered(p: [Z; 6], m: [Z; 4], k: &Constants<f64>) -> Z {
                 a,
                 bgj,
                 cph,
-                c + h * alpha,
-                o1 * j1,
+                line2[0],
+                line2[1],
                 d,
                 epk,
                 f,
@@ -878,6 +1042,8 @@ fn ordered(p: [Z; 6], m: [Z; 4], k: &Constants<f64>) -> Z {
                 dm[2],
                 p[3],
             ],
+            [l23, l03, l02, m[2], m[0]],
+            sums(line2),
             k,
         )
         + alpha
@@ -886,8 +1052,8 @@ fn ordered(p: [Z; 6], m: [Z; 4], k: &Constants<f64>) -> Z {
                     a,
                     b,
                     c,
-                    c + h * alpha,
-                    -j1 * alpha,
+                    line3[0],
+                    line3[1],
                     d,
                     e,
                     f,
@@ -902,6 +1068,8 @@ fn ordered(p: [Z; 6], m: [Z; 4], k: &Constants<f64>) -> Z {
                     dm[2],
                     p[5],
                 ],
+                [l23, l13, l12, m[2], m[1]],
+                sums(line3),
                 k,
             )
 }
@@ -1219,13 +1387,32 @@ mod expression_tests {
             compare("root_2", 3, 3000, 0, |x| roots(x[0], x[1], x[2])[1], &any(3));
             compare("r0", 6, 3000, 0, |x| r0(&cont(&x[0..3]), &cont(&x[3..6]), &c), &any(6));
             compare("r1", 10, 3000, 0, |x| r1(&cont(&x[0..3]), &cont(&x[3..6]), &cont(&x[6..9]), x[9], &c), &any(10));
+            compare("kallen", 3, 3000, 0, |x| kallen(x[0], x[1], x[2]), &any(3));
+            // A quadratic's two-point subgraph [lambda, p, near, far]; often a
+            // massless end. `s3` takes the roots of re(a) x² + b x + c (a is real
+            // for every edge of the box), so lambda is their discriminant.
             compare(
                 "s3",
-                13,
+                17,
                 3000,
                 0,
-                |x| s3(&cont(&x[0..3]), &cont(&x[3..6]), x[6], x[7], x[8], x[9], x[10], x[11], x[12], &c),
-                &any(13),
+                |x| {
+                    let edge = [x[13], x[14], x[15], x[16]];
+                    s3(&cont(&x[0..3]), &cont(&x[3..6]), x[6], x[7], x[8], x[9], x[10], x[11], x[12], edge, &c)
+                },
+                &|rng: &mut Rng| {
+                    let mut x = any(13)(rng);
+                    let (a, b) = (x[8], x[9]);
+                    let end = rng.below(4);
+                    if end == 0 {
+                        x[10] = -(a + b);
+                    } else if end == 1 {
+                        x[10] = ZERO;
+                    }
+                    let c = x[10];
+                    x.extend([b * b - r(4.0) * r(a.re) * c, a, c, if end == 0 { ZERO } else { a + b + c }]);
+                    x
+                },
             );
             compare(
                 "planar",
@@ -1241,15 +1428,40 @@ mod expression_tests {
                     x
                 },
             );
-            // The last argument is `a + c`, which the callers form exactly; the
-            // first 14 keep the random stream of the 14-argument comparison.
+            // `a + c` and the discriminants and values at x = 1 of the edge
+            // quadratics, which the callers form exactly; the first 14 keep the
+            // random stream of the 14-argument comparison.
             let stream = std::cell::RefCell::new(Rng(0x9e3779b97f4a7c15 ^ 14));
-            compare("t1", 15, 1500, 0, |x| t1(core::array::from_fn(|i| x[i]), &c), &|_| {
+            compare("t1", 22, 1500, 0, |x| t1(core::array::from_fn(|i| x[i]), &c), &|_| {
                 let mut x = any(14)(&mut stream.borrow_mut());
-                x.push(x[0] + x[1]);
+                let [a, c, g, h, d, f, j, dpe] = [x[0], x[1], x[2], x[3], x[4], x[6], x[7], x[8]];
+                let ac = a + c;
+                x.extend([ac, dpe * dpe - r(4.0) * r(ac.re) * f, ac + dpe + f, d * d - r(4.0) * r(a.re) * f, a + d + f]);
+                x.extend([g + h, g + j, g + h + j]);
                 x
             });
-            compare("t13", 18, 1500, 0, |x| t13(core::array::from_fn(|i| x[i]), &c), &any(18));
+            compare("t13", 26, 1500, 0, |x| t13(core::array::from_fn(|i| x[i]), &c), &|rng: &mut Rng| {
+                let mut x = any(18)(rng);
+                let [a, c, g, h, e, f, j, dpf] = [x[0], x[1], x[2], x[3], x[5], x[6], x[7], x[10]];
+                let far_ae = a + e + c + dpf;
+                let far_gj = g + j + h + dpf;
+                // dpe and dpj consistent with the conic's corner values.
+                let dpe = far_ae - a - c - f;
+                let dpj = far_gj - g - h - f;
+                x[8] = dpe;
+                x[9] = dpj;
+                x.extend([
+                    (e + c) * (e + c) - r(4.0) * r(a.re) * dpf,
+                    (j + h) * (j + h) - r(4.0) * r(g.re) * dpf,
+                    dpj * dpj - r(4.0) * r((g + h).re) * f,
+                    dpe * dpe - r(4.0) * r((a + c).re) * f,
+                    far_ae,
+                    far_gj,
+                    g + h,
+                    a + c,
+                ]);
+                x
+            });
             // Physical structure: real momentum combinations, masses with
             // nonpositive widths, imaginary infinitesimal directions.
             let _structured = |rng: &mut Rng| {

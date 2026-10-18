@@ -53,24 +53,38 @@ explicit resource limits; see [expression inspection](README.md#combining-integr
   supplied to the callback, including `mu_squared`. Transparent function-map compilation
   remains available and avoids making the master opaque to an outer optimizer.
 
-- Two expression branches depend on the working precision. The dilogarithm
+- One expression branch depends on the working precision: the dilogarithm
   divided difference of nearly coincident arguments (`sheet_exact::near_difference`)
   uses a Bernoulli expansion through `s^22` only when its first omitted term,
   bounded by `8 (max|s|²/39)^12`, leaves `1` unchanged at the working precision
   (`(1 + bound) - 1 == 0`). That holds throughout in binary64, but at 256 bits
   only for `|s| < 3e-3`; otherwise the direct difference is used, whose loss
   stays in the tracked precision. DoubleFloat represents `1 + bound` exactly and
-  keeps the direct difference. The contour box's `s3` takes its double-root
-  forms when the discriminant `b² - 4ac` leaves `1024 |b|²` unchanged
-  (`(1024 |b|² + disc) - 1024 |b|² == 0`): at a pseudo-threshold next to a
-  massless line (an external invariant equal to its massive neighbour's mass)
-  the root is analytically double, but rounded coefficients leave a
-  discriminant of rounding size whose square root cost binary64 8 to 10 digits
-  (5.6 with a vanishing channel). Exactly and nearly on-shell inputs now keep
-  14 to 15 digits; invariants 3e-8 to 5e-7 (relative) from such a threshold keep
-  6.5 instead of 8, as the collapsed roots lose their true separation. Exact
-  Källén discriminants would remove both. At 128 bits and more such inputs give
-  exact zeros. Every other branch is an exact test.
+  keeps the direct difference. Every other branch is an exact test.
+- Each quadratic of the contour box's `s3` is the Feynman polynomial of a
+  two-point subgraph, `p x² + (mi - mj - p) x + mj`: its discriminant is the
+  Källén function `λ(p, mi, mj)` and its values at the ends of the
+  integration are the masses. The callers pass `λ` formed from the invariants
+  as `(p - (√mi + √mj)²)(p - (√mi - √mj)²)` and the mass at the far end. A
+  pseudo-threshold next to a massless line (an external invariant equal to
+  its massive neighbour's mass, `λ = (p - mi)²`) is then an exact double root,
+  and next to it the roots keep their separation `sqrt(λ)/p` and the signs of
+  their slopes `±sqrt(λ)`; a massless end is an exact root 0 or 1. Formed
+  from rounded coefficients, the discriminant kept a residue of rounding
+  size there whose square root cost binary64 8 to 10 digits; collapsing it
+  within rounding cost the separation instead (up to 3e-7 at 5e-7 from the
+  threshold). Binary64 now keeps 1e-14 on both sides
+  (`tests/d0_contour_thresholds.rs`). Within an ulp of such a threshold the
+  second root rounds onto the massless end, so both roots take their slopes
+  and continuations from the exact end values. The contour line's coefficient
+  sums (`g + h`, `g + j`, `g + h + j`) are formed from the invariants too: a
+  vanishing one is an exactly vanishing linear coefficient or an exact root at
+  an end (with `p4² = s23` in the zero-external chart the rounded `g + h` was
+  1e-16, put a root at 1e15 and made one of two equivalent contours O(1)
+  wrong in binary64). A small invariant `a + b + c` also puts a root `beta` of
+  the chart's `b beta² + c beta + a` next to 1, where `d + beta e` and the
+  like cancel; nearer 1 than 0 the chart coefficients use `beta - 1` from the
+  product of the roots (`box_complex::beta_data`).
 - `Float` tracks a difference with the bits left after its cancellation and
   computes later operations at that precision, even when the difference is
   exact. Coefficients that are invariants (`m2 - m3 - p2` for equal masses, or

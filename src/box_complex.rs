@@ -63,6 +63,50 @@ fn coefficient_sum(terms: &[&Atom], exact: &Atom) -> Atom {
     if_nonzero_else(&cancels, exact.clone(), numeric)
 }
 
+/// The Källén function `λ(p, mi, mj) = (p - (√mi + √mj)²)(p - (√mi - √mj)²)`,
+/// the discriminant of the edge quadratic `p x² + (mi - mj - p) x + mj` (and
+/// of `p x² + (mj - mi - p) x + mi`, the same edge from its other end).
+///
+/// Each factor is formed from the invariants: at a threshold or
+/// pseudo-threshold it vanishes exactly, and next to one it keeps the
+/// distance to it. The discriminant of the rounded edge coefficients instead
+/// leaves a rounding residue there, whose square root moves the roots by
+/// sqrt(eps). With a massless line (`mj = 0`) both thresholds are `mi` itself.
+fn kallen([p, mi, mj]: [&Atom; 3]) -> Atom {
+    let plus = grouped(&in_order(&[
+        mi.clone(),
+        mj.clone(),
+        Atom::num(2) * principal_sqrt(&(mi * mj)),
+    ]));
+    let difference = grouped(&(mi - mj));
+    // (√mi - √mj)² = (mi - mj)²/(√mi + √mj)², without cancellation.
+    let minus = if_nonzero_else(
+        mj,
+        if_nonzero_else(mi, &difference * &difference / &plus, mj.clone()),
+        mi.clone(),
+    );
+    grouped(&(p - &plus)) * grouped(&(p - minus))
+}
+
+fn kallen_call(p: &Atom, mi: &Atom, mj: &Atom) -> Atom {
+    call("kallen", [p, mi, mj])
+}
+
+/// `[λ_a, λ_abc, λ_bc]`: the discriminants of the edge quadratics of the
+/// conic `a x² + b y² + c x y + d x + e y + f` on the triangle `tfun`
+/// integrates over: `(a, d, f)` on `y = 0`, `(a + b + c, d + e, f)` on `y = x`
+/// and `(b, c + e, a + d + f)` on `x = 1`. The conic takes the values `f`,
+/// `q10` and `q11` (masses) at the corners (0, 0), (1, 0) and (1, 1), and
+/// `abc` is `a + b + c`; the caller forms all of them from the invariants
+/// they stand for.
+fn edge_kallens(a: &Atom, b: &Atom, abc: &Atom, f: &Atom, q10: &Atom, q11: &Atom) -> [Atom; 3] {
+    [
+        kallen_call(a, q10, f),
+        kallen_call(abc, q11, f),
+        kallen_call(b, q11, q10),
+    ]
+}
+
 fn imaginary_sign(z: &Atom, fallback: &Atom) -> Atom {
     let imaginary = im(z);
     if_nonzero_else(&imaginary, sign_nonnegative(&imaginary), fallback.clone())
@@ -126,11 +170,23 @@ fn mass_directions(m: [&Atom; 4]) -> [Atom; 4] {
 }
 
 fn continued_root(y: Atom, k: &Atom, l: &Atom, dl: &Atom, dn: &Atom, dn2: &Atom) -> Continued {
+    let derivative = Atom::num(2) * k * &y + l;
+    continued_root_with_slope(y, derivative, k, dl, dn, dn2)
+}
+
+/// [continued_root] given the slope `2 K y + L` of the polynomial at its root.
+fn continued_root_with_slope(
+    y: Atom,
+    derivative: Atom,
+    k: &Atom,
+    dl: &Atom,
+    dn: &Atom,
+    dn2: &Atom,
+) -> Continued {
     // Insert y + eps*y' + eps^2*y'' into K*y^2+L*y+N=0. The source
     // has mass widths at order EPSN and its explicit -IEPS*abs(Re f)
     // at order EPSN^2. Retaining both coefficients fixes cancellations
     // between equal mass widths without ever choosing a finite epsilon.
-    let derivative = Atom::num(2) * k * &y + l;
     let first = -(dl * &y + dn) / &derivative;
     let second = -(k * &first * &first + dl * &first + dn2) / derivative;
     Continued {
@@ -159,6 +215,17 @@ fn r1_call(z: &Continued, y1: &Continued, y2: &Continued, fy: &Atom) -> Atom {
     )
 }
 
+/// The two-point subgraph whose Feynman polynomial `p x² + (far - near - p) x
+/// + near` an edge quadratic `a x² + b x + c` of `s3` is, from the invariants:
+/// `lambda = λ(p, near, far)` (see [kallen]), `p` (`a`), and the masses
+/// `near` (`c`, at x = 0) and `far` (`a + b + c`, at x = 1).
+struct Edge<'a> {
+    lambda: &'a Atom,
+    p: &'a Atom,
+    near: &'a Atom,
+    far: &'a Atom,
+}
+
 fn s3_call(
     y1: &Continued,
     y2: &Continued,
@@ -169,14 +236,36 @@ fn s3_call(
     c: &Atom,
     db: &Atom,
     dc: &Atom,
+    edge: Edge,
 ) -> Atom {
     call(
         "s3",
         [
             &y1.value, &y1.first, &y1.second, &y2.value, &y2.first, &y2.second, d, e, a, b, c, db,
-            dc,
+            dc, edge.lambda, edge.p, edge.near, edge.far,
         ],
     )
+}
+
+/// [s3_call] for a linear `b x + c`, with `far = b + c`.
+fn s3_linear_call(
+    y1: &Continued,
+    y2: &Continued,
+    d: &Atom,
+    e: &Atom,
+    b: &Atom,
+    c: &Atom,
+    dc: &Atom,
+    far: &Atom,
+) -> Atom {
+    let zero = Atom::num(0);
+    let edge = Edge {
+        lambda: &zero,
+        p: &zero,
+        near: c,
+        far,
+    };
+    s3_call(y1, y2, d, e, &zero, b, c, &zero, dc, edge)
 }
 
 fn eta(a: &Atom, sa: &Atom, b: &Atom, sb: &Atom, c: &Atom, sc: &Atom) -> Atom {
@@ -359,10 +448,21 @@ fn outside_closed_interval(y: &Atom) -> Atom {
     )
 }
 
-fn s3(x: [&Atom; 13]) -> Atom {
+/// The integral over `x` in (0, 1) of `log(a x² + b x + c)` against the poles
+/// `y1, y2` mapped by `y -> (d + y)/e`.
+///
+/// Each quadratic (`a` nonzero) is the Feynman polynomial of a two-point
+/// subgraph, which the caller passes from the invariants (see [Edge]): its
+/// discriminant `lambda = λ(p, near, far)` ([kallen]), `p` and the masses
+/// `near` and `far` at x = 0 and x = 1. An exact double root is then decided exactly,
+/// next to one the roots keep their separation `sqrt(lambda)/a` and the signs
+/// of their slopes `2 a z + b = ±sqrt(lambda)`, and a massless end is an
+/// exact root. A linear `b x + c` passes `far = b + c`.
+fn s3(x: [&Atom; 17]) -> Atom {
     let mut y1 = Continued::from_args([x[0], x[1], x[2]]);
     let mut y2 = Continued::from_args([x[3], x[4], x[5]]);
     let [d, e, a, b, c, db, dc] = [x[6], x[7], x[8], x[9], x[10], x[11], x[12]];
+    let [lambda, p, near, far] = [x[13], x[14], x[15], x[16]];
     let minus_one = Atom::num(-1);
     let simc = imaginary_sign(
         c,
@@ -374,37 +474,68 @@ fn s3(x: [&Atom; 13]) -> Atom {
         y.second = &y.second / e;
     }
     let fy = r0_call(&y1, &y2);
-    let [root1, root2] = roots(&re(a), b, c);
-    let rea = sign_nonnegative(&re(a));
-    let mut z1 = continued_root(root1, a, b, db, dc, &Atom::num(0));
-    let mut z2 = continued_root(root2, a, b, db, dc, &Atom::num(0));
-    // The discriminant, or zero when it does not change 1024 |b|² at the
-    // working precision. At a pseudo-threshold next to a massless line (an
-    // external invariant equal to its massive neighbour's mass) the root is
-    // analytically double, but the rounded coefficients leave a discriminant
-    // of rounding size whose square root moves the roots by sqrt(eps): the
-    // binary64 box lost 8 to 10 digits there (and 5.6 digits with a vanishing
-    // channel). Taking the double-root forms instead costs the separation of
-    // the true roots: nothing at the threshold and up to 3e-7 for invariants
-    // 3e-8 to 5e-7 (relative) away from it, where binary64 kept 1e-8 before.
-    // At 128 bits and more such inputs give exact zeros; DoubleFloat keeps
-    // the discriminant exactly and decides as before.
-    let reference = Atom::num(1024) * re(&norm(b));
-    let discriminant =
-        grouped(&(&reference + (b * b - Atom::num(4) * a * c))) - &reference;
+    let ra = re(a);
+    let rea = sign_nonnegative(&ra);
+    // solabc's roots with sqrt(lambda): the first has slope 2 a z + b equal
+    // to +sqrt(lambda), the second -sqrt(lambda). The continuation of a root
+    // follows the sign of its slope, which next to a double root the rounded
+    // coefficients no longer resolve.
+    let delta = principal_sqrt(lambda);
+    let plus = -b + &delta;
+    let minus = -b - &delta;
+    let swap = less(&norm(&plus), &norm(&minus));
+    let two_a = Atom::num(2) * &ra;
+    let upper = if_nonzero_else(&swap, Atom::num(2) * c / &minus, &plus / &two_a);
+    let lower = if_nonzero_else(&swap, &minus / &two_a, Atom::num(2) * c / &plus);
+    let zero = Atom::num(0);
+    let general1 = continued_root_with_slope(upper, delta.clone(), a, db, dc, &zero);
+    let general2 = continued_root_with_slope(lower, -&delta, a, db, dc, &zero);
+    // A massless end (near = 0 at x = 0, or far = 0 at x = 1) is a root, and
+    // the other root lies `slope/p` from it, with the slope 2 a z + b there
+    // (p - far, or near - p), exact from the invariants. Next to a
+    // pseudo-threshold that root rounds onto the end, and the rounded
+    // coefficients no longer give the sign of its slope, nor its first-order
+    // numerator db z + dc, which then cancels to rounding (db end + dc is the
+    // end value's direction, zero for a massless line): both roots continue
+    // from the end value instead.
+    let at_end = |general: Atom, zero_near: Atom, zero_far: Atom| {
+        if_nonzero_else(far, if_nonzero_else(near, general, zero_near), zero_far)
+    };
+    let end = at_end(zero.clone(), zero.clone(), Atom::num(1));
+    let slope = if_nonzero_else(far, p - far, near - p);
+    let direction = if_nonzero_else(far, dc.clone(), db + dc);
+    let end_first = &direction / &slope;
+    let end_root = Continued {
+        value: end.clone(),
+        first: end_first.clone(),
+        second: (a * &end_first * &end_first + db * &end_first) / &slope,
+    };
+    let near_first = -db / a - &direction / &slope;
+    let near_root = Continued {
+        value: &end + &slope / re(p),
+        first: near_first.clone(),
+        second: &near_first * a * &direction / (&slope * &slope),
+    };
+    let pick = |general: Continued, special: Continued| Continued {
+        value: at_end(general.value, special.value.clone(), special.value),
+        first: at_end(general.first, special.first.clone(), special.first),
+        second: at_end(general.second, special.second.clone(), special.second),
+    };
+    let mut z1 = pick(general1, end_root);
+    let mut z2 = pick(general2, near_root);
     // An exact double root has no first-order continuation (2 a z + b = 0).
     // Infinitesimal widths split it like sqrt(eps): one root moves up and
     // the other down, which dominates every first-order shift. Only the
     // signs are used, so encode the split as a first-order direction that
     // exceeds those of the poles y1, y2 it is combined with.
-    let double = if_nonzero_else(&discriminant, Atom::num(0), if_nonzero(a, Atom::num(1)));
+    let double = if_nonzero_else(lambda, Atom::num(0), if_nonzero(a, Atom::num(1)));
     let dominant = Atom::num(2)
         * (Atom::num(1)
             + [&y1.first, &y1.second, &y2.first, &y2.second]
                 .into_iter()
                 .fold(Atom::num(0), |sum, v| sum + Symbol::ABS.call((v,))));
-    // Both roots are -b/(2a) there, exactly.
-    let z0 = -b / (Atom::num(2) * a);
+    // Both roots are -b/(2a) there, or the massless end.
+    let z0 = at_end(-b / (Atom::num(2) * a), Atom::num(0), Atom::num(1));
     let centre = z0.clone();
     for (z, direction) in [(&mut z1, Atom::num(1)), (&mut z2, Atom::num(-1))] {
         z.value = if_nonzero_else(&double, centre.clone(), z.value.clone());
@@ -440,7 +571,7 @@ fn s3(x: [&Atom; 13]) -> Atom {
     let interior_z = negative(&(-re(&z0))) * negative(&(re(&z0) - 1));
     let regular_poles = outside_closed_interval(&y1.value) * outside_closed_interval(&y2.value);
     let double_root = if_nonzero_else(
-        &discriminant,
+        lambda,
         Atom::num(0),
         real_coefficients * positive_a * interior_z * regular_poles,
     );
@@ -449,7 +580,14 @@ fn s3(x: [&Atom; 13]) -> Atom {
         call("s3_double_real", [&y1.value, &y2.value, &z0, a]),
         ordinary_quadratic,
     );
-    let mut z = continued_root(-c / b, &Atom::num(0), b, db, dc, &Atom::num(0));
+    let mut z = continued_root(
+        if_nonzero_else(far, -c / b, Atom::num(1)),
+        &zero,
+        b,
+        db,
+        dc,
+        &zero,
+    );
     let known = any_nonzero([im(&z.value), im(&z.first), im(&z.second)]);
     z.second = if_nonzero_else(
         &known,
@@ -506,8 +644,36 @@ fn planar(x: [&Atom; 13]) -> Atom {
 }
 
 /// `ac` is `a + c`, formed by the caller from the invariants it stands for
-/// (see [coefficient_sum]).
-fn t1([a, c, g, h, d, e, f, j, dpe, dd, de, df, dj, ddpe, ac]: [&Atom; 15]) -> Atom {
+/// (see [coefficient_sum]). The edge quadratics `(a + c, dpe, f)` and
+/// `(a, d, f)` have the discriminants `lambda_ac`, `lambda_a` and the values
+/// `far_ac`, `far_a` at x = 1 (see [Edge]); `gh`, `gj` and `ghj` are the
+/// line's `g + h`, `g + j` and `g + h + j` (see [tfun]).
+fn t1(
+    [
+        a,
+        c,
+        g,
+        h,
+        d,
+        e,
+        f,
+        j,
+        dpe,
+        dd,
+        de,
+        df,
+        dj,
+        ddpe,
+        ac,
+        lambda_ac,
+        far_ac,
+        lambda_a,
+        far_a,
+        gh,
+        gj,
+        ghj,
+    ]: [&Atom; 22],
+) -> Atom {
     let k = h * a - c * g;
     let l = h * d - c * j - e * g;
     let n = h * f - e * j;
@@ -517,13 +683,29 @@ fn t1([a, c, g, h, d, e, f, j, dpe, dd, de, df, dj, ddpe, ac]: [&Atom; 15]) -> A
     let [y1, y2] = roots(&k, &l, &n).map(|y| continued_root(y, &k, &l, &dl, &dn, &dn2));
     let zero = Atom::num(0);
     let one = Atom::num(1);
-    (-s3_call(&y1, &y2, &zero, &one, &coefficient_sum(&[a, c], ac), dpe, f, ddpe, df)
-        + s3_call(&y1, &y2, &zero, &one, &zero, &(g + h), j, &zero, dj)
-        - s3_call(&y1, &y2, &zero, &one, &zero, g, j, &zero, dj)
-        + s3_call(&y1, &y2, &zero, &one, a, d, f, dd, df))
+    let sum = coefficient_sum(&[a, c], ac);
+    let edge_ac = Edge {
+        lambda: lambda_ac,
+        p: ac,
+        near: f,
+        far: far_ac,
+    };
+    let edge_a = Edge {
+        lambda: lambda_a,
+        p: a,
+        near: f,
+        far: far_a,
+    };
+    (-s3_call(&y1, &y2, &zero, &one, &sum, dpe, f, ddpe, df, edge_ac)
+        + s3_linear_call(&y1, &y2, &zero, &one, gh, j, dj, ghj)
+        - s3_linear_call(&y1, &y2, &zero, &one, g, j, dj, gj)
+        + s3_call(&y1, &y2, &zero, &one, a, d, f, dd, df, edge_a))
         / k
 }
 
+/// The edge quadratics have the discriminants `lambda_*` (in the order of the
+/// terms) and the values `far_ae` (first, last) and `far_gj` (second,
+/// third) at x = 1; `gh` and `ac` are `g + h` and `a + c` (see [Edge]).
 fn t13(
     [
         a,
@@ -544,7 +726,15 @@ fn t13(
         ddpe,
         ddpj,
         ddpf,
-    ]: [&Atom; 18],
+        lambda_ae,
+        lambda_gj,
+        lambda_gh,
+        lambda_ac,
+        far_ae,
+        far_gj,
+        gh,
+        ac,
+    ]: [&Atom; 26],
 ) -> Atom {
     let k = h * a - c * g;
     let l = a * d + h * e - d * g - c * j;
@@ -555,10 +745,16 @@ fn t13(
     let [y1, y2] = roots(&k, &l, &n).map(|y| continued_root(y, &k, &l, &dl, &dn, &dn2));
     let zero = Atom::num(0);
     let one = Atom::num(1);
-    (-s3_call(&y1, &y2, &zero, &one, a, &(e + c), dpf, de, ddpf)
-        + s3_call(&y1, &y2, &zero, &one, g, &(j + h), dpf, dj, ddpf)
-        - s3_call(&y1, &y2, &zero, &one, &(g + h), dpj, f, ddpj, df)
-        + s3_call(&y1, &y2, &zero, &one, &(a + c), dpe, f, ddpe, df))
+    let edge = |lambda, p, near, far| Edge {
+        lambda,
+        p,
+        near,
+        far,
+    };
+    (-s3_call(&y1, &y2, &zero, &one, a, &(e + c), dpf, de, ddpf, edge(lambda_ae, a, dpf, far_ae))
+        + s3_call(&y1, &y2, &zero, &one, g, &(j + h), dpf, dj, ddpf, edge(lambda_gj, g, dpf, far_gj))
+        - s3_call(&y1, &y2, &zero, &one, &(g + h), dpj, f, ddpj, df, edge(lambda_gh, gh, f, far_gj))
+        + s3_call(&y1, &y2, &zero, &one, &(a + c), dpe, f, ddpe, df, edge(lambda_ac, ac, f, far_ae)))
         / k
 }
 
@@ -609,8 +805,16 @@ struct BetaData {
     y: [Continued; 2],
 }
 
+/// `w` is `beta - 1`, `dpe` and `ddpe` are `d + e` and `dd + de`.
+///
+/// A small `a + b + c` (an invariant) puts a root `beta` of
+/// `b beta² + c beta + a` next to 1, where `d + beta e` and the like cancel
+/// (by 800 in a three-mass box with s23 = 0.0049 next to masses 0.013, which
+/// cost binary64 3e-11 in its poles). Nearer 1 than 0 the coefficients are
+/// therefore expanded about beta = 1.
 fn beta_data(
     beta: &Atom,
+    w: &Atom,
     b: &Atom,
     c: &Atom,
     g: &Atom,
@@ -619,18 +823,25 @@ fn beta_data(
     e: &Atom,
     f: &Atom,
     j: &Atom,
+    dpe: &Atom,
     dd: &Atom,
     de: &Atom,
     df: &Atom,
     dj: &Atom,
+    ddpe: &Atom,
 ) -> BetaData {
-    let a1 = g + beta * h;
-    let b1 = c + Atom::num(2) * beta * b;
-    let c1 = d + beta * e;
+    let near_one = less(&norm(w), &norm(beta));
+    let expanded = |at_one: Atom, at_zero: Atom| if_nonzero_else(&near_one, at_one, at_zero);
+    let a1 = expanded(grouped(&(g + h)) + w * h, g + beta * h);
+    let b1 = expanded(
+        grouped(&(c + Atom::num(2) * b)) + Atom::num(2) * w * b,
+        c + Atom::num(2) * beta * b,
+    );
+    let c1 = expanded(dpe + w * e, d + beta * e);
     let k = b * &a1 - h * &b1;
     let l = e * &a1 - h * &c1 - j * &b1;
     let n = f * &a1 - j * &c1;
-    let dc1 = dd + beta * de;
+    let dc1 = expanded(ddpe + w * de, dd + beta * de);
     let dl = de * &a1 - h * &dc1 - dj * &b1;
     let dn = df * &a1 - dj * &c1 - j * &dc1;
     let dn2 = -dj * &dc1 - i() * Symbol::ABS.call((re(f),)) * &a1;
@@ -689,6 +900,7 @@ fn tfun_selected(
         dpe,
         dpf,
         beta,
+        w,
         dd,
         de,
         df,
@@ -696,20 +908,36 @@ fn tfun_selected(
         ddpe,
         ddpf,
         abc,
-    ]: [&Atom; 19],
+        lambda_a,
+        lambda_abc,
+        lambda_bc,
+        q10,
+        q11,
+        gh,
+        gj,
+        ghj,
+    ]: [&Atom; 28],
 ) -> Atom {
-    let data = beta_data(beta, b, c, g, h, d, e, f, j, dd, de, df, dj);
+    let data = beta_data(beta, w, b, c, g, h, d, e, f, j, dpe, dd, de, df, dj, ddpe);
     let [y1, y2] = &data.y;
     let zero = Atom::num(0);
     let one = Atom::num(1);
     let p1 = call("inside", [beta, &y1.value, &y1.first, &y1.second]);
     let p2 = call("inside", [beta, &y2.value, &y2.first, &y2.second]);
-    let integral = s3_call(y1, y2, beta, &one, &zero, h, &(g + j), &zero, dj)
-        - s3_call(y1, y2, &zero, &(1 - beta), &zero, &(g + h), j, &zero, dj)
-        + s3_call(y1, y2, &zero, &(-beta), &zero, g, j, &zero, dj)
-        - s3_call(y1, y2, beta, &one, b, &(c + e), &(a + dpf), de, ddpf)
-        + s3_call(y1, y2, &zero, &(1 - beta), &coefficient_sum(&[a, b, c], abc), dpe, f, ddpe, df)
-        - s3_call(y1, y2, &zero, &(-beta), a, d, f, dd, df);
+    let sum = coefficient_sum(&[a, b, c], abc);
+    let edge = |lambda, p, near, far| Edge {
+        lambda,
+        p,
+        near,
+        far,
+    };
+    // 1 - beta is -w.
+    let integral = s3_linear_call(y1, y2, beta, &one, h, gj, dj, ghj)
+        - s3_linear_call(y1, y2, &zero, &(-w), gh, j, dj, ghj)
+        + s3_linear_call(y1, y2, &zero, &(-beta), g, j, dj, gj)
+        - s3_call(y1, y2, beta, &one, b, &(c + e), &(a + dpf), de, ddpf, edge(lambda_bc, b, q10, q11))
+        + s3_call(y1, y2, &zero, &(-w), &sum, dpe, f, ddpe, df, edge(lambda_abc, abc, f, q11))
+        - s3_call(y1, y2, &zero, &(-beta), a, d, f, dd, df, edge(lambda_a, a, f, q10));
     let real = real_intersections_absent([a, b, c, g, h, d, e, f, j]);
     let residue = call(
         "planar",
@@ -741,19 +969,46 @@ fn tfun(
         ddpe,
         ddpf,
         abc,
-    ]: [&Atom; 18],
+        lambda_a,
+        lambda_abc,
+        lambda_bc,
+        q10,
+        q11,
+        ghin,
+        gjin,
+        ghjin,
+    ]: [&Atom; 26],
 ) -> Atom {
     let sj = imaginary_sign(jin, &imaginary_sign(djin, &Atom::num(-1)));
     let g = -&sj * gin;
     let h = -&sj * hin;
     let j = -&sj * jin;
     let dj = -&sj * djin;
+    // The line's coefficient sums, formed by the caller from the invariants:
+    // a vanishing one is an exactly vanishing linear coefficient or an exact
+    // root at an end of the edge it restricts to (`gh` = p3 - p5 - p0 in the
+    // zero-external chart: for p3 = p5 the rounded g + h was 1e-16 and put the
+    // root of one edge at 1e15).
+    let gh = -&sj * ghin;
+    let gj = -&sj * gjin;
+    let ghj = -&sj * ghjin;
     let [root1, root2] = roots(b, c, a);
+    // beta - 1: the root nearer 1 from (beta1 - 1)(beta2 - 1) = (a + b + c)/b.
+    let [o1, o2] = [&root1 - 1, &root2 - 1];
+    let w1 = if_nonzero_else(&less(&norm(&o1), &norm(&o2)), abc / (b * &o2), o1.clone());
+    let w2 = if_nonzero_else(&less(&norm(&o2), &norm(&o1)), abc / (b * &o1), o2);
     let swap = less(&norm(&root2), &norm(&root1));
     let beta1 = if_nonzero_else(&swap, root2.clone(), root1.clone());
     let beta2 = if_nonzero_else(&swap, root1, root2);
-    let data1 = beta_data(&beta1, b, c, &g, &h, d, e, f, &j, dd, de, df, &dj);
-    let data2 = beta_data(&beta2, b, c, &g, &h, d, e, f, &j, dd, de, df, &dj);
+    let (w1, w2) = (
+        if_nonzero_else(&swap, w2.clone(), w1.clone()),
+        if_nonzero_else(&swap, w1, w2),
+    );
+    let data = |beta: &Atom, w: &Atom| {
+        beta_data(beta, w, b, c, &g, &h, d, e, f, &j, dpe, dd, de, df, &dj, ddpe)
+    };
+    let data1 = data(&beta1, &w1);
+    let data2 = data(&beta2, &w2);
     let distance_y =
         |beta: &Atom, y: &Continued| call("distance", [beta, &y.value, &y.first, &y.second]);
     let d1 = min(
@@ -768,30 +1023,37 @@ fn tfun(
     // contour encloses a pole, the first (smaller-magnitude) beta is selected.
     let use_first = if_nonzero_else(&(&d1 - 1), less(&d2, &d1), Atom::num(1));
     let beta = if_nonzero_else(&use_first, beta1, beta2);
+    let w = if_nonzero_else(&use_first, w1, w2);
     let general = call(
         "tfun_selected",
         [
-            a, b, c, &g, &h, d, e, f, &j, dpe, dpf, &beta, dd, de, df, &dj, ddpe, ddpf, abc,
+            a, b, c, &g, &h, d, e, f, &j, dpe, dpf, &beta, &w, dd, de, df, &dj, ddpe, ddpf, abc,
+            lambda_a, lambda_abc, lambda_bc, q10, q11, &gh, &gj, &ghj,
         ],
     );
     // b = 0: a + c = abc.
     let no_b = call(
         "t1",
-        [a, c, &g, &h, d, e, f, &j, dpe, dd, de, df, &dj, ddpe, abc],
+        [
+            a, c, &g, &h, d, e, f, &j, dpe, dd, de, df, &dj, ddpe, abc, lambda_abc, q11,
+            lambda_a, q10, &gh, &gj, &ghj,
+        ],
     );
-    // a = 0: b + c = abc, and the new a + c is b.
+    // a = 0: b + c = abc, and the new a + c is b. The new conic takes the
+    // values q11 (its f), q10 and f at the corners (0, 0), (1, 0) and (1, 1),
+    // and the new line (-g - h, g, g + h + j) has the sums -h, j and g + j.
     let bc = coefficient_sum(&[b, c], abc);
     let no_a = call(
         "t1",
         [
             &bc,
             &(-c),
-            &(-&g - &h),
+            &(-&gh),
             &g,
             &(-dpe - Atom::num(2) * &bc),
             &(d + c),
-            &(dpe + &bc + f),
-            &(&g + &h + &j),
+            q11,
+            &ghj,
             &(-e - Atom::num(2) * b - c),
             &(-ddpe),
             dd,
@@ -799,6 +1061,13 @@ fn tfun(
             &dj,
             &(-de),
             b,
+            lambda_bc,
+            q10,
+            lambda_abc,
+            f,
+            &(-&h),
+            &j,
+            &gj,
         ],
     );
     -sj * if_nonzero_else(b, if_nonzero_else(a, general, no_a), no_b)
@@ -817,6 +1086,9 @@ fn no_opposite_chart(p: [&Atom; 6], m: [&Atom; 4]) -> Atom {
     let dpe = in_order(&[m[0] - m[3], -p[3]]);
     let dpk = in_order(&[m[1] - m[3], -p[5]]);
     let dpf = m[2] - p[2];
+    // The edge quadratics' values at x = 1 (m0 and m1 for p0 = p2 = 0).
+    let far_ae = in_order(&[m[0].clone(), -p[0], -p[2]]);
+    let far_gk = m[1] - p[2];
     call(
         "t13",
         [
@@ -838,6 +1110,14 @@ fn no_opposite_chart(p: [&Atom; 6], m: [&Atom; 4]) -> Atom {
             &(&dm[0] - &dm[3]),
             &(&dm[1] - &dm[3]),
             &dm[2],
+            &kallen_call(&a, &dpf, &far_ae),
+            &kallen_call(g, &dpf, &far_gk),
+            &kallen_call(&(g + &h), f, &far_gk),
+            &kallen_call(&(&a + &c), f, &far_ae),
+            &far_ae,
+            &far_gk,
+            &(g + &h),
+            &(&a + &c),
         ],
     )
 }
@@ -909,6 +1189,17 @@ fn zero_external(p: [&Atom; 6], m: [&Atom; 4]) -> Atom {
     let dek = in_order(&[m[0] - m[3], -p[3]]);
     let dpf = m[2] - p[2];
     let bj = b + &j;
+    let abc = a + b + &c;
+    let [lambda_a, lambda_abc, lambda_bc] = edge_kallens(a, b, &abc, f, m[2], m[1]);
+    let abj = a + &bj + &cph;
+    let corner = m[0] - p[0];
+    let [_, lambda_abj, lambda_bj] = edge_kallens(a, &bj, &abj, f, m[2], &corner);
+    // The line (h, j, k): h + j, h + k and h + j + k.
+    let line = [
+        in_order(&[p[3].clone(), -p[5], -p[0]]),
+        in_order(&[m[0] - m[1], p[1].clone(), -p[4]]),
+        in_order(&[m[0] - m[1], -p[0]]),
+    ];
     call(
         "tfun",
         [
@@ -929,7 +1220,15 @@ fn zero_external(p: [&Atom; 6], m: [&Atom; 4]) -> Atom {
             &(&dm[0] - &dm[1]),
             &(&dm[1] - &dm[3]),
             &dm[2],
-            &(a + b + &c),
+            &abc,
+            &lambda_a,
+            &lambda_abc,
+            &lambda_bc,
+            m[2],
+            m[1],
+            &line[0],
+            &line[1],
+            &line[2],
         ],
     ) - call(
         "tfun",
@@ -951,7 +1250,15 @@ fn zero_external(p: [&Atom; 6], m: [&Atom; 4]) -> Atom {
             &(&dm[0] - &dm[1]),
             &(&dm[0] - &dm[3]),
             &dm[2],
-            &(a + &bj + &cph),
+            &abj,
+            &lambda_a,
+            &lambda_abj,
+            &lambda_bj,
+            m[2],
+            &corner,
+            &line[0],
+            &line[1],
+            &line[2],
         ],
     )
 }
@@ -983,14 +1290,30 @@ fn ordered(p: [&Atom; 6], m: [&Atom; 4]) -> Atom {
     let j1 = &j + Atom::num(2) * g * &alpha;
     let e1 = &e + &k * &alpha;
     let de1 = &dm[1] - &dm[2] + (&dm[0] - &dm[1]) * &alpha;
+    // The six Källén functions λ(p_ij, m_i, m_j) of the box.
+    let first = edge_kallens(abc, g, &(abc + g + &jph), f, m[1], m[0]);
+    let second = edge_kallens(a, bgj, &(a + bgj + &cph), f, m[2], m[0]);
+    let third = edge_kallens(a, b, &(a + b + &c), f, m[2], m[1]);
+    // The lines and their coefficient sums (g + h, g + j, g + h + j).
+    let sums = |[g, h, j]: &[Atom; 3]| {
+        [
+            in_order(&[g.clone(), h.clone()]),
+            in_order(&[g.clone(), j.clone()]),
+            in_order(&[g.clone(), h.clone(), j.clone()]),
+        ]
+    };
+    let line1 = [&c + Atom::num(2) * b + (&h + &j) * &alpha, j1.clone(), e1.clone()];
+    let line2 = [&c + &h * &alpha, &o1 * &j1, e1.clone()];
+    let line3 = [&c + &h * &alpha, -&j1 * &alpha, e1.clone()];
+    let [sums1, sums2, sums3] = [&line1, &line2, &line3].map(sums);
     -call(
         "tfun",
         [
             abc,
             g,
             &jph,
-            &(&c + Atom::num(2) * b + (&h + &j) * &alpha),
-            &j1,
+            &line1[0],
+            &line1[1],
             &dpe,
             &k,
             f,
@@ -1004,6 +1327,14 @@ fn ordered(p: [&Atom; 6], m: [&Atom; 4]) -> Atom {
             &(&dm[0] - &dm[3]),
             &dm[1],
             &(abc + g + &jph),
+            &first[0],
+            &first[1],
+            &first[2],
+            m[1],
+            m[0],
+            &sums1[0],
+            &sums1[1],
+            &sums1[2],
         ],
     ) + &o1
         * call(
@@ -1012,8 +1343,8 @@ fn ordered(p: [&Atom; 6], m: [&Atom; 4]) -> Atom {
                 a,
                 bgj,
                 &cph,
-                &(&c + &h * &alpha),
-                &(&o1 * &j1),
+                &line2[0],
+                &line2[1],
                 &d,
                 &epk,
                 f,
@@ -1027,6 +1358,14 @@ fn ordered(p: [&Atom; 6], m: [&Atom; 4]) -> Atom {
                 &(&dm[0] - &dm[3]),
                 &dm[2],
                 &(a + bgj + &cph),
+                &second[0],
+                &second[1],
+                &second[2],
+                m[2],
+                m[0],
+                &sums2[0],
+                &sums2[1],
+                &sums2[2],
             ],
         )
         + &alpha
@@ -1036,8 +1375,8 @@ fn ordered(p: [&Atom; 6], m: [&Atom; 4]) -> Atom {
                     a,
                     b,
                     &c,
-                    &(&c + &h * &alpha),
-                    &(-&j1 * &alpha),
+                    &line3[0],
+                    &line3[1],
                     &d,
                     &e,
                     f,
@@ -1051,6 +1390,14 @@ fn ordered(p: [&Atom; 6], m: [&Atom; 4]) -> Atom {
                     &(&dm[1] - &dm[3]),
                     &dm[2],
                     &(a + b + &c),
+                    &third[0],
+                    &third[1],
+                    &third[2],
+                    m[2],
+                    m[1],
+                    &sums3[0],
+                    &sums3[1],
+                    &sums3[2],
                 ],
             )
 }
@@ -1263,9 +1610,10 @@ pub(crate) fn register(map: &mut FunctionMap) {
     define(map, "root_2", 3, |x| {
         root_bodies(&x[0], &x[1], &x[2])[1].clone()
     });
+    define(map, "kallen", 3, |x| kallen(core::array::from_fn(|idx| &x[idx])));
     define(map, "r0", 6, |x| r0(core::array::from_fn(|idx| &x[idx])));
     define(map, "r1", 10, |x| r1(core::array::from_fn(|idx| &x[idx])));
-    define(map, "s3", 13, |x| s3(core::array::from_fn(|idx| &x[idx])));
+    define(map, "s3", 17, |x| s3(core::array::from_fn(|idx| &x[idx])));
     define(map, "s3_double_real", 4, |x| {
         s3_double_real(core::array::from_fn(|idx| &x[idx]))
     });
@@ -1278,12 +1626,12 @@ pub(crate) fn register(map: &mut FunctionMap) {
     define(map, "distance", 4, |x| {
         distance(core::array::from_fn(|idx| &x[idx]))
     });
-    define(map, "t1", 15, |x| t1(core::array::from_fn(|idx| &x[idx])));
-    define(map, "t13", 18, |x| t13(core::array::from_fn(|idx| &x[idx])));
-    define(map, "tfun_selected", 19, |x| {
+    define(map, "t1", 22, |x| t1(core::array::from_fn(|idx| &x[idx])));
+    define(map, "t13", 26, |x| t13(core::array::from_fn(|idx| &x[idx])));
+    define(map, "tfun_selected", 28, |x| {
         tfun_selected(core::array::from_fn(|idx| &x[idx]))
     });
-    define(map, "tfun", 18, |x| {
+    define(map, "tfun", 26, |x| {
         tfun(core::array::from_fn(|idx| &x[idx]))
     });
     define(map, "sort", 4, |x| {

@@ -126,27 +126,14 @@ fn index(family: ScalarIntegral) -> usize {
 
 /// Binary64 tolerance relative to the largest reference coefficient. The
 /// worst rows (1.4e-10 to 4.2e-10, depending on the evaluator's operation
-/// order) are two-mass triangles with a small complex mass.
+/// order) are two-mass triangles with a small complex mass. Lines 471-474, a
+/// real-mass three-mass box at the pseudo-threshold p3 = m3 next to the
+/// massless fourth line, with p4² and s23 small beside small masses, keep
+/// 2.6e-10 to 3.5e-10 (5.8e-10 to 7.8e-10 before the contour box took exact
+/// Källén discriminants and expanded its charts about beta = 1): the
+/// pseudo-threshold is exact, and the rest is a cancellation in the poles of
+/// the contour chart for these small invariants.
 const BINARY64_TOLERANCE: f64 = 5e-10;
-
-/// Lines 471-474, a real-mass three-mass box exactly at the pseudo-threshold
-/// p3 = m3 next to the massless fourth line, keep nine digits in binary64
-/// (5.8e-10 to 7.8e-10 by evaluator; exact at 256 bits) in the contour box,
-/// which three-mass boxes now use wherever it supports the kinematics. The
-/// boxf33 chart used before had the wrong imaginary part here (-26.894
-/// instead of +27.690), as in some relabellings of about a quarter of
-/// real-mass three-mass boxes (tests/d0_real_mass_orderings.rs).
-const CONTOUR_BINARY64_LIMITED: [usize; 4] = [471, 472, 473, 474];
-const CONTOUR_BINARY64_TOLERANCE: f64 = 2e-9;
-
-/// The binary64 tolerance of a fixture line.
-fn binary64_tolerance(line: usize, tolerance: f64) -> f64 {
-    if CONTOUR_BINARY64_LIMITED.contains(&line) {
-        CONTOUR_BINARY64_TOLERANCE
-    } else {
-        tolerance
-    }
-}
 
 #[test]
 fn native_binary64_matches_oneloop() {
@@ -162,7 +149,7 @@ fn native_binary64_matches_oneloop() {
                     .evaluate(&row.args, &mut output)
                     .unwrap();
                 let error = error(&output, &row.expected);
-                if !(error <= binary64_tolerance(row.line, BINARY64_TOLERANCE)) {
+                if !(error <= BINARY64_TOLERANCE) {
                     failures.push(format!(
                         "line {} (hand-written kernels: {handwritten}): {output:?} vs {:?} ({error:e})",
                         row.line, row.expected
@@ -257,7 +244,7 @@ fn expression_and_symjit_backends_match_oneloop() {
                 let mut output = [C::new(f64::NAN, f64::NAN); 3];
                 evaluate_with_backend(row.family, &row.args, &mut output, backend).unwrap();
                 let error = error(&output, &row.expected);
-                if !(error <= binary64_tolerance(row.line, tolerance)) {
+                if !(error <= tolerance) {
                     failures.push(format!(
                         "line {} ({}): {output:?} vs {:?} ({error:e})",
                         row.line,
@@ -426,7 +413,7 @@ fn triangles_and_boxes_are_invariant_under_relabelling() {
                         .evaluate(&image, &mut output)
                         .unwrap();
                     let error = error(&output, &row.expected);
-                    if !(error <= binary64_tolerance(row.line, IMAGE_TOLERANCE)) {
+                    if !(error <= IMAGE_TOLERANCE) {
                         failures.push(format!(
                         "line {} image {number} (hand-written kernels: {handwritten}) {image:?}: {output:?} ({error:e})",
                         row.line

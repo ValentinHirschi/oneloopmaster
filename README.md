@@ -36,7 +36,11 @@ outside timelike configurations, depends on the labelling, with a wrong real
 or imaginary part in some relabellings of about a quarter of three-mass boxes,
 OneLOop 3.6 included (`tests/d0_real_mass_orderings.rs`). Four-mass boxes keep
 OneLOop's selection; its `boxf4` chart fails in a few relabellings (in 8 of 88
-random four-mass boxes).
+random four-mass boxes). The contour box's edge quadratics take their
+discriminants as exact Källén functions and their roots at massless ends
+exactly, so a pseudo-threshold next to a massless line keeps 1e-14 in
+binary64 on both sides instead of losing 8 to 10 digits at it (or 7 next to
+it), also within an ulp of it (`tests/d0_contour_thresholds.rs`).
 
 This work is based on **Andreas van Hameren's OneLOop package**. The original
 algorithms, analytic continuation conventions and Fortran reference results are
