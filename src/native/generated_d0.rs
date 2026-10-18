@@ -22,41 +22,47 @@ pub(super) fn evaluate<T: NativeFloat>(input: &[C<T>], ctx: &Context<T>) -> [C<T
     [(*(&v0)).clone(), (*(&v1)).clone(), (*(&v2)).clone()]
 }
 
-fn helper_0<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<T>, a5: &C<T>, a6: &C<T>, a7: &C<T>, a8: &C<T>, ctx: &Context<T>) -> C<T> {
-    let v0 = mul(a3, a6);
-    let v1 = add(a0, &v0);
-    let v8 = if truth(&v1) {
-        let v2 = powi(a3, -1, false);
-        let v3 = mul(a0, &v2);
-        (*(&v3)).clone()
+fn helper_0<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<T>, a5: &C<T>, a6: &C<T>, a7: &C<T>, a8: &C<T>, a9: &C<T>, ctx: &Context<T>) -> C<T> {
+    let v0 = mul(a2, a5);
+    let v1 = mul(&v0, a6);
+    let v2 = mul(a3, a7);
+    let v3 = add(a0, &v2);
+    let v10 = if truth(&v3) {
+        let v4 = powi(a3, -1, false);
+        let v5 = mul(a0, &v4);
+        (*(&v5)).clone()
     } else {
-        let v7 = if truth(a3) {
-            let v4 = powi(a3, -1, false);
-            let v5 = mul(&v1, &v4);
-            let v6 = add(a7, &v5);
-            (*(&v6)).clone()
+        let v9 = if truth(a3) {
+            let v6 = powi(a3, -1, false);
+            let v7 = mul(&v3, &v6);
+            let v8 = add(a8, &v7);
+            (*(&v8)).clone()
         } else {
-            (*(a7)).clone()
+            (*(a8)).clone()
         };
-        (*(&v7)).clone()
+        (*(&v9)).clone()
     };
-    let v9 = conj(&v8);
-    let v10 = add(&v8, &v9);
-    let v11 = mul(a8, &v10);
-    let v12 = abs(&v11);
-    let v13 = mul(a6, &v12);
-    let v14 = add(&v11, &v13);
-    let v15 = if truth(&v14) {
-        (*(a6)).clone()
-    } else {
+    let v11 = conj(&v10);
+    let v12 = add(&v10, &v11);
+    let v13 = mul(a9, &v12);
+    let v14 = abs(&v13);
+    let v15 = mul(a7, &v14);
+    let v16 = add(&v13, &v15);
+    let v17 = if truth(&v16) {
         (*(a7)).clone()
+    } else {
+        (*(a8)).clone()
     };
-    let v16 = mul(a6, &v15);
-    let v17 = add(a7, &v16);
-    let v18 = mul(a6, &v17);
-    let v19 = add(a7, &v18);
-    let v20 = mul(&v8, &v19);
-    (*(&v20)).clone()
+    let v18 = mul(a7, &v17);
+    let v19 = add(a8, &v18);
+    let v20 = mul(a9, &v19);
+    let v21 = add(a2, a5);
+    let v22 = add(&v21, &v1);
+    let v23 = mul(a7, &v19);
+    let v24 = mul(&v23, &v22);
+    let v25 = add(&v22, &v20);
+    let v26 = add(&v25, &v24);
+    (*(&v26)).clone()
 }
 
 fn helper_1<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<T>, a5: &C<T>, a6: &C<T>, a7: &C<T>, a8: &C<T>, a9: &C<T>, a10: &C<T>, ctx: &Context<T>) -> C<T> {
@@ -110,47 +116,41 @@ fn helper_1<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<T
     (*(&v30)).clone()
 }
 
-fn helper_2<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<T>, a5: &C<T>, a6: &C<T>, a7: &C<T>, a8: &C<T>, a9: &C<T>, ctx: &Context<T>) -> C<T> {
-    let v0 = mul(a2, a5);
-    let v1 = mul(&v0, a6);
-    let v2 = mul(a3, a7);
-    let v3 = add(a0, &v2);
-    let v10 = if truth(&v3) {
-        let v4 = powi(a3, -1, false);
-        let v5 = mul(a0, &v4);
-        (*(&v5)).clone()
+fn helper_2<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<T>, a5: &C<T>, a6: &C<T>, a7: &C<T>, a8: &C<T>, ctx: &Context<T>) -> C<T> {
+    let v0 = mul(a3, a6);
+    let v1 = add(a0, &v0);
+    let v8 = if truth(&v1) {
+        let v2 = powi(a3, -1, false);
+        let v3 = mul(a0, &v2);
+        (*(&v3)).clone()
     } else {
-        let v9 = if truth(a3) {
-            let v6 = powi(a3, -1, false);
-            let v7 = mul(&v3, &v6);
-            let v8 = add(a8, &v7);
-            (*(&v8)).clone()
+        let v7 = if truth(a3) {
+            let v4 = powi(a3, -1, false);
+            let v5 = mul(&v1, &v4);
+            let v6 = add(a7, &v5);
+            (*(&v6)).clone()
         } else {
-            (*(a8)).clone()
+            (*(a7)).clone()
         };
-        (*(&v9)).clone()
+        (*(&v7)).clone()
     };
-    let v11 = conj(&v10);
-    let v12 = add(&v10, &v11);
-    let v13 = mul(a9, &v12);
-    let v14 = abs(&v13);
-    let v15 = mul(a7, &v14);
-    let v16 = add(&v13, &v15);
-    let v17 = if truth(&v16) {
-        (*(a7)).clone()
+    let v9 = conj(&v8);
+    let v10 = add(&v8, &v9);
+    let v11 = mul(a8, &v10);
+    let v12 = abs(&v11);
+    let v13 = mul(a6, &v12);
+    let v14 = add(&v11, &v13);
+    let v15 = if truth(&v14) {
+        (*(a6)).clone()
     } else {
-        (*(a8)).clone()
+        (*(a7)).clone()
     };
-    let v18 = mul(a7, &v17);
-    let v19 = add(a8, &v18);
-    let v20 = mul(a9, &v19);
-    let v21 = add(a2, a5);
-    let v22 = add(&v21, &v1);
-    let v23 = mul(a7, &v19);
-    let v24 = mul(&v23, &v22);
-    let v25 = add(&v22, &v20);
-    let v26 = add(&v25, &v24);
-    (*(&v26)).clone()
+    let v16 = mul(a6, &v15);
+    let v17 = add(a7, &v16);
+    let v18 = mul(a6, &v17);
+    let v19 = add(a7, &v18);
+    let v20 = mul(&v8, &v19);
+    (*(&v20)).clone()
 }
 
 fn helper_3<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<T>, a5: &C<T>, a6: &C<T>, a7: &C<T>, a8: &C<T>, a9: &C<T>, ctx: &Context<T>) -> C<T> {
@@ -526,361 +526,384 @@ fn helper_11<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
 }
 
 fn helper_12<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<T>, a5: &C<T>, a6: &C<T>, a7: &C<T>, a8: &C<T>, a9: &C<T>, a10: &C<T>, a11: &C<T>, a12: &C<T>, a13: &C<T>, a14: &C<T>, ctx: &Context<T>) -> C<T> {
-    let v0 = powi(a0, -1, false);
-    let v1 = mul(a3, a6);
-    let v2 = conj(&v1);
-    let v3 = add(&v1, &v2);
-    let v4 = mul(a7, &v3);
-    let v5 = abs(&v4);
-    let v6 = mul(a6, &v5);
-    let v7 = add(&v4, &v6);
-    let v8 = if truth(&v7) {
+    let v0 = mul(a3, a6);
+    let v1 = conj(&v0);
+    let v2 = add(&v0, &v1);
+    let v3 = mul(a7, &v2);
+    let v4 = abs(&v3);
+    let v5 = mul(a6, &v4);
+    let v6 = add(&v3, &v5);
+    let v7 = if truth(&v6) {
         (*(a6)).clone()
     } else {
         (*(a8)).clone()
     };
-    let v9 = mul(a6, &v8);
-    let v10 = add(a8, &v9);
-    let v11 = mul(a6, &v10);
-    let v12 = add(a8, &v11);
-    let v13 = mul(&v1, &v12);
-    let v14 = mul(a6, &v2);
-    let v15 = add(&v1, &v14);
-    let v16 = mul(a9, &v15);
-    let v46 = if truth(&v16) {
-        let v17 = abs(&v16);
-        let v18 = mul(a6, &v17);
-        let v19 = add(&v16, &v18);
-        let v20 = if truth(&v19) {
+    let v8 = mul(a6, &v7);
+    let v9 = add(a8, &v8);
+    let v10 = mul(a6, &v9);
+    let v11 = add(a8, &v10);
+    let v12 = mul(&v0, &v11);
+    let v13 = mul(a6, &v1);
+    let v14 = add(&v0, &v13);
+    let v15 = mul(a9, &v14);
+    let v45 = if truth(&v15) {
+        let v16 = abs(&v15);
+        let v17 = mul(a6, &v16);
+        let v18 = add(&v15, &v17);
+        let v19 = if truth(&v18) {
             (*(a6)).clone()
         } else {
             (*(a8)).clone()
         };
-        (*(&v20)).clone()
+        (*(&v19)).clone()
     } else {
-        let v45 = if truth(&v16) {
-            let v21 = abs(&v16);
-            let v22 = mul(a6, &v21);
-            let v23 = add(&v16, &v22);
-            let v24 = if truth(&v23) {
+        let v44 = if truth(&v15) {
+            let v20 = abs(&v15);
+            let v21 = mul(a6, &v20);
+            let v22 = add(&v15, &v21);
+            let v23 = if truth(&v22) {
                 (*(a6)).clone()
             } else {
                 (*(a8)).clone()
             };
-            (*(&v24)).clone()
+            (*(&v23)).clone()
         } else {
-            let v25 = mul(a4, a6);
-            let v26 = conj(&v25);
-            let v27 = mul(a6, &v26);
-            let v28 = add(&v25, &v27);
-            let v29 = mul(a9, &v28);
-            let v44 = if truth(&v29) {
-                let v30 = abs(&v29);
-                let v31 = mul(a6, &v30);
-                let v32 = add(&v29, &v31);
-                let v33 = if truth(&v32) {
+            let v24 = mul(a4, a6);
+            let v25 = conj(&v24);
+            let v26 = mul(a6, &v25);
+            let v27 = add(&v24, &v26);
+            let v28 = mul(a9, &v27);
+            let v43 = if truth(&v28) {
+                let v29 = abs(&v28);
+                let v30 = mul(a6, &v29);
+                let v31 = add(&v28, &v30);
+                let v32 = if truth(&v31) {
                     (*(a6)).clone()
                 } else {
                     (*(a8)).clone()
                 };
-                (*(&v33)).clone()
+                (*(&v32)).clone()
             } else {
-                let v34 = mul(a5, a6);
-                let v35 = conj(&v34);
-                let v36 = mul(a6, &v35);
-                let v37 = add(&v34, &v36);
-                let v38 = mul(a9, &v37);
-                let v43 = if truth(&v38) {
-                    let v39 = abs(&v38);
-                    let v40 = mul(a6, &v39);
-                    let v41 = add(&v38, &v40);
-                    let v42 = if truth(&v41) {
+                let v33 = mul(a5, a6);
+                let v34 = conj(&v33);
+                let v35 = mul(a6, &v34);
+                let v36 = add(&v33, &v35);
+                let v37 = mul(a9, &v36);
+                let v42 = if truth(&v37) {
+                    let v38 = abs(&v37);
+                    let v39 = mul(a6, &v38);
+                    let v40 = add(&v37, &v39);
+                    let v41 = if truth(&v40) {
                         (*(a6)).clone()
                     } else {
                         (*(a8)).clone()
                     };
-                    (*(&v42)).clone()
+                    (*(&v41)).clone()
                 } else {
                     (*(a8)).clone()
                 };
-                (*(&v43)).clone()
+                (*(&v42)).clone()
             };
-            (*(&v44)).clone()
+            (*(&v43)).clone()
         };
-        (*(&v45)).clone()
+        (*(&v44)).clone()
     };
-    let v47 = mul(a7, &v10);
-    let v48 = mul(&v47, &v46);
-    let v49 = mul(a0, a6);
-    let v50 = conj(&v49);
-    let v51 = add(&v49, &v50);
-    let v52 = mul(a7, &v51);
-    let v53 = abs(&v52);
-    let v54 = mul(a6, &v53);
-    let v55 = add(&v52, &v54);
-    let v56 = if truth(&v55) {
+    let v46 = mul(a7, &v9);
+    let v47 = mul(&v46, &v45);
+    let v48 = mul(a0, a6);
+    let v49 = conj(&v48);
+    let v50 = add(&v48, &v49);
+    let v51 = mul(a7, &v50);
+    let v52 = abs(&v51);
+    let v53 = mul(a6, &v52);
+    let v54 = add(&v51, &v53);
+    let v55 = if truth(&v54) {
         (*(a6)).clone()
     } else {
         (*(a8)).clone()
     };
-    let v57 = mul(a6, &v56);
-    let v58 = add(a8, &v57);
-    let v59 = mul(a6, &v58);
-    let v60 = add(a8, &v59);
-    let v61 = mul(&v49, &v60);
-    let v62 = mul(a6, &v50);
-    let v63 = add(&v49, &v62);
-    let v64 = mul(a9, &v63);
-    let v94 = if truth(&v64) {
-        let v65 = abs(&v64);
-        let v66 = mul(a6, &v65);
-        let v67 = add(&v64, &v66);
-        let v68 = if truth(&v67) {
+    let v56 = mul(a6, &v55);
+    let v57 = add(a8, &v56);
+    let v58 = mul(a6, &v57);
+    let v59 = add(a8, &v58);
+    let v60 = mul(&v48, &v59);
+    let v61 = mul(a6, &v49);
+    let v62 = add(&v48, &v61);
+    let v63 = mul(a9, &v62);
+    let v93 = if truth(&v63) {
+        let v64 = abs(&v63);
+        let v65 = mul(a6, &v64);
+        let v66 = add(&v63, &v65);
+        let v67 = if truth(&v66) {
             (*(a6)).clone()
         } else {
             (*(a8)).clone()
         };
-        (*(&v68)).clone()
+        (*(&v67)).clone()
     } else {
-        let v93 = if truth(&v64) {
-            let v69 = abs(&v64);
-            let v70 = mul(a6, &v69);
-            let v71 = add(&v64, &v70);
-            let v72 = if truth(&v71) {
+        let v92 = if truth(&v63) {
+            let v68 = abs(&v63);
+            let v69 = mul(a6, &v68);
+            let v70 = add(&v63, &v69);
+            let v71 = if truth(&v70) {
                 (*(a6)).clone()
             } else {
                 (*(a8)).clone()
             };
-            (*(&v72)).clone()
+            (*(&v71)).clone()
         } else {
-            let v73 = mul(a1, a6);
-            let v74 = conj(&v73);
-            let v75 = mul(a6, &v74);
-            let v76 = add(&v73, &v75);
-            let v77 = mul(a9, &v76);
-            let v92 = if truth(&v77) {
-                let v78 = abs(&v77);
-                let v79 = mul(a6, &v78);
-                let v80 = add(&v77, &v79);
-                let v81 = if truth(&v80) {
+            let v72 = mul(a1, a6);
+            let v73 = conj(&v72);
+            let v74 = mul(a6, &v73);
+            let v75 = add(&v72, &v74);
+            let v76 = mul(a9, &v75);
+            let v91 = if truth(&v76) {
+                let v77 = abs(&v76);
+                let v78 = mul(a6, &v77);
+                let v79 = add(&v76, &v78);
+                let v80 = if truth(&v79) {
                     (*(a6)).clone()
                 } else {
                     (*(a8)).clone()
                 };
-                (*(&v81)).clone()
+                (*(&v80)).clone()
             } else {
-                let v82 = mul(a2, a6);
-                let v83 = conj(&v82);
-                let v84 = mul(a6, &v83);
-                let v85 = add(&v82, &v84);
-                let v86 = mul(a9, &v85);
-                let v91 = if truth(&v86) {
-                    let v87 = abs(&v86);
-                    let v88 = mul(a6, &v87);
-                    let v89 = add(&v86, &v88);
-                    let v90 = if truth(&v89) {
+                let v81 = mul(a2, a6);
+                let v82 = conj(&v81);
+                let v83 = mul(a6, &v82);
+                let v84 = add(&v81, &v83);
+                let v85 = mul(a9, &v84);
+                let v90 = if truth(&v85) {
+                    let v86 = abs(&v85);
+                    let v87 = mul(a6, &v86);
+                    let v88 = add(&v85, &v87);
+                    let v89 = if truth(&v88) {
                         (*(a6)).clone()
                     } else {
                         (*(a8)).clone()
                     };
-                    (*(&v90)).clone()
+                    (*(&v89)).clone()
                 } else {
                     (*(a8)).clone()
                 };
-                (*(&v91)).clone()
+                (*(&v90)).clone()
             };
-            (*(&v92)).clone()
+            (*(&v91)).clone()
         };
-        (*(&v93)).clone()
+        (*(&v92)).clone()
     };
-    let v95 = mul(a7, &v58);
-    let v96 = mul(&v95, &v94);
-    let v97 = helper_0(&v13, &v48, &v47, &v61, &v96, &v95, a6, a8, a7, ctx);
-    let v98 = helper_1(&v13, &v48, &v47, &v61, &v96, &v95, a6, a8, a7, a9, a10, ctx);
-    let v99 = helper_2(&v13, &v48, &v47, &v61, &v96, &v95, a11, a6, a8, a7, ctx);
-    let v100 = helper_4(&v97, &v98, &v99, a11, a8, a6, a9, a12, a13, a14, ctx);
-    let v101 = mul(&v0, &v100);
-    let v102 = add(a8, &v49);
-    let v103 = powi(&v102, -1, false);
-    let v104 = add(a8, &v1);
-    let v105 = conj(&v104);
-    let v106 = add(&v104, &v105);
-    let v107 = mul(a7, &v106);
-    let v108 = abs(&v107);
+    let v94 = mul(a7, &v57);
+    let v95 = mul(&v94, &v93);
+    let v96 = helper_0(&v12, &v47, &v46, &v60, &v95, &v94, a10, a6, a8, a7, ctx);
+    let v97 = mul(a6, &v96);
+    let v98 = add(a8, &v97);
+    let v99 = helper_1(&v12, &v47, &v46, &v60, &v95, &v94, a6, a8, a7, a9, a11, ctx);
+    let v100 = mul(&v98, &v99);
+    let v101 = add(a8, &v0);
+    let v102 = conj(&v101);
+    let v103 = add(&v101, &v102);
+    let v104 = mul(a7, &v103);
+    let v105 = abs(&v104);
+    let v106 = mul(a6, &v105);
+    let v107 = add(&v104, &v106);
+    let v108 = if truth(&v107) {
+        (*(a6)).clone()
+    } else {
+        (*(a8)).clone()
+    };
     let v109 = mul(a6, &v108);
-    let v110 = add(&v107, &v109);
-    let v111 = if truth(&v110) {
-        (*(a6)).clone()
-    } else {
-        (*(a8)).clone()
-    };
-    let v112 = mul(a6, &v111);
-    let v113 = add(a8, &v112);
-    let v114 = mul(a6, &v113);
-    let v115 = add(a8, &v114);
-    let v116 = mul(&v104, &v115);
-    let v117 = mul(a6, &v105);
-    let v118 = add(&v104, &v117);
-    let v119 = mul(a9, &v118);
-    let v149 = if truth(&v119) {
-        let v120 = abs(&v119);
-        let v121 = mul(a6, &v120);
-        let v122 = add(&v119, &v121);
-        let v123 = if truth(&v122) {
+    let v110 = add(a8, &v109);
+    let v111 = mul(a6, &v110);
+    let v112 = add(a8, &v111);
+    let v113 = mul(&v101, &v112);
+    let v114 = mul(a6, &v102);
+    let v115 = add(&v101, &v114);
+    let v116 = mul(a9, &v115);
+    let v146 = if truth(&v116) {
+        let v117 = abs(&v116);
+        let v118 = mul(a6, &v117);
+        let v119 = add(&v116, &v118);
+        let v120 = if truth(&v119) {
             (*(a6)).clone()
         } else {
             (*(a8)).clone()
         };
-        (*(&v123)).clone()
+        (*(&v120)).clone()
     } else {
-        let v148 = if truth(&v119) {
-            let v124 = abs(&v119);
-            let v125 = mul(a6, &v124);
-            let v126 = add(&v119, &v125);
-            let v127 = if truth(&v126) {
+        let v145 = if truth(&v116) {
+            let v121 = abs(&v116);
+            let v122 = mul(a6, &v121);
+            let v123 = add(&v116, &v122);
+            let v124 = if truth(&v123) {
                 (*(a6)).clone()
             } else {
                 (*(a8)).clone()
             };
-            (*(&v127)).clone()
+            (*(&v124)).clone()
         } else {
-            let v128 = mul(a4, a6);
-            let v129 = conj(&v128);
-            let v130 = mul(a6, &v129);
-            let v131 = add(&v128, &v130);
-            let v132 = mul(a9, &v131);
-            let v147 = if truth(&v132) {
-                let v133 = abs(&v132);
-                let v134 = mul(a6, &v133);
-                let v135 = add(&v132, &v134);
-                let v136 = if truth(&v135) {
+            let v125 = mul(a4, a6);
+            let v126 = conj(&v125);
+            let v127 = mul(a6, &v126);
+            let v128 = add(&v125, &v127);
+            let v129 = mul(a9, &v128);
+            let v144 = if truth(&v129) {
+                let v130 = abs(&v129);
+                let v131 = mul(a6, &v130);
+                let v132 = add(&v129, &v131);
+                let v133 = if truth(&v132) {
                     (*(a6)).clone()
                 } else {
                     (*(a8)).clone()
                 };
-                (*(&v136)).clone()
+                (*(&v133)).clone()
             } else {
-                let v137 = mul(a5, a6);
-                let v138 = conj(&v137);
-                let v139 = mul(a6, &v138);
-                let v140 = add(&v137, &v139);
-                let v141 = mul(a9, &v140);
-                let v146 = if truth(&v141) {
-                    let v142 = abs(&v141);
-                    let v143 = mul(a6, &v142);
-                    let v144 = add(&v141, &v143);
-                    let v145 = if truth(&v144) {
+                let v134 = mul(a5, a6);
+                let v135 = conj(&v134);
+                let v136 = mul(a6, &v135);
+                let v137 = add(&v134, &v136);
+                let v138 = mul(a9, &v137);
+                let v143 = if truth(&v138) {
+                    let v139 = abs(&v138);
+                    let v140 = mul(a6, &v139);
+                    let v141 = add(&v138, &v140);
+                    let v142 = if truth(&v141) {
                         (*(a6)).clone()
                     } else {
                         (*(a8)).clone()
                     };
-                    (*(&v145)).clone()
+                    (*(&v142)).clone()
                 } else {
                     (*(a8)).clone()
                 };
-                (*(&v146)).clone()
+                (*(&v143)).clone()
             };
-            (*(&v147)).clone()
+            (*(&v144)).clone()
         };
-        (*(&v148)).clone()
+        (*(&v145)).clone()
     };
-    let v150 = mul(a7, &v113);
-    let v151 = mul(&v150, &v149);
-    let v152 = conj(&v102);
-    let v153 = add(&v102, &v152);
-    let v154 = mul(a7, &v153);
-    let v155 = abs(&v154);
-    let v156 = mul(a6, &v155);
-    let v157 = add(&v154, &v156);
-    let v158 = if truth(&v157) {
+    let v147 = mul(a7, &v110);
+    let v148 = mul(&v147, &v146);
+    let v149 = add(a8, &v48);
+    let v150 = conj(&v149);
+    let v151 = add(&v149, &v150);
+    let v152 = mul(a7, &v151);
+    let v153 = abs(&v152);
+    let v154 = mul(a6, &v153);
+    let v155 = add(&v152, &v154);
+    let v156 = if truth(&v155) {
         (*(a6)).clone()
     } else {
         (*(a8)).clone()
     };
+    let v157 = mul(a6, &v156);
+    let v158 = add(a8, &v157);
     let v159 = mul(a6, &v158);
     let v160 = add(a8, &v159);
-    let v161 = mul(a6, &v160);
-    let v162 = add(a8, &v161);
-    let v163 = mul(&v102, &v162);
-    let v164 = mul(a6, &v152);
-    let v165 = add(&v102, &v164);
-    let v166 = mul(a9, &v165);
-    let v196 = if truth(&v166) {
-        let v167 = abs(&v166);
-        let v168 = mul(a6, &v167);
-        let v169 = add(&v166, &v168);
-        let v170 = if truth(&v169) {
+    let v161 = mul(&v149, &v160);
+    let v162 = mul(a6, &v150);
+    let v163 = add(&v149, &v162);
+    let v164 = mul(a9, &v163);
+    let v194 = if truth(&v164) {
+        let v165 = abs(&v164);
+        let v166 = mul(a6, &v165);
+        let v167 = add(&v164, &v166);
+        let v168 = if truth(&v167) {
             (*(a6)).clone()
         } else {
             (*(a8)).clone()
         };
-        (*(&v170)).clone()
+        (*(&v168)).clone()
     } else {
-        let v195 = if truth(&v166) {
-            let v171 = abs(&v166);
-            let v172 = mul(a6, &v171);
-            let v173 = add(&v166, &v172);
-            let v174 = if truth(&v173) {
+        let v193 = if truth(&v164) {
+            let v169 = abs(&v164);
+            let v170 = mul(a6, &v169);
+            let v171 = add(&v164, &v170);
+            let v172 = if truth(&v171) {
                 (*(a6)).clone()
             } else {
                 (*(a8)).clone()
             };
-            (*(&v174)).clone()
+            (*(&v172)).clone()
         } else {
-            let v175 = mul(a1, a6);
-            let v176 = conj(&v175);
-            let v177 = mul(a6, &v176);
-            let v178 = add(&v175, &v177);
-            let v179 = mul(a9, &v178);
-            let v194 = if truth(&v179) {
-                let v180 = abs(&v179);
-                let v181 = mul(a6, &v180);
-                let v182 = add(&v179, &v181);
-                let v183 = if truth(&v182) {
+            let v173 = mul(a1, a6);
+            let v174 = conj(&v173);
+            let v175 = mul(a6, &v174);
+            let v176 = add(&v173, &v175);
+            let v177 = mul(a9, &v176);
+            let v192 = if truth(&v177) {
+                let v178 = abs(&v177);
+                let v179 = mul(a6, &v178);
+                let v180 = add(&v177, &v179);
+                let v181 = if truth(&v180) {
                     (*(a6)).clone()
                 } else {
                     (*(a8)).clone()
                 };
-                (*(&v183)).clone()
+                (*(&v181)).clone()
             } else {
-                let v184 = mul(a2, a6);
-                let v185 = conj(&v184);
-                let v186 = mul(a6, &v185);
-                let v187 = add(&v184, &v186);
-                let v188 = mul(a9, &v187);
-                let v193 = if truth(&v188) {
-                    let v189 = abs(&v188);
-                    let v190 = mul(a6, &v189);
-                    let v191 = add(&v188, &v190);
-                    let v192 = if truth(&v191) {
+                let v182 = mul(a2, a6);
+                let v183 = conj(&v182);
+                let v184 = mul(a6, &v183);
+                let v185 = add(&v182, &v184);
+                let v186 = mul(a9, &v185);
+                let v191 = if truth(&v186) {
+                    let v187 = abs(&v186);
+                    let v188 = mul(a6, &v187);
+                    let v189 = add(&v186, &v188);
+                    let v190 = if truth(&v189) {
                         (*(a6)).clone()
                     } else {
                         (*(a8)).clone()
                     };
-                    (*(&v192)).clone()
+                    (*(&v190)).clone()
                 } else {
                     (*(a8)).clone()
                 };
-                (*(&v193)).clone()
+                (*(&v191)).clone()
             };
-            (*(&v194)).clone()
+            (*(&v192)).clone()
         };
-        (*(&v195)).clone()
+        (*(&v193)).clone()
     };
-    let v197 = mul(a7, &v160);
-    let v198 = mul(&v197, &v196);
-    let v199 = helper_0(&v116, &v151, &v150, &v163, &v198, &v197, a6, a8, a7, ctx);
-    let v200 = helper_1(&v116, &v151, &v150, &v163, &v198, &v197, a6, a8, a7, a9, a10, ctx);
-    let v201 = helper_2(&v116, &v151, &v150, &v163, &v198, &v197, a11, a6, a8, a7, ctx);
-    let v202 = helper_4(&v199, &v200, &v201, a11, a8, a6, a9, a12, a13, a14, ctx);
-    let v203 = mul(&v103, &v202);
-    let v204 = add(&v101, &v203);
-    (*(&v204)).clone()
+    let v195 = mul(a7, &v158);
+    let v196 = mul(&v195, &v194);
+    let v197 = helper_0(&v113, &v148, &v147, &v161, &v196, &v195, a10, a6, a8, a7, ctx);
+    let v198 = mul(a6, &v197);
+    let v199 = add(a8, &v198);
+    let v200 = helper_1(&v113, &v148, &v147, &v161, &v196, &v195, a6, a8, a7, a9, a11, ctx);
+    let v201 = mul(a6, &v199);
+    let v202 = mul(&v201, &v200);
+    let v203 = add(&v100, &v202);
+    let v209 = if truth(&v203) {
+        let v204 = add(a0, &v0);
+        let v205 = powi(&v204, -1, false);
+        let v206 = mul(a12, a13);
+        let v207 = mul(&v206, &v203);
+        let v208 = mul(&v207, &v205);
+        (*(&v208)).clone()
+    } else {
+        (*(a14)).clone()
+    };
+    let v210 = powi(a0, -1, false);
+    let v211 = helper_2(&v12, &v47, &v46, &v60, &v95, &v94, a6, a8, a7, ctx);
+    let v212 = mul(a6, &v98);
+    let v213 = mul(&v212, &v99);
+    let v214 = add(&v99, &v213);
+    let v215 = helper_4(&v211, &v214, &v96, a10, a8, a6, a9, a14, a12, a13, ctx);
+    let v216 = mul(&v210, &v215);
+    let v217 = powi(&v149, -1, false);
+    let v218 = helper_2(&v113, &v148, &v147, &v161, &v196, &v195, a6, a8, a7, ctx);
+    let v219 = add(&v202, &v200);
+    let v220 = helper_4(&v218, &v219, &v197, a10, a8, a6, a9, a14, a12, a13, ctx);
+    let v221 = mul(&v217, &v220);
+    let v222 = add(&v209, &v216);
+    let v223 = add(&v222, &v221);
+    (*(&v223)).clone()
 }
 
 fn helper_13<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<T>, a5: &C<T>, a6: &C<T>, a7: &C<T>, a8: &C<T>, a9: &C<T>, a10: &C<T>, a11: &C<T>, a12: &C<T>, a13: &C<T>, a14: &C<T>, a15: &C<T>, ctx: &Context<T>) -> C<T> {
     let v0 = log(a3);
-    let v1 = helper_12(a0, a4, a4, a1, a4, a4, a5, a6, a7, a8, a9, a10, a4, a11, a12, ctx);
+    let v1 = helper_12(a0, a4, a4, a1, a4, a4, a5, a6, a7, a8, a9, a10, a11, a12, a4, ctx);
     let v2 = mul(&v0, &v1);
     let v3 = mul(a0, a5);
     let v4 = add(a2, &v3);
@@ -956,9 +979,9 @@ fn helper_13<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v51 = mul(a6, &v39);
     let v52 = mul(&v51, &v50);
-    let v53 = helper_0(&v20, &v30, &v29, &v42, &v52, &v51, a5, a7, a6, ctx);
-    let v54 = helper_1(&v20, &v30, &v29, &v42, &v52, &v51, a5, a7, a6, a8, a9, ctx);
-    let v55 = helper_2(&v20, &v30, &v29, &v42, &v52, &v51, a10, a5, a7, a6, ctx);
+    let v53 = helper_2(&v20, &v30, &v29, &v42, &v52, &v51, a5, a7, a6, ctx);
+    let v54 = helper_1(&v20, &v30, &v29, &v42, &v52, &v51, a5, a7, a6, a8, a10, ctx);
+    let v55 = helper_0(&v20, &v30, &v29, &v42, &v52, &v51, a9, a5, a7, a6, ctx);
     let v56 = conj(&v6);
     let v57 = add(&v6, &v56);
     let v58 = mul(a6, &v57);
@@ -1027,20 +1050,20 @@ fn helper_13<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v98 = mul(a6, &v86);
     let v99 = mul(&v98, &v97);
-    let v100 = helper_0(&v67, &v77, &v76, &v89, &v99, &v98, a5, a7, a6, ctx);
-    let v101 = helper_1(&v67, &v77, &v76, &v89, &v99, &v98, a5, a7, a6, a8, a9, ctx);
-    let v102 = helper_2(&v67, &v77, &v76, &v89, &v99, &v98, a10, a5, a7, a6, ctx);
-    let v103 = helper_6(&v53, &v54, &v55, &v100, &v101, &v102, a10, a7, a5, a6, a13, a11, a12, a14, a15, a9, a4, a8, ctx);
+    let v100 = helper_2(&v67, &v77, &v76, &v89, &v99, &v98, a5, a7, a6, ctx);
+    let v101 = helper_1(&v67, &v77, &v76, &v89, &v99, &v98, a5, a7, a6, a8, a10, ctx);
+    let v102 = helper_0(&v67, &v77, &v76, &v89, &v99, &v98, a9, a5, a7, a6, ctx);
+    let v103 = helper_6(&v53, &v54, &v55, &v100, &v101, &v102, a9, a7, a5, a6, a13, a11, a12, a14, a15, a10, a4, a8, ctx);
     let v104 = mul(a2, &v103);
-    let v105 = mul(a10, &v102);
+    let v105 = mul(a9, &v102);
     let v106 = add(a7, &v105);
     let v107 = powi(&v106, -1, false);
     let v108 = log(a2);
     let v109 = powi(&v100, -1, false);
-    let v110 = helper_0(&v53, &v54, &v55, &v100, &v101, &v102, a5, a7, a6, ctx);
-    let v111 = helper_1(&v53, &v54, &v55, &v100, &v101, &v102, a5, a7, a6, a8, a9, ctx);
-    let v112 = helper_2(&v53, &v54, &v55, &v100, &v101, &v102, a10, a5, a7, a6, ctx);
-    let v113 = helper_4(&v110, &v111, &v112, a10, a7, a5, a8, a4, a11, a12, ctx);
+    let v110 = helper_2(&v53, &v54, &v55, &v100, &v101, &v102, a5, a7, a6, ctx);
+    let v111 = helper_1(&v53, &v54, &v55, &v100, &v101, &v102, a5, a7, a6, a8, a10, ctx);
+    let v112 = helper_0(&v53, &v54, &v55, &v100, &v101, &v102, a9, a5, a7, a6, ctx);
+    let v113 = helper_4(&v110, &v111, &v112, a9, a7, a5, a8, a4, a11, a12, ctx);
     let v114 = mul(a2, a5);
     let v115 = mul(&v114, &v107);
     let v116 = mul(&v115, &v108);
@@ -1082,9 +1105,9 @@ fn helper_13<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v141 = mul(a6, &v129);
     let v142 = mul(&v141, &v140);
-    let v143 = helper_0(&v132, &v142, &v141, &v42, &v52, &v51, a5, a7, a6, ctx);
-    let v144 = helper_1(&v132, &v142, &v141, &v42, &v52, &v51, a5, a7, a6, a8, a9, ctx);
-    let v145 = helper_2(&v132, &v142, &v141, &v42, &v52, &v51, a10, a5, a7, a6, ctx);
+    let v143 = helper_2(&v132, &v142, &v141, &v42, &v52, &v51, a5, a7, a6, ctx);
+    let v144 = helper_1(&v132, &v142, &v141, &v42, &v52, &v51, a5, a7, a6, a8, a10, ctx);
+    let v145 = helper_0(&v132, &v142, &v141, &v42, &v52, &v51, a9, a5, a7, a6, ctx);
     let v146 = add(a7, &v6);
     let v147 = conj(&v146);
     let v148 = add(&v146, &v147);
@@ -1120,20 +1143,20 @@ fn helper_13<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v167 = mul(a6, &v155);
     let v168 = mul(&v167, &v166);
-    let v169 = helper_0(&v158, &v168, &v167, &v89, &v99, &v98, a5, a7, a6, ctx);
-    let v170 = helper_1(&v158, &v168, &v167, &v89, &v99, &v98, a5, a7, a6, a8, a9, ctx);
-    let v171 = helper_2(&v158, &v168, &v167, &v89, &v99, &v98, a10, a5, a7, a6, ctx);
-    let v172 = helper_6(&v143, &v144, &v145, &v169, &v170, &v171, a10, a7, a5, a6, a13, a11, a12, a14, a15, a9, a4, a8, ctx);
+    let v169 = helper_2(&v158, &v168, &v167, &v89, &v99, &v98, a5, a7, a6, ctx);
+    let v170 = helper_1(&v158, &v168, &v167, &v89, &v99, &v98, a5, a7, a6, a8, a10, ctx);
+    let v171 = helper_0(&v158, &v168, &v167, &v89, &v99, &v98, a9, a5, a7, a6, ctx);
+    let v172 = helper_6(&v143, &v144, &v145, &v169, &v170, &v171, a9, a7, a5, a6, a13, a11, a12, a14, a15, a10, a4, a8, ctx);
     let v173 = mul(&v119, &v172);
-    let v174 = mul(a10, &v171);
+    let v174 = mul(a9, &v171);
     let v175 = add(a7, &v174);
     let v176 = powi(&v175, -1, false);
     let v177 = log(&v119);
     let v178 = powi(&v169, -1, false);
-    let v179 = helper_0(&v143, &v144, &v145, &v169, &v170, &v171, a5, a7, a6, ctx);
-    let v180 = helper_1(&v143, &v144, &v145, &v169, &v170, &v171, a5, a7, a6, a8, a9, ctx);
-    let v181 = helper_2(&v143, &v144, &v145, &v169, &v170, &v171, a10, a5, a7, a6, ctx);
-    let v182 = helper_4(&v179, &v180, &v181, a10, a7, a5, a8, a4, a11, a12, ctx);
+    let v179 = helper_2(&v143, &v144, &v145, &v169, &v170, &v171, a5, a7, a6, ctx);
+    let v180 = helper_1(&v143, &v144, &v145, &v169, &v170, &v171, a5, a7, a6, a8, a10, ctx);
+    let v181 = helper_0(&v143, &v144, &v145, &v169, &v170, &v171, a9, a5, a7, a6, ctx);
+    let v182 = helper_4(&v179, &v180, &v181, a9, a7, a5, a8, a4, a11, a12, ctx);
     let v183 = mul(a5, &v119);
     let v184 = mul(&v183, &v176);
     let v185 = mul(&v184, &v177);
@@ -5765,11 +5788,11 @@ fn branch_6<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<T
     };
     let v98 = mul(a1, &v59);
     let v99 = mul(&v98, &v66);
-    let v100 = helper_0(&v11, &v48, &v47, &v62, &v99, &v98, a2, a3, a1, ctx);
+    let v100 = helper_2(&v11, &v48, &v47, &v62, &v99, &v98, a2, a3, a1, ctx);
     let v101 = helper_1(&v11, &v48, &v47, &v62, &v99, &v98, a2, a3, a1, a4, a17, ctx);
-    let v102 = helper_2(&v11, &v48, &v47, &v62, &v99, &v98, a12, a2, a3, a1, ctx);
+    let v102 = helper_0(&v11, &v48, &v47, &v62, &v99, &v98, a12, a2, a3, a1, ctx);
     let v103 = helper_4(&v100, &v101, &v102, a12, a3, a2, a4, a9, a10, a11, ctx);
-    let v104 = helper_12(a18, a15, a16, a19, a5, a7, a2, a1, a3, a4, a17, a12, a9, a10, a11, ctx);
+    let v104 = helper_12(a18, a15, a16, a19, a5, a7, a2, a1, a3, a4, a12, a17, a10, a11, a9, ctx);
     let v105 = mul(a2, &v103);
     let v106 = mul(&v105, &v104);
     let v107 = add(&v50, &v106);
@@ -5865,7 +5888,7 @@ fn branch_7<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<T
     let v49 = mul(a2, &v10);
     let v50 = mul(&v49, &v17);
     let v51 = helper_3(&v13, &v50, &v49, a3, a5, a10, a4, a11, a12, a13, ctx);
-    let v52 = helper_12(a14, a7, a9, a15, a6, a8, a3, a2, a4, a5, a16, a13, a10, a11, a12, ctx);
+    let v52 = helper_12(a14, a7, a9, a15, a6, a8, a3, a2, a4, a5, a13, a16, a11, a12, a10, ctx);
     let v53 = mul(a1, &v51);
     let v54 = mul(&v53, &v52);
     (*(&v54)).clone()
@@ -5959,7 +5982,7 @@ fn branch_7<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<T
     let v103 = mul(a2, &v64);
     let v104 = mul(&v103, &v71);
     let v105 = helper_3(&v67, &v104, &v103, a3, a5, a10, a4, a11, a12, a13, ctx);
-    let v106 = helper_12(a20, a18, a19, a15, a6, a8, a3, a2, a4, a5, a16, a13, a10, a11, a12, ctx);
+    let v106 = helper_12(a20, a18, a19, a15, a6, a8, a3, a2, a4, a5, a13, a16, a11, a12, a10, ctx);
     let v107 = mul(a17, &v105);
     let v108 = mul(&v107, &v106);
     (*(&v108)).clone()
@@ -6330,9 +6353,9 @@ fn branch_8<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<T
     let v210 = mul(a19, &v209);
     let v211 = add(&v99, &v158);
     let v212 = add(&v211, &v210);
-    let v213 = helper_0(&v11, &v48, &v47, &v170, &v207, &v206, a2, a3, a1, ctx);
+    let v213 = helper_2(&v11, &v48, &v47, &v170, &v207, &v206, a2, a3, a1, ctx);
     let v214 = helper_1(&v11, &v48, &v47, &v170, &v207, &v206, a2, a3, a1, a4, a19, ctx);
-    let v215 = helper_2(&v11, &v48, &v47, &v170, &v207, &v206, a12, a2, a3, a1, ctx);
+    let v215 = helper_0(&v11, &v48, &v47, &v170, &v207, &v206, a12, a2, a3, a1, ctx);
     let v216 = helper_4(&v213, &v214, &v215, a12, a3, a2, a4, a9, a10, a11, ctx);
     let v217 = mul(a2, &v51);
     let v218 = mul(&v217, &v212);
@@ -6700,9 +6723,9 @@ fn branch_9<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<T
     let v211 = mul(a1, &v210);
     let v212 = add(&v100, &v159);
     let v213 = add(&v212, &v211);
-    let v214 = helper_0(&v11, &v48, &v47, &v171, &v208, &v207, a2, a3, a1, ctx);
+    let v214 = helper_2(&v11, &v48, &v47, &v171, &v208, &v207, a2, a3, a1, ctx);
     let v215 = helper_1(&v11, &v48, &v47, &v171, &v208, &v207, a2, a3, a1, a4, a19, ctx);
-    let v216 = helper_2(&v11, &v48, &v47, &v171, &v208, &v207, a12, a2, a3, a1, ctx);
+    let v216 = helper_0(&v11, &v48, &v47, &v171, &v208, &v207, a12, a2, a3, a1, ctx);
     let v217 = helper_4(&v214, &v215, &v216, a12, a3, a2, a4, a9, a10, a11, ctx);
     let v218 = mul(a2, &v51);
     let v219 = mul(&v218, &v213);
@@ -6882,9 +6905,9 @@ fn branch_10<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v96 = mul(a3, &v57);
     let v97 = mul(&v96, &v64);
-    let v98 = helper_0(&v13, &v48, &v47, &v60, &v97, &v96, a4, a5, a3, ctx);
+    let v98 = helper_2(&v13, &v48, &v47, &v60, &v97, &v96, a4, a5, a3, ctx);
     let v99 = helper_1(&v13, &v48, &v47, &v60, &v97, &v96, a4, a5, a3, a6, a11, ctx);
-    let v100 = helper_2(&v13, &v48, &v47, &v60, &v97, &v96, a12, a4, a5, a3, ctx);
+    let v100 = helper_0(&v13, &v48, &v47, &v60, &v97, &v96, a12, a4, a5, a3, ctx);
     let v101 = conj(a1);
     let v102 = add(a1, &v101);
     let v103 = mul(a3, &v102);
@@ -6970,9 +6993,9 @@ fn branch_10<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v148 = mul(a3, &v109);
     let v149 = mul(&v148, &v116);
-    let v150 = helper_0(&v13, &v48, &v47, &v112, &v149, &v148, a4, a5, a3, ctx);
+    let v150 = helper_2(&v13, &v48, &v47, &v112, &v149, &v148, a4, a5, a3, ctx);
     let v151 = helper_1(&v13, &v48, &v47, &v112, &v149, &v148, a4, a5, a3, a6, a11, ctx);
-    let v152 = helper_2(&v13, &v48, &v47, &v112, &v149, &v148, a12, a4, a5, a3, ctx);
+    let v152 = helper_0(&v13, &v48, &v47, &v112, &v149, &v148, a12, a4, a5, a3, ctx);
     let v153 = helper_6(&v98, &v99, &v100, &v150, &v151, &v152, a12, a5, a4, a3, a15, a16, a17, a18, a19, a11, a20, a6, ctx);
     let v154 = mul(a2, &v0);
     let v155 = mul(&v154, &v1);
@@ -7150,9 +7173,9 @@ fn branch_11<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v95 = mul(a2, &v58);
     let v96 = mul(&v95, &v65);
-    let v97 = helper_0(&v12, &v49, &v48, &v61, &v96, &v95, a3, a4, a2, ctx);
+    let v97 = helper_2(&v12, &v49, &v48, &v61, &v96, &v95, a3, a4, a2, ctx);
     let v98 = helper_1(&v12, &v49, &v48, &v61, &v96, &v95, a3, a4, a2, a5, a10, ctx);
-    let v99 = helper_2(&v12, &v49, &v48, &v61, &v96, &v95, a11, a3, a4, a2, ctx);
+    let v99 = helper_0(&v12, &v49, &v48, &v61, &v96, &v95, a11, a3, a4, a2, ctx);
     let v100 = conj(a12);
     let v101 = add(a12, &v100);
     let v102 = mul(a2, &v101);
@@ -7238,9 +7261,9 @@ fn branch_11<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v147 = mul(a2, &v108);
     let v148 = mul(&v147, &v115);
-    let v149 = helper_0(&v111, &v148, &v147, &v61, &v96, &v95, a3, a4, a2, ctx);
+    let v149 = helper_2(&v111, &v148, &v147, &v61, &v96, &v95, a3, a4, a2, ctx);
     let v150 = helper_1(&v111, &v148, &v147, &v61, &v96, &v95, a3, a4, a2, a5, a10, ctx);
-    let v151 = helper_2(&v111, &v148, &v147, &v61, &v96, &v95, a11, a3, a4, a2, ctx);
+    let v151 = helper_0(&v111, &v148, &v147, &v61, &v96, &v95, a11, a3, a4, a2, ctx);
     let v152 = helper_6(&v97, &v98, &v99, &v149, &v150, &v151, a11, a4, a3, a2, a15, a16, a17, a18, a19, a10, a20, a5, ctx);
     let v153 = mul(&v0, &v152);
     (*(&v153)).clone()
@@ -7417,9 +7440,9 @@ fn branch_12<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v96 = mul(a3, &v57);
     let v97 = mul(&v96, &v64);
-    let v98 = helper_0(&v13, &v48, &v47, &v60, &v97, &v96, a4, a5, a3, ctx);
+    let v98 = helper_2(&v13, &v48, &v47, &v60, &v97, &v96, a4, a5, a3, ctx);
     let v99 = helper_1(&v13, &v48, &v47, &v60, &v97, &v96, a4, a5, a3, a6, a11, ctx);
-    let v100 = helper_2(&v13, &v48, &v47, &v60, &v97, &v96, a12, a4, a5, a3, ctx);
+    let v100 = helper_0(&v13, &v48, &v47, &v60, &v97, &v96, a12, a4, a5, a3, ctx);
     let v101 = conj(a1);
     let v102 = add(a1, &v101);
     let v103 = mul(a3, &v102);
@@ -7505,9 +7528,9 @@ fn branch_12<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v148 = mul(a3, &v109);
     let v149 = mul(&v148, &v116);
-    let v150 = helper_0(&v13, &v48, &v47, &v112, &v149, &v148, a4, a5, a3, ctx);
+    let v150 = helper_2(&v13, &v48, &v47, &v112, &v149, &v148, a4, a5, a3, ctx);
     let v151 = helper_1(&v13, &v48, &v47, &v112, &v149, &v148, a4, a5, a3, a6, a11, ctx);
-    let v152 = helper_2(&v13, &v48, &v47, &v112, &v149, &v148, a12, a4, a5, a3, ctx);
+    let v152 = helper_0(&v13, &v48, &v47, &v112, &v149, &v148, a12, a4, a5, a3, ctx);
     let v153 = helper_6(&v98, &v99, &v100, &v150, &v151, &v152, a12, a5, a4, a3, a15, a16, a17, a18, a19, a11, a20, a6, ctx);
     let v154 = mul(a21, &v0);
     let v155 = mul(&v154, &v1);
@@ -7685,9 +7708,9 @@ fn branch_13<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v95 = mul(a2, &v58);
     let v96 = mul(&v95, &v65);
-    let v97 = helper_0(&v12, &v49, &v48, &v61, &v96, &v95, a3, a4, a2, ctx);
+    let v97 = helper_2(&v12, &v49, &v48, &v61, &v96, &v95, a3, a4, a2, ctx);
     let v98 = helper_1(&v12, &v49, &v48, &v61, &v96, &v95, a3, a4, a2, a5, a11, ctx);
-    let v99 = helper_2(&v12, &v49, &v48, &v61, &v96, &v95, a12, a3, a4, a2, ctx);
+    let v99 = helper_0(&v12, &v49, &v48, &v61, &v96, &v95, a12, a3, a4, a2, ctx);
     let v100 = conj(a13);
     let v101 = add(a13, &v100);
     let v102 = mul(a2, &v101);
@@ -7773,9 +7796,9 @@ fn branch_13<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v147 = mul(a2, &v108);
     let v148 = mul(&v147, &v115);
-    let v149 = helper_0(&v111, &v148, &v147, &v61, &v96, &v95, a3, a4, a2, ctx);
+    let v149 = helper_2(&v111, &v148, &v147, &v61, &v96, &v95, a3, a4, a2, ctx);
     let v150 = helper_1(&v111, &v148, &v147, &v61, &v96, &v95, a3, a4, a2, a5, a11, ctx);
-    let v151 = helper_2(&v111, &v148, &v147, &v61, &v96, &v95, a12, a3, a4, a2, ctx);
+    let v151 = helper_0(&v111, &v148, &v147, &v61, &v96, &v95, a12, a3, a4, a2, ctx);
     let v152 = helper_6(&v97, &v98, &v99, &v149, &v150, &v151, a12, a4, a3, a2, a16, a17, a18, a19, a20, a11, a21, a5, ctx);
     let v153 = mul(&v0, &v152);
     (*(&v153)).clone()
@@ -8163,7 +8186,7 @@ fn branch_15<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     let v141 = mul(a15, &v140);
     let v142 = mul(a17, a15);
     let v143 = mul(a18, a15);
-    let v144 = helper_12(&v137, &v138, &v139, &v141, &v142, &v143, a7, a4, a3, a9, a11, a25, a1, a10, a26, ctx);
+    let v144 = helper_12(&v137, &v138, &v139, &v141, &v142, &v143, a7, a4, a3, a9, a25, a11, a10, a26, a1, ctx);
     let v145 = helper_14(&v2, &v11, &v74, &v137, &v138, &v139, &v141, &v142, &v143, &v144, a7, a3, a27, a4, a9, a1, a10, a26, a25, a11, a28, a29, a13, a30, a31, ctx);
     let v146 = if truth(&v0) {
     let v147 = conj(a2);
@@ -8846,8 +8869,8 @@ fn branch_16<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     let v84 = mul(a12, &v83);
     let v85 = mul(a16, a12);
     let v86 = mul(a17, a12);
-    let v87 = helper_12(&v80, &v81, &v82, &v84, &v85, &v86, a2, a8, a6, a5, a18, a19, a7, a20, a21, ctx);
-    let v88 = helper_14(&v2, &v8, &v28, &v80, &v81, &v82, &v84, &v85, &v86, &v87, a2, a6, a22, a8, a5, a7, a20, a21, a19, a18, a23, a24, a25, a26, a9, ctx);
+    let v87 = helper_12(&v80, &v81, &v82, &v84, &v85, &v86, a2, a8, a6, a5, a18, a19, a20, a21, a7, ctx);
+    let v88 = helper_14(&v2, &v8, &v28, &v80, &v81, &v82, &v84, &v85, &v86, &v87, a2, a6, a22, a8, a5, a7, a20, a21, a18, a19, a23, a24, a25, a26, a9, ctx);
     let v89 = conj(a0);
     let v90 = add(a0, &v89);
     let v91 = mul(a8, &v90);
@@ -8959,7 +8982,7 @@ fn branch_16<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v146 = mul(a8, &v97);
     let v147 = mul(&v146, &v104);
-    let v148 = helper_3(&v100, &v147, &v146, a2, a5, a7, a6, a20, a21, a19, ctx);
+    let v148 = helper_3(&v100, &v147, &v146, a2, a5, a7, a6, a20, a21, a18, ctx);
     let v149 = mul(a1, &v0);
     let v150 = conj(&v149);
     let v151 = mul(a2, &v150);
@@ -9142,7 +9165,7 @@ fn branch_17<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     let v12 = powi(a1, -1, false);
     let v13 = mul(a4, a10);
     let v14 = mul(&v13, &v12);
-    let v15 = helper_13(&v9, &v11, &v14, a1, a5, a6, a9, a8, a7, a10, a15, a16, a17, a18, a19, a20, ctx);
+    let v15 = helper_13(&v9, &v11, &v14, a1, a5, a6, a9, a8, a7, a15, a10, a16, a17, a18, a19, a20, ctx);
     (*(&v15)).clone()
     } else {
     branch_15(&v5, a5, a1, a8, a9, a4, a2, a6, a3, a7, a16, a10, a21, a18, a22, &v0, a23, a24, a25, a26, a27, a28, a11, a12, a13, a15, a17, a14, a29, a30, a19, a20, a31, ctx)
@@ -9150,7 +9173,7 @@ fn branch_17<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     (*(&v7)).clone()
     } else {
     let v16 = if truth(a4) {
-    branch_16(a4, a2, a6, a27, a28, a7, a8, a5, a9, a20, a11, a12, &v0, a22, a23, a13, a24, a25, a10, a15, a16, a17, a14, a29, a30, a18, a19, a21, ctx)
+    branch_16(a4, a2, a6, a27, a28, a7, a8, a5, a9, a20, a11, a12, &v0, a22, a23, a13, a24, a25, a15, a10, a16, a17, a14, a29, a30, a18, a19, a21, ctx)
     } else {
     let v17 = if truth(a2) {
     let v18 = conj(a2);
@@ -9260,7 +9283,7 @@ fn branch_17<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     let v78 = mul(&v0, &v77);
     let v79 = mul(a24, &v0);
     let v80 = mul(a25, &v0);
-    let v81 = helper_12(&v74, &v75, &v76, &v78, &v79, &v80, a6, a9, a8, a7, a10, a15, a5, a16, a17, ctx);
+    let v81 = helper_12(&v74, &v75, &v76, &v78, &v79, &v80, a6, a9, a8, a7, a15, a10, a16, a17, a5, ctx);
     let v82 = mul(&v72, &v81);
     (*(&v82)).clone()
     } else {
@@ -9502,9 +9525,9 @@ fn branch_18<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v145 = mul(a5, &v91);
     let v146 = mul(&v145, &v98);
-    let v147 = helper_0(&v20, &v70, &v69, &v94, &v146, &v145, a6, a7, a5, ctx);
+    let v147 = helper_2(&v20, &v70, &v69, &v94, &v146, &v145, a6, a7, a5, ctx);
     let v148 = helper_1(&v20, &v70, &v69, &v94, &v146, &v145, a6, a7, a5, a8, a15, ctx);
-    let v149 = helper_2(&v20, &v70, &v69, &v94, &v146, &v145, a16, a6, a7, a5, ctx);
+    let v149 = helper_0(&v20, &v70, &v69, &v94, &v146, &v145, a16, a6, a7, a5, ctx);
     let v150 = helper_4(&v147, &v148, &v149, a16, a7, a6, a8, a17, a18, a19, ctx);
     let v151 = mul(a1, &v2);
     let v152 = mul(&v151, &v150);
@@ -12263,12 +12286,12 @@ fn branch_33<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     let v249 = helper_6(&v215, &v216, &v217, &v246, &v247, &v248, a5, a11, a3, a7, a6, a42, a43, a44, a12, a45, a31, a4, ctx);
     let v250 = mul(&v6, &v249);
     let v251 = powi(&v6, -1, false);
-    let v252 = helper_0(&v190, &v191, &v192, &v204, &v214, &v213, a3, a11, a7, ctx);
+    let v252 = helper_2(&v190, &v191, &v192, &v204, &v214, &v213, a3, a11, a7, ctx);
     let v253 = helper_1(&v190, &v191, &v192, &v204, &v214, &v213, a3, a11, a7, a4, a45, ctx);
-    let v254 = helper_2(&v190, &v191, &v192, &v204, &v214, &v213, a5, a3, a11, a7, ctx);
-    let v255 = helper_0(&v243, &v244, &v245, &v204, &v214, &v213, a3, a11, a7, ctx);
+    let v254 = helper_0(&v190, &v191, &v192, &v204, &v214, &v213, a5, a3, a11, a7, ctx);
+    let v255 = helper_2(&v243, &v244, &v245, &v204, &v214, &v213, a3, a11, a7, ctx);
     let v256 = helper_1(&v243, &v244, &v245, &v204, &v214, &v213, a3, a11, a7, a4, a45, ctx);
-    let v257 = helper_2(&v243, &v244, &v245, &v204, &v214, &v213, a5, a3, a11, a7, ctx);
+    let v257 = helper_0(&v243, &v244, &v245, &v204, &v214, &v213, a5, a3, a11, a7, ctx);
     let v258 = helper_6(&v252, &v253, &v254, &v255, &v256, &v257, a5, a11, a3, a7, a6, a42, a43, a44, a12, a45, a31, a4, ctx);
     let v259 = mul(&v251, &v258);
     let v260 = add(&v250, &v259);
@@ -12366,9 +12389,9 @@ fn branch_33<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v325 = mul(a7, &v313);
     let v326 = mul(&v325, &v320);
-    let v327 = helper_0(&v148, &v158, &v157, &v316, &v326, &v325, a3, a11, a7, ctx);
+    let v327 = helper_2(&v148, &v158, &v157, &v316, &v326, &v325, a3, a11, a7, ctx);
     let v328 = helper_1(&v148, &v158, &v157, &v316, &v326, &v325, a3, a11, a7, a4, a45, ctx);
-    let v329 = helper_2(&v148, &v158, &v157, &v316, &v326, &v325, a5, a3, a11, a7, ctx);
+    let v329 = helper_0(&v148, &v158, &v157, &v316, &v326, &v325, a5, a3, a11, a7, ctx);
     let v330 = conj(&v268);
     let v331 = add(&v268, &v330);
     let v332 = mul(a7, &v331);
@@ -12406,21 +12429,21 @@ fn branch_33<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     let v352 = helper_30(&v327, &v328, &v329, &v341, &v351, &v350, a7, a3, a11, ctx);
     let v353 = helper_31(&v327, &v328, &v329, &v341, &v351, &v350, a7, a3, a11, a4, ctx);
     let v354 = helper_32(&v327, &v328, &v329, &v341, &v351, &v350, a5, a7, a3, a11, ctx);
-    let v355 = helper_0(&v232, &v242, &v241, &v316, &v326, &v325, a3, a11, a7, ctx);
+    let v355 = helper_2(&v232, &v242, &v241, &v316, &v326, &v325, a3, a11, a7, ctx);
     let v356 = helper_1(&v232, &v242, &v241, &v316, &v326, &v325, a3, a11, a7, a4, a45, ctx);
-    let v357 = helper_2(&v232, &v242, &v241, &v316, &v326, &v325, a5, a3, a11, a7, ctx);
+    let v357 = helper_0(&v232, &v242, &v241, &v316, &v326, &v325, a5, a3, a11, a7, ctx);
     let v358 = helper_30(&v355, &v356, &v357, &v341, &v351, &v350, a7, a3, a11, ctx);
     let v359 = helper_31(&v355, &v356, &v357, &v341, &v351, &v350, a7, a3, a11, a4, ctx);
     let v360 = helper_32(&v355, &v356, &v357, &v341, &v351, &v350, a5, a7, a3, a11, ctx);
     let v361 = helper_6(&v352, &v353, &v354, &v358, &v359, &v360, a5, a11, a3, a7, a6, a42, a43, a44, a12, a45, a31, a4, ctx);
     let v362 = mul(&v268, &v361);
     let v363 = powi(&v268, -1, false);
-    let v364 = helper_0(&v327, &v328, &v329, &v341, &v351, &v350, a3, a11, a7, ctx);
+    let v364 = helper_2(&v327, &v328, &v329, &v341, &v351, &v350, a3, a11, a7, ctx);
     let v365 = helper_1(&v327, &v328, &v329, &v341, &v351, &v350, a3, a11, a7, a4, a45, ctx);
-    let v366 = helper_2(&v327, &v328, &v329, &v341, &v351, &v350, a5, a3, a11, a7, ctx);
-    let v367 = helper_0(&v355, &v356, &v357, &v341, &v351, &v350, a3, a11, a7, ctx);
+    let v366 = helper_0(&v327, &v328, &v329, &v341, &v351, &v350, a5, a3, a11, a7, ctx);
+    let v367 = helper_2(&v355, &v356, &v357, &v341, &v351, &v350, a3, a11, a7, ctx);
     let v368 = helper_1(&v355, &v356, &v357, &v341, &v351, &v350, a3, a11, a7, a4, a45, ctx);
-    let v369 = helper_2(&v355, &v356, &v357, &v341, &v351, &v350, a5, a3, a11, a7, ctx);
+    let v369 = helper_0(&v355, &v356, &v357, &v341, &v351, &v350, a5, a3, a11, a7, ctx);
     let v370 = helper_6(&v364, &v365, &v366, &v367, &v368, &v369, a5, a11, a3, a7, a6, a42, a43, a44, a12, a45, a31, a4, ctx);
     let v371 = mul(&v363, &v370);
     let v372 = add(&v362, &v371);
@@ -12565,12 +12588,12 @@ fn branch_33<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     let v471 = helper_6(&v462, &v463, &v464, &v468, &v469, &v470, a5, a11, a3, a7, a6, a42, a43, a44, a12, a45, a31, a4, ctx);
     let v472 = mul(&v378, &v471);
     let v473 = powi(&v378, -1, false);
-    let v474 = helper_0(&v437, &v438, &v439, &v451, &v461, &v460, a3, a11, a7, ctx);
+    let v474 = helper_2(&v437, &v438, &v439, &v451, &v461, &v460, a3, a11, a7, ctx);
     let v475 = helper_1(&v437, &v438, &v439, &v451, &v461, &v460, a3, a11, a7, a4, a45, ctx);
-    let v476 = helper_2(&v437, &v438, &v439, &v451, &v461, &v460, a5, a3, a11, a7, ctx);
-    let v477 = helper_0(&v465, &v466, &v467, &v451, &v461, &v460, a3, a11, a7, ctx);
+    let v476 = helper_0(&v437, &v438, &v439, &v451, &v461, &v460, a5, a3, a11, a7, ctx);
+    let v477 = helper_2(&v465, &v466, &v467, &v451, &v461, &v460, a3, a11, a7, ctx);
     let v478 = helper_1(&v465, &v466, &v467, &v451, &v461, &v460, a3, a11, a7, a4, a45, ctx);
-    let v479 = helper_2(&v465, &v466, &v467, &v451, &v461, &v460, a5, a3, a11, a7, ctx);
+    let v479 = helper_0(&v465, &v466, &v467, &v451, &v461, &v460, a5, a3, a11, a7, ctx);
     let v480 = helper_6(&v474, &v475, &v476, &v477, &v478, &v479, a5, a11, a3, a7, a6, a42, a43, a44, a12, a45, a31, a4, ctx);
     let v481 = mul(&v473, &v480);
     let v482 = add(&v472, &v481);
@@ -12677,12 +12700,12 @@ fn branch_33<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     let v555 = helper_6(&v549, &v550, &v551, &v552, &v553, &v554, a5, a11, a3, a7, a6, a42, a43, a44, a12, a45, a31, a4, ctx);
     let v556 = mul(&v490, &v555);
     let v557 = powi(&v490, -1, false);
-    let v558 = helper_0(&v148, &v158, &v157, &v538, &v548, &v547, a3, a11, a7, ctx);
+    let v558 = helper_2(&v148, &v158, &v157, &v538, &v548, &v547, a3, a11, a7, ctx);
     let v559 = helper_1(&v148, &v158, &v157, &v538, &v548, &v547, a3, a11, a7, a4, a45, ctx);
-    let v560 = helper_2(&v148, &v158, &v157, &v538, &v548, &v547, a5, a3, a11, a7, ctx);
-    let v561 = helper_0(&v232, &v242, &v241, &v538, &v548, &v547, a3, a11, a7, ctx);
+    let v560 = helper_0(&v148, &v158, &v157, &v538, &v548, &v547, a5, a3, a11, a7, ctx);
+    let v561 = helper_2(&v232, &v242, &v241, &v538, &v548, &v547, a3, a11, a7, ctx);
     let v562 = helper_1(&v232, &v242, &v241, &v538, &v548, &v547, a3, a11, a7, a4, a45, ctx);
-    let v563 = helper_2(&v232, &v242, &v241, &v538, &v548, &v547, a5, a3, a11, a7, ctx);
+    let v563 = helper_0(&v232, &v242, &v241, &v538, &v548, &v547, a5, a3, a11, a7, ctx);
     let v564 = helper_6(&v558, &v559, &v560, &v561, &v562, &v563, a5, a11, a3, a7, a6, a42, a43, a44, a12, a45, a31, a4, ctx);
     let v565 = mul(&v557, &v564);
     let v566 = add(&v556, &v565);
@@ -13379,12 +13402,12 @@ fn branch_37<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v45 = mul(a3, &v33);
     let v46 = mul(&v45, &v40);
-    let v47 = helper_0(&v14, &v24, &v23, &v36, &v46, &v45, a4, a5, a3, ctx);
+    let v47 = helper_2(&v14, &v24, &v23, &v36, &v46, &v45, a4, a5, a3, ctx);
     let v48 = helper_1(&v14, &v24, &v23, &v36, &v46, &v45, a4, a5, a3, a6, a8, ctx);
-    let v49 = helper_2(&v14, &v24, &v23, &v36, &v46, &v45, a9, a4, a5, a3, ctx);
-    let v50 = helper_0(&v47, &v48, &v49, a10, a11, a12, a4, a5, a3, ctx);
+    let v49 = helper_0(&v14, &v24, &v23, &v36, &v46, &v45, a9, a4, a5, a3, ctx);
+    let v50 = helper_2(&v47, &v48, &v49, a10, a11, a12, a4, a5, a3, ctx);
     let v51 = helper_1(&v47, &v48, &v49, a10, a11, a12, a4, a5, a3, a6, a8, ctx);
-    let v52 = helper_2(&v47, &v48, &v49, a10, a11, a12, a9, a4, a5, a3, ctx);
+    let v52 = helper_0(&v47, &v48, &v49, a10, a11, a12, a9, a4, a5, a3, ctx);
     let v53 = helper_30(a13, a14, a15, &v50, &v51, &v52, a3, a4, a5, ctx);
     let v54 = helper_31(a13, a14, a15, &v50, &v51, &v52, a3, a4, a5, a6, ctx);
     let v55 = helper_32(a13, a14, a15, &v50, &v51, &v52, a9, a3, a4, a5, ctx);
@@ -13472,9 +13495,9 @@ fn branch_37<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v110 = mul(a3, &v98);
     let v111 = mul(&v110, &v105);
-    let v112 = helper_0(&v79, &v89, &v88, &v101, &v111, &v110, a4, a5, a3, ctx);
+    let v112 = helper_2(&v79, &v89, &v88, &v101, &v111, &v110, a4, a5, a3, ctx);
     let v113 = helper_1(&v79, &v89, &v88, &v101, &v111, &v110, a4, a5, a3, a6, a8, ctx);
-    let v114 = helper_2(&v79, &v89, &v88, &v101, &v111, &v110, a9, a4, a5, a3, ctx);
+    let v114 = helper_0(&v79, &v89, &v88, &v101, &v111, &v110, a9, a4, a5, a3, ctx);
     let v115 = helper_30(a13, a14, a15, &v112, &v113, &v114, a3, a4, a5, ctx);
     let v116 = helper_31(a13, a14, a15, &v112, &v113, &v114, a3, a4, a5, a6, ctx);
     let v117 = helper_32(a13, a14, a15, &v112, &v113, &v114, a9, a3, a4, a5, ctx);
@@ -13716,9 +13739,9 @@ fn branch_38<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v163 = mul(a11, &v151);
     let v164 = mul(&v163, &v158);
-    let v165 = helper_0(&v132, &v142, &v141, &v154, &v164, &v163, a2, a14, a11, ctx);
+    let v165 = helper_2(&v132, &v142, &v141, &v154, &v164, &v163, a2, a14, a11, ctx);
     let v166 = helper_1(&v132, &v142, &v141, &v154, &v164, &v163, a2, a14, a11, a8, a36, ctx);
-    let v167 = helper_2(&v132, &v142, &v141, &v154, &v164, &v163, a9, a2, a14, a11, ctx);
+    let v167 = helper_0(&v132, &v142, &v141, &v154, &v164, &v163, a9, a2, a14, a11, ctx);
     let v168 = conj(&v12);
     let v169 = add(&v12, &v168);
     let v170 = mul(a11, &v169);
@@ -13793,9 +13816,9 @@ fn branch_38<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v216 = mul(a11, &v204);
     let v217 = mul(&v216, &v211);
-    let v218 = helper_0(&v207, &v217, &v216, &v154, &v164, &v163, a2, a14, a11, ctx);
+    let v218 = helper_2(&v207, &v217, &v216, &v154, &v164, &v163, a2, a14, a11, ctx);
     let v219 = helper_1(&v207, &v217, &v216, &v154, &v164, &v163, a2, a14, a11, a8, a36, ctx);
-    let v220 = helper_2(&v207, &v217, &v216, &v154, &v164, &v163, a9, a2, a14, a11, ctx);
+    let v220 = helper_0(&v207, &v217, &v216, &v154, &v164, &v163, a9, a2, a14, a11, ctx);
     let v221 = helper_30(&v218, &v219, &v220, &v179, &v189, &v188, a11, a2, a14, ctx);
     let v222 = helper_31(&v218, &v219, &v220, &v179, &v189, &v188, a11, a2, a14, a8, ctx);
     let v223 = helper_32(&v218, &v219, &v220, &v179, &v189, &v188, a9, a11, a2, a14, ctx);
@@ -13984,9 +14007,9 @@ fn branch_38<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     let v352 = add(&v303, &v327);
     let v353 = add(&v352, &v351);
     let v354 = powi(&v194, -1, false);
-    let v355 = helper_0(&v132, &v142, &v141, &v207, &v217, &v216, a2, a14, a11, ctx);
+    let v355 = helper_2(&v132, &v142, &v141, &v207, &v217, &v216, a2, a14, a11, ctx);
     let v356 = helper_1(&v132, &v142, &v141, &v207, &v217, &v216, a2, a14, a11, a8, a36, ctx);
-    let v357 = helper_2(&v132, &v142, &v141, &v207, &v217, &v216, a9, a2, a14, a11, ctx);
+    let v357 = helper_0(&v132, &v142, &v141, &v207, &v217, &v216, a9, a2, a14, a11, ctx);
     let v358 = helper_4(&v355, &v356, &v357, a9, a14, a2, a8, a5, a37, a38, ctx);
     let v359 = mul(a9, a0);
     let v360 = mul(&v359, &v353);
@@ -13995,22 +14018,22 @@ fn branch_38<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     (*(&v362)).clone()
     };
     let v363 = powi(&v12, -1, false);
-    let v364 = helper_0(&v165, &v166, &v167, &v179, &v189, &v188, a2, a14, a11, ctx);
+    let v364 = helper_2(&v165, &v166, &v167, &v179, &v189, &v188, a2, a14, a11, ctx);
     let v365 = helper_1(&v165, &v166, &v167, &v179, &v189, &v188, a2, a14, a11, a8, a36, ctx);
-    let v366 = helper_2(&v165, &v166, &v167, &v179, &v189, &v188, a9, a2, a14, a11, ctx);
-    let v367 = helper_0(&v218, &v219, &v220, &v179, &v189, &v188, a2, a14, a11, ctx);
+    let v366 = helper_0(&v165, &v166, &v167, &v179, &v189, &v188, a9, a2, a14, a11, ctx);
+    let v367 = helper_2(&v218, &v219, &v220, &v179, &v189, &v188, a2, a14, a11, ctx);
     let v368 = helper_1(&v218, &v219, &v220, &v179, &v189, &v188, a2, a14, a11, a8, a36, ctx);
-    let v369 = helper_2(&v218, &v219, &v220, &v179, &v189, &v188, a9, a2, a14, a11, ctx);
+    let v369 = helper_0(&v218, &v219, &v220, &v179, &v189, &v188, a9, a2, a14, a11, ctx);
     let v370 = helper_6(&v364, &v365, &v366, &v367, &v368, &v369, a9, a14, a2, a11, a10, a37, a38, a39, a6, a36, a5, a8, ctx);
     let v371 = mul(a33, &v363);
     let v372 = mul(&v371, &v370);
     let v373 = powi(&v233, -1, false);
-    let v374 = helper_0(&v132, &v142, &v141, &v279, &v289, &v288, a2, a14, a11, ctx);
+    let v374 = helper_2(&v132, &v142, &v141, &v279, &v289, &v288, a2, a14, a11, ctx);
     let v375 = helper_1(&v132, &v142, &v141, &v279, &v289, &v288, a2, a14, a11, a8, a36, ctx);
-    let v376 = helper_2(&v132, &v142, &v141, &v279, &v289, &v288, a9, a2, a14, a11, ctx);
-    let v377 = helper_0(&v207, &v217, &v216, &v279, &v289, &v288, a2, a14, a11, ctx);
+    let v376 = helper_0(&v132, &v142, &v141, &v279, &v289, &v288, a9, a2, a14, a11, ctx);
+    let v377 = helper_2(&v207, &v217, &v216, &v279, &v289, &v288, a2, a14, a11, ctx);
     let v378 = helper_1(&v207, &v217, &v216, &v279, &v289, &v288, a2, a14, a11, a8, a36, ctx);
-    let v379 = helper_2(&v207, &v217, &v216, &v279, &v289, &v288, a9, a2, a14, a11, ctx);
+    let v379 = helper_0(&v207, &v217, &v216, &v279, &v289, &v288, a9, a2, a14, a11, ctx);
     let v380 = helper_6(&v374, &v375, &v376, &v377, &v378, &v379, a9, a14, a2, a11, a10, a37, a38, a39, a6, a36, a5, a8, ctx);
     let v381 = mul(a2, &v373);
     let v382 = mul(&v381, &v380);
@@ -14255,12 +14278,12 @@ fn branch_40<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v46 = mul(a4, &v34);
     let v47 = mul(&v46, &v41);
-    let v48 = helper_0(&v15, &v25, &v24, &v37, &v47, &v46, a5, a6, a4, ctx);
+    let v48 = helper_2(&v15, &v25, &v24, &v37, &v47, &v46, a5, a6, a4, ctx);
     let v49 = helper_1(&v15, &v25, &v24, &v37, &v47, &v46, a5, a6, a4, a7, a9, ctx);
-    let v50 = helper_2(&v15, &v25, &v24, &v37, &v47, &v46, a10, a5, a6, a4, ctx);
-    let v51 = helper_0(&v48, &v49, &v50, a11, a12, a13, a5, a6, a4, ctx);
+    let v50 = helper_0(&v15, &v25, &v24, &v37, &v47, &v46, a10, a5, a6, a4, ctx);
+    let v51 = helper_2(&v48, &v49, &v50, a11, a12, a13, a5, a6, a4, ctx);
     let v52 = helper_1(&v48, &v49, &v50, a11, a12, a13, a5, a6, a4, a7, a9, ctx);
-    let v53 = helper_2(&v48, &v49, &v50, a11, a12, a13, a10, a5, a6, a4, ctx);
+    let v53 = helper_0(&v48, &v49, &v50, a11, a12, a13, a10, a5, a6, a4, ctx);
     let v54 = helper_30(a14, a15, a16, &v51, &v52, &v53, a4, a5, a6, ctx);
     let v55 = helper_31(a14, a15, a16, &v51, &v52, &v53, a4, a5, a6, a7, ctx);
     let v56 = helper_32(a14, a15, a16, &v51, &v52, &v53, a10, a4, a5, a6, ctx);
@@ -14347,9 +14370,9 @@ fn branch_40<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v110 = mul(a4, &v98);
     let v111 = mul(&v110, &v105);
-    let v112 = helper_0(&v79, &v89, &v88, &v101, &v111, &v110, a5, a6, a4, ctx);
+    let v112 = helper_2(&v79, &v89, &v88, &v101, &v111, &v110, a5, a6, a4, ctx);
     let v113 = helper_1(&v79, &v89, &v88, &v101, &v111, &v110, a5, a6, a4, a7, a9, ctx);
-    let v114 = helper_2(&v79, &v89, &v88, &v101, &v111, &v110, a10, a5, a6, a4, ctx);
+    let v114 = helper_0(&v79, &v89, &v88, &v101, &v111, &v110, a10, a5, a6, a4, ctx);
     let v115 = helper_30(a14, a15, a16, &v112, &v113, &v114, a4, a5, a6, ctx);
     let v116 = helper_31(a14, a15, a16, &v112, &v113, &v114, a4, a5, a6, a7, ctx);
     let v117 = helper_32(a14, a15, a16, &v112, &v113, &v114, a10, a4, a5, a6, ctx);
@@ -14666,9 +14689,9 @@ fn branch_41<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v214 = mul(a10, &v202);
     let v215 = mul(&v214, &v209);
-    let v216 = helper_0(&v127, &v137, &v136, &v205, &v215, &v214, a2, a14, a10, ctx);
+    let v216 = helper_2(&v127, &v137, &v136, &v205, &v215, &v214, a2, a14, a10, ctx);
     let v217 = helper_1(&v127, &v137, &v136, &v205, &v215, &v214, a2, a14, a10, a7, a42, ctx);
-    let v218 = helper_2(&v127, &v137, &v136, &v205, &v215, &v214, a8, a2, a14, a10, ctx);
+    let v218 = helper_0(&v127, &v137, &v136, &v205, &v215, &v214, a8, a2, a14, a10, ctx);
     let v219 = conj(a43);
     let v220 = add(a43, &v219);
     let v221 = mul(a10, &v220);
@@ -14706,9 +14729,9 @@ fn branch_41<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     let v241 = helper_30(&v216, &v217, &v218, &v230, &v240, &v239, a10, a2, a14, ctx);
     let v242 = helper_31(&v216, &v217, &v218, &v230, &v240, &v239, a10, a2, a14, a7, ctx);
     let v243 = helper_32(&v216, &v217, &v218, &v230, &v240, &v239, a8, a10, a2, a14, ctx);
-    let v244 = helper_0(&v177, &v187, &v186, &v205, &v215, &v214, a2, a14, a10, ctx);
+    let v244 = helper_2(&v177, &v187, &v186, &v205, &v215, &v214, a2, a14, a10, ctx);
     let v245 = helper_1(&v177, &v187, &v186, &v205, &v215, &v214, a2, a14, a10, a7, a42, ctx);
-    let v246 = helper_2(&v177, &v187, &v186, &v205, &v215, &v214, a8, a2, a14, a10, ctx);
+    let v246 = helper_0(&v177, &v187, &v186, &v205, &v215, &v214, a8, a2, a14, a10, ctx);
     let v247 = helper_30(&v244, &v245, &v246, &v230, &v240, &v239, a10, a2, a14, ctx);
     let v248 = helper_31(&v244, &v245, &v246, &v230, &v240, &v239, a10, a2, a14, a7, ctx);
     let v249 = helper_32(&v244, &v245, &v246, &v230, &v240, &v239, a8, a10, a2, a14, ctx);
@@ -14798,9 +14821,9 @@ fn branch_41<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     let v307 = add(&v257, &v281);
     let v308 = add(&v307, &v306);
     let v309 = powi(&v164, -1, false);
-    let v310 = helper_0(&v127, &v137, &v136, &v177, &v187, &v186, a2, a14, a10, ctx);
+    let v310 = helper_2(&v127, &v137, &v136, &v177, &v187, &v186, a2, a14, a10, ctx);
     let v311 = helper_1(&v127, &v137, &v136, &v177, &v187, &v186, a2, a14, a10, a7, a42, ctx);
-    let v312 = helper_2(&v127, &v137, &v136, &v177, &v187, &v186, a8, a2, a14, a10, ctx);
+    let v312 = helper_0(&v127, &v137, &v136, &v177, &v187, &v186, a8, a2, a14, a10, ctx);
     let v313 = helper_4(&v310, &v311, &v312, a8, a14, a2, a7, a30, a39, a40, ctx);
     let v314 = mul(a8, a0);
     let v315 = mul(&v314, &v308);
@@ -14809,21 +14832,21 @@ fn branch_41<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     (*(&v317)).clone()
     };
     let v318 = powi(&v10, -1, false);
-    let v319 = helper_0(&v127, &v137, &v136, &v149, &v159, &v158, a2, a14, a10, ctx);
+    let v319 = helper_2(&v127, &v137, &v136, &v149, &v159, &v158, a2, a14, a10, ctx);
     let v320 = helper_1(&v127, &v137, &v136, &v149, &v159, &v158, a2, a14, a10, a7, a42, ctx);
-    let v321 = helper_2(&v127, &v137, &v136, &v149, &v159, &v158, a8, a2, a14, a10, ctx);
-    let v322 = helper_0(&v177, &v187, &v186, &v149, &v159, &v158, a2, a14, a10, ctx);
+    let v321 = helper_0(&v127, &v137, &v136, &v149, &v159, &v158, a8, a2, a14, a10, ctx);
+    let v322 = helper_2(&v177, &v187, &v186, &v149, &v159, &v158, a2, a14, a10, ctx);
     let v323 = helper_1(&v177, &v187, &v186, &v149, &v159, &v158, a2, a14, a10, a7, a42, ctx);
-    let v324 = helper_2(&v177, &v187, &v186, &v149, &v159, &v158, a8, a2, a14, a10, ctx);
+    let v324 = helper_0(&v177, &v187, &v186, &v149, &v159, &v158, a8, a2, a14, a10, ctx);
     let v325 = helper_6(&v319, &v320, &v321, &v322, &v323, &v324, a8, a14, a2, a10, a9, a39, a40, a41, a15, a42, a30, a7, ctx);
     let v326 = mul(a2, &v318);
     let v327 = mul(&v326, &v325);
-    let v328 = helper_0(&v216, &v217, &v218, &v230, &v240, &v239, a2, a14, a10, ctx);
+    let v328 = helper_2(&v216, &v217, &v218, &v230, &v240, &v239, a2, a14, a10, ctx);
     let v329 = helper_1(&v216, &v217, &v218, &v230, &v240, &v239, a2, a14, a10, a7, a42, ctx);
-    let v330 = helper_2(&v216, &v217, &v218, &v230, &v240, &v239, a8, a2, a14, a10, ctx);
-    let v331 = helper_0(&v244, &v245, &v246, &v230, &v240, &v239, a2, a14, a10, ctx);
+    let v330 = helper_0(&v216, &v217, &v218, &v230, &v240, &v239, a8, a2, a14, a10, ctx);
+    let v331 = helper_2(&v244, &v245, &v246, &v230, &v240, &v239, a2, a14, a10, ctx);
     let v332 = helper_1(&v244, &v245, &v246, &v230, &v240, &v239, a2, a14, a10, a7, a42, ctx);
-    let v333 = helper_2(&v244, &v245, &v246, &v230, &v240, &v239, a8, a2, a14, a10, ctx);
+    let v333 = helper_0(&v244, &v245, &v246, &v230, &v240, &v239, a8, a2, a14, a10, ctx);
     let v334 = helper_6(&v328, &v329, &v330, &v331, &v332, &v333, a8, a14, a2, a10, a9, a39, a40, a41, a15, a42, a30, a7, ctx);
     let v335 = mul(a44, a33);
     let v336 = mul(&v335, &v334);
@@ -15678,23 +15701,23 @@ fn branch_44<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     let v258 = helper_30(&v255, &v256, &v257, &v78, &v88, &v87, a8, a1, a7, ctx);
     let v259 = helper_31(&v255, &v256, &v257, &v78, &v88, &v87, a8, a1, a7, a11, ctx);
     let v260 = helper_32(&v255, &v256, &v257, &v78, &v88, &v87, a12, a8, a1, a7, ctx);
-    let v261 = helper_0(&v255, &v256, &v257, &v78, &v88, &v87, a1, a7, a8, ctx);
+    let v261 = helper_2(&v255, &v256, &v257, &v78, &v88, &v87, a1, a7, a8, ctx);
     let v262 = helper_1(&v255, &v256, &v257, &v78, &v88, &v87, a1, a7, a8, a11, a18, ctx);
-    let v263 = helper_2(&v255, &v256, &v257, &v78, &v88, &v87, a12, a1, a7, a8, ctx);
+    let v263 = helper_0(&v255, &v256, &v257, &v78, &v88, &v87, a12, a1, a7, a8, ctx);
     let v264 = helper_6(&v258, &v259, &v260, &v261, &v262, &v263, a12, a7, a1, a8, a13, a15, a16, a17, a10, a18, a9, a11, ctx);
     let v265 = mul(a1, &v127);
     let v266 = mul(&v265, &v174);
     let v267 = mul(&v266, &v264);
     let v268 = powi(&v127, -1, false);
-    let v269 = helper_0(&v222, &v232, &v231, &v244, &v254, &v253, a1, a7, a8, ctx);
+    let v269 = helper_2(&v222, &v232, &v231, &v244, &v254, &v253, a1, a7, a8, ctx);
     let v270 = helper_1(&v222, &v232, &v231, &v244, &v254, &v253, a1, a7, a8, a11, a18, ctx);
-    let v271 = helper_2(&v222, &v232, &v231, &v244, &v254, &v253, a12, a1, a7, a8, ctx);
+    let v271 = helper_0(&v222, &v232, &v231, &v244, &v254, &v253, a12, a1, a7, a8, ctx);
     let v272 = helper_30(&v269, &v270, &v271, &v78, &v88, &v87, a8, a1, a7, ctx);
     let v273 = helper_31(&v269, &v270, &v271, &v78, &v88, &v87, a8, a1, a7, a11, ctx);
     let v274 = helper_32(&v269, &v270, &v271, &v78, &v88, &v87, a12, a8, a1, a7, ctx);
-    let v275 = helper_0(&v269, &v270, &v271, &v78, &v88, &v87, a1, a7, a8, ctx);
+    let v275 = helper_2(&v269, &v270, &v271, &v78, &v88, &v87, a1, a7, a8, ctx);
     let v276 = helper_1(&v269, &v270, &v271, &v78, &v88, &v87, a1, a7, a8, a11, a18, ctx);
-    let v277 = helper_2(&v269, &v270, &v271, &v78, &v88, &v87, a12, a1, a7, a8, ctx);
+    let v277 = helper_0(&v269, &v270, &v271, &v78, &v88, &v87, a12, a1, a7, a8, ctx);
     let v278 = helper_6(&v272, &v273, &v274, &v275, &v276, &v277, a12, a7, a1, a8, a13, a15, a16, a17, a10, a18, a9, a11, ctx);
     let v279 = mul(a1, &v174);
     let v280 = mul(&v279, &v268);
@@ -15746,9 +15769,9 @@ fn branch_44<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     let v314 = helper_30(&v311, &v312, &v313, &v311, &v312, &v313, a8, a1, a7, ctx);
     let v315 = helper_31(&v311, &v312, &v313, &v311, &v312, &v313, a8, a1, a7, a11, ctx);
     let v316 = helper_32(&v311, &v312, &v313, &v311, &v312, &v313, a12, a8, a1, a7, ctx);
-    let v317 = helper_0(&v314, &v315, &v316, &v78, &v88, &v87, a1, a7, a8, ctx);
+    let v317 = helper_2(&v314, &v315, &v316, &v78, &v88, &v87, a1, a7, a8, ctx);
     let v318 = helper_1(&v314, &v315, &v316, &v78, &v88, &v87, a1, a7, a8, a11, a18, ctx);
-    let v319 = helper_2(&v314, &v315, &v316, &v78, &v88, &v87, a12, a1, a7, a8, ctx);
+    let v319 = helper_0(&v314, &v315, &v316, &v78, &v88, &v87, a12, a1, a7, a8, ctx);
     let v320 = helper_3(&v317, &v318, &v319, a1, a11, a9, a7, a15, a16, a12, ctx);
     let v321 = helper_4(&v78, &v88, &v87, a12, a7, a1, a11, a9, a15, a16, ctx);
     let v322 = mul(&v30, &v283);
@@ -15884,9 +15907,9 @@ fn branch_45<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     let v81 = add(&v80, &v75);
     let v82 = add(&v81, &v79);
     let v83 = powi(a21, -1, false);
-    let v84 = helper_0(a15, a16, a17, a18, a19, a20, a1, a4, a3, ctx);
+    let v84 = helper_2(a15, a16, a17, a18, a19, a20, a1, a4, a3, ctx);
     let v85 = helper_1(a15, a16, a17, a18, a19, a20, a1, a4, a3, a5, a22, ctx);
-    let v86 = helper_2(a15, a16, a17, a18, a19, a20, a9, a1, a4, a3, ctx);
+    let v86 = helper_0(a15, a16, a17, a18, a19, a20, a9, a1, a4, a3, ctx);
     let v87 = helper_4(&v84, &v85, &v86, a9, a4, a1, a5, a6, a7, a8, ctx);
     let v88 = mul(a23, a24);
     let v89 = mul(&v88, &v82);
@@ -16005,13 +16028,13 @@ fn branch_46<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v71 = mul(a3, &v59);
     let v72 = mul(&v71, &v66);
-    let v73 = helper_0(&v46, &v47, &v48, &v62, &v72, &v71, a4, a5, a3, ctx);
+    let v73 = helper_2(&v46, &v47, &v48, &v62, &v72, &v71, a4, a5, a3, ctx);
     let v74 = helper_1(&v46, &v47, &v48, &v62, &v72, &v71, a4, a5, a3, a6, a11, ctx);
-    let v75 = helper_2(&v46, &v47, &v48, &v62, &v72, &v71, a8, a4, a5, a3, ctx);
+    let v75 = helper_0(&v46, &v47, &v48, &v62, &v72, &v71, a8, a4, a5, a3, ctx);
     let v76 = helper_3(&v73, &v74, &v75, a4, a6, a12, a5, a13, a14, a8, ctx);
-    let v77 = helper_0(a15, a16, a17, a18, a19, a20, a4, a5, a3, ctx);
+    let v77 = helper_2(a15, a16, a17, a18, a19, a20, a4, a5, a3, ctx);
     let v78 = helper_1(a15, a16, a17, a18, a19, a20, a4, a5, a3, a6, a11, ctx);
-    let v79 = helper_2(a15, a16, a17, a18, a19, a20, a8, a4, a5, a3, ctx);
+    let v79 = helper_0(a15, a16, a17, a18, a19, a20, a8, a4, a5, a3, ctx);
     let v80 = helper_4(&v77, &v78, &v79, a8, a5, a4, a6, a12, a13, a14, ctx);
     let v81 = mul(a21, a22);
     let v82 = mul(&v81, &v1);
@@ -16094,9 +16117,9 @@ fn branch_46<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v132 = mul(a3, &v120);
     let v133 = mul(&v132, &v127);
-    let v134 = helper_0(&v101, &v111, &v110, &v123, &v133, &v132, a4, a5, a3, ctx);
+    let v134 = helper_2(&v101, &v111, &v110, &v123, &v133, &v132, a4, a5, a3, ctx);
     let v135 = helper_1(&v101, &v111, &v110, &v123, &v133, &v132, a4, a5, a3, a6, a11, ctx);
-    let v136 = helper_2(&v101, &v111, &v110, &v123, &v133, &v132, a8, a4, a5, a3, ctx);
+    let v136 = helper_0(&v101, &v111, &v110, &v123, &v133, &v132, a8, a4, a5, a3, ctx);
     let v137 = helper_30(a15, a16, a17, &v134, &v135, &v136, a3, a4, a5, ctx);
     let v138 = helper_31(a15, a16, a17, &v134, &v135, &v136, a3, a4, a5, a6, ctx);
     let v139 = helper_32(a15, a16, a17, &v134, &v135, &v136, a8, a3, a4, a5, ctx);
@@ -16231,9 +16254,9 @@ fn branch_46<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     let v226 = add(&v225, &v220);
     let v227 = add(&v226, &v224);
     let v228 = powi(a1, -1, false);
-    let v229 = helper_0(a15, a16, a17, a18, a19, a20, a4, a5, a3, ctx);
+    let v229 = helper_2(a15, a16, a17, a18, a19, a20, a4, a5, a3, ctx);
     let v230 = helper_1(a15, a16, a17, a18, a19, a20, a4, a5, a3, a6, a11, ctx);
-    let v231 = helper_2(a15, a16, a17, a18, a19, a20, a8, a4, a5, a3, ctx);
+    let v231 = helper_0(a15, a16, a17, a18, a19, a20, a8, a4, a5, a3, ctx);
     let v232 = helper_4(&v229, &v230, &v231, a8, a5, a4, a6, a12, a13, a14, ctx);
     let v233 = mul(a21, a22);
     let v234 = mul(&v233, &v227);
@@ -16314,9 +16337,9 @@ fn branch_46<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v284 = mul(a3, &v272);
     let v285 = mul(&v284, &v279);
-    let v286 = helper_0(&v253, &v263, &v262, &v275, &v285, &v284, a4, a5, a3, ctx);
+    let v286 = helper_2(&v253, &v263, &v262, &v275, &v285, &v284, a4, a5, a3, ctx);
     let v287 = helper_1(&v253, &v263, &v262, &v275, &v285, &v284, a4, a5, a3, a6, a11, ctx);
-    let v288 = helper_2(&v253, &v263, &v262, &v275, &v285, &v284, a8, a4, a5, a3, ctx);
+    let v288 = helper_0(&v253, &v263, &v262, &v275, &v285, &v284, a8, a4, a5, a3, ctx);
     let v289 = helper_30(a15, a16, a17, &v286, &v287, &v288, a3, a4, a5, ctx);
     let v290 = helper_31(a15, a16, a17, &v286, &v287, &v288, a3, a4, a5, a6, ctx);
     let v291 = helper_32(a15, a16, a17, &v286, &v287, &v288, a8, a3, a4, a5, ctx);
@@ -16451,9 +16474,9 @@ fn branch_46<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     let v378 = add(&v377, &v372);
     let v379 = add(&v378, &v376);
     let v380 = powi(a1, -1, false);
-    let v381 = helper_0(a15, a16, a17, a18, a19, a20, a4, a5, a3, ctx);
+    let v381 = helper_2(a15, a16, a17, a18, a19, a20, a4, a5, a3, ctx);
     let v382 = helper_1(a15, a16, a17, a18, a19, a20, a4, a5, a3, a6, a11, ctx);
-    let v383 = helper_2(a15, a16, a17, a18, a19, a20, a8, a4, a5, a3, ctx);
+    let v383 = helper_0(a15, a16, a17, a18, a19, a20, a8, a4, a5, a3, ctx);
     let v384 = helper_4(&v381, &v382, &v383, a8, a5, a4, a6, a12, a13, a14, ctx);
     let v385 = mul(a21, a22);
     let v386 = mul(&v385, &v379);
@@ -16586,9 +16609,9 @@ fn branch_47<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     let v80 = add(&v79, &v52);
     let v81 = add(&v80, &v77);
     let v82 = add(&v81, &v78);
-    let v83 = helper_0(a11, a12, a13, a18, a19, a20, a2, a5, a4, ctx);
+    let v83 = helper_2(a11, a12, a13, a18, a19, a20, a2, a5, a4, ctx);
     let v84 = helper_1(a11, a12, a13, a18, a19, a20, a2, a5, a4, a6, a21, ctx);
-    let v85 = helper_2(a11, a12, a13, a18, a19, a20, a10, a2, a5, a4, ctx);
+    let v85 = helper_0(a11, a12, a13, a18, a19, a20, a10, a2, a5, a4, ctx);
     let v86 = helper_4(&v83, &v84, &v85, a10, a5, a2, a6, a7, a8, a9, ctx);
     let v87 = mul(a22, a23);
     let v88 = mul(&v87, &v0);
@@ -16709,13 +16732,13 @@ fn branch_48<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v73 = mul(a3, &v61);
     let v74 = mul(&v73, &v68);
-    let v75 = helper_0(&v48, &v49, &v50, &v64, &v74, &v73, a4, a5, a3, ctx);
+    let v75 = helper_2(&v48, &v49, &v50, &v64, &v74, &v73, a4, a5, a3, ctx);
     let v76 = helper_1(&v48, &v49, &v50, &v64, &v74, &v73, a4, a5, a3, a6, a13, ctx);
-    let v77 = helper_2(&v48, &v49, &v50, &v64, &v74, &v73, a10, a4, a5, a3, ctx);
+    let v77 = helper_0(&v48, &v49, &v50, &v64, &v74, &v73, a10, a4, a5, a3, ctx);
     let v78 = helper_3(&v75, &v76, &v77, a4, a6, a14, a5, a15, a16, a10, ctx);
-    let v79 = helper_0(a17, a18, a19, a20, a21, a22, a4, a5, a3, ctx);
+    let v79 = helper_2(a17, a18, a19, a20, a21, a22, a4, a5, a3, ctx);
     let v80 = helper_1(a17, a18, a19, a20, a21, a22, a4, a5, a3, a6, a13, ctx);
-    let v81 = helper_2(a17, a18, a19, a20, a21, a22, a10, a4, a5, a3, ctx);
+    let v81 = helper_0(a17, a18, a19, a20, a21, a22, a10, a4, a5, a3, ctx);
     let v82 = helper_4(&v79, &v80, &v81, a10, a5, a4, a6, a14, a15, a16, ctx);
     let v83 = mul(a23, a24);
     let v84 = mul(&v83, &v1);
@@ -16798,9 +16821,9 @@ fn branch_48<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v134 = mul(a3, &v122);
     let v135 = mul(&v134, &v129);
-    let v136 = helper_0(&v103, &v113, &v112, &v125, &v135, &v134, a4, a5, a3, ctx);
+    let v136 = helper_2(&v103, &v113, &v112, &v125, &v135, &v134, a4, a5, a3, ctx);
     let v137 = helper_1(&v103, &v113, &v112, &v125, &v135, &v134, a4, a5, a3, a6, a13, ctx);
-    let v138 = helper_2(&v103, &v113, &v112, &v125, &v135, &v134, a10, a4, a5, a3, ctx);
+    let v138 = helper_0(&v103, &v113, &v112, &v125, &v135, &v134, a10, a4, a5, a3, ctx);
     let v139 = helper_30(a17, a18, a19, &v136, &v137, &v138, a3, a4, a5, ctx);
     let v140 = helper_31(a17, a18, a19, &v136, &v137, &v138, a3, a4, a5, a6, ctx);
     let v141 = helper_32(a17, a18, a19, &v136, &v137, &v138, a10, a3, a4, a5, ctx);
@@ -16894,9 +16917,9 @@ fn branch_48<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v198 = mul(a3, &v186);
     let v199 = mul(&v198, &v193);
-    let v200 = helper_0(&v167, &v177, &v176, &v189, &v199, &v198, a4, a5, a3, ctx);
+    let v200 = helper_2(&v167, &v177, &v176, &v189, &v199, &v198, a4, a5, a3, ctx);
     let v201 = helper_1(&v167, &v177, &v176, &v189, &v199, &v198, a4, a5, a3, a6, a13, ctx);
-    let v202 = helper_2(&v167, &v177, &v176, &v189, &v199, &v198, a10, a4, a5, a3, ctx);
+    let v202 = helper_0(&v167, &v177, &v176, &v189, &v199, &v198, a10, a4, a5, a3, ctx);
     let v203 = helper_30(a17, a18, a19, &v200, &v201, &v202, a3, a4, a5, ctx);
     let v204 = helper_31(a17, a18, a19, &v200, &v201, &v202, a3, a4, a5, a6, ctx);
     let v205 = helper_32(a17, a18, a19, &v200, &v201, &v202, a10, a3, a4, a5, ctx);
@@ -17031,9 +17054,9 @@ fn branch_48<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     let v292 = add(&v291, &v286);
     let v293 = add(&v292, &v290);
     let v294 = powi(a1, -1, false);
-    let v295 = helper_0(a17, a18, a19, a20, a21, a22, a4, a5, a3, ctx);
+    let v295 = helper_2(a17, a18, a19, a20, a21, a22, a4, a5, a3, ctx);
     let v296 = helper_1(a17, a18, a19, a20, a21, a22, a4, a5, a3, a6, a13, ctx);
-    let v297 = helper_2(a17, a18, a19, a20, a21, a22, a10, a4, a5, a3, ctx);
+    let v297 = helper_0(a17, a18, a19, a20, a21, a22, a10, a4, a5, a3, ctx);
     let v298 = helper_4(&v295, &v296, &v297, a10, a5, a4, a6, a14, a15, a16, ctx);
     let v299 = mul(a23, a24);
     let v300 = mul(&v299, &v293);
@@ -17349,12 +17372,12 @@ fn branch_49<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     (*(&v240)).clone()
     };
     let v241 = powi(&v13, -1, false);
-    let v242 = helper_0(&v89, &v138, &v137, &v150, &v160, &v159, a2, a14, a11, ctx);
+    let v242 = helper_2(&v89, &v138, &v137, &v150, &v160, &v159, a2, a14, a11, ctx);
     let v243 = helper_1(&v89, &v138, &v137, &v150, &v160, &v159, a2, a14, a11, a8, a28, ctx);
-    let v244 = helper_2(&v89, &v138, &v137, &v150, &v160, &v159, a9, a2, a14, a11, ctx);
-    let v245 = helper_0(&v178, &v227, &v226, &v150, &v160, &v159, a2, a14, a11, ctx);
+    let v244 = helper_0(&v89, &v138, &v137, &v150, &v160, &v159, a9, a2, a14, a11, ctx);
+    let v245 = helper_2(&v178, &v227, &v226, &v150, &v160, &v159, a2, a14, a11, ctx);
     let v246 = helper_1(&v178, &v227, &v226, &v150, &v160, &v159, a2, a14, a11, a8, a28, ctx);
-    let v247 = helper_2(&v178, &v227, &v226, &v150, &v160, &v159, a9, a2, a14, a11, ctx);
+    let v247 = helper_0(&v178, &v227, &v226, &v150, &v160, &v159, a9, a2, a14, a11, ctx);
     let v248 = helper_6(&v242, &v243, &v244, &v245, &v246, &v247, a9, a14, a2, a11, a10, a25, a26, a27, a7, a28, a6, a8, ctx);
     let v249 = mul(a2, &v241);
     let v250 = mul(&v249, &v248);
@@ -17542,9 +17565,9 @@ fn branch_50<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     let v114 = helper_30(&v76, &v86, &v85, &v103, &v113, &v112, a9, a2, a8, ctx);
     let v115 = helper_31(&v76, &v86, &v85, &v103, &v113, &v112, a9, a2, a8, a13, ctx);
     let v116 = helper_32(&v76, &v86, &v85, &v103, &v113, &v112, a16, a9, a2, a8, ctx);
-    let v117 = helper_0(&v114, &v115, &v116, &v47, &v57, &v56, a2, a8, a9, ctx);
+    let v117 = helper_2(&v114, &v115, &v116, &v47, &v57, &v56, a2, a8, a9, ctx);
     let v118 = helper_1(&v114, &v115, &v116, &v47, &v57, &v56, a2, a8, a9, a13, a12, ctx);
-    let v119 = helper_2(&v114, &v115, &v116, &v47, &v57, &v56, a16, a2, a8, a9, ctx);
+    let v119 = helper_0(&v114, &v115, &v116, &v47, &v57, &v56, a16, a2, a8, a9, ctx);
     let v120 = mul(&v28, &v32);
     let v121 = mul(&v120, &v62);
     let v122 = conj(&v121);
@@ -17581,9 +17604,9 @@ fn branch_50<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v142 = mul(a9, &v130);
     let v143 = mul(&v142, &v137);
-    let v144 = helper_0(&v117, &v118, &v119, &v133, &v143, &v142, a2, a8, a9, ctx);
+    let v144 = helper_2(&v117, &v118, &v119, &v133, &v143, &v142, a2, a8, a9, ctx);
     let v145 = helper_1(&v117, &v118, &v119, &v133, &v143, &v142, a2, a8, a9, a13, a12, ctx);
-    let v146 = helper_2(&v117, &v118, &v119, &v133, &v143, &v142, a16, a2, a8, a9, ctx);
+    let v146 = helper_0(&v117, &v118, &v119, &v133, &v143, &v142, a16, a2, a8, a9, ctx);
     let v147 = helper_4(&v144, &v145, &v146, a16, a8, a2, a13, a10, a14, a15, ctx);
     let v148 = mul(a0, a16);
     let v149 = mul(&v148, &v25);
@@ -17628,12 +17651,12 @@ fn branch_50<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     let v176 = helper_6(&v144, &v145, &v146, &v165, &v175, &v174, a16, a8, a2, a9, a17, a14, a15, a18, a11, a12, a10, a13, ctx);
     let v177 = mul(&v152, &v176);
     let v178 = powi(&v89, -1, false);
-    let v179 = helper_0(&v76, &v86, &v85, &v133, &v143, &v142, a2, a8, a9, ctx);
+    let v179 = helper_2(&v76, &v86, &v85, &v133, &v143, &v142, a2, a8, a9, ctx);
     let v180 = helper_1(&v76, &v86, &v85, &v133, &v143, &v142, a2, a8, a9, a13, a12, ctx);
-    let v181 = helper_2(&v76, &v86, &v85, &v133, &v143, &v142, a16, a2, a8, a9, ctx);
-    let v182 = helper_0(&v47, &v57, &v56, &v103, &v113, &v112, a2, a8, a9, ctx);
+    let v181 = helper_0(&v76, &v86, &v85, &v133, &v143, &v142, a16, a2, a8, a9, ctx);
+    let v182 = helper_2(&v47, &v57, &v56, &v103, &v113, &v112, a2, a8, a9, ctx);
     let v183 = helper_1(&v47, &v57, &v56, &v103, &v113, &v112, a2, a8, a9, a13, a12, ctx);
-    let v184 = helper_2(&v47, &v57, &v56, &v103, &v113, &v112, a16, a2, a8, a9, ctx);
+    let v184 = helper_0(&v47, &v57, &v56, &v103, &v113, &v112, a16, a2, a8, a9, ctx);
     let v185 = helper_6(&v179, &v180, &v181, &v182, &v183, &v184, a16, a8, a2, a9, a17, a14, a15, a18, a11, a12, a10, a13, ctx);
     let v186 = mul(a0, a17);
     let v187 = mul(&v186, &v29);
@@ -17705,9 +17728,9 @@ fn branch_50<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     (*(&v225)).clone()
     };
     let v239 = mul(&v31, &v31);
-    let v240 = helper_0(&v103, &v113, &v112, &v133, &v143, &v142, a2, a8, a9, ctx);
+    let v240 = helper_2(&v103, &v113, &v112, &v133, &v143, &v142, a2, a8, a9, ctx);
     let v241 = helper_1(&v103, &v113, &v112, &v133, &v143, &v142, a2, a8, a9, a13, a12, ctx);
-    let v242 = helper_2(&v103, &v113, &v112, &v133, &v143, &v142, a16, a2, a8, a9, ctx);
+    let v242 = helper_0(&v103, &v113, &v112, &v133, &v143, &v142, a16, a2, a8, a9, ctx);
     let v243 = conj(&v202);
     let v244 = add(&v202, &v243);
     let v245 = mul(a9, &v244);
@@ -17745,9 +17768,9 @@ fn branch_50<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     let v265 = helper_30(&v240, &v241, &v242, &v254, &v264, &v263, a9, a2, a8, ctx);
     let v266 = helper_31(&v240, &v241, &v242, &v254, &v264, &v263, a9, a2, a8, a13, ctx);
     let v267 = helper_32(&v240, &v241, &v242, &v254, &v264, &v263, a16, a9, a2, a8, ctx);
-    let v268 = helper_0(&v47, &v57, &v56, &v76, &v86, &v85, a2, a8, a9, ctx);
+    let v268 = helper_2(&v47, &v57, &v56, &v76, &v86, &v85, a2, a8, a9, ctx);
     let v269 = helper_1(&v47, &v57, &v56, &v76, &v86, &v85, a2, a8, a9, a13, a12, ctx);
-    let v270 = helper_2(&v47, &v57, &v56, &v76, &v86, &v85, a16, a2, a8, a9, ctx);
+    let v270 = helper_0(&v47, &v57, &v56, &v76, &v86, &v85, a16, a2, a8, a9, ctx);
     let v271 = helper_30(&v268, &v269, &v270, &v254, &v264, &v263, a9, a2, a8, ctx);
     let v272 = helper_31(&v268, &v269, &v270, &v254, &v264, &v263, a9, a2, a8, a13, ctx);
     let v273 = helper_32(&v268, &v269, &v270, &v254, &v264, &v263, a16, a9, a2, a8, ctx);
@@ -17758,12 +17781,12 @@ fn branch_50<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     let v278 = mul(&v277, &v239);
     let v279 = mul(&v278, &v274);
     let v280 = powi(&v202, -1, false);
-    let v281 = helper_0(&v240, &v241, &v242, &v254, &v264, &v263, a2, a8, a9, ctx);
+    let v281 = helper_2(&v240, &v241, &v242, &v254, &v264, &v263, a2, a8, a9, ctx);
     let v282 = helper_1(&v240, &v241, &v242, &v254, &v264, &v263, a2, a8, a9, a13, a12, ctx);
-    let v283 = helper_2(&v240, &v241, &v242, &v254, &v264, &v263, a16, a2, a8, a9, ctx);
-    let v284 = helper_0(&v268, &v269, &v270, &v254, &v264, &v263, a2, a8, a9, ctx);
+    let v283 = helper_0(&v240, &v241, &v242, &v254, &v264, &v263, a16, a2, a8, a9, ctx);
+    let v284 = helper_2(&v268, &v269, &v270, &v254, &v264, &v263, a2, a8, a9, ctx);
     let v285 = helper_1(&v268, &v269, &v270, &v254, &v264, &v263, a2, a8, a9, a13, a12, ctx);
-    let v286 = helper_2(&v268, &v269, &v270, &v254, &v264, &v263, a16, a2, a8, a9, ctx);
+    let v286 = helper_0(&v268, &v269, &v270, &v254, &v264, &v263, a16, a2, a8, a9, ctx);
     let v287 = helper_6(&v281, &v282, &v283, &v284, &v285, &v286, a16, a8, a2, a9, a17, a14, a15, a18, a11, a12, a10, a13, ctx);
     let v288 = mul(&v276, &v239);
     let v289 = mul(&v288, &v280);
@@ -17904,9 +17927,9 @@ fn branch_51<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v87 = mul(a9, &v75);
     let v88 = mul(&v87, &v82);
-    let v89 = helper_0(&v78, &v88, &v87, &v49, &v59, &v58, a1, a10, a9, ctx);
+    let v89 = helper_2(&v78, &v88, &v87, &v49, &v59, &v58, a1, a10, a9, ctx);
     let v90 = helper_1(&v78, &v88, &v87, &v49, &v59, &v58, a1, a10, a9, a11, a6, ctx);
-    let v91 = helper_2(&v78, &v88, &v87, &v49, &v59, &v58, a14, a1, a10, a9, ctx);
+    let v91 = helper_0(&v78, &v88, &v87, &v49, &v59, &v58, a14, a1, a10, a9, ctx);
     let v92 = mul(a17, a1);
     let v93 = add(a2, a4);
     let v94 = add(&v93, &v92);
@@ -18008,14 +18031,14 @@ fn branch_51<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     let v162 = helper_32(&v89, &v90, &v91, &v149, &v159, &v158, a14, a9, a1, a10, ctx);
     let v163 = helper_5(&v160, &v161, &v162, a14, a10, a1, a9, a15, a12, a13, a19, a8, a6, a7, ctx);
     let v164 = mul(a1, &v163);
-    let v165 = helper_0(&v89, &v90, &v91, &v149, &v159, &v158, a1, a10, a9, ctx);
+    let v165 = helper_2(&v89, &v90, &v91, &v149, &v159, &v158, a1, a10, a9, ctx);
     let v166 = helper_1(&v89, &v90, &v91, &v149, &v159, &v158, a1, a10, a9, a11, a6, ctx);
-    let v167 = helper_2(&v89, &v90, &v91, &v149, &v159, &v158, a14, a1, a10, a9, ctx);
+    let v167 = helper_0(&v89, &v90, &v91, &v149, &v159, &v158, a14, a1, a10, a9, ctx);
     let v168 = helper_5(&v165, &v166, &v167, a14, a10, a1, a9, a15, a12, a13, a19, a8, a6, a7, ctx);
     let v169 = mul(a1, &v168);
-    let v170 = helper_0(&v78, &v88, &v87, &v22, &v32, &v31, a1, a10, a9, ctx);
+    let v170 = helper_2(&v78, &v88, &v87, &v22, &v32, &v31, a1, a10, a9, ctx);
     let v171 = helper_1(&v78, &v88, &v87, &v22, &v32, &v31, a1, a10, a9, a11, a6, ctx);
-    let v172 = helper_2(&v78, &v88, &v87, &v22, &v32, &v31, a14, a1, a10, a9, ctx);
+    let v172 = helper_0(&v78, &v88, &v87, &v22, &v32, &v31, a14, a1, a10, a9, ctx);
     let v173 = helper_5(&v170, &v171, &v172, a14, a10, a1, a9, a15, a12, a13, a19, a8, a6, a7, ctx);
     let v174 = mul(a14, &v173);
     let v175 = helper_3(&v149, &v159, &v158, a1, a11, a7, a10, a12, a13, a14, ctx);
@@ -18167,9 +18190,9 @@ fn branch_52<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v87 = mul(a9, &v75);
     let v88 = mul(&v87, &v82);
-    let v89 = helper_0(&v78, &v88, &v87, &v22, &v32, &v31, a1, a10, a9, ctx);
+    let v89 = helper_2(&v78, &v88, &v87, &v22, &v32, &v31, a1, a10, a9, ctx);
     let v90 = helper_1(&v78, &v88, &v87, &v22, &v32, &v31, a1, a10, a9, a11, a6, ctx);
-    let v91 = helper_2(&v78, &v88, &v87, &v22, &v32, &v31, a14, a1, a10, a9, ctx);
+    let v91 = helper_0(&v78, &v88, &v87, &v22, &v32, &v31, a14, a1, a10, a9, ctx);
     let v92 = mul(a17, a1);
     let v93 = add(a2, a4);
     let v94 = add(&v93, &v92);
@@ -18271,14 +18294,14 @@ fn branch_52<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     let v162 = helper_32(&v89, &v90, &v91, &v149, &v159, &v158, a14, a9, a1, a10, ctx);
     let v163 = helper_5(&v160, &v161, &v162, a14, a10, a1, a9, a15, a12, a13, a19, a8, a6, a7, ctx);
     let v164 = mul(a1, &v163);
-    let v165 = helper_0(&v89, &v90, &v91, &v149, &v159, &v158, a1, a10, a9, ctx);
+    let v165 = helper_2(&v89, &v90, &v91, &v149, &v159, &v158, a1, a10, a9, ctx);
     let v166 = helper_1(&v89, &v90, &v91, &v149, &v159, &v158, a1, a10, a9, a11, a6, ctx);
-    let v167 = helper_2(&v89, &v90, &v91, &v149, &v159, &v158, a14, a1, a10, a9, ctx);
+    let v167 = helper_0(&v89, &v90, &v91, &v149, &v159, &v158, a14, a1, a10, a9, ctx);
     let v168 = helper_5(&v165, &v166, &v167, a14, a10, a1, a9, a15, a12, a13, a19, a8, a6, a7, ctx);
     let v169 = mul(a1, &v168);
-    let v170 = helper_0(&v78, &v88, &v87, &v49, &v59, &v58, a1, a10, a9, ctx);
+    let v170 = helper_2(&v78, &v88, &v87, &v49, &v59, &v58, a1, a10, a9, ctx);
     let v171 = helper_1(&v78, &v88, &v87, &v49, &v59, &v58, a1, a10, a9, a11, a6, ctx);
-    let v172 = helper_2(&v78, &v88, &v87, &v49, &v59, &v58, a14, a1, a10, a9, ctx);
+    let v172 = helper_0(&v78, &v88, &v87, &v49, &v59, &v58, a14, a1, a10, a9, ctx);
     let v173 = helper_5(&v170, &v171, &v172, a14, a10, a1, a9, a15, a12, a13, a19, a8, a6, a7, ctx);
     let v174 = mul(a14, &v173);
     let v175 = helper_3(&v149, &v159, &v158, a1, a11, a7, a10, a12, a13, a14, ctx);
@@ -18596,13 +18619,13 @@ fn branch_54<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v71 = mul(a3, &v59);
     let v72 = mul(&v71, &v66);
-    let v73 = helper_0(&v46, &v47, &v48, &v62, &v72, &v71, a4, a5, a3, ctx);
+    let v73 = helper_2(&v46, &v47, &v48, &v62, &v72, &v71, a4, a5, a3, ctx);
     let v74 = helper_1(&v46, &v47, &v48, &v62, &v72, &v71, a4, a5, a3, a6, a11, ctx);
-    let v75 = helper_2(&v46, &v47, &v48, &v62, &v72, &v71, a8, a4, a5, a3, ctx);
+    let v75 = helper_0(&v46, &v47, &v48, &v62, &v72, &v71, a8, a4, a5, a3, ctx);
     let v76 = helper_3(&v73, &v74, &v75, a4, a6, a12, a5, a13, a14, a8, ctx);
-    let v77 = helper_0(a15, a16, a17, a18, a19, a20, a4, a5, a3, ctx);
+    let v77 = helper_2(a15, a16, a17, a18, a19, a20, a4, a5, a3, ctx);
     let v78 = helper_1(a15, a16, a17, a18, a19, a20, a4, a5, a3, a6, a11, ctx);
-    let v79 = helper_2(a15, a16, a17, a18, a19, a20, a8, a4, a5, a3, ctx);
+    let v79 = helper_0(a15, a16, a17, a18, a19, a20, a8, a4, a5, a3, ctx);
     let v80 = helper_4(&v77, &v78, &v79, a8, a5, a4, a6, a12, a13, a14, ctx);
     let v81 = mul(a21, a22);
     let v82 = mul(&v81, &v1);
@@ -18685,9 +18708,9 @@ fn branch_54<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v132 = mul(a3, &v120);
     let v133 = mul(&v132, &v127);
-    let v134 = helper_0(&v101, &v111, &v110, &v123, &v133, &v132, a4, a5, a3, ctx);
+    let v134 = helper_2(&v101, &v111, &v110, &v123, &v133, &v132, a4, a5, a3, ctx);
     let v135 = helper_1(&v101, &v111, &v110, &v123, &v133, &v132, a4, a5, a3, a6, a11, ctx);
-    let v136 = helper_2(&v101, &v111, &v110, &v123, &v133, &v132, a8, a4, a5, a3, ctx);
+    let v136 = helper_0(&v101, &v111, &v110, &v123, &v133, &v132, a8, a4, a5, a3, ctx);
     let v137 = helper_30(a15, a16, a17, &v134, &v135, &v136, a3, a4, a5, ctx);
     let v138 = helper_31(a15, a16, a17, &v134, &v135, &v136, a3, a4, a5, a6, ctx);
     let v139 = helper_32(a15, a16, a17, &v134, &v135, &v136, a8, a3, a4, a5, ctx);
@@ -18822,9 +18845,9 @@ fn branch_54<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     let v226 = add(&v225, &v220);
     let v227 = add(&v226, &v224);
     let v228 = powi(a1, -1, false);
-    let v229 = helper_0(a15, a16, a17, a18, a19, a20, a4, a5, a3, ctx);
+    let v229 = helper_2(a15, a16, a17, a18, a19, a20, a4, a5, a3, ctx);
     let v230 = helper_1(a15, a16, a17, a18, a19, a20, a4, a5, a3, a6, a11, ctx);
-    let v231 = helper_2(a15, a16, a17, a18, a19, a20, a8, a4, a5, a3, ctx);
+    let v231 = helper_0(a15, a16, a17, a18, a19, a20, a8, a4, a5, a3, ctx);
     let v232 = helper_4(&v229, &v230, &v231, a8, a5, a4, a6, a12, a13, a14, ctx);
     let v233 = mul(a21, a22);
     let v234 = mul(&v233, &v227);
@@ -18905,9 +18928,9 @@ fn branch_54<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v284 = mul(a3, &v272);
     let v285 = mul(&v284, &v279);
-    let v286 = helper_0(&v253, &v263, &v262, &v275, &v285, &v284, a4, a5, a3, ctx);
+    let v286 = helper_2(&v253, &v263, &v262, &v275, &v285, &v284, a4, a5, a3, ctx);
     let v287 = helper_1(&v253, &v263, &v262, &v275, &v285, &v284, a4, a5, a3, a6, a11, ctx);
-    let v288 = helper_2(&v253, &v263, &v262, &v275, &v285, &v284, a8, a4, a5, a3, ctx);
+    let v288 = helper_0(&v253, &v263, &v262, &v275, &v285, &v284, a8, a4, a5, a3, ctx);
     let v289 = helper_30(a15, a16, a17, &v286, &v287, &v288, a3, a4, a5, ctx);
     let v290 = helper_31(a15, a16, a17, &v286, &v287, &v288, a3, a4, a5, a6, ctx);
     let v291 = helper_32(a15, a16, a17, &v286, &v287, &v288, a8, a3, a4, a5, ctx);
@@ -19042,9 +19065,9 @@ fn branch_54<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     let v378 = add(&v377, &v372);
     let v379 = add(&v378, &v376);
     let v380 = powi(a1, -1, false);
-    let v381 = helper_0(a15, a16, a17, a18, a19, a20, a4, a5, a3, ctx);
+    let v381 = helper_2(a15, a16, a17, a18, a19, a20, a4, a5, a3, ctx);
     let v382 = helper_1(a15, a16, a17, a18, a19, a20, a4, a5, a3, a6, a11, ctx);
-    let v383 = helper_2(a15, a16, a17, a18, a19, a20, a8, a4, a5, a3, ctx);
+    let v383 = helper_0(a15, a16, a17, a18, a19, a20, a8, a4, a5, a3, ctx);
     let v384 = helper_4(&v381, &v382, &v383, a8, a5, a4, a6, a12, a13, a14, ctx);
     let v385 = mul(a21, a22);
     let v386 = mul(&v385, &v379);
@@ -19169,13 +19192,13 @@ fn branch_55<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v73 = mul(a3, &v61);
     let v74 = mul(&v73, &v68);
-    let v75 = helper_0(&v48, &v49, &v50, &v64, &v74, &v73, a4, a5, a3, ctx);
+    let v75 = helper_2(&v48, &v49, &v50, &v64, &v74, &v73, a4, a5, a3, ctx);
     let v76 = helper_1(&v48, &v49, &v50, &v64, &v74, &v73, a4, a5, a3, a6, a13, ctx);
-    let v77 = helper_2(&v48, &v49, &v50, &v64, &v74, &v73, a10, a4, a5, a3, ctx);
+    let v77 = helper_0(&v48, &v49, &v50, &v64, &v74, &v73, a10, a4, a5, a3, ctx);
     let v78 = helper_3(&v75, &v76, &v77, a4, a6, a14, a5, a15, a16, a10, ctx);
-    let v79 = helper_0(a17, a18, a19, a20, a21, a22, a4, a5, a3, ctx);
+    let v79 = helper_2(a17, a18, a19, a20, a21, a22, a4, a5, a3, ctx);
     let v80 = helper_1(a17, a18, a19, a20, a21, a22, a4, a5, a3, a6, a13, ctx);
-    let v81 = helper_2(a17, a18, a19, a20, a21, a22, a10, a4, a5, a3, ctx);
+    let v81 = helper_0(a17, a18, a19, a20, a21, a22, a10, a4, a5, a3, ctx);
     let v82 = helper_4(&v79, &v80, &v81, a10, a5, a4, a6, a14, a15, a16, ctx);
     let v83 = mul(a23, a24);
     let v84 = mul(&v83, &v1);
@@ -19260,9 +19283,9 @@ fn branch_55<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v136 = mul(a3, &v124);
     let v137 = mul(&v136, &v131);
-    let v138 = helper_0(&v105, &v115, &v114, &v127, &v137, &v136, a4, a5, a3, ctx);
+    let v138 = helper_2(&v105, &v115, &v114, &v127, &v137, &v136, a4, a5, a3, ctx);
     let v139 = helper_1(&v105, &v115, &v114, &v127, &v137, &v136, a4, a5, a3, a6, a13, ctx);
-    let v140 = helper_2(&v105, &v115, &v114, &v127, &v137, &v136, a10, a4, a5, a3, ctx);
+    let v140 = helper_0(&v105, &v115, &v114, &v127, &v137, &v136, a10, a4, a5, a3, ctx);
     let v141 = helper_30(a17, a18, a19, &v138, &v139, &v140, a3, a4, a5, ctx);
     let v142 = helper_31(a17, a18, a19, &v138, &v139, &v140, a3, a4, a5, a6, ctx);
     let v143 = helper_32(a17, a18, a19, &v138, &v139, &v140, a10, a3, a4, a5, ctx);
@@ -19397,9 +19420,9 @@ fn branch_55<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     let v230 = add(&v229, &v224);
     let v231 = add(&v230, &v228);
     let v232 = powi(a1, -1, false);
-    let v233 = helper_0(a17, a18, a19, a20, a21, a22, a4, a5, a3, ctx);
+    let v233 = helper_2(a17, a18, a19, a20, a21, a22, a4, a5, a3, ctx);
     let v234 = helper_1(a17, a18, a19, a20, a21, a22, a4, a5, a3, a6, a13, ctx);
-    let v235 = helper_2(a17, a18, a19, a20, a21, a22, a10, a4, a5, a3, ctx);
+    let v235 = helper_0(a17, a18, a19, a20, a21, a22, a10, a4, a5, a3, ctx);
     let v236 = helper_4(&v233, &v234, &v235, a10, a5, a4, a6, a14, a15, a16, ctx);
     let v237 = mul(a23, a24);
     let v238 = mul(&v237, &v231);
@@ -19480,9 +19503,9 @@ fn branch_55<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v288 = mul(a3, &v276);
     let v289 = mul(&v288, &v283);
-    let v290 = helper_0(&v257, &v267, &v266, &v279, &v289, &v288, a4, a5, a3, ctx);
+    let v290 = helper_2(&v257, &v267, &v266, &v279, &v289, &v288, a4, a5, a3, ctx);
     let v291 = helper_1(&v257, &v267, &v266, &v279, &v289, &v288, a4, a5, a3, a6, a13, ctx);
-    let v292 = helper_2(&v257, &v267, &v266, &v279, &v289, &v288, a10, a4, a5, a3, ctx);
+    let v292 = helper_0(&v257, &v267, &v266, &v279, &v289, &v288, a10, a4, a5, a3, ctx);
     let v293 = helper_30(a17, a18, a19, &v290, &v291, &v292, a3, a4, a5, ctx);
     let v294 = helper_31(a17, a18, a19, &v290, &v291, &v292, a3, a4, a5, a6, ctx);
     let v295 = helper_32(a17, a18, a19, &v290, &v291, &v292, a10, a3, a4, a5, ctx);
@@ -19617,9 +19640,9 @@ fn branch_55<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     let v382 = add(&v381, &v376);
     let v383 = add(&v382, &v380);
     let v384 = powi(a1, -1, false);
-    let v385 = helper_0(a17, a18, a19, a20, a21, a22, a4, a5, a3, ctx);
+    let v385 = helper_2(a17, a18, a19, a20, a21, a22, a4, a5, a3, ctx);
     let v386 = helper_1(a17, a18, a19, a20, a21, a22, a4, a5, a3, a6, a13, ctx);
-    let v387 = helper_2(a17, a18, a19, a20, a21, a22, a10, a4, a5, a3, ctx);
+    let v387 = helper_0(a17, a18, a19, a20, a21, a22, a10, a4, a5, a3, ctx);
     let v388 = helper_4(&v385, &v386, &v387, a10, a5, a4, a6, a14, a15, a16, ctx);
     let v389 = mul(a23, a24);
     let v390 = mul(&v389, &v383);
@@ -19935,12 +19958,12 @@ fn branch_56<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     (*(&v240)).clone()
     };
     let v241 = powi(&v13, -1, false);
-    let v242 = helper_0(&v89, &v138, &v137, &v150, &v160, &v159, a2, a14, a11, ctx);
+    let v242 = helper_2(&v89, &v138, &v137, &v150, &v160, &v159, a2, a14, a11, ctx);
     let v243 = helper_1(&v89, &v138, &v137, &v150, &v160, &v159, a2, a14, a11, a8, a28, ctx);
-    let v244 = helper_2(&v89, &v138, &v137, &v150, &v160, &v159, a9, a2, a14, a11, ctx);
-    let v245 = helper_0(&v178, &v227, &v226, &v150, &v160, &v159, a2, a14, a11, ctx);
+    let v244 = helper_0(&v89, &v138, &v137, &v150, &v160, &v159, a9, a2, a14, a11, ctx);
+    let v245 = helper_2(&v178, &v227, &v226, &v150, &v160, &v159, a2, a14, a11, ctx);
     let v246 = helper_1(&v178, &v227, &v226, &v150, &v160, &v159, a2, a14, a11, a8, a28, ctx);
-    let v247 = helper_2(&v178, &v227, &v226, &v150, &v160, &v159, a9, a2, a14, a11, ctx);
+    let v247 = helper_0(&v178, &v227, &v226, &v150, &v160, &v159, a9, a2, a14, a11, ctx);
     let v248 = helper_6(&v242, &v243, &v244, &v245, &v246, &v247, a9, a14, a2, a11, a10, a25, a26, a27, a7, a28, a6, a8, ctx);
     let v249 = mul(a2, &v241);
     let v250 = mul(&v249, &v248);
@@ -20098,9 +20121,9 @@ fn branch_57<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v97 = mul(a13, &v85);
     let v98 = mul(&v97, &v92);
-    let v99 = helper_0(&v64, &v74, &v73, &v88, &v98, &v97, a3, a16, a13, ctx);
+    let v99 = helper_2(&v64, &v74, &v73, &v88, &v98, &v97, a3, a16, a13, ctx);
     let v100 = helper_1(&v64, &v74, &v73, &v88, &v98, &v97, a3, a16, a13, a10, a19, ctx);
-    let v101 = helper_2(&v64, &v74, &v73, &v88, &v98, &v97, a11, a3, a16, a13, ctx);
+    let v101 = helper_0(&v64, &v74, &v73, &v88, &v98, &v97, a11, a3, a16, a13, ctx);
     let v102 = conj(&v15);
     let v103 = add(&v15, &v102);
     let v104 = mul(a13, &v103);
@@ -20138,9 +20161,9 @@ fn branch_57<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     let v124 = helper_30(&v99, &v100, &v101, &v113, &v123, &v122, a13, a3, a16, ctx);
     let v125 = helper_31(&v99, &v100, &v101, &v113, &v123, &v122, a13, a3, a16, a10, ctx);
     let v126 = helper_32(&v99, &v100, &v101, &v113, &v123, &v122, a11, a13, a3, a16, ctx);
-    let v127 = helper_0(&v99, &v100, &v101, &v113, &v123, &v122, a3, a16, a13, ctx);
+    let v127 = helper_2(&v99, &v100, &v101, &v113, &v123, &v122, a3, a16, a13, ctx);
     let v128 = helper_1(&v99, &v100, &v101, &v113, &v123, &v122, a3, a16, a13, a10, a19, ctx);
-    let v129 = helper_2(&v99, &v100, &v101, &v113, &v123, &v122, a11, a3, a16, a13, ctx);
+    let v129 = helper_0(&v99, &v100, &v101, &v113, &v123, &v122, a11, a3, a16, a13, ctx);
     let v130 = helper_6(&v124, &v125, &v126, &v127, &v128, &v129, a11, a16, a3, a13, a12, a20, a21, a22, a8, a19, a7, a10, ctx);
     let v131 = mul(a23, a9);
     let v132 = mul(&v131, &v3);
@@ -20426,15 +20449,15 @@ fn branch_58<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v185 = mul(a7, &v173);
     let v186 = mul(&v185, &v180);
-    let v187 = helper_0(&v149, &v159, &v158, &v176, &v186, &v185, a2, a6, a7, ctx);
+    let v187 = helper_2(&v149, &v159, &v158, &v176, &v186, &v185, a2, a6, a7, ctx);
     let v188 = helper_1(&v149, &v159, &v158, &v176, &v186, &v185, a2, a6, a7, a12, a8, ctx);
-    let v189 = helper_2(&v149, &v159, &v158, &v176, &v186, &v185, a13, a2, a6, a7, ctx);
+    let v189 = helper_0(&v149, &v159, &v158, &v176, &v186, &v185, a13, a2, a6, a7, ctx);
     let v190 = helper_30(&v187, &v188, &v189, &v187, &v188, &v189, a7, a2, a6, ctx);
     let v191 = helper_31(&v187, &v188, &v189, &v187, &v188, &v189, a7, a2, a6, a12, ctx);
     let v192 = helper_32(&v187, &v188, &v189, &v187, &v188, &v189, a13, a7, a2, a6, ctx);
-    let v193 = helper_0(&v190, &v191, &v192, &v96, &v106, &v105, a2, a6, a7, ctx);
+    let v193 = helper_2(&v190, &v191, &v192, &v96, &v106, &v105, a2, a6, a7, ctx);
     let v194 = helper_1(&v190, &v191, &v192, &v96, &v106, &v105, a2, a6, a7, a12, a8, ctx);
-    let v195 = helper_2(&v190, &v191, &v192, &v96, &v106, &v105, a13, a2, a6, a7, ctx);
+    let v195 = helper_0(&v190, &v191, &v192, &v96, &v106, &v105, a13, a2, a6, a7, ctx);
     let v196 = helper_3(&v193, &v194, &v195, a2, a12, a9, a6, a16, a17, a13, ctx);
     let v197 = helper_4(&v96, &v106, &v105, a13, a6, a2, a12, a9, a16, a17, ctx);
     let v198 = mul(&v133, &v196);
@@ -21061,9 +21084,9 @@ fn branch_61<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v197 = mul(a3, &v161);
     let v198 = mul(&v197, &v168);
-    let v199 = helper_0(&v116, &v150, &v149, &v164, &v198, &v197, a1, a4, a3, ctx);
+    let v199 = helper_2(&v116, &v150, &v149, &v164, &v198, &v197, a1, a4, a3, ctx);
     let v200 = helper_1(&v116, &v150, &v149, &v164, &v198, &v197, a1, a4, a3, a5, a36, ctx);
-    let v201 = helper_2(&v116, &v150, &v149, &v164, &v198, &v197, a9, a1, a4, a3, ctx);
+    let v201 = helper_0(&v116, &v150, &v149, &v164, &v198, &v197, a9, a1, a4, a3, ctx);
     let v202 = helper_4(&v199, &v200, &v201, a9, a4, a1, a5, a6, a7, a8, ctx);
     let v203 = mul(a21, a28);
     let v204 = mul(&v203, a23);
@@ -21229,9 +21252,9 @@ fn branch_62<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v117 = mul(a17, &v105);
     let v118 = mul(&v117, &v112);
-    let v119 = helper_0(&v86, &v96, &v95, &v108, &v118, &v117, a7, a21, a17, ctx);
+    let v119 = helper_2(&v86, &v96, &v95, &v108, &v118, &v117, a7, a21, a17, ctx);
     let v120 = helper_1(&v86, &v96, &v95, &v108, &v118, &v117, a7, a21, a17, a22, a32, ctx);
-    let v121 = helper_2(&v86, &v96, &v95, &v108, &v118, &v117, a33, a7, a21, a17, ctx);
+    let v121 = helper_0(&v86, &v96, &v95, &v108, &v118, &v117, a33, a7, a21, a17, ctx);
     let v122 = helper_30(&v39, &v73, &v72, &v119, &v120, &v121, a17, a7, a21, ctx);
     let v123 = helper_31(&v39, &v73, &v72, &v119, &v120, &v121, a17, a7, a21, a22, ctx);
     let v124 = helper_32(&v39, &v73, &v72, &v119, &v120, &v121, a33, a17, a7, a21, ctx);
@@ -21574,9 +21597,9 @@ fn branch_63<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     let v202 = add(&v201, &v74);
     let v203 = add(&v202, &v200);
     let v204 = powi(&v149, -1, false);
-    let v205 = helper_0(&v112, &v146, &v145, &v163, &v197, &v196, a1, a4, a3, ctx);
+    let v205 = helper_2(&v112, &v146, &v145, &v163, &v197, &v196, a1, a4, a3, ctx);
     let v206 = helper_1(&v112, &v146, &v145, &v163, &v197, &v196, a1, a4, a3, a5, a35, ctx);
-    let v207 = helper_2(&v112, &v146, &v145, &v163, &v197, &v196, a9, a1, a4, a3, ctx);
+    let v207 = helper_0(&v112, &v146, &v145, &v163, &v197, &v196, a9, a1, a4, a3, ctx);
     let v208 = helper_4(&v205, &v206, &v207, a9, a4, a1, a5, a6, a7, a8, ctx);
     let v209 = mul(a20, a27);
     let v210 = mul(&v209, a22);
@@ -21742,9 +21765,9 @@ fn branch_64<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v117 = mul(a17, &v105);
     let v118 = mul(&v117, &v112);
-    let v119 = helper_0(&v86, &v96, &v95, &v108, &v118, &v117, a7, a21, a17, ctx);
+    let v119 = helper_2(&v86, &v96, &v95, &v108, &v118, &v117, a7, a21, a17, ctx);
     let v120 = helper_1(&v86, &v96, &v95, &v108, &v118, &v117, a7, a21, a17, a22, a32, ctx);
-    let v121 = helper_2(&v86, &v96, &v95, &v108, &v118, &v117, a33, a7, a21, a17, ctx);
+    let v121 = helper_0(&v86, &v96, &v95, &v108, &v118, &v117, a33, a7, a21, a17, ctx);
     let v122 = helper_30(&v39, &v73, &v72, &v119, &v120, &v121, a17, a7, a21, ctx);
     let v123 = helper_31(&v39, &v73, &v72, &v119, &v120, &v121, a17, a7, a21, a22, ctx);
     let v124 = helper_32(&v39, &v73, &v72, &v119, &v120, &v121, a33, a17, a7, a21, ctx);
@@ -22086,9 +22109,9 @@ fn branch_65<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     let v201 = add(&v200, &v73);
     let v202 = add(&v201, &v199);
     let v203 = powi(&v148, -1, false);
-    let v204 = helper_0(&v111, &v145, &v144, &v162, &v196, &v195, a1, a4, a3, ctx);
+    let v204 = helper_2(&v111, &v145, &v144, &v162, &v196, &v195, a1, a4, a3, ctx);
     let v205 = helper_1(&v111, &v145, &v144, &v162, &v196, &v195, a1, a4, a3, a5, a35, ctx);
-    let v206 = helper_2(&v111, &v145, &v144, &v162, &v196, &v195, a9, a1, a4, a3, ctx);
+    let v206 = helper_0(&v111, &v145, &v144, &v162, &v196, &v195, a9, a1, a4, a3, ctx);
     let v207 = helper_4(&v204, &v205, &v206, a9, a4, a1, a5, a6, a7, a8, ctx);
     let v208 = mul(a20, a27);
     let v209 = mul(&v208, a22);
@@ -22357,9 +22380,9 @@ fn branch_66<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v196 = mul(a3, &v160);
     let v197 = mul(&v196, &v167);
-    let v198 = helper_0(&v115, &v149, &v148, &v163, &v197, &v196, a1, a4, a3, ctx);
+    let v198 = helper_2(&v115, &v149, &v148, &v163, &v197, &v196, a1, a4, a3, ctx);
     let v199 = helper_1(&v115, &v149, &v148, &v163, &v197, &v196, a1, a4, a3, a5, a36, ctx);
-    let v200 = helper_2(&v115, &v149, &v148, &v163, &v197, &v196, a9, a1, a4, a3, ctx);
+    let v200 = helper_0(&v115, &v149, &v148, &v163, &v197, &v196, a9, a1, a4, a3, ctx);
     let v201 = helper_4(&v198, &v199, &v200, a9, a4, a1, a5, a6, a7, a8, ctx);
     let v202 = mul(a21, a28);
     let v203 = mul(&v202, a23);
@@ -22634,9 +22657,9 @@ fn branch_67<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     let v201 = add(&v200, &v73);
     let v202 = add(&v201, &v199);
     let v203 = powi(&v148, -1, false);
-    let v204 = helper_0(&v111, &v145, &v144, &v162, &v196, &v195, a1, a4, a3, ctx);
+    let v204 = helper_2(&v111, &v145, &v144, &v162, &v196, &v195, a1, a4, a3, ctx);
     let v205 = helper_1(&v111, &v145, &v144, &v162, &v196, &v195, a1, a4, a3, a5, a35, ctx);
-    let v206 = helper_2(&v111, &v145, &v144, &v162, &v196, &v195, a9, a1, a4, a3, ctx);
+    let v206 = helper_0(&v111, &v145, &v144, &v162, &v196, &v195, a9, a1, a4, a3, ctx);
     let v207 = helper_4(&v204, &v205, &v206, a9, a4, a1, a5, a6, a7, a8, ctx);
     let v208 = mul(a20, a27);
     let v209 = mul(&v208, a22);
@@ -22917,9 +22940,9 @@ fn branch_68<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     let v207 = add(&v206, &v104);
     let v208 = add(&v207, &v156);
     let v209 = add(&v208, &v205);
-    let v210 = helper_0(&v121, &v155, &v154, &v170, &v204, &v203, a6, a17, a16, ctx);
+    let v210 = helper_2(&v121, &v155, &v154, &v170, &v204, &v203, a6, a17, a16, ctx);
     let v211 = helper_1(&v121, &v155, &v154, &v170, &v204, &v203, a6, a17, a16, a18, a32, ctx);
-    let v212 = helper_2(&v121, &v155, &v154, &v170, &v204, &v203, a21, a6, a17, a16, ctx);
+    let v212 = helper_0(&v121, &v155, &v154, &v170, &v204, &v203, a21, a6, a17, a16, ctx);
     let v213 = helper_4(&v210, &v211, &v212, a21, a17, a6, a18, a14, a19, a20, ctx);
     let v214 = mul(a11, a25);
     let v215 = mul(&v214, a13);
@@ -23026,9 +23049,9 @@ fn branch_69<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v62 = mul(a7, &v50);
     let v63 = mul(&v62, &v57);
-    let v64 = helper_0(&v31, &v41, &v40, &v53, &v63, &v62, a2, a6, a7, ctx);
+    let v64 = helper_2(&v31, &v41, &v40, &v53, &v63, &v62, a2, a6, a7, ctx);
     let v65 = helper_1(&v31, &v41, &v40, &v53, &v63, &v62, a2, a6, a7, a9, a10, ctx);
-    let v66 = helper_2(&v31, &v41, &v40, &v53, &v63, &v62, a11, a2, a6, a7, ctx);
+    let v66 = helper_0(&v31, &v41, &v40, &v53, &v63, &v62, a11, a2, a6, a7, ctx);
     let v67 = if truth(&v17) {
     (*(a1)).clone()
     } else {
@@ -23108,9 +23131,9 @@ fn branch_69<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v116 = mul(a7, &v104);
     let v117 = mul(&v116, &v111);
-    let v118 = helper_0(&v92, &v93, &v94, &v107, &v117, &v116, a2, a6, a7, ctx);
+    let v118 = helper_2(&v92, &v93, &v94, &v107, &v117, &v116, a2, a6, a7, ctx);
     let v119 = helper_1(&v92, &v93, &v94, &v107, &v117, &v116, a2, a6, a7, a9, a10, ctx);
-    let v120 = helper_2(&v92, &v93, &v94, &v107, &v117, &v116, a11, a2, a6, a7, ctx);
+    let v120 = helper_0(&v92, &v93, &v94, &v107, &v117, &v116, a11, a2, a6, a7, ctx);
     let v121 = if truth(&v17) {
     (*(a4)).clone()
     } else {
@@ -23195,9 +23218,9 @@ fn branch_69<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v171 = mul(a7, &v159);
     let v172 = mul(&v171, &v166);
-    let v173 = helper_0(&v146, &v147, &v148, &v162, &v172, &v171, a2, a6, a7, ctx);
+    let v173 = helper_2(&v146, &v147, &v148, &v162, &v172, &v171, a2, a6, a7, ctx);
     let v174 = helper_1(&v146, &v147, &v148, &v162, &v172, &v171, a2, a6, a7, a9, a10, ctx);
-    let v175 = helper_2(&v146, &v147, &v148, &v162, &v172, &v171, a11, a2, a6, a7, ctx);
+    let v175 = helper_0(&v146, &v147, &v148, &v162, &v172, &v171, a11, a2, a6, a7, ctx);
     let v176 = helper_6(&v118, &v119, &v120, &v173, &v174, &v175, a11, a6, a2, a7, a12, a13, a14, a15, a16, a10, a17, a9, ctx);
     let v177 = mul(a7, a8);
     let v178 = mul(&v177, &v0);
@@ -23323,9 +23346,9 @@ fn branch_70<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v70 = mul(a8, &v58);
     let v71 = mul(&v70, &v65);
-    let v72 = helper_0(&v37, &v47, &v46, &v61, &v71, &v70, a1, a7, a8, ctx);
+    let v72 = helper_2(&v37, &v47, &v46, &v61, &v71, &v70, a1, a7, a8, ctx);
     let v73 = helper_1(&v37, &v47, &v46, &v61, &v71, &v70, a1, a7, a8, a9, a10, ctx);
-    let v74 = helper_2(&v37, &v47, &v46, &v61, &v71, &v70, a11, a1, a7, a8, ctx);
+    let v74 = helper_0(&v37, &v47, &v46, &v61, &v71, &v70, a11, a1, a7, a8, ctx);
     let v75 = conj(&v22);
     let v76 = add(&v22, &v75);
     let v77 = mul(a8, &v76);
@@ -23401,12 +23424,12 @@ fn branch_70<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v120 = mul(a8, &v108);
     let v121 = mul(&v120, &v115);
-    let v122 = helper_0(&v86, &v96, &v95, &v111, &v121, &v120, a1, a7, a8, ctx);
+    let v122 = helper_2(&v86, &v96, &v95, &v111, &v121, &v120, a1, a7, a8, ctx);
     let v123 = helper_1(&v86, &v96, &v95, &v111, &v121, &v120, a1, a7, a8, a9, a10, ctx);
-    let v124 = helper_2(&v86, &v96, &v95, &v111, &v121, &v120, a11, a1, a7, a8, ctx);
-    let v125 = helper_0(&v72, &v73, &v74, &v122, &v123, &v124, a1, a7, a8, ctx);
+    let v124 = helper_0(&v86, &v96, &v95, &v111, &v121, &v120, a11, a1, a7, a8, ctx);
+    let v125 = helper_2(&v72, &v73, &v74, &v122, &v123, &v124, a1, a7, a8, ctx);
     let v126 = helper_1(&v72, &v73, &v74, &v122, &v123, &v124, a1, a7, a8, a9, a10, ctx);
-    let v127 = helper_2(&v72, &v73, &v74, &v122, &v123, &v124, a11, a1, a7, a8, ctx);
+    let v127 = helper_0(&v72, &v73, &v74, &v122, &v123, &v124, a11, a1, a7, a8, ctx);
     let v128 = conj(a7);
     let v129 = add(a7, &v128);
     let v130 = mul(a8, &v129);
@@ -23481,9 +23504,9 @@ fn branch_70<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     let v175 = helper_3(&v164, &v174, &v173, a1, a9, a17, a7, a13, a14, a11, ctx);
     let v176 = mul(a10, &v175);
     let v177 = mul(a2, &v162);
-    let v178 = helper_0(&v177, &v174, &v173, &v86, &v96, &v95, a1, a7, a8, ctx);
+    let v178 = helper_2(&v177, &v174, &v173, &v86, &v96, &v95, a1, a7, a8, ctx);
     let v179 = helper_1(&v177, &v174, &v173, &v86, &v96, &v95, a1, a7, a8, a9, a10, ctx);
-    let v180 = helper_2(&v177, &v174, &v173, &v86, &v96, &v95, a11, a1, a7, a8, ctx);
+    let v180 = helper_0(&v177, &v174, &v173, &v86, &v96, &v95, a11, a1, a7, a8, ctx);
     let v181 = helper_3(&v178, &v179, &v180, a1, a9, a17, a7, a13, a14, a11, ctx);
     let v182 = add(&v176, &v181);
     let v183 = helper_4(&v125, &v126, &v127, a11, a7, a1, a9, a17, a13, a14, ctx);
@@ -23578,9 +23601,9 @@ fn branch_71<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v48 = mul(a4, &v36);
     let v49 = mul(&v48, &v43);
-    let v50 = helper_0(&v16, &v26, &v25, &v39, &v49, &v48, a2, a5, a4, ctx);
+    let v50 = helper_2(&v16, &v26, &v25, &v39, &v49, &v48, a2, a5, a4, ctx);
     let v51 = helper_1(&v16, &v26, &v25, &v39, &v49, &v48, a2, a5, a4, a6, a8, ctx);
-    let v52 = helper_2(&v16, &v26, &v25, &v39, &v49, &v48, a9, a2, a5, a4, ctx);
+    let v52 = helper_0(&v16, &v26, &v25, &v39, &v49, &v48, a9, a2, a5, a4, ctx);
     let v53 = helper_5(&v50, &v51, &v52, a9, a5, a2, a4, a10, a11, a12, a13, a14, a8, a15, ctx);
     let v54 = mul(a10, &v53);
     let v55 = conj(&v2);
@@ -23651,9 +23674,9 @@ fn branch_71<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v97 = mul(a4, &v85);
     let v98 = mul(&v97, &v92);
-    let v99 = helper_0(&v66, &v76, &v75, &v88, &v98, &v97, a2, a5, a4, ctx);
+    let v99 = helper_2(&v66, &v76, &v75, &v88, &v98, &v97, a2, a5, a4, ctx);
     let v100 = helper_1(&v66, &v76, &v75, &v88, &v98, &v97, a2, a5, a4, a6, a8, ctx);
-    let v101 = helper_2(&v66, &v76, &v75, &v88, &v98, &v97, a9, a2, a5, a4, ctx);
+    let v101 = helper_0(&v66, &v76, &v75, &v88, &v98, &v97, a9, a2, a5, a4, ctx);
     let v102 = mul(a16, a2);
     let v103 = add(a3, &v102);
     let v104 = conj(&v103);
@@ -23693,9 +23716,9 @@ fn branch_71<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     let v126 = helper_30(&v99, &v100, &v101, &v115, &v125, &v124, a4, a2, a5, ctx);
     let v127 = helper_31(&v99, &v100, &v101, &v115, &v125, &v124, a4, a2, a5, a6, ctx);
     let v128 = helper_32(&v99, &v100, &v101, &v115, &v125, &v124, a9, a4, a2, a5, ctx);
-    let v129 = helper_0(&v126, &v127, &v128, &v39, &v49, &v48, a2, a5, a4, ctx);
+    let v129 = helper_2(&v126, &v127, &v128, &v39, &v49, &v48, a2, a5, a4, ctx);
     let v130 = helper_1(&v126, &v127, &v128, &v39, &v49, &v48, a2, a5, a4, a6, a8, ctx);
-    let v131 = helper_2(&v126, &v127, &v128, &v39, &v49, &v48, a9, a2, a5, a4, ctx);
+    let v131 = helper_0(&v126, &v127, &v128, &v39, &v49, &v48, a9, a2, a5, a4, ctx);
     let v132 = helper_5(&v129, &v130, &v131, a9, a5, a2, a4, a10, a11, a12, a13, a14, a8, a15, ctx);
     let v133 = powi(a17, -1, false);
     let v134 = mul(&v88, &v133);
@@ -23879,13 +23902,13 @@ fn branch_72<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v102 = mul(a5, &v89);
     let v103 = mul(&v102, &v97);
-    let v104 = helper_0(&v77, &v78, &v79, &v93, &v103, &v102, a2, a6, a5, ctx);
+    let v104 = helper_2(&v77, &v78, &v79, &v93, &v103, &v102, a2, a6, a5, ctx);
     let v105 = helper_1(&v77, &v78, &v79, &v93, &v103, &v102, a2, a6, a5, a7, a11, ctx);
-    let v106 = helper_2(&v77, &v78, &v79, &v93, &v103, &v102, a10, a2, a6, a5, ctx);
-    let v107 = helper_0(&v16, &v26, &v25, &v104, &v105, &v106, a2, a6, a5, ctx);
+    let v106 = helper_0(&v77, &v78, &v79, &v93, &v103, &v102, a10, a2, a6, a5, ctx);
+    let v107 = helper_2(&v16, &v26, &v25, &v104, &v105, &v106, a2, a6, a5, ctx);
     let v108 = mul(&v4, &v107);
     let v109 = helper_1(&v16, &v26, &v25, &v104, &v105, &v106, a2, a6, a5, a7, a11, ctx);
-    let v110 = helper_2(&v16, &v26, &v25, &v104, &v105, &v106, a10, a2, a6, a5, ctx);
+    let v110 = helper_0(&v16, &v26, &v25, &v104, &v105, &v106, a10, a2, a6, a5, ctx);
     let v111 = helper_5(&v108, &v109, &v110, a10, a6, a2, a5, a12, a13, a14, a15, a16, a11, a17, ctx);
     let v112 = helper_3(&v93, &v103, &v102, a2, a7, a17, a6, a13, a14, a10, ctx);
     let v113 = conj(&v2);
@@ -23927,15 +23950,15 @@ fn branch_72<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     let v137 = mul(&v112, &v136);
     let v138 = mul(&v28, &v39);
     let v139 = mul(&v2, &v123);
-    let v140 = helper_0(&v138, &v51, &v50, &v139, &v135, &v134, a2, a6, a5, ctx);
+    let v140 = helper_2(&v138, &v51, &v50, &v139, &v135, &v134, a2, a6, a5, ctx);
     let v141 = helper_1(&v138, &v51, &v50, &v139, &v135, &v134, a2, a6, a5, a7, a11, ctx);
-    let v142 = helper_2(&v138, &v51, &v50, &v139, &v135, &v134, a10, a2, a6, a5, ctx);
+    let v142 = helper_0(&v138, &v51, &v50, &v139, &v135, &v134, a10, a2, a6, a5, ctx);
     let v143 = helper_5(&v140, &v141, &v142, a10, a6, a2, a5, a12, a13, a14, a15, a16, a11, a17, ctx);
     let v144 = mul(a2, &v143);
     let v145 = mul(&v53, &v64);
-    let v146 = helper_0(&v145, &v76, &v75, &v139, &v135, &v134, a2, a6, a5, ctx);
+    let v146 = helper_2(&v145, &v76, &v75, &v139, &v135, &v134, a2, a6, a5, ctx);
     let v147 = helper_1(&v145, &v76, &v75, &v139, &v135, &v134, a2, a6, a5, a7, a11, ctx);
-    let v148 = helper_2(&v145, &v76, &v75, &v139, &v135, &v134, a10, a2, a6, a5, ctx);
+    let v148 = helper_0(&v145, &v76, &v75, &v139, &v135, &v134, a10, a2, a6, a5, ctx);
     let v149 = helper_5(&v146, &v147, &v148, a10, a6, a2, a5, a12, a13, a14, a15, a16, a11, a17, ctx);
     let v150 = mul(a2, &v149);
     let v151 = add(&v137, &v144);
@@ -24041,9 +24064,9 @@ fn branch_73<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v47 = mul(a4, &v35);
     let v48 = mul(&v47, &v42);
-    let v49 = helper_0(&v16, &v26, &v25, &v38, &v48, &v47, a2, a5, a4, ctx);
+    let v49 = helper_2(&v16, &v26, &v25, &v38, &v48, &v47, a2, a5, a4, ctx);
     let v50 = helper_1(&v16, &v26, &v25, &v38, &v48, &v47, a2, a5, a4, a6, a7, ctx);
-    let v51 = helper_2(&v16, &v26, &v25, &v38, &v48, &v47, a8, a2, a5, a4, ctx);
+    let v51 = helper_0(&v16, &v26, &v25, &v38, &v48, &v47, a8, a2, a5, a4, ctx);
     let v52 = helper_3(&v49, &v50, &v51, a2, a6, a9, a5, a10, a11, a8, ctx);
     let v53 = conj(&v2);
     let v54 = add(&v2, &v53);
@@ -24079,9 +24102,9 @@ fn branch_73<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v73 = mul(a4, &v61);
     let v74 = mul(&v73, &v68);
-    let v75 = helper_0(&v64, &v74, &v73, &v38, &v48, &v47, a2, a5, a4, ctx);
+    let v75 = helper_2(&v64, &v74, &v73, &v38, &v48, &v47, a2, a5, a4, ctx);
     let v76 = helper_1(&v64, &v74, &v73, &v38, &v48, &v47, a2, a5, a4, a6, a7, ctx);
-    let v77 = helper_2(&v64, &v74, &v73, &v38, &v48, &v47, a8, a2, a5, a4, ctx);
+    let v77 = helper_0(&v64, &v74, &v73, &v38, &v48, &v47, a8, a2, a5, a4, ctx);
     let v78 = helper_3(&v75, &v76, &v77, a2, a6, a9, a5, a10, a11, a8, ctx);
     let v79 = mul(&v52, &v78);
     let v80 = mul(a12, a2);
@@ -24120,9 +24143,9 @@ fn branch_73<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v102 = mul(a4, &v90);
     let v103 = mul(&v102, &v97);
-    let v104 = helper_0(&v93, &v103, &v102, &v64, &v74, &v73, a2, a5, a4, ctx);
+    let v104 = helper_2(&v93, &v103, &v102, &v64, &v74, &v73, a2, a5, a4, ctx);
     let v105 = helper_1(&v93, &v103, &v102, &v64, &v74, &v73, a2, a5, a4, a6, a7, ctx);
-    let v106 = helper_2(&v93, &v103, &v102, &v64, &v74, &v73, a8, a2, a5, a4, ctx);
+    let v106 = helper_0(&v93, &v103, &v102, &v64, &v74, &v73, a8, a2, a5, a4, ctx);
     let v107 = helper_5(&v104, &v105, &v106, a8, a5, a2, a4, a13, a10, a11, a14, a15, a7, a9, ctx);
     let v108 = mul(a2, &v107);
     let v109 = add(&v79, &v108);
@@ -24132,9 +24155,9 @@ fn branch_73<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     let v113 = helper_3(&v112, &v48, &v47, a2, a6, a9, a5, a10, a11, a8, ctx);
     let v114 = mul(a17, &v113);
     let v115 = mul(a2, &v52);
-    let v116 = helper_0(&v93, &v103, &v102, &v38, &v48, &v47, a2, a5, a4, ctx);
+    let v116 = helper_2(&v93, &v103, &v102, &v38, &v48, &v47, a2, a5, a4, ctx);
     let v117 = helper_1(&v93, &v103, &v102, &v38, &v48, &v47, a2, a5, a4, a6, a7, ctx);
-    let v118 = helper_2(&v93, &v103, &v102, &v38, &v48, &v47, a8, a2, a5, a4, ctx);
+    let v118 = helper_0(&v93, &v103, &v102, &v38, &v48, &v47, a8, a2, a5, a4, ctx);
     let v119 = helper_3(&v116, &v117, &v118, a2, a6, a9, a5, a10, a11, a8, ctx);
     let v120 = mul(a8, &v78);
     let v121 = add(&v115, &v119);
@@ -24237,9 +24260,9 @@ fn branch_74<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     let v50 = mul(a5, &v38);
     let v51 = mul(&v50, &v45);
     let v52 = mul(a3, &v15);
-    let v53 = helper_0(&v41, &v51, &v50, &v52, &v27, &v26, a2, a6, a5, ctx);
+    let v53 = helper_2(&v41, &v51, &v50, &v52, &v27, &v26, a2, a6, a5, ctx);
     let v54 = helper_1(&v41, &v51, &v50, &v52, &v27, &v26, a2, a6, a5, a7, a12, ctx);
-    let v55 = helper_2(&v41, &v51, &v50, &v52, &v27, &v26, a11, a2, a6, a5, ctx);
+    let v55 = helper_0(&v41, &v51, &v50, &v52, &v27, &v26, a11, a2, a6, a5, ctx);
     let v56 = helper_3(&v53, &v54, &v55, a2, a7, a8, a6, a9, a10, a11, ctx);
     let v57 = mul(a2, &v56);
     let v58 = conj(&v2);
@@ -24276,9 +24299,9 @@ fn branch_74<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v78 = mul(a5, &v66);
     let v79 = mul(&v78, &v73);
-    let v80 = helper_0(&v69, &v79, &v78, &v52, &v27, &v26, a2, a6, a5, ctx);
+    let v80 = helper_2(&v69, &v79, &v78, &v52, &v27, &v26, a2, a6, a5, ctx);
     let v81 = helper_1(&v69, &v79, &v78, &v52, &v27, &v26, a2, a6, a5, a7, a12, ctx);
-    let v82 = helper_2(&v69, &v79, &v78, &v52, &v27, &v26, a11, a2, a6, a5, ctx);
+    let v82 = helper_0(&v69, &v79, &v78, &v52, &v27, &v26, a11, a2, a6, a5, ctx);
     let v83 = helper_3(&v80, &v81, &v82, a2, a7, a8, a6, a9, a10, a11, ctx);
     let v84 = mul(a11, &v83);
     let v85 = add(&v57, &v84);
@@ -24607,9 +24630,9 @@ fn branch_76<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v105 = mul(a10, &v93);
     let v106 = mul(&v105, &v100);
-    let v107 = helper_0(&v73, &v83, &v82, &v96, &v106, &v105, a6, a12, a10, ctx);
+    let v107 = helper_2(&v73, &v83, &v82, &v96, &v106, &v105, a6, a12, a10, ctx);
     let v108 = helper_1(&v73, &v83, &v82, &v96, &v106, &v105, a6, a12, a10, a13, a14, ctx);
-    let v109 = helper_2(&v73, &v83, &v82, &v96, &v106, &v105, a15, a6, a12, a10, ctx);
+    let v109 = helper_0(&v73, &v83, &v82, &v96, &v106, &v105, a15, a6, a12, a10, ctx);
     let v110 = helper_30(&v45, &v60, &v59, &v107, &v108, &v109, a10, a6, a12, ctx);
     let v111 = helper_31(&v45, &v60, &v59, &v107, &v108, &v109, a10, a6, a12, a13, ctx);
     let v112 = helper_32(&v45, &v60, &v59, &v107, &v108, &v109, a15, a10, a6, a12, ctx);
@@ -24795,9 +24818,9 @@ fn branch_76<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     let v236 = add(&v235, &v229);
     let v237 = add(&v236, &v233);
     let v238 = powi(&v113, -1, false);
-    let v239 = helper_0(&v45, &v60, &v59, &v132, &v148, &v147, a6, a12, a10, ctx);
+    let v239 = helper_2(&v45, &v60, &v59, &v132, &v148, &v147, a6, a12, a10, ctx);
     let v240 = helper_1(&v45, &v60, &v59, &v132, &v148, &v147, a6, a12, a10, a13, a14, ctx);
-    let v241 = helper_2(&v45, &v60, &v59, &v132, &v148, &v147, a15, a6, a12, a10, ctx);
+    let v241 = helper_0(&v45, &v60, &v59, &v132, &v148, &v147, a15, a6, a12, a10, ctx);
     let v242 = helper_4(&v239, &v240, &v241, a15, a12, a6, a13, a8, a16, a17, ctx);
     let v243 = mul(a6, &v237);
     let v244 = mul(&v243, &v238);
@@ -24838,9 +24861,9 @@ fn branch_76<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v268 = mul(a10, &v256);
     let v269 = mul(&v268, &v263);
-    let v270 = helper_0(&v259, &v269, &v268, &v167, &v177, &v176, a6, a12, a10, ctx);
+    let v270 = helper_2(&v259, &v269, &v268, &v167, &v177, &v176, a6, a12, a10, ctx);
     let v271 = helper_1(&v259, &v269, &v268, &v167, &v177, &v176, a6, a12, a10, a13, a14, ctx);
-    let v272 = helper_2(&v259, &v269, &v268, &v167, &v177, &v176, a15, a6, a12, a10, ctx);
+    let v272 = helper_0(&v259, &v269, &v268, &v167, &v177, &v176, a15, a6, a12, a10, ctx);
     let v273 = helper_30(&v45, &v60, &v59, &v270, &v271, &v272, a10, a6, a12, ctx);
     let v274 = helper_31(&v45, &v60, &v59, &v270, &v271, &v272, a10, a6, a12, a13, ctx);
     let v275 = helper_32(&v45, &v60, &v59, &v270, &v271, &v272, a15, a10, a6, a12, ctx);
@@ -24931,9 +24954,9 @@ fn branch_77<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v46 = mul(a4, &v34);
     let v47 = mul(&v46, &v41);
-    let v48 = helper_0(&v14, &v24, &v23, &v37, &v47, &v46, a3, a5, a4, ctx);
+    let v48 = helper_2(&v14, &v24, &v23, &v37, &v47, &v46, a3, a5, a4, ctx);
     let v49 = helper_1(&v14, &v24, &v23, &v37, &v47, &v46, a3, a5, a4, a6, a7, ctx);
-    let v50 = helper_2(&v14, &v24, &v23, &v37, &v47, &v46, a8, a3, a5, a4, ctx);
+    let v50 = helper_0(&v14, &v24, &v23, &v37, &v47, &v46, a8, a3, a5, a4, ctx);
     let v51 = mul(a9, a3);
     let v52 = conj(&v51);
     let v53 = add(&v51, &v52);
@@ -25004,16 +25027,16 @@ fn branch_77<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v95 = mul(a4, &v83);
     let v96 = mul(&v95, &v90);
-    let v97 = helper_0(&v63, &v73, &v72, &v86, &v96, &v95, a3, a5, a4, ctx);
+    let v97 = helper_2(&v63, &v73, &v72, &v86, &v96, &v95, a3, a5, a4, ctx);
     let v98 = helper_1(&v63, &v73, &v72, &v86, &v96, &v95, a3, a5, a4, a6, a7, ctx);
-    let v99 = helper_2(&v63, &v73, &v72, &v86, &v96, &v95, a8, a3, a5, a4, ctx);
+    let v99 = helper_0(&v63, &v73, &v72, &v86, &v96, &v95, a8, a3, a5, a4, ctx);
     let v100 = helper_6(&v48, &v49, &v50, &v97, &v98, &v99, a8, a5, a3, a4, a10, a11, a12, a13, a14, a7, a15, a6, ctx);
     let v101 = mul(&v0, &v1);
     let v102 = mul(&v101, &v100);
     let v103 = powi(a2, -1, false);
-    let v104 = helper_0(&v97, &v98, &v99, &v48, &v49, &v50, a3, a5, a4, ctx);
+    let v104 = helper_2(&v97, &v98, &v99, &v48, &v49, &v50, a3, a5, a4, ctx);
     let v105 = helper_1(&v97, &v98, &v99, &v48, &v49, &v50, a3, a5, a4, a6, a7, ctx);
-    let v106 = helper_2(&v97, &v98, &v99, &v48, &v49, &v50, a8, a3, a5, a4, ctx);
+    let v106 = helper_0(&v97, &v98, &v99, &v48, &v49, &v50, a8, a3, a5, a4, ctx);
     let v107 = conj(a5);
     let v108 = add(a5, &v107);
     let v109 = mul(a4, &v108);
@@ -25103,10 +25126,10 @@ fn branch_77<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     let v169 = helper_30(&v158, &v168, &v167, &v158, &v168, &v167, a4, a3, a5, ctx);
     let v170 = helper_31(&v158, &v168, &v167, &v158, &v168, &v167, a4, a3, a5, a6, ctx);
     let v171 = helper_32(&v158, &v168, &v167, &v158, &v168, &v167, a8, a4, a3, a5, ctx);
-    let v172 = helper_0(&v143, &v144, &v145, &v169, &v170, &v171, a3, a5, a4, ctx);
+    let v172 = helper_2(&v143, &v144, &v145, &v169, &v170, &v171, a3, a5, a4, ctx);
     let v173 = mul(&v133, &v172);
     let v174 = helper_1(&v143, &v144, &v145, &v169, &v170, &v171, a3, a5, a4, a6, a7, ctx);
-    let v175 = helper_2(&v143, &v144, &v145, &v169, &v170, &v171, a8, a3, a5, a4, ctx);
+    let v175 = helper_0(&v143, &v144, &v145, &v169, &v170, &v171, a8, a3, a5, a4, ctx);
     let v176 = helper_3(&v173, &v174, &v175, a3, a6, a15, a5, a11, a12, a8, ctx);
     let v177 = helper_4(&v104, &v105, &v106, a8, a5, a3, a6, a15, a11, a12, ctx);
     let v178 = mul(a18, &v1);
@@ -25287,9 +25310,9 @@ fn branch_78<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v109 = mul(a4, &v97);
     let v110 = mul(&v109, &v104);
-    let v111 = helper_0(&v77, &v87, &v86, &v100, &v110, &v109, a3, a5, a4, ctx);
+    let v111 = helper_2(&v77, &v87, &v86, &v100, &v110, &v109, a3, a5, a4, ctx);
     let v112 = helper_1(&v77, &v87, &v86, &v100, &v110, &v109, a3, a5, a4, a6, a13, ctx);
-    let v113 = helper_2(&v77, &v87, &v86, &v100, &v110, &v109, a7, a3, a5, a4, ctx);
+    let v113 = helper_0(&v77, &v87, &v86, &v100, &v110, &v109, a7, a3, a5, a4, ctx);
     let v114 = helper_5(&v111, &v112, &v113, a7, a5, a3, a4, a8, a9, a10, a11, a12, a13, a14, ctx);
     let v115 = mul(a3, &v114);
     let v116 = conj(&v2);
@@ -25361,9 +25384,9 @@ fn branch_78<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v159 = mul(a4, &v147);
     let v160 = mul(&v159, &v154);
-    let v161 = helper_0(&v127, &v137, &v136, &v150, &v160, &v159, a3, a5, a4, ctx);
+    let v161 = helper_2(&v127, &v137, &v136, &v150, &v160, &v159, a3, a5, a4, ctx);
     let v162 = helper_1(&v127, &v137, &v136, &v150, &v160, &v159, a3, a5, a4, a6, a13, ctx);
-    let v163 = helper_2(&v127, &v137, &v136, &v150, &v160, &v159, a7, a3, a5, a4, ctx);
+    let v163 = helper_0(&v127, &v137, &v136, &v150, &v160, &v159, a7, a3, a5, a4, ctx);
     let v164 = helper_5(&v161, &v162, &v163, a7, a5, a3, a4, a8, a9, a10, a11, a12, a13, a14, ctx);
     let v165 = mul(a2, &v0);
     let v166 = mul(&v165, &v1);
@@ -25641,9 +25664,9 @@ fn branch_79<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v46 = mul(a4, &v34);
     let v47 = mul(&v46, &v41);
-    let v48 = helper_0(&v14, &v24, &v23, &v37, &v47, &v46, a3, a5, a4, ctx);
+    let v48 = helper_2(&v14, &v24, &v23, &v37, &v47, &v46, a3, a5, a4, ctx);
     let v49 = helper_1(&v14, &v24, &v23, &v37, &v47, &v46, a3, a5, a4, a6, a7, ctx);
-    let v50 = helper_2(&v14, &v24, &v23, &v37, &v47, &v46, a8, a3, a5, a4, ctx);
+    let v50 = helper_0(&v14, &v24, &v23, &v37, &v47, &v46, a8, a3, a5, a4, ctx);
     let v51 = mul(a9, a3);
     let v52 = conj(&v51);
     let v53 = add(&v51, &v52);
@@ -25714,19 +25737,19 @@ fn branch_79<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v95 = mul(a4, &v83);
     let v96 = mul(&v95, &v90);
-    let v97 = helper_0(&v63, &v73, &v72, &v86, &v96, &v95, a3, a5, a4, ctx);
+    let v97 = helper_2(&v63, &v73, &v72, &v86, &v96, &v95, a3, a5, a4, ctx);
     let v98 = helper_1(&v63, &v73, &v72, &v86, &v96, &v95, a3, a5, a4, a6, a7, ctx);
-    let v99 = helper_2(&v63, &v73, &v72, &v86, &v96, &v95, a8, a3, a5, a4, ctx);
+    let v99 = helper_0(&v63, &v73, &v72, &v86, &v96, &v95, a8, a3, a5, a4, ctx);
     let v100 = helper_6(&v48, &v49, &v50, &v97, &v98, &v99, a8, a5, a3, a4, a10, a11, a12, a13, a14, a7, a15, a6, ctx);
     let v101 = mul(&v0, &v1);
     let v102 = mul(&v101, &v100);
     let v103 = powi(a2, -1, false);
-    let v104 = helper_0(&v86, &v96, &v95, &v37, &v47, &v46, a3, a5, a4, ctx);
+    let v104 = helper_2(&v86, &v96, &v95, &v37, &v47, &v46, a3, a5, a4, ctx);
     let v105 = helper_1(&v86, &v96, &v95, &v37, &v47, &v46, a3, a5, a4, a6, a7, ctx);
-    let v106 = helper_2(&v86, &v96, &v95, &v37, &v47, &v46, a8, a3, a5, a4, ctx);
-    let v107 = helper_0(&v63, &v73, &v72, &v14, &v24, &v23, a3, a5, a4, ctx);
+    let v106 = helper_0(&v86, &v96, &v95, &v37, &v47, &v46, a8, a3, a5, a4, ctx);
+    let v107 = helper_2(&v63, &v73, &v72, &v14, &v24, &v23, a3, a5, a4, ctx);
     let v108 = helper_1(&v63, &v73, &v72, &v14, &v24, &v23, a3, a5, a4, a6, a7, ctx);
-    let v109 = helper_2(&v63, &v73, &v72, &v14, &v24, &v23, a8, a3, a5, a4, ctx);
+    let v109 = helper_0(&v63, &v73, &v72, &v14, &v24, &v23, a8, a3, a5, a4, ctx);
     let v110 = helper_6(&v104, &v105, &v106, &v107, &v108, &v109, a8, a5, a3, a4, a10, a11, a12, a13, a14, a7, a15, a6, ctx);
     let v111 = mul(&v0, &v103);
     let v112 = mul(&v111, &v110);
@@ -25740,9 +25763,9 @@ fn branch_79<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     let v120 = helper_31(&v115, &v116, &v117, &v86, &v96, &v95, a4, a3, a5, a6, ctx);
     let v121 = helper_32(&v115, &v116, &v117, &v86, &v96, &v95, a8, a4, a3, a5, ctx);
     let v122 = helper_3(&v119, &v120, &v121, a3, a6, a15, a5, a11, a12, a8, ctx);
-    let v123 = helper_0(&v97, &v98, &v99, &v48, &v49, &v50, a3, a5, a4, ctx);
+    let v123 = helper_2(&v97, &v98, &v99, &v48, &v49, &v50, a3, a5, a4, ctx);
     let v124 = helper_1(&v97, &v98, &v99, &v48, &v49, &v50, a3, a5, a4, a6, a7, ctx);
-    let v125 = helper_2(&v97, &v98, &v99, &v48, &v49, &v50, a8, a3, a5, a4, ctx);
+    let v125 = helper_0(&v97, &v98, &v99, &v48, &v49, &v50, a8, a3, a5, a4, ctx);
     let v126 = helper_4(&v123, &v124, &v125, a8, a5, a3, a6, a15, a11, a12, ctx);
     let v127 = mul(a7, &v1);
     let v128 = mul(&v127, &v103);
@@ -25959,9 +25982,9 @@ fn branch_80<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v108 = mul(a4, &v96);
     let v109 = mul(&v108, &v103);
-    let v110 = helper_0(&v76, &v86, &v85, &v99, &v109, &v108, a3, a5, a4, ctx);
+    let v110 = helper_2(&v76, &v86, &v85, &v99, &v109, &v108, a3, a5, a4, ctx);
     let v111 = helper_1(&v76, &v86, &v85, &v99, &v109, &v108, a3, a5, a4, a6, a13, ctx);
-    let v112 = helper_2(&v76, &v86, &v85, &v99, &v109, &v108, a7, a3, a5, a4, ctx);
+    let v112 = helper_0(&v76, &v86, &v85, &v99, &v109, &v108, a7, a3, a5, a4, ctx);
     let v113 = helper_5(&v110, &v111, &v112, a7, a5, a3, a4, a8, a9, a10, a11, a12, a13, a14, ctx);
     let v114 = mul(a15, a3);
     let v115 = conj(&v114);
@@ -26033,9 +26056,9 @@ fn branch_80<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v158 = mul(a4, &v146);
     let v159 = mul(&v158, &v153);
-    let v160 = helper_0(&v126, &v136, &v135, &v149, &v159, &v158, a3, a5, a4, ctx);
+    let v160 = helper_2(&v126, &v136, &v135, &v149, &v159, &v158, a3, a5, a4, ctx);
     let v161 = helper_1(&v126, &v136, &v135, &v149, &v159, &v158, a3, a5, a4, a6, a13, ctx);
-    let v162 = helper_2(&v126, &v136, &v135, &v149, &v159, &v158, a7, a3, a5, a4, ctx);
+    let v162 = helper_0(&v126, &v136, &v135, &v149, &v159, &v158, a7, a3, a5, a4, ctx);
     let v163 = helper_5(&v160, &v161, &v162, a7, a5, a3, a4, a8, a9, a10, a11, a12, a13, a14, ctx);
     let v164 = mul(a3, &v163);
     let v165 = mul(a2, &v0);
@@ -26671,9 +26694,9 @@ fn branch_82<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v109 = mul(a4, &v97);
     let v110 = mul(&v109, &v104);
-    let v111 = helper_0(&v77, &v87, &v86, &v100, &v110, &v109, a3, a5, a4, ctx);
+    let v111 = helper_2(&v77, &v87, &v86, &v100, &v110, &v109, a3, a5, a4, ctx);
     let v112 = helper_1(&v77, &v87, &v86, &v100, &v110, &v109, a3, a5, a4, a6, a13, ctx);
-    let v113 = helper_2(&v77, &v87, &v86, &v100, &v110, &v109, a7, a3, a5, a4, ctx);
+    let v113 = helper_0(&v77, &v87, &v86, &v100, &v110, &v109, a7, a3, a5, a4, ctx);
     let v114 = helper_5(&v111, &v112, &v113, a7, a5, a3, a4, a8, a9, a10, a11, a12, a13, a14, ctx);
     let v115 = mul(a3, &v114);
     let v116 = conj(&v2);
@@ -26745,9 +26768,9 @@ fn branch_82<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v159 = mul(a4, &v147);
     let v160 = mul(&v159, &v154);
-    let v161 = helper_0(&v127, &v137, &v136, &v150, &v160, &v159, a3, a5, a4, ctx);
+    let v161 = helper_2(&v127, &v137, &v136, &v150, &v160, &v159, a3, a5, a4, ctx);
     let v162 = helper_1(&v127, &v137, &v136, &v150, &v160, &v159, a3, a5, a4, a6, a13, ctx);
-    let v163 = helper_2(&v127, &v137, &v136, &v150, &v160, &v159, a7, a3, a5, a4, ctx);
+    let v163 = helper_0(&v127, &v137, &v136, &v150, &v160, &v159, a7, a3, a5, a4, ctx);
     let v164 = helper_5(&v161, &v162, &v163, a7, a5, a3, a4, a8, a9, a10, a11, a12, a13, a14, ctx);
     let v165 = mul(a2, &v0);
     let v166 = mul(&v165, &v1);
@@ -27025,9 +27048,9 @@ fn branch_83<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v46 = mul(a4, &v34);
     let v47 = mul(&v46, &v41);
-    let v48 = helper_0(&v14, &v24, &v23, &v37, &v47, &v46, a3, a5, a4, ctx);
+    let v48 = helper_2(&v14, &v24, &v23, &v37, &v47, &v46, a3, a5, a4, ctx);
     let v49 = helper_1(&v14, &v24, &v23, &v37, &v47, &v46, a3, a5, a4, a6, a7, ctx);
-    let v50 = helper_2(&v14, &v24, &v23, &v37, &v47, &v46, a8, a3, a5, a4, ctx);
+    let v50 = helper_0(&v14, &v24, &v23, &v37, &v47, &v46, a8, a3, a5, a4, ctx);
     let v51 = mul(a9, a3);
     let v52 = conj(&v51);
     let v53 = add(&v51, &v52);
@@ -27098,19 +27121,19 @@ fn branch_83<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v95 = mul(a4, &v83);
     let v96 = mul(&v95, &v90);
-    let v97 = helper_0(&v63, &v73, &v72, &v86, &v96, &v95, a3, a5, a4, ctx);
+    let v97 = helper_2(&v63, &v73, &v72, &v86, &v96, &v95, a3, a5, a4, ctx);
     let v98 = helper_1(&v63, &v73, &v72, &v86, &v96, &v95, a3, a5, a4, a6, a7, ctx);
-    let v99 = helper_2(&v63, &v73, &v72, &v86, &v96, &v95, a8, a3, a5, a4, ctx);
+    let v99 = helper_0(&v63, &v73, &v72, &v86, &v96, &v95, a8, a3, a5, a4, ctx);
     let v100 = helper_6(&v48, &v49, &v50, &v97, &v98, &v99, a8, a5, a3, a4, a10, a11, a12, a13, a14, a7, a15, a6, ctx);
     let v101 = mul(&v0, &v1);
     let v102 = mul(&v101, &v100);
     let v103 = powi(a2, -1, false);
-    let v104 = helper_0(&v86, &v96, &v95, &v37, &v47, &v46, a3, a5, a4, ctx);
+    let v104 = helper_2(&v86, &v96, &v95, &v37, &v47, &v46, a3, a5, a4, ctx);
     let v105 = helper_1(&v86, &v96, &v95, &v37, &v47, &v46, a3, a5, a4, a6, a7, ctx);
-    let v106 = helper_2(&v86, &v96, &v95, &v37, &v47, &v46, a8, a3, a5, a4, ctx);
-    let v107 = helper_0(&v63, &v73, &v72, &v14, &v24, &v23, a3, a5, a4, ctx);
+    let v106 = helper_0(&v86, &v96, &v95, &v37, &v47, &v46, a8, a3, a5, a4, ctx);
+    let v107 = helper_2(&v63, &v73, &v72, &v14, &v24, &v23, a3, a5, a4, ctx);
     let v108 = helper_1(&v63, &v73, &v72, &v14, &v24, &v23, a3, a5, a4, a6, a7, ctx);
-    let v109 = helper_2(&v63, &v73, &v72, &v14, &v24, &v23, a8, a3, a5, a4, ctx);
+    let v109 = helper_0(&v63, &v73, &v72, &v14, &v24, &v23, a8, a3, a5, a4, ctx);
     let v110 = helper_6(&v104, &v105, &v106, &v107, &v108, &v109, a8, a5, a3, a4, a10, a11, a12, a13, a14, a7, a15, a6, ctx);
     let v111 = mul(&v0, &v103);
     let v112 = mul(&v111, &v110);
@@ -27124,9 +27147,9 @@ fn branch_83<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     let v120 = helper_31(&v115, &v116, &v117, &v14, &v24, &v23, a4, a3, a5, a6, ctx);
     let v121 = helper_32(&v115, &v116, &v117, &v14, &v24, &v23, a8, a4, a3, a5, ctx);
     let v122 = helper_3(&v119, &v120, &v121, a3, a6, a15, a5, a11, a12, a8, ctx);
-    let v123 = helper_0(&v107, &v108, &v109, &v104, &v105, &v106, a3, a5, a4, ctx);
+    let v123 = helper_2(&v107, &v108, &v109, &v104, &v105, &v106, a3, a5, a4, ctx);
     let v124 = helper_1(&v107, &v108, &v109, &v104, &v105, &v106, a3, a5, a4, a6, a7, ctx);
-    let v125 = helper_2(&v107, &v108, &v109, &v104, &v105, &v106, a8, a3, a5, a4, ctx);
+    let v125 = helper_0(&v107, &v108, &v109, &v104, &v105, &v106, a8, a3, a5, a4, ctx);
     let v126 = helper_4(&v123, &v124, &v125, a8, a5, a3, a6, a15, a11, a12, ctx);
     let v127 = mul(a7, &v1);
     let v128 = mul(&v127, &v103);
@@ -41446,9 +41469,9 @@ fn branch_115<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C
     };
     let v113 = mul(a8, &v101);
     let v114 = mul(&v113, &v108);
-    let v115 = helper_0(&v88, &v89, &v90, &v104, &v114, &v113, a1, a7, a8, ctx);
+    let v115 = helper_2(&v88, &v89, &v90, &v104, &v114, &v113, a1, a7, a8, ctx);
     let v116 = helper_1(&v88, &v89, &v90, &v104, &v114, &v113, a1, a7, a8, a13, a10, ctx);
-    let v117 = helper_2(&v88, &v89, &v90, &v104, &v114, &v113, a14, a1, a7, a8, ctx);
+    let v117 = helper_0(&v88, &v89, &v90, &v104, &v114, &v113, a14, a1, a7, a8, ctx);
     let v118 = mul(&v27, &v29);
     let v119 = mul(&v118, &v34);
     let v120 = conj(&v119);
@@ -41485,9 +41508,9 @@ fn branch_115<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C
     };
     let v140 = mul(a8, &v128);
     let v141 = mul(&v140, &v135);
-    let v142 = helper_0(&v115, &v116, &v117, &v131, &v141, &v140, a1, a7, a8, ctx);
+    let v142 = helper_2(&v115, &v116, &v117, &v131, &v141, &v140, a1, a7, a8, ctx);
     let v143 = helper_1(&v115, &v116, &v117, &v131, &v141, &v140, a1, a7, a8, a13, a10, ctx);
-    let v144 = helper_2(&v115, &v116, &v117, &v131, &v141, &v140, a14, a1, a7, a8, ctx);
+    let v144 = helper_0(&v115, &v116, &v117, &v131, &v141, &v140, a14, a1, a7, a8, ctx);
     let v145 = helper_4(&v142, &v143, &v144, a14, a7, a1, a13, a11, a15, a16, ctx);
     let v146 = mul(&v24, &v28);
     let v147 = mul(&v146, &v145);
@@ -42172,9 +42195,9 @@ fn branch_120<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C
     };
     let v68 = mul(a7, &v56);
     let v69 = mul(&v68, &v63);
-    let v70 = helper_0(&v36, &v46, &v45, &v59, &v69, &v68, a1, a6, a7, ctx);
+    let v70 = helper_2(&v36, &v46, &v45, &v59, &v69, &v68, a1, a6, a7, ctx);
     let v71 = helper_1(&v36, &v46, &v45, &v59, &v69, &v68, a1, a6, a7, a8, a9, ctx);
-    let v72 = helper_2(&v36, &v46, &v45, &v59, &v69, &v68, a10, a1, a6, a7, ctx);
+    let v72 = helper_0(&v36, &v46, &v45, &v59, &v69, &v68, a10, a1, a6, a7, ctx);
     let v73 = conj(&v19);
     let v74 = add(&v19, &v73);
     let v75 = mul(a7, &v74);
@@ -42250,12 +42273,12 @@ fn branch_120<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C
     };
     let v118 = mul(a7, &v106);
     let v119 = mul(&v118, &v113);
-    let v120 = helper_0(&v84, &v94, &v93, &v109, &v119, &v118, a1, a6, a7, ctx);
+    let v120 = helper_2(&v84, &v94, &v93, &v109, &v119, &v118, a1, a6, a7, ctx);
     let v121 = helper_1(&v84, &v94, &v93, &v109, &v119, &v118, a1, a6, a7, a8, a9, ctx);
-    let v122 = helper_2(&v84, &v94, &v93, &v109, &v119, &v118, a10, a1, a6, a7, ctx);
-    let v123 = helper_0(&v70, &v71, &v72, &v120, &v121, &v122, a1, a6, a7, ctx);
+    let v122 = helper_0(&v84, &v94, &v93, &v109, &v119, &v118, a10, a1, a6, a7, ctx);
+    let v123 = helper_2(&v70, &v71, &v72, &v120, &v121, &v122, a1, a6, a7, ctx);
     let v124 = helper_1(&v70, &v71, &v72, &v120, &v121, &v122, a1, a6, a7, a8, a9, ctx);
-    let v125 = helper_2(&v70, &v71, &v72, &v120, &v121, &v122, a10, a1, a6, a7, ctx);
+    let v125 = helper_0(&v70, &v71, &v72, &v120, &v121, &v122, a10, a1, a6, a7, ctx);
     let v126 = helper_4(&v123, &v124, &v125, a10, a6, a1, a8, a11, a12, a13, ctx);
     let v127 = mul(a1, &v20);
     let v128 = mul(&v127, &v22);
@@ -42376,9 +42399,9 @@ fn branch_121<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C
     };
     let v74 = mul(a5, &v62);
     let v75 = mul(&v74, &v69);
-    let v76 = helper_0(&v42, &v52, &v51, &v65, &v75, &v74, a2, a6, a5, ctx);
+    let v76 = helper_2(&v42, &v52, &v51, &v65, &v75, &v74, a2, a6, a5, ctx);
     let v77 = helper_1(&v42, &v52, &v51, &v65, &v75, &v74, a2, a6, a5, a7, a12, ctx);
-    let v78 = helper_2(&v42, &v52, &v51, &v65, &v75, &v74, a11, a2, a6, a5, ctx);
+    let v78 = helper_0(&v42, &v52, &v51, &v65, &v75, &v74, a11, a2, a6, a5, ctx);
     let v79 = helper_3(&v76, &v77, &v78, a2, a7, a8, a6, a9, a10, a11, ctx);
     let v80 = mul(a2, &v79);
     let v81 = conj(&v2);
@@ -42416,9 +42439,9 @@ fn branch_121<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C
     let v101 = mul(a5, &v89);
     let v102 = mul(&v101, &v96);
     let v103 = mul(a3, &v15);
-    let v104 = helper_0(&v92, &v102, &v101, &v103, &v27, &v26, a2, a6, a5, ctx);
+    let v104 = helper_2(&v92, &v102, &v101, &v103, &v27, &v26, a2, a6, a5, ctx);
     let v105 = helper_1(&v92, &v102, &v101, &v103, &v27, &v26, a2, a6, a5, a7, a12, ctx);
-    let v106 = helper_2(&v92, &v102, &v101, &v103, &v27, &v26, a11, a2, a6, a5, ctx);
+    let v106 = helper_0(&v92, &v102, &v101, &v103, &v27, &v26, a11, a2, a6, a5, ctx);
     let v107 = helper_3(&v104, &v105, &v106, a2, a7, a8, a6, a9, a10, a11, ctx);
     let v108 = mul(a2, &v107);
     let v109 = add(&v29, &v80);
@@ -42504,9 +42527,9 @@ fn branch_122<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C
     };
     let v48 = mul(a5, &v36);
     let v49 = mul(&v48, &v43);
-    let v50 = helper_0(&v17, &v27, &v26, &v39, &v49, &v48, a2, a6, a5, ctx);
+    let v50 = helper_2(&v17, &v27, &v26, &v39, &v49, &v48, a2, a6, a5, ctx);
     let v51 = helper_1(&v17, &v27, &v26, &v39, &v49, &v48, a2, a6, a5, a7, a8, ctx);
-    let v52 = helper_2(&v17, &v27, &v26, &v39, &v49, &v48, a9, a2, a6, a5, ctx);
+    let v52 = helper_0(&v17, &v27, &v26, &v39, &v49, &v48, a9, a2, a6, a5, ctx);
     let v53 = mul(a10, a2);
     let v54 = add(a3, &v53);
     let v55 = conj(&v54);
@@ -42543,9 +42566,9 @@ fn branch_122<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C
     };
     let v75 = mul(a5, &v63);
     let v76 = mul(&v75, &v70);
-    let v77 = helper_0(&v66, &v76, &v75, &v39, &v49, &v48, a2, a6, a5, ctx);
+    let v77 = helper_2(&v66, &v76, &v75, &v39, &v49, &v48, a2, a6, a5, ctx);
     let v78 = helper_1(&v66, &v76, &v75, &v39, &v49, &v48, a2, a6, a5, a7, a8, ctx);
-    let v79 = helper_2(&v66, &v76, &v75, &v39, &v49, &v48, a9, a2, a6, a5, ctx);
+    let v79 = helper_0(&v66, &v76, &v75, &v39, &v49, &v48, a9, a2, a6, a5, ctx);
     let v80 = helper_30(&v50, &v51, &v52, &v77, &v78, &v79, a5, a2, a6, ctx);
     let v81 = helper_31(&v50, &v51, &v52, &v77, &v78, &v79, a5, a2, a6, a7, ctx);
     let v82 = helper_32(&v50, &v51, &v52, &v77, &v78, &v79, a9, a5, a2, a6, ctx);
@@ -42586,9 +42609,9 @@ fn branch_122<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C
     };
     let v106 = mul(a5, &v93);
     let v107 = mul(&v106, &v101);
-    let v108 = helper_0(&v80, &v81, &v82, &v97, &v107, &v106, a2, a6, a5, ctx);
+    let v108 = helper_2(&v80, &v81, &v82, &v97, &v107, &v106, a2, a6, a5, ctx);
     let v109 = helper_1(&v80, &v81, &v82, &v97, &v107, &v106, a2, a6, a5, a7, a8, ctx);
-    let v110 = helper_2(&v80, &v81, &v82, &v97, &v107, &v106, a9, a2, a6, a5, ctx);
+    let v110 = helper_0(&v80, &v81, &v82, &v97, &v107, &v106, a9, a2, a6, a5, ctx);
     let v111 = helper_3(&v108, &v109, &v110, a2, a7, a12, a6, a13, a14, a9, ctx);
     let v112 = mul(a2, &v0);
     let v113 = mul(&v112, &v3);
@@ -42675,9 +42698,9 @@ fn branch_123<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C
     let v51 = mul(a5, &v39);
     let v52 = mul(&v51, &v46);
     let v53 = mul(a3, &v15);
-    let v54 = helper_0(&v42, &v52, &v51, &v53, &v27, &v26, a2, a6, a5, ctx);
+    let v54 = helper_2(&v42, &v52, &v51, &v53, &v27, &v26, a2, a6, a5, ctx);
     let v55 = helper_1(&v42, &v52, &v51, &v53, &v27, &v26, a2, a6, a5, a7, a13, ctx);
-    let v56 = helper_2(&v42, &v52, &v51, &v53, &v27, &v26, a11, a2, a6, a5, ctx);
+    let v56 = helper_0(&v42, &v52, &v51, &v53, &v27, &v26, a11, a2, a6, a5, ctx);
     let v57 = helper_3(&v54, &v55, &v56, a2, a7, a8, a6, a9, a10, a11, ctx);
     let v58 = mul(a2, &v57);
     let v59 = mul(a14, a2);
@@ -42716,9 +42739,9 @@ fn branch_123<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C
     };
     let v81 = mul(a5, &v69);
     let v82 = mul(&v81, &v76);
-    let v83 = helper_0(&v72, &v82, &v81, &v53, &v27, &v26, a2, a6, a5, ctx);
+    let v83 = helper_2(&v72, &v82, &v81, &v53, &v27, &v26, a2, a6, a5, ctx);
     let v84 = helper_1(&v72, &v82, &v81, &v53, &v27, &v26, a2, a6, a5, a7, a13, ctx);
-    let v85 = helper_2(&v72, &v82, &v81, &v53, &v27, &v26, a11, a2, a6, a5, ctx);
+    let v85 = helper_0(&v72, &v82, &v81, &v53, &v27, &v26, a11, a2, a6, a5, ctx);
     let v86 = helper_3(&v83, &v84, &v85, a2, a7, a8, a6, a9, a10, a11, ctx);
     let v87 = conj(&v2);
     let v88 = add(&v2, &v87);
@@ -42754,9 +42777,9 @@ fn branch_123<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C
     };
     let v107 = mul(a5, &v95);
     let v108 = mul(&v107, &v102);
-    let v109 = helper_0(&v98, &v108, &v107, &v53, &v27, &v26, a2, a6, a5, ctx);
+    let v109 = helper_2(&v98, &v108, &v107, &v53, &v27, &v26, a2, a6, a5, ctx);
     let v110 = helper_1(&v98, &v108, &v107, &v53, &v27, &v26, a2, a6, a5, a7, a13, ctx);
-    let v111 = helper_2(&v98, &v108, &v107, &v53, &v27, &v26, a11, a2, a6, a5, ctx);
+    let v111 = helper_0(&v98, &v108, &v107, &v53, &v27, &v26, a11, a2, a6, a5, ctx);
     let v112 = helper_3(&v109, &v110, &v111, a2, a7, a8, a6, a9, a10, a11, ctx);
     let v113 = mul(a11, &v112);
     let v114 = add(&v29, &v58);
@@ -42847,9 +42870,9 @@ fn branch_124<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C
     let v51 = mul(a5, &v39);
     let v52 = mul(&v51, &v46);
     let v53 = mul(a3, &v15);
-    let v54 = helper_0(&v42, &v52, &v51, &v53, &v27, &v26, a2, a6, a5, ctx);
+    let v54 = helper_2(&v42, &v52, &v51, &v53, &v27, &v26, a2, a6, a5, ctx);
     let v55 = helper_1(&v42, &v52, &v51, &v53, &v27, &v26, a2, a6, a5, a7, a12, ctx);
-    let v56 = helper_2(&v42, &v52, &v51, &v53, &v27, &v26, a11, a2, a6, a5, ctx);
+    let v56 = helper_0(&v42, &v52, &v51, &v53, &v27, &v26, a11, a2, a6, a5, ctx);
     let v57 = helper_3(&v54, &v55, &v56, a2, a7, a8, a6, a9, a10, a11, ctx);
     let v58 = mul(a2, &v57);
     let v59 = conj(&v2);
@@ -42886,9 +42909,9 @@ fn branch_124<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C
     };
     let v79 = mul(a5, &v67);
     let v80 = mul(&v79, &v74);
-    let v81 = helper_0(&v70, &v80, &v79, &v53, &v27, &v26, a2, a6, a5, ctx);
+    let v81 = helper_2(&v70, &v80, &v79, &v53, &v27, &v26, a2, a6, a5, ctx);
     let v82 = helper_1(&v70, &v80, &v79, &v53, &v27, &v26, a2, a6, a5, a7, a12, ctx);
-    let v83 = helper_2(&v70, &v80, &v79, &v53, &v27, &v26, a11, a2, a6, a5, ctx);
+    let v83 = helper_0(&v70, &v80, &v79, &v53, &v27, &v26, a11, a2, a6, a5, ctx);
     let v84 = helper_3(&v81, &v82, &v83, a2, a7, a8, a6, a9, a10, a11, ctx);
     let v85 = mul(a11, &v84);
     let v86 = add(&v29, &v58);
@@ -42972,9 +42995,9 @@ fn branch_125<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C
     };
     let v46 = mul(a4, &v34);
     let v47 = mul(&v46, &v41);
-    let v48 = helper_0(&v14, &v24, &v23, &v37, &v47, &v46, a3, a5, a4, ctx);
+    let v48 = helper_2(&v14, &v24, &v23, &v37, &v47, &v46, a3, a5, a4, ctx);
     let v49 = helper_1(&v14, &v24, &v23, &v37, &v47, &v46, a3, a5, a4, a6, a7, ctx);
-    let v50 = helper_2(&v14, &v24, &v23, &v37, &v47, &v46, a8, a3, a5, a4, ctx);
+    let v50 = helper_0(&v14, &v24, &v23, &v37, &v47, &v46, a8, a3, a5, a4, ctx);
     let v51 = mul(a0, a3);
     let v52 = conj(&v51);
     let v53 = add(&v51, &v52);
@@ -43045,12 +43068,12 @@ fn branch_125<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C
     };
     let v95 = mul(a4, &v83);
     let v96 = mul(&v95, &v90);
-    let v97 = helper_0(&v63, &v73, &v72, &v86, &v96, &v95, a3, a5, a4, ctx);
+    let v97 = helper_2(&v63, &v73, &v72, &v86, &v96, &v95, a3, a5, a4, ctx);
     let v98 = helper_1(&v63, &v73, &v72, &v86, &v96, &v95, a3, a5, a4, a6, a7, ctx);
-    let v99 = helper_2(&v63, &v73, &v72, &v86, &v96, &v95, a8, a3, a5, a4, ctx);
-    let v100 = helper_0(&v48, &v49, &v50, &v97, &v98, &v99, a3, a5, a4, ctx);
+    let v99 = helper_0(&v63, &v73, &v72, &v86, &v96, &v95, a8, a3, a5, a4, ctx);
+    let v100 = helper_2(&v48, &v49, &v50, &v97, &v98, &v99, a3, a5, a4, ctx);
     let v101 = helper_1(&v48, &v49, &v50, &v97, &v98, &v99, a3, a5, a4, a6, a7, ctx);
-    let v102 = helper_2(&v48, &v49, &v50, &v97, &v98, &v99, a8, a3, a5, a4, ctx);
+    let v102 = helper_0(&v48, &v49, &v50, &v97, &v98, &v99, a8, a3, a5, a4, ctx);
     let v103 = helper_4(&v100, &v101, &v102, a8, a5, a3, a6, a10, a11, a12, ctx);
     let v104 = mul(&v0, &v1);
     let v105 = mul(&v104, &v103);
@@ -43130,9 +43153,9 @@ fn branch_126<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C
     };
     let v46 = mul(a4, &v34);
     let v47 = mul(&v46, &v41);
-    let v48 = helper_0(&v14, &v24, &v23, &v37, &v47, &v46, a3, a5, a4, ctx);
+    let v48 = helper_2(&v14, &v24, &v23, &v37, &v47, &v46, a3, a5, a4, ctx);
     let v49 = helper_1(&v14, &v24, &v23, &v37, &v47, &v46, a3, a5, a4, a6, a7, ctx);
-    let v50 = helper_2(&v14, &v24, &v23, &v37, &v47, &v46, a8, a3, a5, a4, ctx);
+    let v50 = helper_0(&v14, &v24, &v23, &v37, &v47, &v46, a8, a3, a5, a4, ctx);
     let v51 = mul(a1, a3);
     let v52 = conj(&v51);
     let v53 = add(&v51, &v52);
@@ -43203,12 +43226,12 @@ fn branch_126<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C
     };
     let v95 = mul(a4, &v83);
     let v96 = mul(&v95, &v90);
-    let v97 = helper_0(&v63, &v73, &v72, &v86, &v96, &v95, a3, a5, a4, ctx);
+    let v97 = helper_2(&v63, &v73, &v72, &v86, &v96, &v95, a3, a5, a4, ctx);
     let v98 = helper_1(&v63, &v73, &v72, &v86, &v96, &v95, a3, a5, a4, a6, a7, ctx);
-    let v99 = helper_2(&v63, &v73, &v72, &v86, &v96, &v95, a8, a3, a5, a4, ctx);
-    let v100 = helper_0(&v48, &v49, &v50, &v97, &v98, &v99, a3, a5, a4, ctx);
+    let v99 = helper_0(&v63, &v73, &v72, &v86, &v96, &v95, a8, a3, a5, a4, ctx);
+    let v100 = helper_2(&v48, &v49, &v50, &v97, &v98, &v99, a3, a5, a4, ctx);
     let v101 = helper_1(&v48, &v49, &v50, &v97, &v98, &v99, a3, a5, a4, a6, a7, ctx);
-    let v102 = helper_2(&v48, &v49, &v50, &v97, &v98, &v99, a8, a3, a5, a4, ctx);
+    let v102 = helper_0(&v48, &v49, &v50, &v97, &v98, &v99, a8, a3, a5, a4, ctx);
     let v103 = helper_4(&v100, &v101, &v102, a8, a5, a3, a6, a10, a11, a12, ctx);
     let v104 = mul(&v0, &v1);
     let v105 = mul(&v104, &v103);
@@ -43426,9 +43449,9 @@ fn branch_128<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C
     };
     let v46 = mul(a4, &v34);
     let v47 = mul(&v46, &v41);
-    let v48 = helper_0(&v14, &v24, &v23, &v37, &v47, &v46, a3, a5, a4, ctx);
+    let v48 = helper_2(&v14, &v24, &v23, &v37, &v47, &v46, a3, a5, a4, ctx);
     let v49 = helper_1(&v14, &v24, &v23, &v37, &v47, &v46, a3, a5, a4, a6, a7, ctx);
-    let v50 = helper_2(&v14, &v24, &v23, &v37, &v47, &v46, a8, a3, a5, a4, ctx);
+    let v50 = helper_0(&v14, &v24, &v23, &v37, &v47, &v46, a8, a3, a5, a4, ctx);
     let v51 = mul(a1, a3);
     let v52 = conj(&v51);
     let v53 = add(&v51, &v52);
@@ -43499,12 +43522,12 @@ fn branch_128<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C
     };
     let v95 = mul(a4, &v83);
     let v96 = mul(&v95, &v90);
-    let v97 = helper_0(&v63, &v73, &v72, &v86, &v96, &v95, a3, a5, a4, ctx);
+    let v97 = helper_2(&v63, &v73, &v72, &v86, &v96, &v95, a3, a5, a4, ctx);
     let v98 = helper_1(&v63, &v73, &v72, &v86, &v96, &v95, a3, a5, a4, a6, a7, ctx);
-    let v99 = helper_2(&v63, &v73, &v72, &v86, &v96, &v95, a8, a3, a5, a4, ctx);
-    let v100 = helper_0(&v48, &v49, &v50, &v97, &v98, &v99, a3, a5, a4, ctx);
+    let v99 = helper_0(&v63, &v73, &v72, &v86, &v96, &v95, a8, a3, a5, a4, ctx);
+    let v100 = helper_2(&v48, &v49, &v50, &v97, &v98, &v99, a3, a5, a4, ctx);
     let v101 = helper_1(&v48, &v49, &v50, &v97, &v98, &v99, a3, a5, a4, a6, a7, ctx);
-    let v102 = helper_2(&v48, &v49, &v50, &v97, &v98, &v99, a8, a3, a5, a4, ctx);
+    let v102 = helper_0(&v48, &v49, &v50, &v97, &v98, &v99, a8, a3, a5, a4, ctx);
     let v103 = helper_4(&v100, &v101, &v102, a8, a5, a3, a6, a10, a11, a12, ctx);
     let v104 = mul(a13, &v0);
     let v105 = mul(&v104, &v1);
@@ -43723,9 +43746,9 @@ fn branch_130<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C
     };
     let v46 = mul(a4, &v34);
     let v47 = mul(&v46, &v41);
-    let v48 = helper_0(&v14, &v24, &v23, &v37, &v47, &v46, a3, a5, a4, ctx);
+    let v48 = helper_2(&v14, &v24, &v23, &v37, &v47, &v46, a3, a5, a4, ctx);
     let v49 = helper_1(&v14, &v24, &v23, &v37, &v47, &v46, a3, a5, a4, a6, a7, ctx);
-    let v50 = helper_2(&v14, &v24, &v23, &v37, &v47, &v46, a8, a3, a5, a4, ctx);
+    let v50 = helper_0(&v14, &v24, &v23, &v37, &v47, &v46, a8, a3, a5, a4, ctx);
     let v51 = mul(a0, a3);
     let v52 = conj(&v51);
     let v53 = add(&v51, &v52);
@@ -43796,12 +43819,12 @@ fn branch_130<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C
     };
     let v95 = mul(a4, &v83);
     let v96 = mul(&v95, &v90);
-    let v97 = helper_0(&v63, &v73, &v72, &v86, &v96, &v95, a3, a5, a4, ctx);
+    let v97 = helper_2(&v63, &v73, &v72, &v86, &v96, &v95, a3, a5, a4, ctx);
     let v98 = helper_1(&v63, &v73, &v72, &v86, &v96, &v95, a3, a5, a4, a6, a7, ctx);
-    let v99 = helper_2(&v63, &v73, &v72, &v86, &v96, &v95, a8, a3, a5, a4, ctx);
-    let v100 = helper_0(&v48, &v49, &v50, &v97, &v98, &v99, a3, a5, a4, ctx);
+    let v99 = helper_0(&v63, &v73, &v72, &v86, &v96, &v95, a8, a3, a5, a4, ctx);
+    let v100 = helper_2(&v48, &v49, &v50, &v97, &v98, &v99, a3, a5, a4, ctx);
     let v101 = helper_1(&v48, &v49, &v50, &v97, &v98, &v99, a3, a5, a4, a6, a7, ctx);
-    let v102 = helper_2(&v48, &v49, &v50, &v97, &v98, &v99, a8, a3, a5, a4, ctx);
+    let v102 = helper_0(&v48, &v49, &v50, &v97, &v98, &v99, a8, a3, a5, a4, ctx);
     let v103 = helper_4(&v100, &v101, &v102, a8, a5, a3, a6, a10, a11, a12, ctx);
     let v104 = mul(a13, &v0);
     let v105 = mul(&v104, &v1);

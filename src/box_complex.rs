@@ -207,12 +207,27 @@ fn root_bodies(a: &Atom, b: &Atom, c: &Atom) -> [Atom; 2] {
         .unwrap()
 }
 
+/// `(log((1-y2)/(-y2)) - log((1-y1)/(-y1)))/(y1 - y2)` on the continued
+/// sheets, as `log(q)/(1 - q)` of the two quotients.
+///
+/// When the two sheets of a quotient differ by a winding (`y1` and `y2`
+/// infinitesimally on opposite lips of a cut), its `log(q)/(1 - q)` carries
+/// `i pi n/(1 - q)`, which for nearly coincident `y1, y2` is large and cancels
+/// against other terms of the contour formula; `1 - q` formed from the rounded
+/// quotient then costs digits. The windings are therefore taken out and their
+/// contribution `i pi (n0 - n1)/(y1 - y2)` uses the difference of the poles.
 fn r0(x: [&Atom; 6]) -> Atom {
     let y1 = Continued::from_args([x[0], x[1], x[2]]);
     let y2 = Continued::from_args([x[3], x[4], x[5]]);
-    (&y2.complement(0).sheet() / &y1.complement(0).sheet()).log_over_one_minus() / &y1.value
-        + (&y2.complement(1).sheet() / &y1.complement(1).sheet()).log_over_one_minus()
-            / (1 - &y1.value)
+    let (q0, n0) = (&y2.complement(0).sheet() / &y1.complement(0).sheet()).split_winding();
+    let (q1, n1) = (&y2.complement(1).sheet() / &y1.complement(1).sheet()).split_winding();
+    let winding = n0 - n1;
+    q0.log_over_one_minus() / &y1.value
+        + q1.log_over_one_minus() / (1 - &y1.value)
+        + if_nonzero(
+            &winding,
+            i() * Symbol::PI.to_atom() * &winding / (&y1.value - &y2.value),
+        )
 }
 
 fn r1(x: [&Atom; 10]) -> Atom {

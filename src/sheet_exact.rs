@@ -487,6 +487,21 @@ impl SheetAtom {
         log_ratio_symbol().call((&self.value, &self.phase, &self.odd))
     }
 
+    /// This sheet without its winding, and the winding `n` (in units of
+    /// `i pi`): `log(self) = log(unwound) + i pi n`. Only an unreflected value
+    /// (`odd = 0`, the case of a quotient near one) is unwound.
+    pub(crate) fn split_winding(&self) -> (SheetAtom, Atom) {
+        let winding = (1 - &self.odd) * &self.phase;
+        (
+            SheetAtom {
+                value: self.value.clone(),
+                phase: &self.phase - &winding,
+                odd: self.odd.clone(),
+            },
+            winding,
+        )
+    }
+
     pub(crate) fn dilog(&self) -> Atom {
         dilog_symbol().call((&self.value, &self.phase, &self.odd))
     }

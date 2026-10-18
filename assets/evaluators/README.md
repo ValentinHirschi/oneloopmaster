@@ -5,10 +5,11 @@ Regenerated on 2026-10-17 from the expressions with the continuation fixes of
 `Cargo.toml`). The generator validated all five families against all 293
 acceptance and 31 benchmark rows before writing them; the regression rows,
 `tests/data/real_mass_limits.txt` and `tests/native_d0_four_mass_defect.rs`
-check the SymJIT backend as well. The C0 asset was rebuilt afterwards from the
-compact definitions (registered r-function and root helpers) with the exact
-zero coefficient of the two-mass triangle at a vanishing invariant
-(`tests/float_branch_decisions.rs`).
+check the SymJIT backend as well. The C0 and D0 assets were rebuilt afterwards
+from the compact definitions (registered r-function and root helpers): C0 with
+the exact zero coefficient of the two-mass triangle at a vanishing invariant
+(`tests/float_branch_decisions.rs`), D0 with the contour residue's sheet
+windings separated (`tests/d0_vanishing_gram.rs`).
 
 Previous generations: 2026-09-29 with released Symbolica and Numerica 3.0.1 and
 SymJIT 2.26.0, and the C0 asset of 2026-09-22 (zero-root ordering of the finite
@@ -37,7 +38,7 @@ exhaustive analytic-region coverage.
 | B0 | 15,375 | `0730c8a390d31c508fbece0760186627dc851b8ccf2da787072f8c2788f50354` |
 | dB0 | 61,566 | `5f145ba984ffe2bdffb9355557a9272c3006d0a601e845cd48877d5d19ea4d77` |
 | C0 | 86,330 | `1dd3da62d2fabbefa5aa4008181f3fbc74266d0c66dcaf7ad5e3f92f91913012` |
-| D0 | 1,899,115 | `35f66163246cb11d138181fe34137e8b1dd2af7a273fe6968b8d19f396853c89` |
+| D0 | 1,861,137 | `98dad062fd7a915136d52ebf4a109f315d82934473182bdc77c1ff1927863f40` |
 
 The embedded files use the `oneloop-evaluator-v3` discriminator, which binds
 the Symbolica IR schema and strict compilation policy without claiming backend

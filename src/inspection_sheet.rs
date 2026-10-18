@@ -43,6 +43,17 @@ impl SheetAtom {
     pub(crate) fn dilog(&self) -> Atom {
         symbolica::symbol!("__olo_inspect_sheet_dilog").call((&self.argument, &self.logarithm))
     }
+    pub(crate) fn split_winding(&self) -> (SheetAtom, Atom) {
+        let principal = self.argument.log();
+        let winding = (&self.logarithm - &principal) / (i() * Symbol::PI.to_atom());
+        (
+            SheetAtom {
+                argument: self.argument.clone(),
+                logarithm: principal,
+            },
+            winding,
+        )
+    }
 }
 
 impl Mul for &SheetAtom {

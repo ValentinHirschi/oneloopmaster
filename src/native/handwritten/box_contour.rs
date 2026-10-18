@@ -195,9 +195,28 @@ fn lom(q: &Sheet<f64>, k: &Constants<f64>) -> Z {
 }
 
 fn r0(y1: &Cont, y2: &Cont, k: &Constants<f64>) -> Z {
-    let first = lom(&y2.complement(0.0).sheet().div(&y1.complement(0.0).sheet()), k);
-    let second = lom(&y2.complement(1.0).sheet().div(&y1.complement(1.0).sheet()), k);
-    dv(first, y1.v) + dv(second, ONE - y1.v)
+    // `r0`: the windings of the two quotients are taken out and added as
+    // i pi (n0 - n1)/(y1 - y2), with the exact pole difference.
+    let split = |q: Sheet<f64>| {
+        let winding = if q.odd { 0 } else { q.phase };
+        (
+            Sheet {
+                phase: q.phase - winding,
+                ..q
+            },
+            winding,
+        )
+    };
+    let (q0, n0) = split(y2.complement(0.0).sheet().div(&y1.complement(0.0).sheet()));
+    let (q1, n1) = split(y2.complement(1.0).sheet().div(&y1.complement(1.0).sheet()));
+    let value = dv(lom(&q0, k), y1.v) + dv(lom(&q1, k), ONE - y1.v);
+    let winding = n0 - n1;
+    if winding != 0 {
+        let pi_n = k.pi * winding as f64;
+        value + dv(Z { re: 0.0, im: pi_n }, y1.v - y2.v)
+    } else {
+        value
+    }
 }
 
 fn r1(zz: &Cont, yy1: &Cont, yy2: &Cont, fy: Z, k: &Constants<f64>) -> Z {
