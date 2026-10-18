@@ -343,6 +343,35 @@ fn native_primitives_double_float_retains_low_components() {
 }
 
 #[test]
+fn native_primitives_double_float_products_keep_exact_symmetries() {
+    // The compensated DoubleFloat product rounds its cross terms in operand
+    // order. The native complex product forms them symmetrically, so
+    // `z conj(z)` is exactly real (as for binary64 above) and products
+    // commute. A residue of 1e-35 in `1 - z conj(z)` made a four-mass D0
+    // invert a dilogarithm argument of modulus 0.09
+    // (tests/native_double_float_d0.rs).
+    let ratio = |n: i64, d: i64| DoubleFloat::from(n as f64) / DoubleFloat::from(d as f64);
+    let mut residues = 0;
+    for n in 1..=40 {
+        let z = C::new(ratio(n, 123), ratio(41 - n, 287));
+        let w = C::new(ratio(n + 3, 11), -ratio(n, 13));
+        let norm = primitives::mul(&z, &primitives::conj(&z));
+        assert!(norm.im.is_fully_zero(), "{z:?} conj: {norm:?}");
+        let negated = primitives::mul(&C::new(-z.re, -z.im), &primitives::conj(&z));
+        assert!(
+            negated.im.is_fully_zero(),
+            "{z:?} negated conj: {negated:?}"
+        );
+        assert_eq!(primitives::mul(&z, &w), primitives::mul(&w, &z));
+        if !(z.re * -z.im + z.im * z.re).is_fully_zero() {
+            residues += 1;
+        }
+    }
+    // The raw products leave such residues for some of these values.
+    assert!(residues > 0);
+}
+
+#[test]
 fn native_primitives_general_powers_and_quadrants() {
     for re in [-2.0, -0.25, 0.25, 2.0] {
         for im in [-0.75, 0.75] {

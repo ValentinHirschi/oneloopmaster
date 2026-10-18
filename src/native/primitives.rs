@@ -150,6 +150,23 @@ fn double_to_float(value: DoubleFloat, bits: u32) -> Float {
     Float::with_val(bits, pair.hi()) + Float::with_val(bits, pair.lo())
 }
 
+/// The DoubleFloat product `x * y`, exactly commutative and odd in each operand.
+///
+/// The compensated product behind DoubleFloat accumulates its cross terms in
+/// operand order, so `x * y` and `y * x` can differ in the low component. Here
+/// every operation is symmetric under exchanging the operands: the high
+/// product with its fused rounding error, and the plain sum of the two cross
+/// products. Hence `x * y == y * x` and `x * (-y) == -(x * y)` exactly, as for
+/// binary64 and MPFR products, at the same few-ulp accuracy.
+#[inline]
+pub(crate) fn commutative_product(x: &DoubleFloat, y: &DoubleFloat) -> DoubleFloat {
+    let (x, y) = (x.into_inner(), y.into_inner());
+    let high = x.hi() * y.hi();
+    let error = x.hi().mul_add(y.hi(), -high);
+    let cross = x.hi() * y.lo() + x.lo() * y.hi();
+    DoubleFloat::from_compensated_sum(high, error + (cross + x.lo() * y.lo()))
+}
+
 impl NativeFloat for DoubleFloat {
     // Compensated arithmetic expands to many instructions. Sharing these two
     // operations avoids repeating that expansion in every generated branch.
@@ -158,9 +175,18 @@ impl NativeFloat for DoubleFloat {
         inline_add(a, b)
     }
 
+    // The exact predicates of the expressions test analytically real values
+    // such as `1 - z conj(z)` with `x - |x|`, which is nonzero for any
+    // imaginary residue. With a commutative product the imaginary part of
+    // `z conj(z)`, `re (-im) + im re`, is exactly zero, as in binary64 and
+    // MPFR; otherwise a residue of a few 1e-35 decided |z| > 1 for |z| = 0.09
+    // and inverted a dilogarithm argument (wrong four-mass D0 real part).
     #[inline(never)]
     fn complex_mul(a: &C<Self>, b: &C<Self>) -> C<Self> {
-        inline_mul(a, b)
+        C::new(
+            commutative_product(&a.re, &b.re) - commutative_product(&a.im, &b.im),
+            commutative_product(&a.re, &b.im) + commutative_product(&a.im, &b.re),
+        )
     }
 
     const FIXED_BITS: Option<u32> = Some(106);
