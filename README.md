@@ -35,8 +35,17 @@ supports the kinematics: OneLOop's real-mass `boxf33` chart, which it takes
 outside timelike configurations, depends on the labelling, with a wrong real
 or imaginary part in some relabellings of about a quarter of three-mass boxes,
 OneLOop 3.6 included (`tests/d0_real_mass_orderings.rs`). Four-mass boxes keep
-OneLOop's selection; its `boxf4` chart fails in a few relabellings (in 8 of 88
-random four-mass boxes). The contour box's edge quadratics take their
+OneLOop's selection, but its `boxf4` chart (Denner-Nierste-Scharf), wrong in
+about 2% of the relabellings of random real four-mass boxes (OneLOop 3.6
+included), is now Denner and Dittmaier's form of it (arXiv:1005.2076, eq. (3.61)):
+an invariant below its pseudo-threshold in the `p23` slot, its r-function
+exactly real, `x r13` principal with the explicit `eta(x, r13) Log R` term, and
+exact infinitesimal decisions (`tests/d0_four_mass_orderings.rs`). The continued
+dilogarithm's unit-circle test signed `1 - x conj(x)` without taking its real
+part: in `Float` a rounding-level imaginary part made it invert small arguments
+(a `4 pi²` jump on higher windings, seen at 128 to 256 bits in four-mass boxes
+above all their pseudo-thresholds); it now signs the real part.
+The contour box's edge quadratics take their
 discriminants as exact Källén functions and their roots at massless ends
 exactly, so a pseudo-threshold next to a massless line keeps 1e-14 in
 binary64 on both sides instead of losing 8 to 10 digits at it (or 7 next to

@@ -52,7 +52,10 @@ expressions does not update these kernels: an expression change in these
 sectors must be transcribed as well (as were the continuation fixes checked by
 `tests/permutation_regressions.rs`: exact r-function roots at zero momenta and
 thresholds, the roots, chart choice and root lips of `trif3`, the root lips of
-`boxf4`, and the contour box's double-root split and real residue logarithms;
+`boxf4` (and its Denner-Dittmaier chart of `tests/d0_four_mass_orderings.rs`:
+the relabelling that puts an invariant below its pseudo-threshold in the `p23`
+slot, principal `x r13` and the explicit `eta(x, r13) Log R` term), and the
+contour box's double-root split and real residue logarithms;
 and the conditioning fixes of `tests/c0_coincident_roots.rs` and
 `tests/d0_tiny_invariant.rs`: the term-wise dilogarithm divided difference of
 `sheet_exact::near_difference`, `log(x)/(1-x)` next to one through

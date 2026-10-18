@@ -64,7 +64,7 @@ fn dilog_body(value: &Atom, phase: &Atom, odd: &Atom, at_one: Atom, at_zero: Ato
     let even = phase - odd;
     let argument = physical(value, odd);
     let nonunit = &argument - 1;
-    let inverted = negative(&(Atom::num(1) - value * value.conj()));
+    let inverted = negative(&re(&(Atom::num(1) - value * value.conj())));
     let normalized = choose(&inverted, Atom::num(1) / &argument, argument);
     let logarithm = choose(&inverted, -value.log(), value.log());
     let even = choose(&inverted, -&even, even);
@@ -310,7 +310,7 @@ fn near_difference(first: &SheetAtom, second: &SheetAtom, direct: Atom) -> Atom 
     };
 
     // dilog_body's inversion test, on the same arithmetic.
-    let inverted = |s: &SheetAtom| negative(&(&one - &s.value * s.value.conj()));
+    let inverted = |s: &SheetAtom| negative(&re(&(&one - &s.value * s.value.conj())));
     let [inverted_1, inverted_2] = [inverted(first), inverted(second)];
     // Across the unit circle the continued Li2(1-x) is continuous for the
     // phases -1, 0, 1, and the representation inside holds on both sides;

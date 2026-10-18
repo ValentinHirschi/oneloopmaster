@@ -19,6 +19,9 @@ representation for every supported real-mass three-mass box
 the contour box's exact Källén discriminants, massless-end roots, exact line
 sums and charts expanded about beta = 1 (`tests/d0_contour_thresholds.rs`,
 likewise), and again with the far-root form of `r1` (same test).
+C0 and D0 were rebuilt on 2026-10-18 with the continued dilogarithm's
+unit-circle test on a real part, and D0 with the Denner-Dittmaier four-mass
+chart (`tests/d0_four_mass_orderings.rs`, which checks SymJIT too).
 
 Previous generations: 2026-09-29 with released Symbolica and Numerica 3.0.1 and
 SymJIT 2.26.0, and the C0 asset of 2026-09-22 (zero-root ordering of the finite
@@ -46,8 +49,8 @@ exhaustive analytic-region coverage.
 | A0 | 1,488 | `b034aa19e48f3f62b7029f2c88ad4f14e19ff6d9580979d43868349c5e651a0d` |
 | B0 | 15,375 | `0730c8a390d31c508fbece0760186627dc851b8ccf2da787072f8c2788f50354` |
 | dB0 | 61,566 | `5f145ba984ffe2bdffb9355557a9272c3006d0a601e845cd48877d5d19ea4d77` |
-| C0 | 101,145 | `114aa366c67aa769e4e7ccc9305361b3c11ae312f7c21efa8d60c82d018bb504` |
-| D0 | 1,897,811 | `c91916236ca92b7e6656b673bafb280dce997a24e73cfa4e5f732940a00ce35c` |
+| C0 | 101,453 | `c9ead5acc13ae9847347885772fa2eb212ed6c3cf974de66ce1a00b5eca73456` |
+| D0 | 1,931,722 | `178feecf6054b4887e29ef30218662ebc6f9e1e291399b3652d12bbdb706ef6d` |
 
 The embedded files use the `oneloop-evaluator-v3` discriminator, which binds
 the Symbolica IR schema and strict compilation policy without claiming backend

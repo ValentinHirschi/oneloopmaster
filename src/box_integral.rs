@@ -1,7 +1,7 @@
 //! Box mass sectors and infrared formulas.
 use super::*;
 use sheet_exact::sqrt_lower as physical_sqrt;
-use sheet_exact::{SheetAtom as Q, divided_difference as dd, negative, re, sign_nonnegative};
+use sheet_exact::{SheetAtom as Q, divided_difference as dd, im, negative, re, sign_nonnegative};
 
 pub(crate) fn box_finite_massless(p: [&Atom; 6]) -> Atom {
     let r12 = -p[0];
@@ -35,11 +35,9 @@ pub(crate) fn box_finite_massless(p: [&Atom; 6]) -> Atom {
 // these timelike configurations. Exact inequalities replace its numerical
 // proximity tests. Keep the boxf representation for kinematics boxc rejects.
 //
-// Four real masses keep this selection: the boxf4 (Denner-Nierste-Scharf)
-// chart is wrong in a few relabellings of some boxes (in 12 of the 1432
-// relabellings that took it, in 8 of 88 random four-mass boxes), but the
-// contour box costs 1.5 to 4 times as much on the recorded NinjaRS streams,
-// where boxf4 is right.
+// Four real masses keep this selection (the contour box costs 1.5 to 4 times
+// as much on the recorded NinjaRS streams); their boxf4 chart is corrected in
+// `box_four_masses_chart`.
 fn finite_box_representation(p: [&Atom; 6], m: [&Atom; 4], fallback: Atom) -> Atom {
     let complex_mass = any_nonzero(m.map(sheet_exact::im));
     let all_external_nonnegative = p[..4]
@@ -65,7 +63,12 @@ fn finite_three_mass_representation(p: [&Atom; 6], m: [&Atom; 4], fallback: Atom
     )
 }
 
-pub(crate) fn box_finite_four_masses(p: [&Atom; 6], m: [&Atom; 4]) -> Atom {
+/// OneLOop's boxf4 as it stands, for complex masses (where the contour box
+/// rejects the kinematics) and for real masses without any invariant at or
+/// below its pseudo-threshold, where [box_four_masses_chart] does not apply
+/// (all invariants positive and all four Källén functions negative: no real
+/// momenta, and OneLOop returns its error value).
+fn box_four_masses_dns(p: [&Atom; 6], m: [&Atom; 4]) -> Atom {
     let roots = m.map(physical_sqrt);
     let k12 = (m[0] + m[1] - p[0]) / (&roots[0] * &roots[1]);
     let k13 = (m[0] + m[2] - p[4]) / (&roots[0] * &roots[2]);
@@ -127,9 +130,193 @@ pub(crate) fn box_finite_four_masses(p: [&Atom; 6], m: [&Atom; 4]) -> Atom {
     finite +=
         (dd(&(&w1 * &q34), &(&w2 * &q34)) * &r34 + dd(&(&w1 / &q34), &(&w2 / &q34)) / &r34) * &r13;
     finite -= dd(&(&qx1 * &q14), &(&qx2 * &q14)) * &r14 + dd(&(&qx1 / &q14), &(&qx2 / &q14)) / &r14;
-    let generic = if_nonzero(
+    if_nonzero(
         &a,
         -finite / (&a * &roots[0] * &roots[1] * &roots[2] * &roots[3]),
+    )
+}
+
+/// The boxf4 chart for four real masses with `r24 >= 1`, i.e. an invariant
+/// `p23 <= (m2 - m4)^2` in the `p23` slot: the representation of Denner and
+/// Dittmaier (arXiv:1005.2076, eq. (3.61), their `r20`), which is OneLOop's
+/// boxf4 term by term.
+///
+/// OneLOop's boxf4 depended on the labelling (wrong in about 2% of the
+/// relabellings of random real four-mass boxes, OneLOop 3.6 included). The
+/// representation requires that r-function to be real and positive, which
+/// OneLOop does not arrange, and exactly real: its infinitesimal imaginary
+/// part moves `x r12 / r24` across the cut where `r12` is real and negative.
+/// It also forms `x r13` as a principal value and restores the winding with
+/// the explicit term `eta(x, r13) Log R`; OneLOop's phase-tracked three-factor
+/// products differ from that by multiples of `(2 pi i)^2`. The other
+/// infinitesimals keep OneLOop's `p -> p (1 + i eps)` on every invariant except
+/// `p23`.
+///
+/// Every infinitesimal decision is exact: `D = b^2 - 4 a c` is real (a
+/// multiple of the modified Cayley determinant), so with a real `r13` the
+/// roots are real exactly when `D >= 0`, and with `r13` on the unit circle
+/// (complex, or `-1` or `1` at a threshold) `R` is real when `D < 0` as well.
+fn box_four_masses_chart(p: [&Atom; 6], m: [&Atom; 4]) -> Atom {
+    let roots = m.map(physical_sqrt);
+    let k12 = (m[0] + m[1] - p[0]) / (&roots[0] * &roots[1]);
+    let k13 = (m[0] + m[2] - p[4]) / (&roots[0] * &roots[2]);
+    let k14 = (m[0] + m[3] - p[3]) / (&roots[0] * &roots[3]);
+    let k23 = (m[1] + m[2] - p[1]) / (&roots[1] * &roots[2]);
+    let k24 = (m[1] + m[3] - p[5]) / (&roots[1] * &roots[3]);
+    let k34 = (m[2] + m[3] - p[2]) / (&roots[2] * &roots[3]);
+    let (r12, _) = r_function(&k12);
+    let (r13, d13) = r_function(&k13);
+    let (r14, _) = r_function(&k14);
+    let (r23, _) = r_function(&k23);
+    let (r24, d24) = r_function(&k24);
+    let (r34, _) = r_function(&k34);
+    let a = &k34 / &r24 + &r13 * &k12 - &k14 * &r13 / &r24 - &k23;
+    let b = &d13 * &d24 + &k12 * &k34 - &k14 * &k23;
+    let c = &k12 / &r13 + &r24 * &k34 - &k14 * &r24 / &r13 - &k23;
+    let (x1, x2) = negative_quadratic_roots(&a, &b, &c);
+    // First-order velocities of p -> p (1 + i eps) with p23 static.
+    let dk = |p: &Atom, i: usize, j: usize| -p / (&roots[i] * &roots[j]);
+    let [dr13, dd13, weight] = r_function_velocity(&k13, &r13, &d13, &dk(p[4], 0, 2));
+    // At a threshold r13 = r0 = -1 or 1 the root moves along (r0 - i) sqrt(eps),
+    // off the unit circle as well, where R is real: D(r13) is proportional to
+    // -(1 + i r0). Real decisions take only its real part, the velocity above.
+    let tilt = if_nonzero_else(&weight, Atom::num(1), 1 + sheet_exact::i() * &r13);
+    let [dr13, dd13] = [dr13 * &tilt, dd13 * &tilt];
+    let [dk12, dk14, dk23, dk34] = [(p[0], 0, 1), (p[3], 0, 3), (p[1], 1, 2), (p[2], 2, 3)]
+        .map(|(v, i, j)| dk(v, i, j) * &weight);
+    let r13_2 = &r13 * &r13;
+    let da = &dk34 / &r24 + &dr13 * &k12 + &r13 * &dk12
+        - &dk14 * &r13 / &r24
+        - &k14 * &dr13 / &r24
+        - &dk23;
+    let db = &dd13 * &d24 + &dk12 * &k34 + &k12 * &dk34 - &dk14 * &k23 - &k14 * &dk23;
+    let dc = &dk12 / &r13 - &k12 * &dr13 / &r13_2 + &r24 * &dk34 - &dk14 * &r24 / &r13
+        + &k14 * &r24 * &dr13 / &r13_2
+        - &dk23;
+    let base = re(&(&k23 - &r13 * &k12 - &r24 * &k34 + &r13 * &r24 * &k14)) * re(&a);
+    let lip = |root: &Atom, other: &Atom| {
+        let fallback = sign_nonnegative(&(&base * re(other)));
+        root_lip_or(root, &a, &b, [&da, &db, &dc], fallback)
+    };
+    let lips = [lip(&x1, &x2), lip(&x2, &x1)];
+    // r13 is real for |k13| >= 2 and on the unit circle for |k13| <= 2.
+    let r13_discriminant = &k13 * &k13 - 4;
+    let r13_real = 1 - negative(&r13_discriminant);
+    let r13_circle = 1 - negative(&-&r13_discriminant);
+    let below = negative(&re(&(&b * &b - Atom::num(4) * &a * &c)));
+    let x_real = &r13_real * (1 - &below);
+    let ratio_real = &x_real + r13_circle * &below;
+    let sign_or =
+        |value: &Atom, fallback: Atom| if_nonzero_else(value, sign_nonnegative(value), fallback);
+    // The direction of r13 (zero for a static p12, where eta vanishes).
+    let s13 = if_nonzero_else(
+        &r13_real,
+        sign_or(&re(&dr13), Atom::num(0)),
+        sign_nonnegative(&im(&r13)),
+    );
+    let two_pi_i = Atom::num(2) * Symbol::PI.to_atom() * sheet_exact::i();
+    let mut principal = Vec::new();
+    let mut winding = Vec::new();
+    let mut log_slope = Atom::num(0);
+    for (index, (x, lip)) in [(&x1, &lips[0]), (&x2, &lips[1])].into_iter().enumerate() {
+        let slope = Atom::num(2) * &a * x - &b;
+        let dx = if_nonzero(&slope, (&db * x - &da * x * x - &dc) / &slope);
+        let v = x * &r13;
+        let dv = &dx * &r13 + x * &dr13;
+        // The lip of the principal value x r13, real exactly with x.
+        let lv = if_nonzero_else(
+            &x_real,
+            sign_or(&re(&dv), lip * sign_nonnegative(&re(&r13))),
+            sign_nonnegative(&im(&v)),
+        );
+        // eta(x, r13) / (2 pi i) from the three imaginary-part signs.
+        let sx = if_nonzero_else(&x_real, lip.clone(), sign_nonnegative(&im(x)));
+        let n = -&sx * &s13 * &s13 * (1 + &sx * &s13) * (1 - &sx * &lv) / 4;
+        // R = P(x) of the r13 terms; its side, when real, from its velocity.
+        let u = &v / &r24;
+        let numerator = 1 - &u * &k23 + &u * &u;
+        let denominator = 1 - &v * &k34 + &v * &v;
+        let du = &dv / &r24;
+        let dnumerator = -&du * &k23 - &u * &dk23 + Atom::num(2) * &u * &du;
+        let ddenominator = -&dv * &k34 - &v * &dk34 + Atom::num(2) * &v * &dv;
+        let ratio = &numerator / &denominator;
+        let dratio = &ratio * (&dnumerator / &numerator - &ddenominator / &denominator);
+        let side = sign_or(&re(&dratio), Atom::num(1));
+        let value = if_nonzero_else(&ratio_real, re(&ratio), ratio);
+        if index == 0 {
+            // d Log R / dx at a double root (x1 = x2).
+            let slope = (Atom::num(2) * &u - &k23) / (&r24 * &numerator)
+                - (Atom::num(2) * &v - &k34) / &denominator;
+            log_slope = if_nonzero(&n, &n * &r13 * slope);
+        }
+        winding.push(if_nonzero(&n, &n * Q::with_sign(value, side).log()));
+        principal.push(Q::with_sign(v, lv));
+    }
+    let qx1 = Q::with_sign(x1.clone(), lips[0].clone());
+    let qx2 = Q::with_sign(x2.clone(), lips[1].clone());
+    let [q12, q14, q23, q24, q34] = [&r12, &r14, &r23, &r24, &r34].map(|r| Q::lower(r.clone()));
+    let y1 = &qx1 / &q24;
+    let y2 = &qx2 / &q24;
+    let mut finite =
+        (dd(&(&y1 * &q12), &(&y2 * &q12)) * &r12 + dd(&(&y1 / &q12), &(&y2 / &q12)) / &r12) / &r24;
+    let ratio = &r13 / &r24;
+    let inverse24 = Atom::num(1) / &r24;
+    let z1 = principal[0].scale_positive(&inverse24);
+    let z2 = principal[1].scale_positive(&inverse24);
+    finite -= (dd(&(&z1 * &q23), &(&z2 * &q23)) * &r23 + dd(&(&z1 / &q23), &(&z2 / &q23)) / &r23)
+        * &ratio;
+    let [w1, w2] = [&principal[0], &principal[1]];
+    finite +=
+        (dd(&(w1 * &q34), &(w2 * &q34)) * &r34 + dd(&(w1 / &q34), &(w2 / &q34)) / &r34) * &r13;
+    finite -= dd(&(&qx1 * &q14), &(&qx2 * &q14)) * &r14 + dd(&(&qx1 / &q14), &(&qx2 / &q14)) / &r14;
+    // The explicit term, -sum_k (-1)^(k+1) eta_k Log R_k / (x1 - x2).
+    let gap = &x1 - &x2;
+    finite -= two_pi_i * if_nonzero_else(&gap, (&winding[0] - &winding[1]) / &gap, log_slope);
+    if_nonzero(
+        &a,
+        -finite / (&a * &roots[0] * &roots[1] * &roots[2] * &roots[3]),
+    )
+}
+
+fn box_four_masses_chart_symbol() -> Symbol {
+    symbolica::symbol!("__olo_box_four_masses_chart")
+}
+
+/// Relabellings of the propagators that move each invariant into the `p23`
+/// slot (momenta and masses in the new order): the channels `p23`, `p12`, then
+/// the external `p1` to `p4`.
+pub(crate) const FOUR_MASS_CHART_ORDERS: [([usize; 6], [usize; 4]); 6] = [
+    ([0, 1, 2, 3, 4, 5], [0, 1, 2, 3]),
+    ([1, 2, 3, 0, 5, 4], [1, 2, 3, 0]),
+    ([4, 3, 5, 1, 2, 0], [2, 0, 3, 1]),
+    ([0, 5, 2, 4, 3, 1], [0, 1, 3, 2]),
+    ([4, 1, 5, 3, 0, 2], [0, 2, 1, 3]),
+    ([0, 4, 2, 5, 1, 3], [1, 0, 2, 3]),
+];
+
+pub(crate) fn box_finite_four_masses(p: [&Atom; 6], m: [&Atom; 4]) -> Atom {
+    let roots = m.map(physical_sqrt);
+    let real_masses = 1 - any_nonzero(m.map(sheet_exact::im));
+    // The first invariant whose r-function is real and at least one (real
+    // k >= 2, at or below its pseudo-threshold) takes the p23 slot of
+    // box_four_masses_chart; k is formed as the chart forms k24.
+    let generic = FOUR_MASS_CHART_ORDERS.iter().rev().fold(
+        box_four_masses_dns(p, m),
+        |otherwise, (order, masses)| {
+            let k = (m[masses[1]] + m[masses[3]] - p[order[5]])
+                / (&roots[masses[1]] * &roots[masses[3]]);
+            let positive = &real_masses * (1 - negative(&(&k * &k - 4))) * (1 - negative(&k));
+            let args: Vec<Atom> = order
+                .map(|i| p[i].clone())
+                .into_iter()
+                .chain(masses.map(|i| m[i].clone()))
+                .collect();
+            if_nonzero_else(
+                &positive,
+                box_four_masses_chart_symbol().call(&args),
+                otherwise,
+            )
+        },
     );
     // For equal masses at zero external momentum, the Feynman-parameter
     // denominator is constant and the simplex volume is exactly 1/6.
@@ -1088,6 +1275,19 @@ pub(crate) fn register_boxes(map: &mut FunctionMap) {
     let symbols =
         core::array::from_fn::<_, 11, _>(|i| symbolica::symbol!(format!("__olo_d0_arg_{i}")));
     let x = symbols.map(Symbol::to_atom);
+    // One definition for every relabelling of box_finite_four_masses. It binds
+    // the sector parameters: new symbols would renumber later ones and reorder
+    // the other families' evaluators.
+    map.add_function_with_options(
+        box_four_masses_chart_symbol(),
+        symbols[..10].to_vec(),
+        box_four_masses_chart(
+            [&x[0], &x[1], &x[2], &x[3], &x[4], &x[5]],
+            [&x[6], &x[7], &x[8], &x[9]],
+        ),
+        native_function_options(),
+    )
+    .expect("unique four-mass chart");
     let p = [&x[0], &x[1], &x[2], &x[3], &x[4], &x[5]];
     let m = [&x[6], &x[7], &x[8], &x[9]];
     let definitions = [

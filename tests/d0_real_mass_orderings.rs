@@ -11,9 +11,9 @@
 //! 400 random real-mass boxes, 39 of 154 three-mass boxes were wrong in some of
 //! their 24 relabellings, always where the contour box supports the
 //! kinematics, which three-mass boxes now use wherever it does. (Four-mass
-//! boxes keep OneLOop's selection: its boxf4 chart was wrong in 12 of the
-//! 1432 relabellings that took it, in 8 of 88 boxes, but the contour box costs
-//! 1.5 to 4 times as much on the recorded NinjaRS streams.)
+//! boxes keep OneLOop's selection, as the contour box costs 1.5 to 4 times as
+//! much on the recorded NinjaRS streams; their boxf4 chart is corrected
+//! instead: tests/d0_four_mass_orderings.rs.)
 //! References (tests/data/real_mass_orderings.txt): OneLOop 3.6 in quadruple
 //! precision with vanishing widths, which is independent of the real-mass
 //! charts.

@@ -1,0 +1,48 @@
+# kind mu_squared momenta... squared_mass_real_imag... finite_real finite_imag
+# Real-mass four-mass D0 whose boxf4 (Denner-Nierste-Scharf) chart depended on the order of
+# its propagators, from sweeps of 400 random boxes (masses 1, 100, 6464.16, 8315.178393760001,
+# 29929; integer invariants up to 2.5e5, 15% of them equal to a mass) in all 24 relabellings,
+# where OneLOop's boxf4 was wrong in about 2% of the relabellings that took it (OneLOop 3.6
+# included, in double and quadruple precision). They cover the mechanisms of
+# box_integral::box_four_masses_chart: both channels below their pseudo-thresholds (rows 1-2,
+# where the imaginary part of r24 moved x r12 / r24 across the cut of a negative r12); one
+# channel below its pseudo-threshold (rows 3-11, failing where it sat in the p12 slot or
+# where x r13 needed its winding), with a real r13 (rows 3-4), an r13 on the unit circle
+# (rows 5-7) or both among the failing relabellings (rows 8-10), row 11 wrong at 128 bits
+# only; an external invariant below its pseudo-threshold as the only one (row 12); and a
+# channel at its threshold, where r13 = -1 leaves the unit circle only through its
+# sqrt(eps) motion (row 13, from a sweep with invariants at exact thresholds). Rows 14-16
+# have every invariant above its pseudo-threshold and keep OneLOop's chart; in Float the
+# continued dilogarithm's unit-circle test misread rounding noise there, in some
+# relabellings at 128 to 256 bits. Row 17 (tests/oracle_sweep.py, D0 seed 4) has a channel
+# at its threshold and a vanishing external invariant between equal masses (at its
+# pseudo-threshold, k = 2); OneLOop 3.6 gives 2.176 - 61.51 i in 2 of its 24 relabellings
+# (the two the oracle sweep takes) and the value below in the other 22.
+# References: OneLOop 3.6 in quadruple precision with widths -i w m on the massive lines,
+# extrapolated to w = 0 from w = 1e-10 and 2e-10 (as tests/data/real_mass_limits.txt). For
+# row 12 OneLOop returns its error value at every width (the four Källén functions are
+# negative); its reference is Denner and Dittmaier's eq. (3.61) (arXiv:1005.2076) evaluated
+# independently in 90-digit arithmetic, which equals the value continued from kinematics
+# where the contour box applies. Rows 13 and 17 are extrapolated in sqrt(w) (f0 + a sqrt(w) +
+# b w from w = 1e-12, 4e-12 and 1.6e-11), as their width dependence is not analytic at the
+# threshold; for rows 14-16 OneLOop returns its error value, and the references are
+# OneLOop's boxf4 evaluated independently in 90-digit arithmetic (the same value in all 24
+# relabellings).
+# The poles vanish.
+4 8315.178393760001 -49433 203509 100 88393 6464.16 -21330 100 0 100 0 8315.178393760001 0 1 0 -1.2172823719410182e-09 -2.7533344979023298e-09
+4 8315.178393760001 5317 58242 -82794 40699 -245985 175144 1 0 6464.16 0 1 0 100 0 -6.908951515019793e-10 1.8935483015431153e-11
+4 8315.178393760001 -233905 51909 95937 -219180 -184106 209032 100 0 29929 0 8315.178393760001 0 100 0 -9.431272143513341e-11 1.0405876548824487e-10
+4 8315.178393760001 159722 -59651 127254 6464.16 8315.178393760001 -159478 6464.16 0 1 0 100 0 29929 0 -2.6789192975441432e-09 -2.255696953585519e-09
+4 8315.178393760001 -45111 61113 -173213 -12374 235467 221651 29929 0 29929 0 6464.16 0 1 0 -2.2974620260726827e-09 -9.304758946012835e-10
+4 8315.178393760001 -9813 100 100 -139373 189947 125380 1 0 8315.178393760001 0 8315.178393760001 0 29929 0 -5.039164437023425e-09 -1.4471428465290431e-09
+4 8315.178393760001 218811 18130 223779 -232727 8315.178393760001 -196683 100 0 29929 0 8315.178393760001 0 6464.16 0 -1.2025232593708189e-09 -6.24627530215026e-10
+4 8315.178393760001 -14392 28373 25875 8315.178393760001 -37532 75910 29929 0 29929 0 8315.178393760001 0 6464.16 0 -9.08052250798791e-11 3.3323889522163357e-09
+4 8315.178393760001 -57910 8315.178393760001 1 -197127 143240 247235 1 0 1 0 1 0 1 0 4.4238372861786277e-10 -1.562510361671673e-09
+4 8315.178393760001 136549 -88971 -125050 29929 171033 108609 29929 0 100 0 1 0 1 0 -7.48932811674698e-10 -4.0300904963553165e-10
+4 8315.178393760001 139929 -32781 -57522 118595 137037 -19858 29929 0 8315.178393760001 0 29929 0 1 0 -2.626463927750989e-10 -6.014895118059777e-10
+4 8315.178393760001 207177 157295 6464.16 131302 94748 221000 29929 0 100 0 1 0 29929 0 1.8827010453106292e-10 -3.870213252642985e-10
+4 8315.178393760001 -30230 133953 -81527 26864 -93800 33489 8315.178393760001 0 29929 0 8315.178393760001 0 100 0 6.93018765300559e-10 2.0663054802022206e-09
+4 8315.178393760001 89526 218313 242371 119166 103690 180833 29929 0 1 0 6464.16 0 8315.178393760001 0 1.482112976094873e-10 -1.064848290238233e-10
+4 8315.178393760001 145823 110623 186258 189114 30959 155591 29929 0 8315.178393760001 0 8315.178393760001 0 6464.16 0 1.4463740635413382e-10 -1.9990708801234387e-10
+4 8315.178393760001 29929 101446 194962 75836 200395 153381 29929 0 8315.178393760001 0 1 0 29929 0 -2.3834799547380183e-11 -3.687666228749934e-10
+4 1 0 1.939351244333556 4.616075471676815 -1.3135178794812885 -0.37504160373662826 0.04613395493643435 0.011533488734108588 0 0.011533488734108588 0 2.25 0 0.011533488734108588 0 2.1760465006738006 11.165636541661996

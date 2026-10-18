@@ -65,7 +65,12 @@ explicit resource limits; see [expression inspection](README.md#combining-integr
   `16 (max(1, |y1|², |y2|²)/|z|²)⁴` leaves 1 unchanged (in binary64 for
   `|z|` beyond about 140 `max(1, |y|)`; at 128 bits and more only for huge
   roots, where the general form costs eps `|z|`). Every other branch is an
-  exact test.
+  exact test. Sign tests take real values: the continued dilogarithm's
+  unit-circle test signed `1 - x conj(x)` itself, and `Float` evaluation can
+  leave it a rounding-level imaginary part, which a sign test reports as
+  negative. Small arguments were then inverted (a `4 pi²` jump on windings
+  beyond `-1, 0, 1`), at 128 to 256 bits in four-mass boxes whose invariants
+  all exceed their pseudo-thresholds; the test now signs the real part.
 - Each quadratic of the contour box's `s3` is the Feynman polynomial of a
   two-point subgraph, `p x² + (mi - mj - p) x + mj`: its discriminant is the
   Källén function `λ(p, mi, mj)` and its values at the ends of the
