@@ -345,8 +345,15 @@ fn s3(y1: &Cont, y2: &Cont, d: Z, e: Z, a: Z, b: Z, c: Z, db: Z, dc: Z, k: &Cons
     let fy = r0(&y1, &y2, k);
     let value = if nz(a) {
         let z0 = -dv(b, r(2.0) * a);
+        // `s3`'s discriminant, zero when it does not change 1024 |b|².
+        let reference = 1024.0 * norm(b);
+        let discriminant = b * b - r(4.0) * a * c;
+        let double = !nz(Z {
+            re: (reference + discriminant.re) - reference,
+            im: discriminant.im,
+        });
         let real_coefficients = a.im == 0.0 && b.im == 0.0 && c.im == 0.0;
-        let double_root = !nz(b * b - r(4.0) * a * c)
+        let double_root = double
             && real_coefficients
             && negative(-a.re)
             && negative(-z0.re)
@@ -360,12 +367,12 @@ fn s3(y1: &Cont, y2: &Cont, d: Z, e: Z, a: Z, b: Z, c: Z, db: Z, dc: Z, k: &Cons
             let rea = sgn(a.re);
             let mut z1 = continued_root(root1, a, b, db, dc, ZERO);
             let mut z2 = continued_root(root2, a, b, db, dc, ZERO);
-            if !nz(b * b - r(4.0) * a * c) {
+            if double {
                 // An exact double root splits like sqrt(eps), one root up and
                 // one down, dominating every first-order shift of y1 and y2.
                 let size = |z: Z| z.re.hypot(z.im);
                 let dominant = 2.0 * (1.0 + size(y1.f) + size(y1.s) + size(y2.f) + size(y2.s));
-                let centre = z1.v;
+                let centre = z0;
                 z1 = Cont { v: centre, f: Z { re: 0.0, im: dominant }, s: ZERO };
                 z2 = Cont { v: centre, f: Z { re: 0.0, im: -dominant }, s: ZERO };
             }

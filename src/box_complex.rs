@@ -378,24 +378,34 @@ fn s3(x: [&Atom; 13]) -> Atom {
     let rea = sign_nonnegative(&re(a));
     let mut z1 = continued_root(root1, a, b, db, dc, &Atom::num(0));
     let mut z2 = continued_root(root2, a, b, db, dc, &Atom::num(0));
+    // The discriminant, or zero when it does not change 1024 |b|² at the
+    // working precision. At a pseudo-threshold next to a massless line (an
+    // external invariant equal to its massive neighbour's mass) the root is
+    // analytically double, but the rounded coefficients leave a discriminant
+    // of rounding size whose square root moves the roots by sqrt(eps): the
+    // binary64 box lost 8 to 10 digits there (and 5.6 digits with a vanishing
+    // channel). Taking the double-root forms instead costs the separation of
+    // the true roots: nothing at the threshold and up to 3e-7 for invariants
+    // 3e-8 to 5e-7 (relative) away from it, where binary64 kept 1e-8 before.
+    // At 128 bits and more such inputs give exact zeros; DoubleFloat keeps
+    // the discriminant exactly and decides as before.
+    let reference = Atom::num(1024) * re(&norm(b));
+    let discriminant =
+        grouped(&(&reference + (b * b - Atom::num(4) * a * c))) - &reference;
     // An exact double root has no first-order continuation (2 a z + b = 0).
     // Infinitesimal widths split it like sqrt(eps): one root moves up and
     // the other down, which dominates every first-order shift. Only the
     // signs are used, so encode the split as a first-order direction that
     // exceeds those of the poles y1, y2 it is combined with.
-    let double = if_nonzero_else(
-        &(b * b - Atom::num(4) * a * c),
-        Atom::num(0),
-        if_nonzero(a, Atom::num(1)),
-    );
+    let double = if_nonzero_else(&discriminant, Atom::num(0), if_nonzero(a, Atom::num(1)));
     let dominant = Atom::num(2)
         * (Atom::num(1)
             + [&y1.first, &y1.second, &y2.first, &y2.second]
                 .into_iter()
                 .fold(Atom::num(0), |sum, v| sum + Symbol::ABS.call((v,))));
-    // The first root is evaluated as -b/(2a) there; use it for both roots
-    // so that they coincide exactly.
-    let centre = z1.value.clone();
+    // Both roots are -b/(2a) there, exactly.
+    let z0 = -b / (Atom::num(2) * a);
+    let centre = z0.clone();
     for (z, direction) in [(&mut z1, Atom::num(1)), (&mut z2, Atom::num(-1))] {
         z.value = if_nonzero_else(&double, centre.clone(), z.value.clone());
         z.first = if_nonzero_else(&double, i() * direction * &dominant, z.first.clone());
@@ -425,13 +435,12 @@ fn s3(x: [&Atom; 13]) -> Atom {
             ))
         + r1_call(&z1, &y1, &y2, &fy)
         + r1_call(&z2, &y1, &y2, &fy);
-    let z0 = -b / (Atom::num(2) * a);
     let real_coefficients = 1 - any_nonzero([im(a), im(b), im(c)]);
     let positive_a = negative(&(-re(a)));
     let interior_z = negative(&(-re(&z0))) * negative(&(re(&z0) - 1));
     let regular_poles = outside_closed_interval(&y1.value) * outside_closed_interval(&y2.value);
     let double_root = if_nonzero_else(
-        &(b * b - Atom::num(4) * a * c),
+        &discriminant,
         Atom::num(0),
         real_coefficients * positive_a * interior_z * regular_poles,
     );

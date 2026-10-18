@@ -30,6 +30,13 @@ evaluated term by term, as OneLOop's `dilog2_c` (a two-mass C0 with nearly
 coincident roots was off by 2.4e-13 in binary64, now 2e-15 to 9e-15 on every
 route: `tests/c0_coincident_roots.rs`), and the contour box no longer loses a
 tiny invariant to cancellation in `Float` (`tests/d0_tiny_invariant.rs`).
+Real-mass three-mass boxes use the contour representation wherever it
+supports the kinematics: OneLOop's real-mass `boxf33` chart, which it takes
+outside timelike configurations, depends on the labelling, with a wrong real
+or imaginary part in some relabellings of about a quarter of three-mass boxes,
+OneLOop 3.6 included (`tests/d0_real_mass_orderings.rs`). Four-mass boxes keep
+OneLOop's selection; its `boxf4` chart fails in a few relabellings (in 8 of 88
+random four-mass boxes).
 
 This work is based on **Andreas van Hameren's OneLOop package**. The original
 algorithms, analytic continuation conventions and Fortran reference results are

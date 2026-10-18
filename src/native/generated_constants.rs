@@ -80,6 +80,8 @@ pub(super) const CONSTANTS: &[ConstantSpec] = &[
     ConstantSpec::Rational { re: "-22", im: "0" },
     ConstantSpec::Rational { re: "-23", im: "0" },
     ConstantSpec::Rational { re: "4294967296", im: "0" },
+    ConstantSpec::Rational { re: "-1024", im: "0" },
+    ConstantSpec::Rational { re: "1024", im: "0" },
     ConstantSpec::Rational { re: "1/8", im: "0" },
     ConstantSpec::Rational { re: "0", im: "2" },
     ConstantSpec::Rational { re: "-1/8", im: "0" },

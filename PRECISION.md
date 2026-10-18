@@ -53,14 +53,24 @@ explicit resource limits; see [expression inspection](README.md#combining-integr
   supplied to the callback, including `mu_squared`. Transparent function-map compilation
   remains available and avoids making the master opaque to an outer optimizer.
 
-- One expression branch depends on the working precision: the dilogarithm
+- Two expression branches depend on the working precision. The dilogarithm
   divided difference of nearly coincident arguments (`sheet_exact::near_difference`)
   uses a Bernoulli expansion through `s^22` only when its first omitted term,
   bounded by `8 (max|s|²/39)^12`, leaves `1` unchanged at the working precision
   (`(1 + bound) - 1 == 0`). That holds throughout in binary64, but at 256 bits
   only for `|s| < 3e-3`; otherwise the direct difference is used, whose loss
   stays in the tracked precision. DoubleFloat represents `1 + bound` exactly and
-  keeps the direct difference. Every other branch is an exact test.
+  keeps the direct difference. The contour box's `s3` takes its double-root
+  forms when the discriminant `b² - 4ac` leaves `1024 |b|²` unchanged
+  (`(1024 |b|² + disc) - 1024 |b|² == 0`): at a pseudo-threshold next to a
+  massless line (an external invariant equal to its massive neighbour's mass)
+  the root is analytically double, but rounded coefficients leave a
+  discriminant of rounding size whose square root cost binary64 8 to 10 digits
+  (5.6 with a vanishing channel). Exactly and nearly on-shell inputs now keep
+  14 to 15 digits; invariants 3e-8 to 5e-7 (relative) from such a threshold keep
+  6.5 instead of 8, as the collapsed roots lose their true separation. Exact
+  Källén discriminants would remove both. At 128 bits and more such inputs give
+  exact zeros. Every other branch is an exact test.
 - `Float` tracks a difference with the bits left after its cancellation and
   computes later operations at that precision, even when the difference is
   exact. Coefficients that are invariants (`m2 - m3 - p2` for equal masses, or

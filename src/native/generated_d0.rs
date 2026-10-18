@@ -1894,7 +1894,7 @@ fn helper_18<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v37 = mul(ctx.constant(1), &v36);
     let v38 = add(ctx.constant(0), &v37);
-    let v39 = mul(ctx.constant(78), &v14);
+    let v39 = mul(ctx.constant(80), &v14);
     let v40 = mul(&v39, &v26);
     let v41 = mul(&v40, &v38);
     let v879 = if truth(&v41) {
@@ -2027,7 +2027,7 @@ fn helper_18<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     };
     let v893 = mul(ctx.constant(1), &v892);
     let v894 = add(ctx.constant(0), &v893);
-    let v895 = mul(ctx.constant(80), &v14);
+    let v895 = mul(ctx.constant(82), &v14);
     let v896 = mul(&v895, &v26);
     let v897 = mul(&v896, &v38);
     let v898 = add(ctx.constant(0), &v897);
@@ -2060,12 +2060,12 @@ fn helper_18<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
 }
 
 fn helper_19<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<T>, a5: &C<T>, a6: &C<T>, a7: &C<T>, a8: &C<T>, a9: &C<T>, a10: &C<T>, a11: &C<T>, a12: &C<T>, ctx: &Context<T>) -> C<T> {
-    let v893 = if truth(a7) {
-        branch_24(a7, a8, a10, a9, a0, a6, a3, a1, a2, a4, a5, a11, a12, ctx)
+    let v898 = if truth(a7) {
+        branch_24(a7, a8, a9, a10, a0, a6, a3, a1, a2, a4, a5, a11, a12, ctx)
     } else {
         (*(ctx.constant(2))).clone()
     };
-    (*(&v893)).clone()
+    (*(&v898)).clone()
 }
 
 fn helper_20<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<T>, a5: &C<T>, a6: &C<T>, a7: &C<T>, a8: &C<T>, a9: &C<T>, a10: &C<T>, a11: &C<T>, a12: &C<T>, ctx: &Context<T>) -> C<T> {
@@ -2326,7 +2326,7 @@ fn helper_20<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
         };
         (*(&v316)).clone()
     };
-    let v318 = mul(ctx.constant(5), ctx.constant(79));
+    let v318 = mul(ctx.constant(5), ctx.constant(81));
     let v319 = mul(&v318, &v317);
     (*(&v319)).clone()
 }
@@ -2490,12 +2490,12 @@ fn helper_21<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
 }
 
 fn helper_22<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<T>, a5: &C<T>, a8: &C<T>, a9: &C<T>, a10: &C<T>, a11: &C<T>, a12: &C<T>, ctx: &Context<T>) -> C<T> {
-    let v893 = if truth(ctx.constant(0)) {
-        branch_31(a8, a10, a9, a0, a3, a1, a2, a4, a5, a11, a12, ctx)
+    let v898 = if truth(ctx.constant(0)) {
+        branch_31(a8, a9, a10, a0, a3, a1, a2, a4, a5, a11, a12, ctx)
     } else {
         (*(ctx.constant(2))).clone()
     };
-    (*(&v893)).clone()
+    (*(&v898)).clone()
 }
 
 fn helper_23<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<T>, a5: &C<T>, a6: &C<T>, a7: &C<T>, a8: &C<T>, a9: &C<T>, a10: &C<T>, a11: &C<T>, a12: &C<T>, a13: &C<T>, a14: &C<T>, ctx: &Context<T>) -> C<T> {
@@ -4067,19 +4067,19 @@ fn helper_39<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
 fn helper_40<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<T>, a5: &C<T>, a6: &C<T>, a7: &C<T>, a8: &C<T>, a9: &C<T>, a10: &C<T>, ctx: &Context<T>) -> C<T> {
     let v0 = mul(a7, ctx.constant(1));
     let v1 = add(a0, &v0);
-    let v3862 = if truth(&v1) {
-        branch_55(a4, a5, a0, a1, a2, a3, a9, a8, a7, a6, ctx)
+    let v3710 = if truth(&v1) {
+        branch_55(a4, a5, a0, a1, a2, a3, a6, a7, a8, a9, ctx)
     } else {
-        let v1765 = mul(a9, ctx.constant(1));
-        let v1766 = add(a3, &v1765);
-        let v3861 = if truth(&v1766) {
-            branch_55(a4, a5, a0, a1, a2, a3, a9, a8, a7, a6, ctx)
+        let v1689 = mul(a9, ctx.constant(1));
+        let v1690 = add(a3, &v1689);
+        let v3709 = if truth(&v1690) {
+            branch_55(a4, a5, a0, a1, a2, a3, a6, a7, a8, a9, ctx)
         } else {
-            branch_56(a8, a4, a5, a7, a9, &v1765, a1, a2, a10, ctx)
+            branch_56(a8, a4, a5, a7, a9, &v1689, a1, a2, a10, ctx)
         };
-        (*(&v3861)).clone()
+        (*(&v3709)).clone()
     };
-    (*(&v3862)).clone()
+    (*(&v3710)).clone()
 }
 
 fn helper_41<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<T>, a5: &C<T>, a6: &C<T>, a7: &C<T>, a8: &C<T>, a9: &C<T>, a10: &C<T>, ctx: &Context<T>) -> C<T> {
@@ -4462,7 +4462,7 @@ fn helper_44<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
                     let v3307 = mul(&v3306, &v3306);
                     let v3308 = mul(ctx.constant(1), &v3307);
                     let v3309 = mul(ctx.constant(5), ctx.constant(5));
-                    let v3310 = mul(ctx.constant(88), &v3309);
+                    let v3310 = mul(ctx.constant(90), &v3309);
                     let v3311 = add(&v3284, &v3304);
                     let v3312 = add(&v3311, &v3308);
                     let v3313 = add(&v3312, &v3310);
@@ -5214,7 +5214,7 @@ fn helper_56<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
                             let v28 = mul(a5, ctx.constant(1));
                             let v29 = add(a9, &v28);
                             let v30 = powi(&v29, -1, false);
-                            let v31 = mul(ctx.constant(83), &v27);
+                            let v31 = mul(ctx.constant(85), &v27);
                             let v32 = mul(&v31, &v30);
                             (*(&v32)).clone()
                         };
@@ -5226,7 +5226,7 @@ fn helper_56<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
                             let v36 = mul(a5, ctx.constant(1));
                             let v37 = add(a9, &v36);
                             let v38 = powi(&v37, -1, false);
-                            let v39 = mul(ctx.constant(83), &v35);
+                            let v39 = mul(ctx.constant(85), &v35);
                             let v40 = mul(&v39, &v38);
                             (*(&v40)).clone()
                         } else {
@@ -5297,7 +5297,7 @@ fn helper_56<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
                         let v80 = mul(a5, ctx.constant(1));
                         let v81 = add(a9, &v80);
                         let v82 = powi(&v81, -1, false);
-                        let v83 = mul(ctx.constant(83), &v79);
+                        let v83 = mul(ctx.constant(85), &v79);
                         let v84 = mul(&v83, &v82);
                         (*(&v84)).clone()
                     };
@@ -5309,7 +5309,7 @@ fn helper_56<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
                         let v88 = mul(a5, ctx.constant(1));
                         let v89 = add(a9, &v88);
                         let v90 = powi(&v89, -1, false);
-                        let v91 = mul(ctx.constant(83), &v87);
+                        let v91 = mul(ctx.constant(85), &v87);
                         let v92 = mul(&v91, &v90);
                         (*(&v92)).clone()
                     } else {
@@ -10028,7 +10028,7 @@ fn branch_20<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     (*(&v153)).clone()
 }
 
-fn branch_21<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<T>, a5: &C<T>, a6: &C<T>, ctx: &Context<T>) -> C<T> {
+fn branch_21<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<T>, a5: &C<T>, a6: &C<T>, a7: &C<T>, ctx: &Context<T>) -> C<T> {
     let v0 = conj(a0);
     let v1 = mul(ctx.constant(1), &v0);
     let v2 = add(a0, &v1);
@@ -10036,156 +10036,155 @@ fn branch_21<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     let v4 = if truth(&v3) {
     (*(ctx.constant(0))).clone()
     } else {
-    let v5 = conj(a1);
-    let v6 = mul(ctx.constant(1), &v5);
-    let v7 = add(a1, &v6);
-    let v8 = mul(ctx.constant(15), &v7);
-    let v9 = if truth(&v8) {
+    let v5 = mul(ctx.constant(1), a1);
+    let v6 = add(a2, &v5);
+    let v7 = mul(ctx.constant(15), &v6);
+    let v8 = if truth(&v7) {
     (*(ctx.constant(0))).clone()
     } else {
-    let v10 = conj(a2);
-    let v11 = mul(ctx.constant(1), &v10);
-    let v12 = add(a2, &v11);
-    let v13 = mul(ctx.constant(15), &v12);
-    let v14 = if truth(&v13) {
+    let v9 = conj(a3);
+    let v10 = mul(ctx.constant(1), &v9);
+    let v11 = add(a3, &v10);
+    let v12 = mul(ctx.constant(15), &v11);
+    let v13 = if truth(&v12) {
     (*(ctx.constant(0))).clone()
     } else {
     (*(ctx.constant(2))).clone()
     };
-    (*(&v14)).clone()
+    (*(&v13)).clone()
     };
-    (*(&v9)).clone()
+    (*(&v8)).clone()
     };
-    let v15 = mul(ctx.constant(1), &v4);
-    let v16 = add(ctx.constant(0), &v15);
-    let v17 = conj(a2);
-    let v18 = add(a2, &v17);
-    let v19 = mul(ctx.constant(8), &v18);
-    let v20 = mul(ctx.constant(1), &v19);
-    let v21 = abs(&v20);
-    let v22 = mul(ctx.constant(1), &v21);
-    let v23 = add(&v20, &v22);
-    let v24 = if truth(&v23) {
+    let v14 = mul(ctx.constant(1), &v4);
+    let v15 = add(ctx.constant(0), &v14);
+    let v16 = conj(a3);
+    let v17 = add(a3, &v16);
+    let v18 = mul(ctx.constant(8), &v17);
+    let v19 = mul(ctx.constant(1), &v18);
+    let v20 = abs(&v19);
+    let v21 = mul(ctx.constant(1), &v20);
+    let v22 = add(&v19, &v21);
+    let v23 = if truth(&v22) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    let v25 = mul(ctx.constant(1), &v24);
-    let v26 = add(ctx.constant(0), &v25);
-    let v27 = powi(a2, -1, false);
-    let v28 = mul(a1, ctx.constant(10));
-    let v29 = mul(&v28, &v27);
-    let v30 = conj(&v29);
-    let v31 = add(&v29, &v30);
-    let v32 = mul(ctx.constant(8), &v31);
-    let v33 = add(ctx.constant(1), &v32);
-    let v34 = abs(&v33);
-    let v35 = mul(ctx.constant(1), &v34);
-    let v36 = add(&v33, &v35);
-    let v37 = if truth(&v36) {
+    let v24 = mul(ctx.constant(1), &v23);
+    let v25 = add(ctx.constant(0), &v24);
+    let v26 = powi(a3, -1, false);
+    let v27 = mul(a2, ctx.constant(10));
+    let v28 = mul(&v27, &v26);
+    let v29 = conj(&v28);
+    let v30 = add(&v28, &v29);
+    let v31 = mul(ctx.constant(8), &v30);
+    let v32 = add(ctx.constant(1), &v31);
+    let v33 = abs(&v32);
+    let v34 = mul(ctx.constant(1), &v33);
+    let v35 = add(&v32, &v34);
+    let v36 = if truth(&v35) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    let v38 = mul(ctx.constant(1), &v37);
-    let v39 = add(ctx.constant(0), &v38);
-    let v40 = mul(ctx.constant(1), &v32);
-    let v41 = abs(&v40);
-    let v42 = mul(ctx.constant(1), &v41);
-    let v43 = add(&v40, &v42);
-    let v44 = if truth(&v43) {
+    let v37 = mul(ctx.constant(1), &v36);
+    let v38 = add(ctx.constant(0), &v37);
+    let v39 = mul(ctx.constant(1), &v31);
+    let v40 = abs(&v39);
+    let v41 = mul(ctx.constant(1), &v40);
+    let v42 = add(&v39, &v41);
+    let v43 = if truth(&v42) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    let v45 = mul(ctx.constant(1), &v44);
-    let v46 = add(ctx.constant(0), &v45);
-    let v47 = add(a3, a4);
-    let v48 = mul(a5, &v47);
-    let v49 = conj(&v48);
-    let v50 = mul(ctx.constant(1), &v49);
-    let v51 = add(&v48, &v50);
-    let v52 = mul(ctx.constant(15), &v51);
-    let v53 = if truth(&v52) {
+    let v44 = mul(ctx.constant(1), &v43);
+    let v45 = add(ctx.constant(0), &v44);
+    let v46 = add(a4, a5);
+    let v47 = mul(a6, &v46);
+    let v48 = conj(&v47);
+    let v49 = mul(ctx.constant(1), &v48);
+    let v50 = add(&v47, &v49);
+    let v51 = mul(ctx.constant(15), &v50);
+    let v52 = if truth(&v51) {
     (*(ctx.constant(0))).clone()
     } else {
-    let v54 = add(&v48, &v49);
-    let v55 = mul(ctx.constant(8), &v54);
-    let v56 = abs(&v55);
-    let v57 = mul(ctx.constant(1), &v56);
-    let v58 = add(&v55, &v57);
-    let v59 = if truth(&v58) {
+    let v53 = add(&v47, &v48);
+    let v54 = mul(ctx.constant(8), &v53);
+    let v55 = abs(&v54);
+    let v56 = mul(ctx.constant(1), &v55);
+    let v57 = add(&v54, &v56);
+    let v58 = if truth(&v57) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    let v60 = mul(ctx.constant(1), &v59);
-    let v61 = add(ctx.constant(0), &v60);
-    let v62 = mul(ctx.constant(8), &v61);
-    let v63 = mul(ctx.constant(1), &v55);
-    let v64 = add(ctx.constant(0), &v63);
-    let v65 = abs(&v64);
-    let v66 = mul(ctx.constant(1), &v65);
-    let v67 = add(&v64, &v66);
-    let v68 = if truth(&v67) {
+    let v59 = mul(ctx.constant(1), &v58);
+    let v60 = add(ctx.constant(0), &v59);
+    let v61 = mul(ctx.constant(8), &v60);
+    let v62 = mul(ctx.constant(1), &v54);
+    let v63 = add(ctx.constant(0), &v62);
+    let v64 = abs(&v63);
+    let v65 = mul(ctx.constant(1), &v64);
+    let v66 = add(&v63, &v65);
+    let v67 = if truth(&v66) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    let v69 = mul(ctx.constant(1), &v68);
-    let v70 = add(ctx.constant(0), &v69);
-    let v71 = mul(ctx.constant(8), &v70);
-    let v72 = add(&v62, &v71);
-    (*(&v72)).clone()
+    let v68 = mul(ctx.constant(1), &v67);
+    let v69 = add(ctx.constant(0), &v68);
+    let v70 = mul(ctx.constant(8), &v69);
+    let v71 = add(&v61, &v70);
+    (*(&v71)).clone()
     };
-    let v73 = add(a6, a4);
-    let v74 = mul(a5, &v73);
-    let v75 = conj(&v74);
-    let v76 = mul(ctx.constant(1), &v75);
-    let v77 = add(&v74, &v76);
-    let v78 = mul(ctx.constant(15), &v77);
-    let v79 = if truth(&v78) {
+    let v72 = add(a7, a5);
+    let v73 = mul(a6, &v72);
+    let v74 = conj(&v73);
+    let v75 = mul(ctx.constant(1), &v74);
+    let v76 = add(&v73, &v75);
+    let v77 = mul(ctx.constant(15), &v76);
+    let v78 = if truth(&v77) {
     (*(ctx.constant(0))).clone()
     } else {
-    let v80 = add(&v74, &v75);
-    let v81 = mul(ctx.constant(8), &v80);
-    let v82 = abs(&v81);
-    let v83 = mul(ctx.constant(1), &v82);
-    let v84 = add(&v81, &v83);
-    let v85 = if truth(&v84) {
+    let v79 = add(&v73, &v74);
+    let v80 = mul(ctx.constant(8), &v79);
+    let v81 = abs(&v80);
+    let v82 = mul(ctx.constant(1), &v81);
+    let v83 = add(&v80, &v82);
+    let v84 = if truth(&v83) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    let v86 = mul(ctx.constant(1), &v85);
-    let v87 = add(ctx.constant(0), &v86);
-    let v88 = mul(ctx.constant(8), &v87);
-    let v89 = mul(ctx.constant(1), &v81);
-    let v90 = add(ctx.constant(0), &v89);
-    let v91 = abs(&v90);
-    let v92 = mul(ctx.constant(1), &v91);
-    let v93 = add(&v90, &v92);
-    let v94 = if truth(&v93) {
+    let v85 = mul(ctx.constant(1), &v84);
+    let v86 = add(ctx.constant(0), &v85);
+    let v87 = mul(ctx.constant(8), &v86);
+    let v88 = mul(ctx.constant(1), &v80);
+    let v89 = add(ctx.constant(0), &v88);
+    let v90 = abs(&v89);
+    let v91 = mul(ctx.constant(1), &v90);
+    let v92 = add(&v89, &v91);
+    let v93 = if truth(&v92) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    let v95 = mul(ctx.constant(1), &v94);
-    let v96 = add(ctx.constant(0), &v95);
-    let v97 = mul(ctx.constant(8), &v96);
-    let v98 = add(&v88, &v97);
-    (*(&v98)).clone()
+    let v94 = mul(ctx.constant(1), &v93);
+    let v95 = add(ctx.constant(0), &v94);
+    let v96 = mul(ctx.constant(8), &v95);
+    let v97 = add(&v87, &v96);
+    (*(&v97)).clone()
     };
-    let v99 = mul(ctx.constant(78), &v16);
-    let v100 = mul(&v99, &v26);
-    let v101 = mul(&v100, &v39);
-    let v102 = mul(&v101, &v46);
-    let v103 = mul(&v102, &v53);
-    let v104 = mul(&v103, &v79);
-    (*(&v104)).clone()
+    let v98 = mul(ctx.constant(80), &v15);
+    let v99 = mul(&v98, &v25);
+    let v100 = mul(&v99, &v38);
+    let v101 = mul(&v100, &v45);
+    let v102 = mul(&v101, &v52);
+    let v103 = mul(&v102, &v78);
+    (*(&v103)).clone()
 }
 
-fn branch_22<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<T>, a5: &C<T>, a6: &C<T>, a7: &C<T>, a8: &C<T>, a9: &C<T>, a10: &C<T>, a11: &C<T>, a12: &C<T>, a13: &C<T>, ctx: &Context<T>) -> C<T> {
+fn branch_22<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<T>, a5: &C<T>, a6: &C<T>, a7: &C<T>, a8: &C<T>, a9: &C<T>, a10: &C<T>, a11: &C<T>, a12: &C<T>, a13: &C<T>, a14: &C<T>, ctx: &Context<T>) -> C<T> {
     let v0 = if truth(a0) {
     (*(ctx.constant(2))).clone()
     } else {
@@ -10197,196 +10196,196 @@ fn branch_22<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     (*(&v1)).clone()
     };
     let v2 = if truth(&v0) {
-    let v3 = conj(a1);
-    let v4 = add(a1, &v3);
-    let v5 = mul(ctx.constant(8), &v4);
-    let v6 = helper_10(&v5, a2, a3, ctx);
-    (*(&v6)).clone()
+    let v3 = powi(a1, -1, false);
+    let v4 = mul(a2, ctx.constant(10));
+    let v5 = mul(&v4, &v3);
+    (*(&v5)).clone()
     } else {
-    let v7 = conj(a1);
-    let v8 = add(a1, &v7);
-    let v9 = mul(ctx.constant(8), &v8);
-    let v10 = helper_10(&v9, a2, a3, ctx);
-    (*(&v10)).clone()
+    let v6 = conj(a1);
+    let v7 = add(a1, &v6);
+    let v8 = mul(ctx.constant(8), &v7);
+    let v9 = helper_10(&v8, a2, a3, ctx);
+    (*(&v9)).clone()
     };
-    let v11 = if truth(&v0) {
-    let v12 = mul(a4, a5);
-    let v13 = abs(&v12);
-    let v14 = mul(a6, a5);
-    let v15 = abs(&v14);
-    let v16 = mul(a7, a5);
-    let v17 = abs(&v16);
-    let v18 = mul(a8, a5);
-    let v19 = abs(&v18);
-    let v20 = add(ctx.constant(0), &v13);
-    let v21 = add(&v20, &v15);
-    let v22 = add(&v21, &v17);
-    let v23 = add(&v22, &v19);
-    let v24 = mul(ctx.constant(79), &v23);
-    (*(&v24)).clone()
+    let v10 = if truth(&v0) {
+    let v11 = mul(a4, a5);
+    let v12 = abs(&v11);
+    let v13 = mul(a6, a5);
+    let v14 = abs(&v13);
+    let v15 = mul(a7, a5);
+    let v16 = abs(&v15);
+    let v17 = mul(a8, a5);
+    let v18 = abs(&v17);
+    let v19 = add(ctx.constant(0), &v12);
+    let v20 = add(&v19, &v14);
+    let v21 = add(&v20, &v16);
+    let v22 = add(&v21, &v18);
+    let v23 = mul(ctx.constant(81), &v22);
+    (*(&v23)).clone()
     } else {
-    let v25 = conj(a1);
-    let v26 = add(a1, &v25);
-    let v27 = mul(ctx.constant(8), &v26);
-    let v28 = helper_10(&v27, a2, a3, ctx);
-    let v29 = mul(a9, &v28);
-    let v30 = add(a10, &v29);
-    let v31 = mul(a1, ctx.constant(6));
-    let v32 = mul(&v31, &v28);
-    let v33 = add(a2, &v32);
-    let v34 = powi(&v33, -1, false);
-    let v35 = mul(ctx.constant(1), &v30);
-    let v36 = mul(&v35, &v34);
+    let v24 = conj(a1);
+    let v25 = add(a1, &v24);
+    let v26 = mul(ctx.constant(8), &v25);
+    let v27 = helper_10(&v26, a2, a3, ctx);
+    let v28 = mul(a9, &v27);
+    let v29 = add(a10, &v28);
+    let v30 = mul(a1, ctx.constant(6));
+    let v31 = mul(&v30, &v27);
+    let v32 = add(a2, &v31);
+    let v33 = powi(&v32, -1, false);
+    let v34 = mul(ctx.constant(1), &v29);
+    let v35 = mul(&v34, &v33);
+    (*(&v35)).clone()
+    };
+    let v36 = if truth(&v0) {
+    (*(ctx.constant(2))).clone()
+    } else {
+    let v37 = conj(a1);
+    let v38 = add(a1, &v37);
+    let v39 = mul(ctx.constant(8), &v38);
+    let v40 = helper_10(&v39, a2, a3, ctx);
+    let v41 = mul(a1, ctx.constant(6));
+    let v42 = mul(&v41, &v40);
+    let v43 = add(a2, &v42);
+    let v44 = powi(&v43, -1, false);
+    let v45 = mul(a9, &v40);
+    let v46 = add(a10, &v45);
+    let v47 = mul(&v46, &v46);
+    let v48 = mul(&v43, &v43);
+    let v49 = powi(&v48, -1, false);
+    let v50 = mul(a1, &v47);
+    let v51 = mul(&v50, &v49);
+    let v52 = mul(a9, ctx.constant(1));
+    let v53 = mul(&v52, &v44);
+    let v54 = mul(&v53, &v46);
+    let v55 = add(&v51, &v54);
+    let v56 = mul(ctx.constant(1), &v44);
+    let v57 = mul(&v56, &v55);
+    (*(&v57)).clone()
+    };
+    let v58 = conj(&v36);
+    let v59 = mul(ctx.constant(1), &v58);
+    let v60 = add(&v36, &v59);
+    let v61 = mul(ctx.constant(15), &v60);
+    let v62 = if truth(&v61) {
+    (*(ctx.constant(0))).clone()
+    } else {
+    let v63 = conj(&v10);
+    let v64 = mul(ctx.constant(1), &v63);
+    let v65 = add(&v10, &v64);
+    let v66 = mul(ctx.constant(15), &v65);
+    let v67 = if truth(&v66) {
+    (*(ctx.constant(0))).clone()
+    } else {
+    let v68 = conj(&v2);
+    let v69 = mul(ctx.constant(1), &v68);
+    let v70 = add(&v2, &v69);
+    let v71 = mul(ctx.constant(15), &v70);
+    let v72 = if truth(&v71) {
+    (*(ctx.constant(0))).clone()
+    } else {
+    (*(ctx.constant(2))).clone()
+    };
+    (*(&v72)).clone()
+    };
+    (*(&v67)).clone()
+    };
+    let v73 = if truth(&v62) {
     (*(&v36)).clone()
-    };
-    let v37 = if truth(&v0) {
-    (*(ctx.constant(2))).clone()
     } else {
-    let v38 = conj(a1);
-    let v39 = add(a1, &v38);
-    let v40 = mul(ctx.constant(8), &v39);
-    let v41 = helper_10(&v40, a2, a3, ctx);
-    let v42 = mul(a1, ctx.constant(6));
-    let v43 = mul(&v42, &v41);
-    let v44 = add(a2, &v43);
-    let v45 = powi(&v44, -1, false);
-    let v46 = mul(a9, &v41);
-    let v47 = add(a10, &v46);
-    let v48 = mul(&v47, &v47);
-    let v49 = mul(&v44, &v44);
-    let v50 = powi(&v49, -1, false);
-    let v51 = mul(a1, &v48);
-    let v52 = mul(&v51, &v50);
-    let v53 = mul(a9, ctx.constant(1));
-    let v54 = mul(&v53, &v45);
-    let v55 = mul(&v54, &v47);
-    let v56 = add(&v52, &v55);
-    let v57 = mul(ctx.constant(1), &v45);
-    let v58 = mul(&v57, &v56);
-    (*(&v58)).clone()
-    };
-    let v59 = conj(&v37);
-    let v60 = mul(ctx.constant(1), &v59);
-    let v61 = add(&v37, &v60);
-    let v62 = mul(ctx.constant(15), &v61);
-    let v63 = if truth(&v62) {
-    (*(ctx.constant(0))).clone()
-    } else {
-    let v64 = conj(&v11);
-    let v65 = mul(ctx.constant(1), &v64);
-    let v66 = add(&v11, &v65);
-    let v67 = mul(ctx.constant(15), &v66);
-    let v68 = if truth(&v67) {
-    (*(ctx.constant(0))).clone()
-    } else {
-    let v69 = conj(&v2);
-    let v70 = mul(ctx.constant(1), &v69);
-    let v71 = add(&v2, &v70);
-    let v72 = mul(ctx.constant(15), &v71);
-    let v73 = if truth(&v72) {
-    (*(ctx.constant(0))).clone()
-    } else {
-    (*(ctx.constant(2))).clone()
-    };
-    (*(&v73)).clone()
-    };
-    (*(&v68)).clone()
-    };
-    let v74 = if truth(&v63) {
-    (*(&v37)).clone()
-    } else {
-    let v75 = conj(&v2);
-    let v76 = add(&v2, &v75);
-    let v77 = mul(ctx.constant(8), &v76);
-    let v78 = abs(&v77);
-    let v79 = conj(a3);
-    let v80 = mul(ctx.constant(1), &v79);
-    let v81 = add(a3, &v80);
-    let v82 = mul(ctx.constant(15), &v81);
-    let v83 = if truth(&v82) {
-    let v84 = abs(&v82);
-    let v85 = mul(ctx.constant(1), &v84);
-    let v86 = add(&v82, &v85);
-    let v87 = if truth(&v86) {
+    let v74 = conj(&v2);
+    let v75 = add(&v2, &v74);
+    let v76 = mul(ctx.constant(8), &v75);
+    let v77 = abs(&v76);
+    let v78 = conj(a3);
+    let v79 = mul(ctx.constant(1), &v78);
+    let v80 = add(a3, &v79);
+    let v81 = mul(ctx.constant(15), &v80);
+    let v82 = if truth(&v81) {
+    let v83 = abs(&v81);
+    let v84 = mul(ctx.constant(1), &v83);
+    let v85 = add(&v81, &v84);
+    let v86 = if truth(&v85) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    (*(&v87)).clone()
+    (*(&v86)).clone()
     } else {
-    let v88 = conj(a10);
-    let v89 = mul(ctx.constant(1), &v88);
-    let v90 = add(a10, &v89);
-    let v91 = mul(ctx.constant(15), &v90);
-    let v92 = if truth(&v91) {
-    let v93 = abs(&v91);
-    let v94 = mul(ctx.constant(1), &v93);
-    let v95 = add(&v91, &v94);
-    let v96 = if truth(&v95) {
+    let v87 = conj(a10);
+    let v88 = mul(ctx.constant(1), &v87);
+    let v89 = add(a10, &v88);
+    let v90 = mul(ctx.constant(15), &v89);
+    let v91 = if truth(&v90) {
+    let v92 = abs(&v90);
+    let v93 = mul(ctx.constant(1), &v92);
+    let v94 = add(&v90, &v93);
+    let v95 = if truth(&v94) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    (*(&v96)).clone()
+    (*(&v95)).clone()
     } else {
-    let v97 = conj(a2);
-    let v98 = mul(ctx.constant(1), &v97);
-    let v99 = add(a2, &v98);
-    let v100 = mul(ctx.constant(15), &v99);
-    let v101 = if truth(&v100) {
-    let v102 = abs(&v100);
-    let v103 = mul(ctx.constant(1), &v102);
-    let v104 = add(&v100, &v103);
-    let v105 = if truth(&v104) {
+    let v96 = mul(ctx.constant(1), a11);
+    let v97 = add(a2, &v96);
+    let v98 = mul(ctx.constant(15), &v97);
+    let v99 = if truth(&v98) {
+    let v100 = abs(&v98);
+    let v101 = mul(ctx.constant(1), &v100);
+    let v102 = add(&v98, &v101);
+    let v103 = if truth(&v102) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    (*(&v105)).clone()
+    (*(&v103)).clone()
     } else {
-    let v106 = conj(a9);
-    let v107 = mul(ctx.constant(1), &v106);
-    let v108 = add(a9, &v107);
-    let v109 = mul(ctx.constant(15), &v108);
-    let v110 = if truth(&v109) {
-    let v111 = abs(&v109);
-    let v112 = mul(ctx.constant(1), &v111);
-    let v113 = add(&v109, &v112);
-    let v114 = if truth(&v113) {
+    let v104 = conj(a9);
+    let v105 = mul(ctx.constant(1), &v104);
+    let v106 = add(a9, &v105);
+    let v107 = mul(ctx.constant(15), &v106);
+    let v108 = if truth(&v107) {
+    let v109 = abs(&v107);
+    let v110 = mul(ctx.constant(1), &v109);
+    let v111 = add(&v107, &v110);
+    let v112 = if truth(&v111) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    (*(&v114)).clone()
+    (*(&v112)).clone()
     } else {
     (*(ctx.constant(1))).clone()
     };
-    (*(&v110)).clone()
+    (*(&v108)).clone()
     };
-    (*(&v101)).clone()
+    (*(&v99)).clone()
     };
-    (*(&v92)).clone()
+    (*(&v91)).clone()
     };
-    let v115 = conj(a1);
-    let v116 = add(a1, &v115);
-    let v117 = mul(ctx.constant(8), &v116);
-    let v118 = abs(&v117);
-    let v119 = mul(ctx.constant(1), &v118);
-    let v120 = add(&v117, &v119);
-    let v121 = if truth(&v120) {
+    let v113 = conj(a1);
+    let v114 = add(a1, &v113);
+    let v115 = mul(ctx.constant(8), &v114);
+    let v116 = abs(&v115);
+    let v117 = mul(ctx.constant(1), &v116);
+    let v118 = add(&v115, &v117);
+    let v119 = if truth(&v118) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    let v122 = if truth(&v0) {
-    let v123 = helper_10(&v117, a2, a3, ctx);
+    let v120 = if truth(&v0) {
+    let v121 = powi(a1, -1, false);
+    let v122 = mul(a2, ctx.constant(10));
+    let v123 = mul(&v122, &v121);
     (*(&v123)).clone()
     } else {
-    let v124 = helper_11(&v117, a2, a3, ctx);
+    let v124 = helper_11(&v115, a2, a3, ctx);
     (*(&v124)).clone()
     };
-    let v125 = conj(&v122);
-    let v126 = add(&v122, &v125);
+    let v125 = conj(&v120);
+    let v126 = add(&v120, &v125);
     let v127 = mul(ctx.constant(8), &v126);
     let v128 = abs(&v127);
     let v129 = mul(ctx.constant(1), &v128);
@@ -10396,561 +10395,557 @@ fn branch_22<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     } else {
     (*(ctx.constant(0))).clone()
     };
-    let v132 = mul(ctx.constant(9), &v78);
-    let v133 = mul(&v132, &v83);
-    let v134 = mul(&v133, &v121);
+    let v132 = mul(ctx.constant(9), &v77);
+    let v133 = mul(&v132, &v82);
+    let v134 = mul(&v133, &v119);
     let v135 = mul(&v134, &v131);
     (*(&v135)).clone()
     };
-    let v136 = add(a11, a12);
+    let v136 = add(a12, a13);
     let v137 = mul(a5, &v136);
     let v138 = mul(a4, a5);
     let v139 = mul(a6, a5);
-    let v140 = add(a13, a12);
+    let v140 = add(a14, a13);
     let v141 = mul(a5, &v140);
     let v142 = mul(a7, a5);
     let v143 = mul(a8, a5);
     let v144 = helper_15(&v137, &v138, &v139, &v141, &v142, &v143, ctx);
-    let v145 = helper_18(&v2, &v11, &v74, &v137, &v138, &v139, &v141, &v142, &v143, &v144, ctx);
+    let v145 = helper_18(&v2, &v10, &v73, &v137, &v138, &v139, &v141, &v142, &v143, &v144, ctx);
     let v146 = if truth(&v0) {
-    let v147 = conj(a1);
-    let v148 = add(a1, &v147);
-    let v149 = mul(ctx.constant(8), &v148);
-    let v150 = helper_10(&v149, a2, a3, ctx);
-    (*(&v150)).clone()
+    let v147 = powi(a1, -1, false);
+    let v148 = mul(a2, ctx.constant(10));
+    let v149 = mul(&v148, &v147);
+    (*(&v149)).clone()
     } else {
-    let v151 = conj(a1);
-    let v152 = add(a1, &v151);
-    let v153 = mul(ctx.constant(8), &v152);
-    let v154 = helper_11(&v153, a2, a3, ctx);
-    (*(&v154)).clone()
+    let v150 = conj(a1);
+    let v151 = add(a1, &v150);
+    let v152 = mul(ctx.constant(8), &v151);
+    let v153 = helper_11(&v152, a2, a3, ctx);
+    (*(&v153)).clone()
     };
-    let v155 = if truth(&v0) {
-    let v156 = abs(&v138);
-    let v157 = abs(&v139);
-    let v158 = abs(&v142);
-    let v159 = abs(&v143);
-    let v160 = add(ctx.constant(0), &v156);
+    let v154 = if truth(&v0) {
+    let v155 = abs(&v138);
+    let v156 = abs(&v139);
+    let v157 = abs(&v142);
+    let v158 = abs(&v143);
+    let v159 = add(ctx.constant(0), &v155);
+    let v160 = add(&v159, &v156);
     let v161 = add(&v160, &v157);
     let v162 = add(&v161, &v158);
-    let v163 = add(&v162, &v159);
-    let v164 = mul(ctx.constant(81), &v163);
-    (*(&v164)).clone()
+    let v163 = mul(ctx.constant(83), &v162);
+    (*(&v163)).clone()
     } else {
-    let v165 = conj(a1);
-    let v166 = add(a1, &v165);
-    let v167 = mul(ctx.constant(8), &v166);
-    let v168 = helper_11(&v167, a2, a3, ctx);
-    let v169 = mul(a9, &v168);
-    let v170 = add(a10, &v169);
-    let v171 = mul(a1, ctx.constant(6));
-    let v172 = mul(&v171, &v168);
-    let v173 = add(a2, &v172);
-    let v174 = powi(&v173, -1, false);
-    let v175 = mul(ctx.constant(1), &v170);
-    let v176 = mul(&v175, &v174);
+    let v164 = conj(a1);
+    let v165 = add(a1, &v164);
+    let v166 = mul(ctx.constant(8), &v165);
+    let v167 = helper_11(&v166, a2, a3, ctx);
+    let v168 = mul(a9, &v167);
+    let v169 = add(a10, &v168);
+    let v170 = mul(a1, ctx.constant(6));
+    let v171 = mul(&v170, &v167);
+    let v172 = add(a2, &v171);
+    let v173 = powi(&v172, -1, false);
+    let v174 = mul(ctx.constant(1), &v169);
+    let v175 = mul(&v174, &v173);
+    (*(&v175)).clone()
+    };
+    let v176 = if truth(&v0) {
+    (*(ctx.constant(2))).clone()
+    } else {
+    let v177 = conj(a1);
+    let v178 = add(a1, &v177);
+    let v179 = mul(ctx.constant(8), &v178);
+    let v180 = helper_11(&v179, a2, a3, ctx);
+    let v181 = mul(a1, ctx.constant(6));
+    let v182 = mul(&v181, &v180);
+    let v183 = add(a2, &v182);
+    let v184 = powi(&v183, -1, false);
+    let v185 = mul(a9, &v180);
+    let v186 = add(a10, &v185);
+    let v187 = mul(&v186, &v186);
+    let v188 = mul(&v183, &v183);
+    let v189 = powi(&v188, -1, false);
+    let v190 = mul(a1, &v187);
+    let v191 = mul(&v190, &v189);
+    let v192 = mul(a9, ctx.constant(1));
+    let v193 = mul(&v192, &v184);
+    let v194 = mul(&v193, &v186);
+    let v195 = add(&v191, &v194);
+    let v196 = mul(ctx.constant(1), &v184);
+    let v197 = mul(&v196, &v195);
+    (*(&v197)).clone()
+    };
+    let v198 = conj(&v176);
+    let v199 = mul(ctx.constant(1), &v198);
+    let v200 = add(&v176, &v199);
+    let v201 = mul(ctx.constant(15), &v200);
+    let v202 = if truth(&v201) {
+    (*(ctx.constant(0))).clone()
+    } else {
+    let v203 = conj(&v154);
+    let v204 = mul(ctx.constant(1), &v203);
+    let v205 = add(&v154, &v204);
+    let v206 = mul(ctx.constant(15), &v205);
+    let v207 = if truth(&v206) {
+    (*(ctx.constant(0))).clone()
+    } else {
+    let v208 = conj(&v146);
+    let v209 = mul(ctx.constant(1), &v208);
+    let v210 = add(&v146, &v209);
+    let v211 = mul(ctx.constant(15), &v210);
+    let v212 = if truth(&v211) {
+    (*(ctx.constant(0))).clone()
+    } else {
+    (*(ctx.constant(2))).clone()
+    };
+    (*(&v212)).clone()
+    };
+    (*(&v207)).clone()
+    };
+    let v213 = if truth(&v202) {
     (*(&v176)).clone()
-    };
-    let v177 = if truth(&v0) {
-    (*(ctx.constant(2))).clone()
     } else {
-    let v178 = conj(a1);
-    let v179 = add(a1, &v178);
-    let v180 = mul(ctx.constant(8), &v179);
-    let v181 = helper_11(&v180, a2, a3, ctx);
-    let v182 = mul(a1, ctx.constant(6));
-    let v183 = mul(&v182, &v181);
-    let v184 = add(a2, &v183);
-    let v185 = powi(&v184, -1, false);
-    let v186 = mul(a9, &v181);
-    let v187 = add(a10, &v186);
-    let v188 = mul(&v187, &v187);
-    let v189 = mul(&v184, &v184);
-    let v190 = powi(&v189, -1, false);
-    let v191 = mul(a1, &v188);
-    let v192 = mul(&v191, &v190);
-    let v193 = mul(a9, ctx.constant(1));
-    let v194 = mul(&v193, &v185);
-    let v195 = mul(&v194, &v187);
-    let v196 = add(&v192, &v195);
-    let v197 = mul(ctx.constant(1), &v185);
-    let v198 = mul(&v197, &v196);
-    (*(&v198)).clone()
-    };
-    let v199 = conj(&v177);
-    let v200 = mul(ctx.constant(1), &v199);
-    let v201 = add(&v177, &v200);
-    let v202 = mul(ctx.constant(15), &v201);
-    let v203 = if truth(&v202) {
-    (*(ctx.constant(0))).clone()
-    } else {
-    let v204 = conj(&v155);
-    let v205 = mul(ctx.constant(1), &v204);
-    let v206 = add(&v155, &v205);
-    let v207 = mul(ctx.constant(15), &v206);
-    let v208 = if truth(&v207) {
-    (*(ctx.constant(0))).clone()
-    } else {
-    let v209 = conj(&v146);
-    let v210 = mul(ctx.constant(1), &v209);
-    let v211 = add(&v146, &v210);
-    let v212 = mul(ctx.constant(15), &v211);
-    let v213 = if truth(&v212) {
-    (*(ctx.constant(0))).clone()
-    } else {
-    (*(ctx.constant(2))).clone()
-    };
-    (*(&v213)).clone()
-    };
-    (*(&v208)).clone()
-    };
-    let v214 = if truth(&v203) {
-    (*(&v177)).clone()
-    } else {
-    let v215 = conj(&v146);
-    let v216 = add(&v146, &v215);
-    let v217 = mul(ctx.constant(8), &v216);
-    let v218 = abs(&v217);
-    let v219 = conj(a3);
-    let v220 = mul(ctx.constant(1), &v219);
-    let v221 = add(a3, &v220);
-    let v222 = mul(ctx.constant(15), &v221);
-    let v223 = if truth(&v222) {
-    let v224 = abs(&v222);
-    let v225 = mul(ctx.constant(1), &v224);
-    let v226 = add(&v222, &v225);
-    let v227 = if truth(&v226) {
+    let v214 = conj(&v146);
+    let v215 = add(&v146, &v214);
+    let v216 = mul(ctx.constant(8), &v215);
+    let v217 = abs(&v216);
+    let v218 = conj(a3);
+    let v219 = mul(ctx.constant(1), &v218);
+    let v220 = add(a3, &v219);
+    let v221 = mul(ctx.constant(15), &v220);
+    let v222 = if truth(&v221) {
+    let v223 = abs(&v221);
+    let v224 = mul(ctx.constant(1), &v223);
+    let v225 = add(&v221, &v224);
+    let v226 = if truth(&v225) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    (*(&v227)).clone()
+    (*(&v226)).clone()
     } else {
-    let v228 = conj(a10);
-    let v229 = mul(ctx.constant(1), &v228);
-    let v230 = add(a10, &v229);
-    let v231 = mul(ctx.constant(15), &v230);
-    let v232 = if truth(&v231) {
-    let v233 = abs(&v231);
-    let v234 = mul(ctx.constant(1), &v233);
-    let v235 = add(&v231, &v234);
-    let v236 = if truth(&v235) {
+    let v227 = conj(a10);
+    let v228 = mul(ctx.constant(1), &v227);
+    let v229 = add(a10, &v228);
+    let v230 = mul(ctx.constant(15), &v229);
+    let v231 = if truth(&v230) {
+    let v232 = abs(&v230);
+    let v233 = mul(ctx.constant(1), &v232);
+    let v234 = add(&v230, &v233);
+    let v235 = if truth(&v234) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    (*(&v236)).clone()
+    (*(&v235)).clone()
     } else {
-    let v237 = conj(a2);
-    let v238 = mul(ctx.constant(1), &v237);
-    let v239 = add(a2, &v238);
-    let v240 = mul(ctx.constant(15), &v239);
-    let v241 = if truth(&v240) {
-    let v242 = abs(&v240);
-    let v243 = mul(ctx.constant(1), &v242);
-    let v244 = add(&v240, &v243);
-    let v245 = if truth(&v244) {
+    let v236 = mul(ctx.constant(1), a11);
+    let v237 = add(a2, &v236);
+    let v238 = mul(ctx.constant(15), &v237);
+    let v239 = if truth(&v238) {
+    let v240 = abs(&v238);
+    let v241 = mul(ctx.constant(1), &v240);
+    let v242 = add(&v238, &v241);
+    let v243 = if truth(&v242) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    (*(&v245)).clone()
+    (*(&v243)).clone()
     } else {
-    let v246 = conj(a9);
-    let v247 = mul(ctx.constant(1), &v246);
-    let v248 = add(a9, &v247);
-    let v249 = mul(ctx.constant(15), &v248);
-    let v250 = if truth(&v249) {
-    let v251 = abs(&v249);
-    let v252 = mul(ctx.constant(1), &v251);
-    let v253 = add(&v249, &v252);
-    let v254 = if truth(&v253) {
+    let v244 = conj(a9);
+    let v245 = mul(ctx.constant(1), &v244);
+    let v246 = add(a9, &v245);
+    let v247 = mul(ctx.constant(15), &v246);
+    let v248 = if truth(&v247) {
+    let v249 = abs(&v247);
+    let v250 = mul(ctx.constant(1), &v249);
+    let v251 = add(&v247, &v250);
+    let v252 = if truth(&v251) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    (*(&v254)).clone()
+    (*(&v252)).clone()
     } else {
     (*(ctx.constant(1))).clone()
     };
-    (*(&v250)).clone()
+    (*(&v248)).clone()
     };
-    (*(&v241)).clone()
+    (*(&v239)).clone()
     };
-    (*(&v232)).clone()
+    (*(&v231)).clone()
     };
-    let v255 = conj(a1);
-    let v256 = add(a1, &v255);
-    let v257 = mul(ctx.constant(8), &v256);
-    let v258 = abs(&v257);
-    let v259 = mul(ctx.constant(1), &v258);
-    let v260 = add(&v257, &v259);
-    let v261 = if truth(&v260) {
-    (*(ctx.constant(1))).clone()
-    } else {
-    (*(ctx.constant(0))).clone()
-    };
-    let v262 = conj(&v2);
-    let v263 = add(&v2, &v262);
-    let v264 = mul(ctx.constant(8), &v263);
-    let v265 = abs(&v264);
-    let v266 = mul(ctx.constant(1), &v265);
-    let v267 = add(&v264, &v266);
-    let v268 = if truth(&v267) {
+    let v253 = conj(a1);
+    let v254 = add(a1, &v253);
+    let v255 = mul(ctx.constant(8), &v254);
+    let v256 = abs(&v255);
+    let v257 = mul(ctx.constant(1), &v256);
+    let v258 = add(&v255, &v257);
+    let v259 = if truth(&v258) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    let v269 = mul(ctx.constant(9), &v218);
-    let v270 = mul(&v269, &v223);
-    let v271 = mul(&v270, &v261);
-    let v272 = mul(&v271, &v268);
-    (*(&v272)).clone()
-    };
-    let v273 = helper_18(&v146, &v155, &v214, &v137, &v138, &v139, &v141, &v142, &v143, &v144, ctx);
-    let v274 = conj(a1);
-    let v275 = add(a1, &v274);
-    let v276 = mul(ctx.constant(8), &v275);
-    let v277 = abs(&v276);
-    let v278 = mul(ctx.constant(1), &v277);
-    let v279 = add(&v276, &v278);
-    let v280 = if truth(&v279) {
+    let v260 = conj(&v2);
+    let v261 = add(&v2, &v260);
+    let v262 = mul(ctx.constant(8), &v261);
+    let v263 = abs(&v262);
+    let v264 = mul(ctx.constant(1), &v263);
+    let v265 = add(&v262, &v264);
+    let v266 = if truth(&v265) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
+    let v267 = mul(ctx.constant(9), &v217);
+    let v268 = mul(&v267, &v222);
+    let v269 = mul(&v268, &v259);
+    let v270 = mul(&v269, &v266);
+    (*(&v270)).clone()
+    };
+    let v271 = helper_18(&v146, &v154, &v213, &v137, &v138, &v139, &v141, &v142, &v143, &v144, ctx);
+    let v272 = conj(a1);
+    let v273 = add(a1, &v272);
+    let v274 = mul(ctx.constant(8), &v273);
+    let v275 = abs(&v274);
+    let v276 = mul(ctx.constant(1), &v275);
+    let v277 = add(&v274, &v276);
+    let v278 = if truth(&v277) {
+    (*(ctx.constant(1))).clone()
+    } else {
+    (*(ctx.constant(0))).clone()
+    };
+    let v279 = mul(ctx.constant(1), &v278);
+    let v280 = add(ctx.constant(0), &v279);
     let v281 = mul(ctx.constant(1), &v280);
     let v282 = add(ctx.constant(0), &v281);
-    let v283 = mul(ctx.constant(1), &v282);
-    let v284 = add(ctx.constant(0), &v283);
-    let v285 = mul(a1, &v284);
-    let v286 = mul(ctx.constant(1), &v274);
-    let v287 = add(a1, &v286);
-    let v288 = mul(ctx.constant(15), &v287);
-    let v289 = if truth(&v288) {
-    let v290 = abs(&v288);
-    let v291 = mul(ctx.constant(1), &v290);
-    let v292 = add(&v288, &v291);
-    let v293 = if truth(&v292) {
+    let v283 = mul(a1, &v282);
+    let v284 = mul(ctx.constant(1), &v272);
+    let v285 = add(a1, &v284);
+    let v286 = mul(ctx.constant(15), &v285);
+    let v287 = if truth(&v286) {
+    let v288 = abs(&v286);
+    let v289 = mul(ctx.constant(1), &v288);
+    let v290 = add(&v286, &v289);
+    let v291 = if truth(&v290) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    (*(&v293)).clone()
+    (*(&v291)).clone()
     } else {
-    let v294 = conj(a3);
-    let v295 = mul(ctx.constant(1), &v294);
-    let v296 = add(a3, &v295);
-    let v297 = mul(ctx.constant(15), &v296);
-    let v298 = if truth(&v297) {
-    let v299 = abs(&v297);
-    let v300 = mul(ctx.constant(1), &v299);
-    let v301 = add(&v297, &v300);
-    let v302 = if truth(&v301) {
+    let v292 = conj(a3);
+    let v293 = mul(ctx.constant(1), &v292);
+    let v294 = add(a3, &v293);
+    let v295 = mul(ctx.constant(15), &v294);
+    let v296 = if truth(&v295) {
+    let v297 = abs(&v295);
+    let v298 = mul(ctx.constant(1), &v297);
+    let v299 = add(&v295, &v298);
+    let v300 = if truth(&v299) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    (*(&v302)).clone()
+    (*(&v300)).clone()
     } else {
-    let v303 = conj(a10);
-    let v304 = mul(ctx.constant(1), &v303);
-    let v305 = add(a10, &v304);
-    let v306 = mul(ctx.constant(15), &v305);
-    let v307 = if truth(&v306) {
-    let v308 = abs(&v306);
-    let v309 = mul(ctx.constant(1), &v308);
-    let v310 = add(&v306, &v309);
-    let v311 = if truth(&v310) {
+    let v301 = conj(a10);
+    let v302 = mul(ctx.constant(1), &v301);
+    let v303 = add(a10, &v302);
+    let v304 = mul(ctx.constant(15), &v303);
+    let v305 = if truth(&v304) {
+    let v306 = abs(&v304);
+    let v307 = mul(ctx.constant(1), &v306);
+    let v308 = add(&v304, &v307);
+    let v309 = if truth(&v308) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    (*(&v311)).clone()
+    (*(&v309)).clone()
     } else {
-    let v312 = conj(a2);
-    let v313 = mul(ctx.constant(1), &v312);
-    let v314 = add(a2, &v313);
-    let v315 = mul(ctx.constant(15), &v314);
-    let v316 = if truth(&v315) {
-    let v317 = abs(&v315);
-    let v318 = mul(ctx.constant(1), &v317);
-    let v319 = add(&v315, &v318);
-    let v320 = if truth(&v319) {
+    let v310 = mul(ctx.constant(1), a11);
+    let v311 = add(a2, &v310);
+    let v312 = mul(ctx.constant(15), &v311);
+    let v313 = if truth(&v312) {
+    let v314 = abs(&v312);
+    let v315 = mul(ctx.constant(1), &v314);
+    let v316 = add(&v312, &v315);
+    let v317 = if truth(&v316) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    (*(&v320)).clone()
+    (*(&v317)).clone()
     } else {
-    let v321 = conj(a9);
-    let v322 = mul(ctx.constant(1), &v321);
-    let v323 = add(a9, &v322);
-    let v324 = mul(ctx.constant(15), &v323);
-    let v325 = if truth(&v324) {
-    let v326 = abs(&v324);
-    let v327 = mul(ctx.constant(1), &v326);
-    let v328 = add(&v324, &v327);
-    let v329 = if truth(&v328) {
+    let v318 = conj(a9);
+    let v319 = mul(ctx.constant(1), &v318);
+    let v320 = add(a9, &v319);
+    let v321 = mul(ctx.constant(15), &v320);
+    let v322 = if truth(&v321) {
+    let v323 = abs(&v321);
+    let v324 = mul(ctx.constant(1), &v323);
+    let v325 = add(&v321, &v324);
+    let v326 = if truth(&v325) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    (*(&v329)).clone()
+    (*(&v326)).clone()
     } else {
     (*(ctx.constant(1))).clone()
     };
-    (*(&v325)).clone()
+    (*(&v322)).clone()
     };
-    (*(&v316)).clone()
+    (*(&v313)).clone()
     };
-    (*(&v307)).clone()
+    (*(&v305)).clone()
     };
-    (*(&v298)).clone()
+    (*(&v296)).clone()
     };
-    let v330 = mul(ctx.constant(8), &v282);
-    let v331 = mul(&v330, &v289);
-    let v332 = helper_3(&v285, &v331, &v330, ctx);
-    let v333 = mul(ctx.constant(1), &v2);
-    let v334 = conj(&v333);
-    let v335 = mul(ctx.constant(1), &v334);
-    let v336 = add(&v333, &v335);
-    let v337 = mul(ctx.constant(15), &v336);
-    let v338 = if truth(&v337) {
-    let v339 = abs(&v337);
-    let v340 = mul(ctx.constant(1), &v339);
-    let v341 = add(&v337, &v340);
-    let v342 = if truth(&v341) {
-    (*(ctx.constant(1))).clone()
-    } else {
-    (*(ctx.constant(0))).clone()
-    };
-    (*(&v342)).clone()
-    } else {
-    let v343 = conj(&v2);
-    let v344 = mul(ctx.constant(1), &v343);
-    let v345 = add(&v2, &v344);
-    let v346 = mul(ctx.constant(15), &v345);
-    let v347 = if truth(&v346) {
-    let v348 = abs(&v346);
-    let v349 = mul(ctx.constant(1), &v348);
-    let v350 = add(&v346, &v349);
-    let v351 = if truth(&v350) {
+    let v327 = mul(ctx.constant(8), &v280);
+    let v328 = mul(&v327, &v287);
+    let v329 = helper_3(&v283, &v328, &v327, ctx);
+    let v330 = mul(ctx.constant(1), &v2);
+    let v331 = conj(&v330);
+    let v332 = mul(ctx.constant(1), &v331);
+    let v333 = add(&v330, &v332);
+    let v334 = mul(ctx.constant(15), &v333);
+    let v335 = if truth(&v334) {
+    let v336 = abs(&v334);
+    let v337 = mul(ctx.constant(1), &v336);
+    let v338 = add(&v334, &v337);
+    let v339 = if truth(&v338) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    (*(&v351)).clone()
+    (*(&v339)).clone()
     } else {
-    let v352 = conj(&v11);
-    let v353 = mul(ctx.constant(1), &v352);
-    let v354 = add(&v11, &v353);
-    let v355 = mul(ctx.constant(15), &v354);
-    let v356 = if truth(&v355) {
-    let v357 = abs(&v355);
-    let v358 = mul(ctx.constant(1), &v357);
-    let v359 = add(&v355, &v358);
-    let v360 = if truth(&v359) {
+    let v340 = conj(&v2);
+    let v341 = mul(ctx.constant(1), &v340);
+    let v342 = add(&v2, &v341);
+    let v343 = mul(ctx.constant(15), &v342);
+    let v344 = if truth(&v343) {
+    let v345 = abs(&v343);
+    let v346 = mul(ctx.constant(1), &v345);
+    let v347 = add(&v343, &v346);
+    let v348 = if truth(&v347) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    (*(&v360)).clone()
+    (*(&v348)).clone()
     } else {
-    let v361 = conj(&v74);
-    let v362 = mul(ctx.constant(1), &v361);
-    let v363 = add(&v74, &v362);
-    let v364 = mul(ctx.constant(15), &v363);
-    let v365 = if truth(&v364) {
-    let v366 = abs(&v364);
-    let v367 = mul(ctx.constant(1), &v366);
-    let v368 = add(&v364, &v367);
-    let v369 = if truth(&v368) {
+    let v349 = conj(&v10);
+    let v350 = mul(ctx.constant(1), &v349);
+    let v351 = add(&v10, &v350);
+    let v352 = mul(ctx.constant(15), &v351);
+    let v353 = if truth(&v352) {
+    let v354 = abs(&v352);
+    let v355 = mul(ctx.constant(1), &v354);
+    let v356 = add(&v352, &v355);
+    let v357 = if truth(&v356) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    (*(&v369)).clone()
+    (*(&v357)).clone()
     } else {
-    (*(ctx.constant(0))).clone()
-    };
-    (*(&v365)).clone()
-    };
-    (*(&v356)).clone()
-    };
-    let v370 = mul(ctx.constant(1), &v347);
-    (*(&v370)).clone()
-    };
-    let v371 = mul(ctx.constant(1), &v146);
-    let v372 = conj(&v371);
-    let v373 = mul(ctx.constant(1), &v372);
-    let v374 = add(&v371, &v373);
-    let v375 = mul(ctx.constant(15), &v374);
-    let v376 = if truth(&v375) {
-    let v377 = abs(&v375);
-    let v378 = mul(ctx.constant(1), &v377);
-    let v379 = add(&v375, &v378);
-    let v380 = if truth(&v379) {
+    let v358 = conj(&v73);
+    let v359 = mul(ctx.constant(1), &v358);
+    let v360 = add(&v73, &v359);
+    let v361 = mul(ctx.constant(15), &v360);
+    let v362 = if truth(&v361) {
+    let v363 = abs(&v361);
+    let v364 = mul(ctx.constant(1), &v363);
+    let v365 = add(&v361, &v364);
+    let v366 = if truth(&v365) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    (*(&v380)).clone()
+    (*(&v366)).clone()
     } else {
-    let v381 = conj(&v146);
-    let v382 = mul(ctx.constant(1), &v381);
-    let v383 = add(&v146, &v382);
-    let v384 = mul(ctx.constant(15), &v383);
-    let v385 = if truth(&v384) {
-    let v386 = abs(&v384);
-    let v387 = mul(ctx.constant(1), &v386);
-    let v388 = add(&v384, &v387);
-    let v389 = if truth(&v388) {
+    (*(ctx.constant(0))).clone()
+    };
+    (*(&v362)).clone()
+    };
+    (*(&v353)).clone()
+    };
+    let v367 = mul(ctx.constant(1), &v344);
+    (*(&v367)).clone()
+    };
+    let v368 = mul(ctx.constant(1), &v146);
+    let v369 = conj(&v368);
+    let v370 = mul(ctx.constant(1), &v369);
+    let v371 = add(&v368, &v370);
+    let v372 = mul(ctx.constant(15), &v371);
+    let v373 = if truth(&v372) {
+    let v374 = abs(&v372);
+    let v375 = mul(ctx.constant(1), &v374);
+    let v376 = add(&v372, &v375);
+    let v377 = if truth(&v376) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    (*(&v389)).clone()
+    (*(&v377)).clone()
     } else {
-    let v390 = conj(&v155);
-    let v391 = mul(ctx.constant(1), &v390);
-    let v392 = add(&v155, &v391);
-    let v393 = mul(ctx.constant(15), &v392);
-    let v394 = if truth(&v393) {
-    let v395 = abs(&v393);
-    let v396 = mul(ctx.constant(1), &v395);
-    let v397 = add(&v393, &v396);
-    let v398 = if truth(&v397) {
+    let v378 = conj(&v146);
+    let v379 = mul(ctx.constant(1), &v378);
+    let v380 = add(&v146, &v379);
+    let v381 = mul(ctx.constant(15), &v380);
+    let v382 = if truth(&v381) {
+    let v383 = abs(&v381);
+    let v384 = mul(ctx.constant(1), &v383);
+    let v385 = add(&v381, &v384);
+    let v386 = if truth(&v385) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    (*(&v398)).clone()
+    (*(&v386)).clone()
     } else {
-    let v399 = conj(&v214);
-    let v400 = mul(ctx.constant(1), &v399);
-    let v401 = add(&v214, &v400);
-    let v402 = mul(ctx.constant(15), &v401);
-    let v403 = if truth(&v402) {
-    let v404 = abs(&v402);
-    let v405 = mul(ctx.constant(1), &v404);
-    let v406 = add(&v402, &v405);
-    let v407 = if truth(&v406) {
+    let v387 = conj(&v154);
+    let v388 = mul(ctx.constant(1), &v387);
+    let v389 = add(&v154, &v388);
+    let v390 = mul(ctx.constant(15), &v389);
+    let v391 = if truth(&v390) {
+    let v392 = abs(&v390);
+    let v393 = mul(ctx.constant(1), &v392);
+    let v394 = add(&v390, &v393);
+    let v395 = if truth(&v394) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    (*(&v407)).clone()
+    (*(&v395)).clone()
     } else {
-    (*(ctx.constant(0))).clone()
-    };
-    (*(&v403)).clone()
-    };
-    (*(&v394)).clone()
-    };
-    let v408 = mul(ctx.constant(1), &v385);
-    (*(&v408)).clone()
-    };
-    let v409 = mul(&v338, &v376);
-    let v410 = add(ctx.constant(0), &v409);
-    let v411 = conj(ctx.constant(2));
-    let v412 = mul(ctx.constant(1), &v411);
-    let v413 = add(ctx.constant(2), &v412);
-    let v414 = mul(ctx.constant(15), &v413);
-    let v415 = if truth(&v414) {
-    let v416 = abs(&v414);
-    let v417 = mul(ctx.constant(1), &v416);
-    let v418 = add(&v414, &v417);
-    let v419 = if truth(&v418) {
+    let v396 = conj(&v213);
+    let v397 = mul(ctx.constant(1), &v396);
+    let v398 = add(&v213, &v397);
+    let v399 = mul(ctx.constant(15), &v398);
+    let v400 = if truth(&v399) {
+    let v401 = abs(&v399);
+    let v402 = mul(ctx.constant(1), &v401);
+    let v403 = add(&v399, &v402);
+    let v404 = if truth(&v403) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    (*(&v419)).clone()
+    (*(&v404)).clone()
     } else {
-    let v420 = conj(a3);
-    let v421 = mul(ctx.constant(1), &v420);
-    let v422 = add(a3, &v421);
-    let v423 = mul(ctx.constant(15), &v422);
-    let v424 = if truth(&v423) {
-    let v425 = abs(&v423);
-    let v426 = mul(ctx.constant(1), &v425);
-    let v427 = add(&v423, &v426);
-    let v428 = if truth(&v427) {
+    (*(ctx.constant(0))).clone()
+    };
+    (*(&v400)).clone()
+    };
+    (*(&v391)).clone()
+    };
+    let v405 = mul(ctx.constant(1), &v382);
+    (*(&v405)).clone()
+    };
+    let v406 = mul(&v335, &v373);
+    let v407 = add(ctx.constant(0), &v406);
+    let v408 = conj(ctx.constant(2));
+    let v409 = mul(ctx.constant(1), &v408);
+    let v410 = add(ctx.constant(2), &v409);
+    let v411 = mul(ctx.constant(15), &v410);
+    let v412 = if truth(&v411) {
+    let v413 = abs(&v411);
+    let v414 = mul(ctx.constant(1), &v413);
+    let v415 = add(&v411, &v414);
+    let v416 = if truth(&v415) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    (*(&v428)).clone()
+    (*(&v416)).clone()
     } else {
-    let v429 = conj(a10);
-    let v430 = mul(ctx.constant(1), &v429);
-    let v431 = add(a10, &v430);
-    let v432 = mul(ctx.constant(15), &v431);
-    let v433 = if truth(&v432) {
-    let v434 = abs(&v432);
-    let v435 = mul(ctx.constant(1), &v434);
-    let v436 = add(&v432, &v435);
-    let v437 = if truth(&v436) {
+    let v417 = conj(a3);
+    let v418 = mul(ctx.constant(1), &v417);
+    let v419 = add(a3, &v418);
+    let v420 = mul(ctx.constant(15), &v419);
+    let v421 = if truth(&v420) {
+    let v422 = abs(&v420);
+    let v423 = mul(ctx.constant(1), &v422);
+    let v424 = add(&v420, &v423);
+    let v425 = if truth(&v424) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    (*(&v437)).clone()
+    (*(&v425)).clone()
     } else {
-    let v438 = conj(a2);
-    let v439 = mul(ctx.constant(1), &v438);
-    let v440 = add(a2, &v439);
-    let v441 = mul(ctx.constant(15), &v440);
+    let v426 = conj(a10);
+    let v427 = mul(ctx.constant(1), &v426);
+    let v428 = add(a10, &v427);
+    let v429 = mul(ctx.constant(15), &v428);
+    let v430 = if truth(&v429) {
+    let v431 = abs(&v429);
+    let v432 = mul(ctx.constant(1), &v431);
+    let v433 = add(&v429, &v432);
+    let v434 = if truth(&v433) {
+    (*(ctx.constant(1))).clone()
+    } else {
+    (*(ctx.constant(0))).clone()
+    };
+    (*(&v434)).clone()
+    } else {
+    let v435 = mul(ctx.constant(1), a11);
+    let v436 = add(a2, &v435);
+    let v437 = mul(ctx.constant(15), &v436);
+    let v438 = if truth(&v437) {
+    let v439 = abs(&v437);
+    let v440 = mul(ctx.constant(1), &v439);
+    let v441 = add(&v437, &v440);
     let v442 = if truth(&v441) {
-    let v443 = abs(&v441);
-    let v444 = mul(ctx.constant(1), &v443);
-    let v445 = add(&v441, &v444);
-    let v446 = if truth(&v445) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
-    };
-    (*(&v446)).clone()
-    } else {
-    let v447 = conj(a9);
-    let v448 = mul(ctx.constant(1), &v447);
-    let v449 = add(a9, &v448);
-    let v450 = mul(ctx.constant(15), &v449);
-    let v451 = if truth(&v450) {
-    let v452 = abs(&v450);
-    let v453 = mul(ctx.constant(1), &v452);
-    let v454 = add(&v450, &v453);
-    let v455 = if truth(&v454) {
-    (*(ctx.constant(1))).clone()
-    } else {
-    (*(ctx.constant(0))).clone()
-    };
-    (*(&v455)).clone()
-    } else {
-    (*(ctx.constant(1))).clone()
-    };
-    (*(&v451)).clone()
     };
     (*(&v442)).clone()
+    } else {
+    let v443 = conj(a9);
+    let v444 = mul(ctx.constant(1), &v443);
+    let v445 = add(a9, &v444);
+    let v446 = mul(ctx.constant(15), &v445);
+    let v447 = if truth(&v446) {
+    let v448 = abs(&v446);
+    let v449 = mul(ctx.constant(1), &v448);
+    let v450 = add(&v446, &v449);
+    let v451 = if truth(&v450) {
+    (*(ctx.constant(1))).clone()
+    } else {
+    (*(ctx.constant(0))).clone()
     };
-    (*(&v433)).clone()
+    (*(&v451)).clone()
+    } else {
+    (*(ctx.constant(1))).clone()
     };
-    let v456 = mul(&v280, &v424);
-    (*(&v456)).clone()
+    (*(&v447)).clone()
     };
-    let v457 = mul(ctx.constant(1), &v338);
-    let v458 = mul(&v457, &v415);
-    let v459 = add(ctx.constant(0), &v458);
-    let v460 = mul(ctx.constant(16), ctx.constant(5));
-    let v461 = mul(&v460, &v410);
-    let v462 = mul(&v461, &v415);
-    let v463 = mul(&v462, &v459);
-    let v464 = add(&v332, &v463);
-    let v465 = mul(&v464, &v144);
-    let v466 = add(&v145, &v273);
-    let v467 = add(&v466, &v465);
-    (*(&v467)).clone()
+    (*(&v438)).clone()
+    };
+    (*(&v430)).clone()
+    };
+    let v452 = mul(&v278, &v421);
+    (*(&v452)).clone()
+    };
+    let v453 = mul(ctx.constant(1), &v335);
+    let v454 = mul(&v453, &v412);
+    let v455 = add(ctx.constant(0), &v454);
+    let v456 = mul(ctx.constant(16), ctx.constant(5));
+    let v457 = mul(&v456, &v407);
+    let v458 = mul(&v457, &v412);
+    let v459 = mul(&v458, &v455);
+    let v460 = add(&v329, &v459);
+    let v461 = mul(&v460, &v144);
+    let v462 = add(&v145, &v271);
+    let v463 = add(&v462, &v461);
+    (*(&v463)).clone()
 }
 
 fn branch_23<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<T>, a5: &C<T>, a6: &C<T>, a7: &C<T>, a8: &C<T>, a9: &C<T>, a10: &C<T>, a11: &C<T>, ctx: &Context<T>) -> C<T> {
@@ -11372,153 +11367,167 @@ fn branch_23<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
 fn branch_24<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<T>, a5: &C<T>, a6: &C<T>, a7: &C<T>, a8: &C<T>, a9: &C<T>, a10: &C<T>, a11: &C<T>, a12: &C<T>, ctx: &Context<T>) -> C<T> {
     let v0 = powi(a0, -1, false);
     let v1 = if truth(a1) {
-    let v2 = mul(a1, a2);
-    let v3 = mul(&v2, ctx.constant(7));
-    let v4 = mul(a3, a3);
+    let v2 = conj(a2);
+    let v3 = mul(a2, &v2);
+    let v4 = conj(&v3);
     let v5 = add(&v3, &v4);
-    let v6 = if truth(&v5) {
-    (*(ctx.constant(2))).clone()
-    } else {
-    branch_21(a2, a3, a1, a4, a5, &v0, a6, ctx)
-    };
-    let v7 = if truth(&v6) {
-    let v8 = add(a4, a5);
-    let v9 = mul(&v0, &v8);
-    let v10 = add(a6, a5);
-    let v11 = mul(&v0, &v10);
-    let v12 = powi(a1, -1, false);
-    let v13 = mul(a3, ctx.constant(10));
-    let v14 = mul(&v13, &v12);
-    let v15 = helper_17(&v9, &v11, &v14, a1, ctx);
-    (*(&v15)).clone()
-    } else {
-    branch_22(&v5, a1, a3, a2, a7, &v0, a8, a9, a10, a11, a12, a4, a5, a6, ctx)
-    };
-    (*(&v7)).clone()
-    } else {
-    let v16 = if truth(a3) {
-    branch_23(a3, a2, a11, a12, a4, a5, &v0, a7, a8, a6, a9, a10, ctx)
-    } else {
-    let v17 = if truth(a2) {
-    let v18 = conj(a2);
-    let v19 = add(a2, &v18);
-    let v20 = mul(ctx.constant(8), &v19);
-    let v21 = abs(&v20);
-    let v22 = mul(ctx.constant(1), &v21);
-    let v23 = add(&v20, &v22);
-    let v24 = if truth(&v23) {
-    (*(ctx.constant(1))).clone()
-    } else {
-    (*(ctx.constant(0))).clone()
-    };
-    let v25 = mul(ctx.constant(1), &v24);
-    let v26 = add(ctx.constant(0), &v25);
-    let v27 = mul(ctx.constant(1), &v26);
-    let v28 = add(ctx.constant(0), &v27);
-    let v29 = mul(a2, &v28);
-    let v30 = mul(ctx.constant(1), &v18);
-    let v31 = add(a2, &v30);
-    let v32 = mul(ctx.constant(15), &v31);
-    let v33 = if truth(&v32) {
-    let v34 = abs(&v32);
-    let v35 = mul(ctx.constant(1), &v34);
-    let v36 = add(&v32, &v35);
-    let v37 = if truth(&v36) {
-    (*(ctx.constant(1))).clone()
-    } else {
-    (*(ctx.constant(0))).clone()
-    };
-    (*(&v37)).clone()
-    } else {
-    let v38 = if truth(&v32) {
-    let v39 = abs(&v32);
-    let v40 = mul(ctx.constant(1), &v39);
-    let v41 = add(&v32, &v40);
-    let v42 = if truth(&v41) {
-    (*(ctx.constant(1))).clone()
-    } else {
-    (*(ctx.constant(0))).clone()
-    };
-    (*(&v42)).clone()
-    } else {
-    let v43 = conj(a12);
-    let v44 = mul(ctx.constant(1), &v43);
-    let v45 = add(a12, &v44);
-    let v46 = mul(ctx.constant(15), &v45);
-    let v47 = if truth(&v46) {
-    let v48 = abs(&v46);
-    let v49 = mul(ctx.constant(1), &v48);
-    let v50 = add(&v46, &v49);
-    let v51 = if truth(&v50) {
-    (*(ctx.constant(1))).clone()
-    } else {
-    (*(ctx.constant(0))).clone()
-    };
-    (*(&v51)).clone()
-    } else {
-    let v52 = conj(a3);
-    let v53 = mul(ctx.constant(1), &v52);
-    let v54 = add(a3, &v53);
-    let v55 = mul(ctx.constant(15), &v54);
-    let v56 = if truth(&v55) {
-    let v57 = abs(&v55);
-    let v58 = mul(ctx.constant(1), &v57);
-    let v59 = add(&v55, &v58);
-    let v60 = if truth(&v59) {
-    (*(ctx.constant(1))).clone()
-    } else {
-    (*(ctx.constant(0))).clone()
-    };
-    (*(&v60)).clone()
-    } else {
-    let v61 = conj(a11);
-    let v62 = mul(ctx.constant(1), &v61);
-    let v63 = add(a11, &v62);
-    let v64 = mul(ctx.constant(15), &v63);
-    let v65 = if truth(&v64) {
-    let v66 = abs(&v64);
-    let v67 = mul(ctx.constant(1), &v66);
-    let v68 = add(&v64, &v67);
-    let v69 = if truth(&v68) {
-    (*(ctx.constant(1))).clone()
-    } else {
-    (*(ctx.constant(0))).clone()
-    };
-    (*(&v69)).clone()
-    } else {
-    (*(ctx.constant(1))).clone()
-    };
-    (*(&v65)).clone()
-    };
-    (*(&v56)).clone()
-    };
-    (*(&v47)).clone()
-    };
-    (*(&v38)).clone()
-    };
-    let v70 = mul(ctx.constant(8), &v26);
-    let v71 = mul(&v70, &v33);
-    let v72 = helper_3(&v29, &v71, &v70, ctx);
-    let v73 = add(a4, a5);
-    let v74 = mul(&v0, &v73);
-    let v75 = mul(a7, &v0);
-    let v76 = mul(a8, &v0);
-    let v77 = add(a6, a5);
-    let v78 = mul(&v0, &v77);
-    let v79 = mul(a9, &v0);
-    let v80 = mul(a10, &v0);
-    let v81 = helper_15(&v74, &v75, &v76, &v78, &v79, &v80, ctx);
-    let v82 = mul(&v72, &v81);
-    (*(&v82)).clone()
+    let v6 = mul(ctx.constant(8), &v5);
+    let v7 = mul(ctx.constant(78), &v6);
+    let v8 = mul(a1, a3);
+    let v9 = mul(&v8, ctx.constant(7));
+    let v10 = mul(ctx.constant(79), &v6);
+    let v11 = mul(a2, a2);
+    let v12 = add(&v9, &v10);
+    let v13 = add(&v12, &v11);
+    let v14 = if truth(&v13) {
+    (*(&v13)).clone()
     } else {
     (*(ctx.constant(2))).clone()
+    };
+    let v15 = add(&v7, &v14);
+    let v16 = if truth(&v15) {
+    (*(ctx.constant(2))).clone()
+    } else {
+    branch_21(a3, &v2, a2, a1, a4, a5, &v0, a6, ctx)
+    };
+    let v17 = if truth(&v16) {
+    let v18 = add(a4, a5);
+    let v19 = mul(&v0, &v18);
+    let v20 = add(a6, a5);
+    let v21 = mul(&v0, &v20);
+    let v22 = powi(a1, -1, false);
+    let v23 = mul(a2, ctx.constant(10));
+    let v24 = mul(&v23, &v22);
+    let v25 = helper_17(&v19, &v21, &v24, a1, ctx);
+    (*(&v25)).clone()
+    } else {
+    branch_22(&v15, a1, a2, a3, a7, &v0, a8, a9, a10, a11, a12, &v2, a4, a5, a6, ctx)
     };
     (*(&v17)).clone()
+    } else {
+    let v26 = if truth(a2) {
+    branch_23(a2, a3, a11, a12, a4, a5, &v0, a7, a8, a6, a9, a10, ctx)
+    } else {
+    let v27 = if truth(a3) {
+    let v28 = conj(a3);
+    let v29 = add(a3, &v28);
+    let v30 = mul(ctx.constant(8), &v29);
+    let v31 = abs(&v30);
+    let v32 = mul(ctx.constant(1), &v31);
+    let v33 = add(&v30, &v32);
+    let v34 = if truth(&v33) {
+    (*(ctx.constant(1))).clone()
+    } else {
+    (*(ctx.constant(0))).clone()
     };
-    (*(&v16)).clone()
+    let v35 = mul(ctx.constant(1), &v34);
+    let v36 = add(ctx.constant(0), &v35);
+    let v37 = mul(ctx.constant(1), &v36);
+    let v38 = add(ctx.constant(0), &v37);
+    let v39 = mul(a3, &v38);
+    let v40 = mul(ctx.constant(1), &v28);
+    let v41 = add(a3, &v40);
+    let v42 = mul(ctx.constant(15), &v41);
+    let v43 = if truth(&v42) {
+    let v44 = abs(&v42);
+    let v45 = mul(ctx.constant(1), &v44);
+    let v46 = add(&v42, &v45);
+    let v47 = if truth(&v46) {
+    (*(ctx.constant(1))).clone()
+    } else {
+    (*(ctx.constant(0))).clone()
     };
-    let v83 = mul(&v0, &v1);
-    (*(&v83)).clone()
+    (*(&v47)).clone()
+    } else {
+    let v48 = if truth(&v42) {
+    let v49 = abs(&v42);
+    let v50 = mul(ctx.constant(1), &v49);
+    let v51 = add(&v42, &v50);
+    let v52 = if truth(&v51) {
+    (*(ctx.constant(1))).clone()
+    } else {
+    (*(ctx.constant(0))).clone()
+    };
+    (*(&v52)).clone()
+    } else {
+    let v53 = conj(a12);
+    let v54 = mul(ctx.constant(1), &v53);
+    let v55 = add(a12, &v54);
+    let v56 = mul(ctx.constant(15), &v55);
+    let v57 = if truth(&v56) {
+    let v58 = abs(&v56);
+    let v59 = mul(ctx.constant(1), &v58);
+    let v60 = add(&v56, &v59);
+    let v61 = if truth(&v60) {
+    (*(ctx.constant(1))).clone()
+    } else {
+    (*(ctx.constant(0))).clone()
+    };
+    (*(&v61)).clone()
+    } else {
+    let v62 = conj(a2);
+    let v63 = mul(ctx.constant(1), &v62);
+    let v64 = add(a2, &v63);
+    let v65 = mul(ctx.constant(15), &v64);
+    let v66 = if truth(&v65) {
+    let v67 = abs(&v65);
+    let v68 = mul(ctx.constant(1), &v67);
+    let v69 = add(&v65, &v68);
+    let v70 = if truth(&v69) {
+    (*(ctx.constant(1))).clone()
+    } else {
+    (*(ctx.constant(0))).clone()
+    };
+    (*(&v70)).clone()
+    } else {
+    let v71 = conj(a11);
+    let v72 = mul(ctx.constant(1), &v71);
+    let v73 = add(a11, &v72);
+    let v74 = mul(ctx.constant(15), &v73);
+    let v75 = if truth(&v74) {
+    let v76 = abs(&v74);
+    let v77 = mul(ctx.constant(1), &v76);
+    let v78 = add(&v74, &v77);
+    let v79 = if truth(&v78) {
+    (*(ctx.constant(1))).clone()
+    } else {
+    (*(ctx.constant(0))).clone()
+    };
+    (*(&v79)).clone()
+    } else {
+    (*(ctx.constant(1))).clone()
+    };
+    (*(&v75)).clone()
+    };
+    (*(&v66)).clone()
+    };
+    (*(&v57)).clone()
+    };
+    (*(&v48)).clone()
+    };
+    let v80 = mul(ctx.constant(8), &v36);
+    let v81 = mul(&v80, &v43);
+    let v82 = helper_3(&v39, &v81, &v80, ctx);
+    let v83 = add(a4, a5);
+    let v84 = mul(&v0, &v83);
+    let v85 = mul(a7, &v0);
+    let v86 = mul(a8, &v0);
+    let v87 = add(a6, a5);
+    let v88 = mul(&v0, &v87);
+    let v89 = mul(a9, &v0);
+    let v90 = mul(a10, &v0);
+    let v91 = helper_15(&v84, &v85, &v86, &v88, &v89, &v90, ctx);
+    let v92 = mul(&v82, &v91);
+    (*(&v92)).clone()
+    } else {
+    (*(ctx.constant(2))).clone()
+    };
+    (*(&v27)).clone()
+    };
+    (*(&v26)).clone()
+    };
+    let v93 = mul(&v0, &v1);
+    (*(&v93)).clone()
 }
 
 fn branch_25<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<T>, a5: &C<T>, a6: &C<T>, a7: &C<T>, a8: &C<T>, a9: &C<T>, a10: &C<T>, ctx: &Context<T>) -> C<T> {
@@ -12095,7 +12104,7 @@ fn branch_27<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     (*(&v119)).clone()
 }
 
-fn branch_28<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<T>, a5: &C<T>, ctx: &Context<T>) -> C<T> {
+fn branch_28<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<T>, a5: &C<T>, a6: &C<T>, ctx: &Context<T>) -> C<T> {
     let v0 = conj(a0);
     let v1 = mul(ctx.constant(1), &v0);
     let v2 = add(a0, &v1);
@@ -12103,156 +12112,155 @@ fn branch_28<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     let v4 = if truth(&v3) {
     (*(ctx.constant(0))).clone()
     } else {
-    let v5 = conj(a1);
-    let v6 = mul(ctx.constant(1), &v5);
-    let v7 = add(a1, &v6);
-    let v8 = mul(ctx.constant(15), &v7);
-    let v9 = if truth(&v8) {
+    let v5 = mul(ctx.constant(1), a1);
+    let v6 = add(a2, &v5);
+    let v7 = mul(ctx.constant(15), &v6);
+    let v8 = if truth(&v7) {
     (*(ctx.constant(0))).clone()
     } else {
-    let v10 = conj(a2);
-    let v11 = mul(ctx.constant(1), &v10);
-    let v12 = add(a2, &v11);
-    let v13 = mul(ctx.constant(15), &v12);
-    let v14 = if truth(&v13) {
+    let v9 = conj(a3);
+    let v10 = mul(ctx.constant(1), &v9);
+    let v11 = add(a3, &v10);
+    let v12 = mul(ctx.constant(15), &v11);
+    let v13 = if truth(&v12) {
     (*(ctx.constant(0))).clone()
     } else {
     (*(ctx.constant(2))).clone()
     };
-    (*(&v14)).clone()
+    (*(&v13)).clone()
     };
-    (*(&v9)).clone()
+    (*(&v8)).clone()
     };
-    let v15 = mul(ctx.constant(1), &v4);
-    let v16 = add(ctx.constant(0), &v15);
-    let v17 = conj(a2);
-    let v18 = add(a2, &v17);
-    let v19 = mul(ctx.constant(8), &v18);
-    let v20 = mul(ctx.constant(1), &v19);
-    let v21 = abs(&v20);
-    let v22 = mul(ctx.constant(1), &v21);
-    let v23 = add(&v20, &v22);
-    let v24 = if truth(&v23) {
+    let v14 = mul(ctx.constant(1), &v4);
+    let v15 = add(ctx.constant(0), &v14);
+    let v16 = conj(a3);
+    let v17 = add(a3, &v16);
+    let v18 = mul(ctx.constant(8), &v17);
+    let v19 = mul(ctx.constant(1), &v18);
+    let v20 = abs(&v19);
+    let v21 = mul(ctx.constant(1), &v20);
+    let v22 = add(&v19, &v21);
+    let v23 = if truth(&v22) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    let v25 = mul(ctx.constant(1), &v24);
-    let v26 = add(ctx.constant(0), &v25);
-    let v27 = powi(a2, -1, false);
-    let v28 = mul(a1, ctx.constant(10));
-    let v29 = mul(&v28, &v27);
-    let v30 = conj(&v29);
-    let v31 = add(&v29, &v30);
-    let v32 = mul(ctx.constant(8), &v31);
-    let v33 = add(ctx.constant(1), &v32);
-    let v34 = abs(&v33);
-    let v35 = mul(ctx.constant(1), &v34);
-    let v36 = add(&v33, &v35);
-    let v37 = if truth(&v36) {
+    let v24 = mul(ctx.constant(1), &v23);
+    let v25 = add(ctx.constant(0), &v24);
+    let v26 = powi(a3, -1, false);
+    let v27 = mul(a2, ctx.constant(10));
+    let v28 = mul(&v27, &v26);
+    let v29 = conj(&v28);
+    let v30 = add(&v28, &v29);
+    let v31 = mul(ctx.constant(8), &v30);
+    let v32 = add(ctx.constant(1), &v31);
+    let v33 = abs(&v32);
+    let v34 = mul(ctx.constant(1), &v33);
+    let v35 = add(&v32, &v34);
+    let v36 = if truth(&v35) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    let v38 = mul(ctx.constant(1), &v37);
-    let v39 = add(ctx.constant(0), &v38);
-    let v40 = mul(ctx.constant(1), &v32);
-    let v41 = abs(&v40);
-    let v42 = mul(ctx.constant(1), &v41);
-    let v43 = add(&v40, &v42);
-    let v44 = if truth(&v43) {
+    let v37 = mul(ctx.constant(1), &v36);
+    let v38 = add(ctx.constant(0), &v37);
+    let v39 = mul(ctx.constant(1), &v31);
+    let v40 = abs(&v39);
+    let v41 = mul(ctx.constant(1), &v40);
+    let v42 = add(&v39, &v41);
+    let v43 = if truth(&v42) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    let v45 = mul(ctx.constant(1), &v44);
-    let v46 = add(ctx.constant(0), &v45);
-    let v47 = add(a3, ctx.constant(2));
-    let v48 = mul(a4, &v47);
-    let v49 = conj(&v48);
-    let v50 = mul(ctx.constant(1), &v49);
-    let v51 = add(&v48, &v50);
-    let v52 = mul(ctx.constant(15), &v51);
-    let v53 = if truth(&v52) {
+    let v44 = mul(ctx.constant(1), &v43);
+    let v45 = add(ctx.constant(0), &v44);
+    let v46 = add(a4, ctx.constant(2));
+    let v47 = mul(a5, &v46);
+    let v48 = conj(&v47);
+    let v49 = mul(ctx.constant(1), &v48);
+    let v50 = add(&v47, &v49);
+    let v51 = mul(ctx.constant(15), &v50);
+    let v52 = if truth(&v51) {
     (*(ctx.constant(0))).clone()
     } else {
-    let v54 = add(&v48, &v49);
-    let v55 = mul(ctx.constant(8), &v54);
-    let v56 = abs(&v55);
-    let v57 = mul(ctx.constant(1), &v56);
-    let v58 = add(&v55, &v57);
-    let v59 = if truth(&v58) {
+    let v53 = add(&v47, &v48);
+    let v54 = mul(ctx.constant(8), &v53);
+    let v55 = abs(&v54);
+    let v56 = mul(ctx.constant(1), &v55);
+    let v57 = add(&v54, &v56);
+    let v58 = if truth(&v57) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    let v60 = mul(ctx.constant(1), &v59);
-    let v61 = add(ctx.constant(0), &v60);
-    let v62 = mul(ctx.constant(8), &v61);
-    let v63 = mul(ctx.constant(1), &v55);
-    let v64 = add(ctx.constant(0), &v63);
-    let v65 = abs(&v64);
-    let v66 = mul(ctx.constant(1), &v65);
-    let v67 = add(&v64, &v66);
-    let v68 = if truth(&v67) {
+    let v59 = mul(ctx.constant(1), &v58);
+    let v60 = add(ctx.constant(0), &v59);
+    let v61 = mul(ctx.constant(8), &v60);
+    let v62 = mul(ctx.constant(1), &v54);
+    let v63 = add(ctx.constant(0), &v62);
+    let v64 = abs(&v63);
+    let v65 = mul(ctx.constant(1), &v64);
+    let v66 = add(&v63, &v65);
+    let v67 = if truth(&v66) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    let v69 = mul(ctx.constant(1), &v68);
-    let v70 = add(ctx.constant(0), &v69);
-    let v71 = mul(ctx.constant(8), &v70);
-    let v72 = add(&v62, &v71);
-    (*(&v72)).clone()
+    let v68 = mul(ctx.constant(1), &v67);
+    let v69 = add(ctx.constant(0), &v68);
+    let v70 = mul(ctx.constant(8), &v69);
+    let v71 = add(&v61, &v70);
+    (*(&v71)).clone()
     };
-    let v73 = add(a5, ctx.constant(2));
-    let v74 = mul(a4, &v73);
-    let v75 = conj(&v74);
-    let v76 = mul(ctx.constant(1), &v75);
-    let v77 = add(&v74, &v76);
-    let v78 = mul(ctx.constant(15), &v77);
-    let v79 = if truth(&v78) {
+    let v72 = add(a6, ctx.constant(2));
+    let v73 = mul(a5, &v72);
+    let v74 = conj(&v73);
+    let v75 = mul(ctx.constant(1), &v74);
+    let v76 = add(&v73, &v75);
+    let v77 = mul(ctx.constant(15), &v76);
+    let v78 = if truth(&v77) {
     (*(ctx.constant(0))).clone()
     } else {
-    let v80 = add(&v74, &v75);
-    let v81 = mul(ctx.constant(8), &v80);
-    let v82 = abs(&v81);
-    let v83 = mul(ctx.constant(1), &v82);
-    let v84 = add(&v81, &v83);
-    let v85 = if truth(&v84) {
+    let v79 = add(&v73, &v74);
+    let v80 = mul(ctx.constant(8), &v79);
+    let v81 = abs(&v80);
+    let v82 = mul(ctx.constant(1), &v81);
+    let v83 = add(&v80, &v82);
+    let v84 = if truth(&v83) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    let v86 = mul(ctx.constant(1), &v85);
-    let v87 = add(ctx.constant(0), &v86);
-    let v88 = mul(ctx.constant(8), &v87);
-    let v89 = mul(ctx.constant(1), &v81);
-    let v90 = add(ctx.constant(0), &v89);
-    let v91 = abs(&v90);
-    let v92 = mul(ctx.constant(1), &v91);
-    let v93 = add(&v90, &v92);
-    let v94 = if truth(&v93) {
+    let v85 = mul(ctx.constant(1), &v84);
+    let v86 = add(ctx.constant(0), &v85);
+    let v87 = mul(ctx.constant(8), &v86);
+    let v88 = mul(ctx.constant(1), &v80);
+    let v89 = add(ctx.constant(0), &v88);
+    let v90 = abs(&v89);
+    let v91 = mul(ctx.constant(1), &v90);
+    let v92 = add(&v89, &v91);
+    let v93 = if truth(&v92) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    let v95 = mul(ctx.constant(1), &v94);
-    let v96 = add(ctx.constant(0), &v95);
-    let v97 = mul(ctx.constant(8), &v96);
-    let v98 = add(&v88, &v97);
-    (*(&v98)).clone()
+    let v94 = mul(ctx.constant(1), &v93);
+    let v95 = add(ctx.constant(0), &v94);
+    let v96 = mul(ctx.constant(8), &v95);
+    let v97 = add(&v87, &v96);
+    (*(&v97)).clone()
     };
-    let v99 = mul(ctx.constant(78), &v16);
-    let v100 = mul(&v99, &v26);
-    let v101 = mul(&v100, &v39);
-    let v102 = mul(&v101, &v46);
-    let v103 = mul(&v102, &v53);
-    let v104 = mul(&v103, &v79);
-    (*(&v104)).clone()
+    let v98 = mul(ctx.constant(80), &v15);
+    let v99 = mul(&v98, &v25);
+    let v100 = mul(&v99, &v38);
+    let v101 = mul(&v100, &v45);
+    let v102 = mul(&v101, &v52);
+    let v103 = mul(&v102, &v78);
+    (*(&v103)).clone()
 }
 
-fn branch_29<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<T>, a5: &C<T>, a6: &C<T>, a7: &C<T>, a8: &C<T>, a9: &C<T>, a10: &C<T>, a11: &C<T>, a12: &C<T>, ctx: &Context<T>) -> C<T> {
+fn branch_29<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<T>, a5: &C<T>, a6: &C<T>, a7: &C<T>, a8: &C<T>, a9: &C<T>, a10: &C<T>, a11: &C<T>, a12: &C<T>, a13: &C<T>, ctx: &Context<T>) -> C<T> {
     let v0 = if truth(a0) {
     (*(ctx.constant(2))).clone()
     } else {
@@ -12264,196 +12272,196 @@ fn branch_29<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     (*(&v1)).clone()
     };
     let v2 = if truth(&v0) {
-    let v3 = conj(a1);
-    let v4 = add(a1, &v3);
-    let v5 = mul(ctx.constant(8), &v4);
-    let v6 = helper_10(&v5, a2, a3, ctx);
-    (*(&v6)).clone()
+    let v3 = powi(a1, -1, false);
+    let v4 = mul(a2, ctx.constant(10));
+    let v5 = mul(&v4, &v3);
+    (*(&v5)).clone()
     } else {
-    let v7 = conj(a1);
-    let v8 = add(a1, &v7);
-    let v9 = mul(ctx.constant(8), &v8);
-    let v10 = helper_10(&v9, a2, a3, ctx);
-    (*(&v10)).clone()
+    let v6 = conj(a1);
+    let v7 = add(a1, &v6);
+    let v8 = mul(ctx.constant(8), &v7);
+    let v9 = helper_10(&v8, a2, a3, ctx);
+    (*(&v9)).clone()
     };
-    let v11 = if truth(&v0) {
-    let v12 = mul(a4, a5);
-    let v13 = abs(&v12);
-    let v14 = mul(a6, a5);
-    let v15 = abs(&v14);
-    let v16 = mul(a7, a5);
-    let v17 = abs(&v16);
-    let v18 = mul(a8, a5);
-    let v19 = abs(&v18);
-    let v20 = add(ctx.constant(0), &v13);
-    let v21 = add(&v20, &v15);
-    let v22 = add(&v21, &v17);
-    let v23 = add(&v22, &v19);
-    let v24 = mul(ctx.constant(79), &v23);
-    (*(&v24)).clone()
+    let v10 = if truth(&v0) {
+    let v11 = mul(a4, a5);
+    let v12 = abs(&v11);
+    let v13 = mul(a6, a5);
+    let v14 = abs(&v13);
+    let v15 = mul(a7, a5);
+    let v16 = abs(&v15);
+    let v17 = mul(a8, a5);
+    let v18 = abs(&v17);
+    let v19 = add(ctx.constant(0), &v12);
+    let v20 = add(&v19, &v14);
+    let v21 = add(&v20, &v16);
+    let v22 = add(&v21, &v18);
+    let v23 = mul(ctx.constant(81), &v22);
+    (*(&v23)).clone()
     } else {
-    let v25 = conj(a1);
-    let v26 = add(a1, &v25);
-    let v27 = mul(ctx.constant(8), &v26);
-    let v28 = helper_10(&v27, a2, a3, ctx);
-    let v29 = mul(a9, &v28);
-    let v30 = add(a10, &v29);
-    let v31 = mul(a1, ctx.constant(6));
-    let v32 = mul(&v31, &v28);
-    let v33 = add(a2, &v32);
-    let v34 = powi(&v33, -1, false);
-    let v35 = mul(ctx.constant(1), &v30);
-    let v36 = mul(&v35, &v34);
+    let v24 = conj(a1);
+    let v25 = add(a1, &v24);
+    let v26 = mul(ctx.constant(8), &v25);
+    let v27 = helper_10(&v26, a2, a3, ctx);
+    let v28 = mul(a9, &v27);
+    let v29 = add(a10, &v28);
+    let v30 = mul(a1, ctx.constant(6));
+    let v31 = mul(&v30, &v27);
+    let v32 = add(a2, &v31);
+    let v33 = powi(&v32, -1, false);
+    let v34 = mul(ctx.constant(1), &v29);
+    let v35 = mul(&v34, &v33);
+    (*(&v35)).clone()
+    };
+    let v36 = if truth(&v0) {
+    (*(ctx.constant(2))).clone()
+    } else {
+    let v37 = conj(a1);
+    let v38 = add(a1, &v37);
+    let v39 = mul(ctx.constant(8), &v38);
+    let v40 = helper_10(&v39, a2, a3, ctx);
+    let v41 = mul(a1, ctx.constant(6));
+    let v42 = mul(&v41, &v40);
+    let v43 = add(a2, &v42);
+    let v44 = powi(&v43, -1, false);
+    let v45 = mul(a9, &v40);
+    let v46 = add(a10, &v45);
+    let v47 = mul(&v46, &v46);
+    let v48 = mul(&v43, &v43);
+    let v49 = powi(&v48, -1, false);
+    let v50 = mul(a1, &v47);
+    let v51 = mul(&v50, &v49);
+    let v52 = mul(a9, ctx.constant(1));
+    let v53 = mul(&v52, &v44);
+    let v54 = mul(&v53, &v46);
+    let v55 = add(&v51, &v54);
+    let v56 = mul(ctx.constant(1), &v44);
+    let v57 = mul(&v56, &v55);
+    (*(&v57)).clone()
+    };
+    let v58 = conj(&v36);
+    let v59 = mul(ctx.constant(1), &v58);
+    let v60 = add(&v36, &v59);
+    let v61 = mul(ctx.constant(15), &v60);
+    let v62 = if truth(&v61) {
+    (*(ctx.constant(0))).clone()
+    } else {
+    let v63 = conj(&v10);
+    let v64 = mul(ctx.constant(1), &v63);
+    let v65 = add(&v10, &v64);
+    let v66 = mul(ctx.constant(15), &v65);
+    let v67 = if truth(&v66) {
+    (*(ctx.constant(0))).clone()
+    } else {
+    let v68 = conj(&v2);
+    let v69 = mul(ctx.constant(1), &v68);
+    let v70 = add(&v2, &v69);
+    let v71 = mul(ctx.constant(15), &v70);
+    let v72 = if truth(&v71) {
+    (*(ctx.constant(0))).clone()
+    } else {
+    (*(ctx.constant(2))).clone()
+    };
+    (*(&v72)).clone()
+    };
+    (*(&v67)).clone()
+    };
+    let v73 = if truth(&v62) {
     (*(&v36)).clone()
-    };
-    let v37 = if truth(&v0) {
-    (*(ctx.constant(2))).clone()
     } else {
-    let v38 = conj(a1);
-    let v39 = add(a1, &v38);
-    let v40 = mul(ctx.constant(8), &v39);
-    let v41 = helper_10(&v40, a2, a3, ctx);
-    let v42 = mul(a1, ctx.constant(6));
-    let v43 = mul(&v42, &v41);
-    let v44 = add(a2, &v43);
-    let v45 = powi(&v44, -1, false);
-    let v46 = mul(a9, &v41);
-    let v47 = add(a10, &v46);
-    let v48 = mul(&v47, &v47);
-    let v49 = mul(&v44, &v44);
-    let v50 = powi(&v49, -1, false);
-    let v51 = mul(a1, &v48);
-    let v52 = mul(&v51, &v50);
-    let v53 = mul(a9, ctx.constant(1));
-    let v54 = mul(&v53, &v45);
-    let v55 = mul(&v54, &v47);
-    let v56 = add(&v52, &v55);
-    let v57 = mul(ctx.constant(1), &v45);
-    let v58 = mul(&v57, &v56);
-    (*(&v58)).clone()
-    };
-    let v59 = conj(&v37);
-    let v60 = mul(ctx.constant(1), &v59);
-    let v61 = add(&v37, &v60);
-    let v62 = mul(ctx.constant(15), &v61);
-    let v63 = if truth(&v62) {
-    (*(ctx.constant(0))).clone()
-    } else {
-    let v64 = conj(&v11);
-    let v65 = mul(ctx.constant(1), &v64);
-    let v66 = add(&v11, &v65);
-    let v67 = mul(ctx.constant(15), &v66);
-    let v68 = if truth(&v67) {
-    (*(ctx.constant(0))).clone()
-    } else {
-    let v69 = conj(&v2);
-    let v70 = mul(ctx.constant(1), &v69);
-    let v71 = add(&v2, &v70);
-    let v72 = mul(ctx.constant(15), &v71);
-    let v73 = if truth(&v72) {
-    (*(ctx.constant(0))).clone()
-    } else {
-    (*(ctx.constant(2))).clone()
-    };
-    (*(&v73)).clone()
-    };
-    (*(&v68)).clone()
-    };
-    let v74 = if truth(&v63) {
-    (*(&v37)).clone()
-    } else {
-    let v75 = conj(&v2);
-    let v76 = add(&v2, &v75);
-    let v77 = mul(ctx.constant(8), &v76);
-    let v78 = abs(&v77);
-    let v79 = conj(a3);
-    let v80 = mul(ctx.constant(1), &v79);
-    let v81 = add(a3, &v80);
-    let v82 = mul(ctx.constant(15), &v81);
-    let v83 = if truth(&v82) {
-    let v84 = abs(&v82);
-    let v85 = mul(ctx.constant(1), &v84);
-    let v86 = add(&v82, &v85);
-    let v87 = if truth(&v86) {
+    let v74 = conj(&v2);
+    let v75 = add(&v2, &v74);
+    let v76 = mul(ctx.constant(8), &v75);
+    let v77 = abs(&v76);
+    let v78 = conj(a3);
+    let v79 = mul(ctx.constant(1), &v78);
+    let v80 = add(a3, &v79);
+    let v81 = mul(ctx.constant(15), &v80);
+    let v82 = if truth(&v81) {
+    let v83 = abs(&v81);
+    let v84 = mul(ctx.constant(1), &v83);
+    let v85 = add(&v81, &v84);
+    let v86 = if truth(&v85) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    (*(&v87)).clone()
+    (*(&v86)).clone()
     } else {
-    let v88 = conj(a10);
-    let v89 = mul(ctx.constant(1), &v88);
-    let v90 = add(a10, &v89);
-    let v91 = mul(ctx.constant(15), &v90);
-    let v92 = if truth(&v91) {
-    let v93 = abs(&v91);
-    let v94 = mul(ctx.constant(1), &v93);
-    let v95 = add(&v91, &v94);
-    let v96 = if truth(&v95) {
+    let v87 = conj(a10);
+    let v88 = mul(ctx.constant(1), &v87);
+    let v89 = add(a10, &v88);
+    let v90 = mul(ctx.constant(15), &v89);
+    let v91 = if truth(&v90) {
+    let v92 = abs(&v90);
+    let v93 = mul(ctx.constant(1), &v92);
+    let v94 = add(&v90, &v93);
+    let v95 = if truth(&v94) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    (*(&v96)).clone()
+    (*(&v95)).clone()
     } else {
-    let v97 = conj(a2);
-    let v98 = mul(ctx.constant(1), &v97);
-    let v99 = add(a2, &v98);
-    let v100 = mul(ctx.constant(15), &v99);
-    let v101 = if truth(&v100) {
-    let v102 = abs(&v100);
-    let v103 = mul(ctx.constant(1), &v102);
-    let v104 = add(&v100, &v103);
-    let v105 = if truth(&v104) {
+    let v96 = mul(ctx.constant(1), a11);
+    let v97 = add(a2, &v96);
+    let v98 = mul(ctx.constant(15), &v97);
+    let v99 = if truth(&v98) {
+    let v100 = abs(&v98);
+    let v101 = mul(ctx.constant(1), &v100);
+    let v102 = add(&v98, &v101);
+    let v103 = if truth(&v102) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    (*(&v105)).clone()
+    (*(&v103)).clone()
     } else {
-    let v106 = conj(a9);
-    let v107 = mul(ctx.constant(1), &v106);
-    let v108 = add(a9, &v107);
-    let v109 = mul(ctx.constant(15), &v108);
-    let v110 = if truth(&v109) {
-    let v111 = abs(&v109);
-    let v112 = mul(ctx.constant(1), &v111);
-    let v113 = add(&v109, &v112);
-    let v114 = if truth(&v113) {
+    let v104 = conj(a9);
+    let v105 = mul(ctx.constant(1), &v104);
+    let v106 = add(a9, &v105);
+    let v107 = mul(ctx.constant(15), &v106);
+    let v108 = if truth(&v107) {
+    let v109 = abs(&v107);
+    let v110 = mul(ctx.constant(1), &v109);
+    let v111 = add(&v107, &v110);
+    let v112 = if truth(&v111) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    (*(&v114)).clone()
+    (*(&v112)).clone()
     } else {
     (*(ctx.constant(1))).clone()
     };
-    (*(&v110)).clone()
+    (*(&v108)).clone()
     };
-    (*(&v101)).clone()
+    (*(&v99)).clone()
     };
-    (*(&v92)).clone()
+    (*(&v91)).clone()
     };
-    let v115 = conj(a1);
-    let v116 = add(a1, &v115);
-    let v117 = mul(ctx.constant(8), &v116);
-    let v118 = abs(&v117);
-    let v119 = mul(ctx.constant(1), &v118);
-    let v120 = add(&v117, &v119);
-    let v121 = if truth(&v120) {
+    let v113 = conj(a1);
+    let v114 = add(a1, &v113);
+    let v115 = mul(ctx.constant(8), &v114);
+    let v116 = abs(&v115);
+    let v117 = mul(ctx.constant(1), &v116);
+    let v118 = add(&v115, &v117);
+    let v119 = if truth(&v118) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    let v122 = if truth(&v0) {
-    let v123 = helper_10(&v117, a2, a3, ctx);
+    let v120 = if truth(&v0) {
+    let v121 = powi(a1, -1, false);
+    let v122 = mul(a2, ctx.constant(10));
+    let v123 = mul(&v122, &v121);
     (*(&v123)).clone()
     } else {
-    let v124 = helper_11(&v117, a2, a3, ctx);
+    let v124 = helper_11(&v115, a2, a3, ctx);
     (*(&v124)).clone()
     };
-    let v125 = conj(&v122);
-    let v126 = add(&v122, &v125);
+    let v125 = conj(&v120);
+    let v126 = add(&v120, &v125);
     let v127 = mul(ctx.constant(8), &v126);
     let v128 = abs(&v127);
     let v129 = mul(ctx.constant(1), &v128);
@@ -12463,561 +12471,557 @@ fn branch_29<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     } else {
     (*(ctx.constant(0))).clone()
     };
-    let v132 = mul(ctx.constant(9), &v78);
-    let v133 = mul(&v132, &v83);
-    let v134 = mul(&v133, &v121);
+    let v132 = mul(ctx.constant(9), &v77);
+    let v133 = mul(&v132, &v82);
+    let v134 = mul(&v133, &v119);
     let v135 = mul(&v134, &v131);
     (*(&v135)).clone()
     };
-    let v136 = add(a11, ctx.constant(2));
+    let v136 = add(a12, ctx.constant(2));
     let v137 = mul(a5, &v136);
     let v138 = mul(a4, a5);
     let v139 = mul(a6, a5);
-    let v140 = add(a12, ctx.constant(2));
+    let v140 = add(a13, ctx.constant(2));
     let v141 = mul(a5, &v140);
     let v142 = mul(a7, a5);
     let v143 = mul(a8, a5);
     let v144 = helper_15(&v137, &v138, &v139, &v141, &v142, &v143, ctx);
-    let v145 = helper_18(&v2, &v11, &v74, &v137, &v138, &v139, &v141, &v142, &v143, &v144, ctx);
+    let v145 = helper_18(&v2, &v10, &v73, &v137, &v138, &v139, &v141, &v142, &v143, &v144, ctx);
     let v146 = if truth(&v0) {
-    let v147 = conj(a1);
-    let v148 = add(a1, &v147);
-    let v149 = mul(ctx.constant(8), &v148);
-    let v150 = helper_10(&v149, a2, a3, ctx);
-    (*(&v150)).clone()
+    let v147 = powi(a1, -1, false);
+    let v148 = mul(a2, ctx.constant(10));
+    let v149 = mul(&v148, &v147);
+    (*(&v149)).clone()
     } else {
-    let v151 = conj(a1);
-    let v152 = add(a1, &v151);
-    let v153 = mul(ctx.constant(8), &v152);
-    let v154 = helper_11(&v153, a2, a3, ctx);
-    (*(&v154)).clone()
+    let v150 = conj(a1);
+    let v151 = add(a1, &v150);
+    let v152 = mul(ctx.constant(8), &v151);
+    let v153 = helper_11(&v152, a2, a3, ctx);
+    (*(&v153)).clone()
     };
-    let v155 = if truth(&v0) {
-    let v156 = abs(&v138);
-    let v157 = abs(&v139);
-    let v158 = abs(&v142);
-    let v159 = abs(&v143);
-    let v160 = add(ctx.constant(0), &v156);
+    let v154 = if truth(&v0) {
+    let v155 = abs(&v138);
+    let v156 = abs(&v139);
+    let v157 = abs(&v142);
+    let v158 = abs(&v143);
+    let v159 = add(ctx.constant(0), &v155);
+    let v160 = add(&v159, &v156);
     let v161 = add(&v160, &v157);
     let v162 = add(&v161, &v158);
-    let v163 = add(&v162, &v159);
-    let v164 = mul(ctx.constant(81), &v163);
-    (*(&v164)).clone()
+    let v163 = mul(ctx.constant(83), &v162);
+    (*(&v163)).clone()
     } else {
-    let v165 = conj(a1);
-    let v166 = add(a1, &v165);
-    let v167 = mul(ctx.constant(8), &v166);
-    let v168 = helper_11(&v167, a2, a3, ctx);
-    let v169 = mul(a9, &v168);
-    let v170 = add(a10, &v169);
-    let v171 = mul(a1, ctx.constant(6));
-    let v172 = mul(&v171, &v168);
-    let v173 = add(a2, &v172);
-    let v174 = powi(&v173, -1, false);
-    let v175 = mul(ctx.constant(1), &v170);
-    let v176 = mul(&v175, &v174);
+    let v164 = conj(a1);
+    let v165 = add(a1, &v164);
+    let v166 = mul(ctx.constant(8), &v165);
+    let v167 = helper_11(&v166, a2, a3, ctx);
+    let v168 = mul(a9, &v167);
+    let v169 = add(a10, &v168);
+    let v170 = mul(a1, ctx.constant(6));
+    let v171 = mul(&v170, &v167);
+    let v172 = add(a2, &v171);
+    let v173 = powi(&v172, -1, false);
+    let v174 = mul(ctx.constant(1), &v169);
+    let v175 = mul(&v174, &v173);
+    (*(&v175)).clone()
+    };
+    let v176 = if truth(&v0) {
+    (*(ctx.constant(2))).clone()
+    } else {
+    let v177 = conj(a1);
+    let v178 = add(a1, &v177);
+    let v179 = mul(ctx.constant(8), &v178);
+    let v180 = helper_11(&v179, a2, a3, ctx);
+    let v181 = mul(a1, ctx.constant(6));
+    let v182 = mul(&v181, &v180);
+    let v183 = add(a2, &v182);
+    let v184 = powi(&v183, -1, false);
+    let v185 = mul(a9, &v180);
+    let v186 = add(a10, &v185);
+    let v187 = mul(&v186, &v186);
+    let v188 = mul(&v183, &v183);
+    let v189 = powi(&v188, -1, false);
+    let v190 = mul(a1, &v187);
+    let v191 = mul(&v190, &v189);
+    let v192 = mul(a9, ctx.constant(1));
+    let v193 = mul(&v192, &v184);
+    let v194 = mul(&v193, &v186);
+    let v195 = add(&v191, &v194);
+    let v196 = mul(ctx.constant(1), &v184);
+    let v197 = mul(&v196, &v195);
+    (*(&v197)).clone()
+    };
+    let v198 = conj(&v176);
+    let v199 = mul(ctx.constant(1), &v198);
+    let v200 = add(&v176, &v199);
+    let v201 = mul(ctx.constant(15), &v200);
+    let v202 = if truth(&v201) {
+    (*(ctx.constant(0))).clone()
+    } else {
+    let v203 = conj(&v154);
+    let v204 = mul(ctx.constant(1), &v203);
+    let v205 = add(&v154, &v204);
+    let v206 = mul(ctx.constant(15), &v205);
+    let v207 = if truth(&v206) {
+    (*(ctx.constant(0))).clone()
+    } else {
+    let v208 = conj(&v146);
+    let v209 = mul(ctx.constant(1), &v208);
+    let v210 = add(&v146, &v209);
+    let v211 = mul(ctx.constant(15), &v210);
+    let v212 = if truth(&v211) {
+    (*(ctx.constant(0))).clone()
+    } else {
+    (*(ctx.constant(2))).clone()
+    };
+    (*(&v212)).clone()
+    };
+    (*(&v207)).clone()
+    };
+    let v213 = if truth(&v202) {
     (*(&v176)).clone()
-    };
-    let v177 = if truth(&v0) {
-    (*(ctx.constant(2))).clone()
     } else {
-    let v178 = conj(a1);
-    let v179 = add(a1, &v178);
-    let v180 = mul(ctx.constant(8), &v179);
-    let v181 = helper_11(&v180, a2, a3, ctx);
-    let v182 = mul(a1, ctx.constant(6));
-    let v183 = mul(&v182, &v181);
-    let v184 = add(a2, &v183);
-    let v185 = powi(&v184, -1, false);
-    let v186 = mul(a9, &v181);
-    let v187 = add(a10, &v186);
-    let v188 = mul(&v187, &v187);
-    let v189 = mul(&v184, &v184);
-    let v190 = powi(&v189, -1, false);
-    let v191 = mul(a1, &v188);
-    let v192 = mul(&v191, &v190);
-    let v193 = mul(a9, ctx.constant(1));
-    let v194 = mul(&v193, &v185);
-    let v195 = mul(&v194, &v187);
-    let v196 = add(&v192, &v195);
-    let v197 = mul(ctx.constant(1), &v185);
-    let v198 = mul(&v197, &v196);
-    (*(&v198)).clone()
-    };
-    let v199 = conj(&v177);
-    let v200 = mul(ctx.constant(1), &v199);
-    let v201 = add(&v177, &v200);
-    let v202 = mul(ctx.constant(15), &v201);
-    let v203 = if truth(&v202) {
-    (*(ctx.constant(0))).clone()
-    } else {
-    let v204 = conj(&v155);
-    let v205 = mul(ctx.constant(1), &v204);
-    let v206 = add(&v155, &v205);
-    let v207 = mul(ctx.constant(15), &v206);
-    let v208 = if truth(&v207) {
-    (*(ctx.constant(0))).clone()
-    } else {
-    let v209 = conj(&v146);
-    let v210 = mul(ctx.constant(1), &v209);
-    let v211 = add(&v146, &v210);
-    let v212 = mul(ctx.constant(15), &v211);
-    let v213 = if truth(&v212) {
-    (*(ctx.constant(0))).clone()
-    } else {
-    (*(ctx.constant(2))).clone()
-    };
-    (*(&v213)).clone()
-    };
-    (*(&v208)).clone()
-    };
-    let v214 = if truth(&v203) {
-    (*(&v177)).clone()
-    } else {
-    let v215 = conj(&v146);
-    let v216 = add(&v146, &v215);
-    let v217 = mul(ctx.constant(8), &v216);
-    let v218 = abs(&v217);
-    let v219 = conj(a3);
-    let v220 = mul(ctx.constant(1), &v219);
-    let v221 = add(a3, &v220);
-    let v222 = mul(ctx.constant(15), &v221);
-    let v223 = if truth(&v222) {
-    let v224 = abs(&v222);
-    let v225 = mul(ctx.constant(1), &v224);
-    let v226 = add(&v222, &v225);
-    let v227 = if truth(&v226) {
+    let v214 = conj(&v146);
+    let v215 = add(&v146, &v214);
+    let v216 = mul(ctx.constant(8), &v215);
+    let v217 = abs(&v216);
+    let v218 = conj(a3);
+    let v219 = mul(ctx.constant(1), &v218);
+    let v220 = add(a3, &v219);
+    let v221 = mul(ctx.constant(15), &v220);
+    let v222 = if truth(&v221) {
+    let v223 = abs(&v221);
+    let v224 = mul(ctx.constant(1), &v223);
+    let v225 = add(&v221, &v224);
+    let v226 = if truth(&v225) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    (*(&v227)).clone()
+    (*(&v226)).clone()
     } else {
-    let v228 = conj(a10);
-    let v229 = mul(ctx.constant(1), &v228);
-    let v230 = add(a10, &v229);
-    let v231 = mul(ctx.constant(15), &v230);
-    let v232 = if truth(&v231) {
-    let v233 = abs(&v231);
-    let v234 = mul(ctx.constant(1), &v233);
-    let v235 = add(&v231, &v234);
-    let v236 = if truth(&v235) {
+    let v227 = conj(a10);
+    let v228 = mul(ctx.constant(1), &v227);
+    let v229 = add(a10, &v228);
+    let v230 = mul(ctx.constant(15), &v229);
+    let v231 = if truth(&v230) {
+    let v232 = abs(&v230);
+    let v233 = mul(ctx.constant(1), &v232);
+    let v234 = add(&v230, &v233);
+    let v235 = if truth(&v234) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    (*(&v236)).clone()
+    (*(&v235)).clone()
     } else {
-    let v237 = conj(a2);
-    let v238 = mul(ctx.constant(1), &v237);
-    let v239 = add(a2, &v238);
-    let v240 = mul(ctx.constant(15), &v239);
-    let v241 = if truth(&v240) {
-    let v242 = abs(&v240);
-    let v243 = mul(ctx.constant(1), &v242);
-    let v244 = add(&v240, &v243);
-    let v245 = if truth(&v244) {
+    let v236 = mul(ctx.constant(1), a11);
+    let v237 = add(a2, &v236);
+    let v238 = mul(ctx.constant(15), &v237);
+    let v239 = if truth(&v238) {
+    let v240 = abs(&v238);
+    let v241 = mul(ctx.constant(1), &v240);
+    let v242 = add(&v238, &v241);
+    let v243 = if truth(&v242) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    (*(&v245)).clone()
+    (*(&v243)).clone()
     } else {
-    let v246 = conj(a9);
-    let v247 = mul(ctx.constant(1), &v246);
-    let v248 = add(a9, &v247);
-    let v249 = mul(ctx.constant(15), &v248);
-    let v250 = if truth(&v249) {
-    let v251 = abs(&v249);
-    let v252 = mul(ctx.constant(1), &v251);
-    let v253 = add(&v249, &v252);
-    let v254 = if truth(&v253) {
+    let v244 = conj(a9);
+    let v245 = mul(ctx.constant(1), &v244);
+    let v246 = add(a9, &v245);
+    let v247 = mul(ctx.constant(15), &v246);
+    let v248 = if truth(&v247) {
+    let v249 = abs(&v247);
+    let v250 = mul(ctx.constant(1), &v249);
+    let v251 = add(&v247, &v250);
+    let v252 = if truth(&v251) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    (*(&v254)).clone()
+    (*(&v252)).clone()
     } else {
     (*(ctx.constant(1))).clone()
     };
-    (*(&v250)).clone()
+    (*(&v248)).clone()
     };
-    (*(&v241)).clone()
+    (*(&v239)).clone()
     };
-    (*(&v232)).clone()
+    (*(&v231)).clone()
     };
-    let v255 = conj(a1);
-    let v256 = add(a1, &v255);
-    let v257 = mul(ctx.constant(8), &v256);
-    let v258 = abs(&v257);
-    let v259 = mul(ctx.constant(1), &v258);
-    let v260 = add(&v257, &v259);
-    let v261 = if truth(&v260) {
-    (*(ctx.constant(1))).clone()
-    } else {
-    (*(ctx.constant(0))).clone()
-    };
-    let v262 = conj(&v2);
-    let v263 = add(&v2, &v262);
-    let v264 = mul(ctx.constant(8), &v263);
-    let v265 = abs(&v264);
-    let v266 = mul(ctx.constant(1), &v265);
-    let v267 = add(&v264, &v266);
-    let v268 = if truth(&v267) {
+    let v253 = conj(a1);
+    let v254 = add(a1, &v253);
+    let v255 = mul(ctx.constant(8), &v254);
+    let v256 = abs(&v255);
+    let v257 = mul(ctx.constant(1), &v256);
+    let v258 = add(&v255, &v257);
+    let v259 = if truth(&v258) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    let v269 = mul(ctx.constant(9), &v218);
-    let v270 = mul(&v269, &v223);
-    let v271 = mul(&v270, &v261);
-    let v272 = mul(&v271, &v268);
-    (*(&v272)).clone()
-    };
-    let v273 = helper_18(&v146, &v155, &v214, &v137, &v138, &v139, &v141, &v142, &v143, &v144, ctx);
-    let v274 = conj(a1);
-    let v275 = add(a1, &v274);
-    let v276 = mul(ctx.constant(8), &v275);
-    let v277 = abs(&v276);
-    let v278 = mul(ctx.constant(1), &v277);
-    let v279 = add(&v276, &v278);
-    let v280 = if truth(&v279) {
+    let v260 = conj(&v2);
+    let v261 = add(&v2, &v260);
+    let v262 = mul(ctx.constant(8), &v261);
+    let v263 = abs(&v262);
+    let v264 = mul(ctx.constant(1), &v263);
+    let v265 = add(&v262, &v264);
+    let v266 = if truth(&v265) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
+    let v267 = mul(ctx.constant(9), &v217);
+    let v268 = mul(&v267, &v222);
+    let v269 = mul(&v268, &v259);
+    let v270 = mul(&v269, &v266);
+    (*(&v270)).clone()
+    };
+    let v271 = helper_18(&v146, &v154, &v213, &v137, &v138, &v139, &v141, &v142, &v143, &v144, ctx);
+    let v272 = conj(a1);
+    let v273 = add(a1, &v272);
+    let v274 = mul(ctx.constant(8), &v273);
+    let v275 = abs(&v274);
+    let v276 = mul(ctx.constant(1), &v275);
+    let v277 = add(&v274, &v276);
+    let v278 = if truth(&v277) {
+    (*(ctx.constant(1))).clone()
+    } else {
+    (*(ctx.constant(0))).clone()
+    };
+    let v279 = mul(ctx.constant(1), &v278);
+    let v280 = add(ctx.constant(0), &v279);
     let v281 = mul(ctx.constant(1), &v280);
     let v282 = add(ctx.constant(0), &v281);
-    let v283 = mul(ctx.constant(1), &v282);
-    let v284 = add(ctx.constant(0), &v283);
-    let v285 = mul(a1, &v284);
-    let v286 = mul(ctx.constant(1), &v274);
-    let v287 = add(a1, &v286);
-    let v288 = mul(ctx.constant(15), &v287);
-    let v289 = if truth(&v288) {
-    let v290 = abs(&v288);
-    let v291 = mul(ctx.constant(1), &v290);
-    let v292 = add(&v288, &v291);
-    let v293 = if truth(&v292) {
+    let v283 = mul(a1, &v282);
+    let v284 = mul(ctx.constant(1), &v272);
+    let v285 = add(a1, &v284);
+    let v286 = mul(ctx.constant(15), &v285);
+    let v287 = if truth(&v286) {
+    let v288 = abs(&v286);
+    let v289 = mul(ctx.constant(1), &v288);
+    let v290 = add(&v286, &v289);
+    let v291 = if truth(&v290) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    (*(&v293)).clone()
+    (*(&v291)).clone()
     } else {
-    let v294 = conj(a3);
-    let v295 = mul(ctx.constant(1), &v294);
-    let v296 = add(a3, &v295);
-    let v297 = mul(ctx.constant(15), &v296);
-    let v298 = if truth(&v297) {
-    let v299 = abs(&v297);
-    let v300 = mul(ctx.constant(1), &v299);
-    let v301 = add(&v297, &v300);
-    let v302 = if truth(&v301) {
+    let v292 = conj(a3);
+    let v293 = mul(ctx.constant(1), &v292);
+    let v294 = add(a3, &v293);
+    let v295 = mul(ctx.constant(15), &v294);
+    let v296 = if truth(&v295) {
+    let v297 = abs(&v295);
+    let v298 = mul(ctx.constant(1), &v297);
+    let v299 = add(&v295, &v298);
+    let v300 = if truth(&v299) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    (*(&v302)).clone()
+    (*(&v300)).clone()
     } else {
-    let v303 = conj(a10);
-    let v304 = mul(ctx.constant(1), &v303);
-    let v305 = add(a10, &v304);
-    let v306 = mul(ctx.constant(15), &v305);
-    let v307 = if truth(&v306) {
-    let v308 = abs(&v306);
-    let v309 = mul(ctx.constant(1), &v308);
-    let v310 = add(&v306, &v309);
-    let v311 = if truth(&v310) {
+    let v301 = conj(a10);
+    let v302 = mul(ctx.constant(1), &v301);
+    let v303 = add(a10, &v302);
+    let v304 = mul(ctx.constant(15), &v303);
+    let v305 = if truth(&v304) {
+    let v306 = abs(&v304);
+    let v307 = mul(ctx.constant(1), &v306);
+    let v308 = add(&v304, &v307);
+    let v309 = if truth(&v308) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    (*(&v311)).clone()
+    (*(&v309)).clone()
     } else {
-    let v312 = conj(a2);
-    let v313 = mul(ctx.constant(1), &v312);
-    let v314 = add(a2, &v313);
-    let v315 = mul(ctx.constant(15), &v314);
-    let v316 = if truth(&v315) {
-    let v317 = abs(&v315);
-    let v318 = mul(ctx.constant(1), &v317);
-    let v319 = add(&v315, &v318);
-    let v320 = if truth(&v319) {
+    let v310 = mul(ctx.constant(1), a11);
+    let v311 = add(a2, &v310);
+    let v312 = mul(ctx.constant(15), &v311);
+    let v313 = if truth(&v312) {
+    let v314 = abs(&v312);
+    let v315 = mul(ctx.constant(1), &v314);
+    let v316 = add(&v312, &v315);
+    let v317 = if truth(&v316) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    (*(&v320)).clone()
+    (*(&v317)).clone()
     } else {
-    let v321 = conj(a9);
-    let v322 = mul(ctx.constant(1), &v321);
-    let v323 = add(a9, &v322);
-    let v324 = mul(ctx.constant(15), &v323);
-    let v325 = if truth(&v324) {
-    let v326 = abs(&v324);
-    let v327 = mul(ctx.constant(1), &v326);
-    let v328 = add(&v324, &v327);
-    let v329 = if truth(&v328) {
+    let v318 = conj(a9);
+    let v319 = mul(ctx.constant(1), &v318);
+    let v320 = add(a9, &v319);
+    let v321 = mul(ctx.constant(15), &v320);
+    let v322 = if truth(&v321) {
+    let v323 = abs(&v321);
+    let v324 = mul(ctx.constant(1), &v323);
+    let v325 = add(&v321, &v324);
+    let v326 = if truth(&v325) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    (*(&v329)).clone()
+    (*(&v326)).clone()
     } else {
     (*(ctx.constant(1))).clone()
     };
-    (*(&v325)).clone()
+    (*(&v322)).clone()
     };
-    (*(&v316)).clone()
+    (*(&v313)).clone()
     };
-    (*(&v307)).clone()
+    (*(&v305)).clone()
     };
-    (*(&v298)).clone()
+    (*(&v296)).clone()
     };
-    let v330 = mul(ctx.constant(8), &v282);
-    let v331 = mul(&v330, &v289);
-    let v332 = helper_3(&v285, &v331, &v330, ctx);
-    let v333 = mul(ctx.constant(1), &v2);
-    let v334 = conj(&v333);
-    let v335 = mul(ctx.constant(1), &v334);
-    let v336 = add(&v333, &v335);
-    let v337 = mul(ctx.constant(15), &v336);
-    let v338 = if truth(&v337) {
-    let v339 = abs(&v337);
-    let v340 = mul(ctx.constant(1), &v339);
-    let v341 = add(&v337, &v340);
-    let v342 = if truth(&v341) {
-    (*(ctx.constant(1))).clone()
-    } else {
-    (*(ctx.constant(0))).clone()
-    };
-    (*(&v342)).clone()
-    } else {
-    let v343 = conj(&v2);
-    let v344 = mul(ctx.constant(1), &v343);
-    let v345 = add(&v2, &v344);
-    let v346 = mul(ctx.constant(15), &v345);
-    let v347 = if truth(&v346) {
-    let v348 = abs(&v346);
-    let v349 = mul(ctx.constant(1), &v348);
-    let v350 = add(&v346, &v349);
-    let v351 = if truth(&v350) {
+    let v327 = mul(ctx.constant(8), &v280);
+    let v328 = mul(&v327, &v287);
+    let v329 = helper_3(&v283, &v328, &v327, ctx);
+    let v330 = mul(ctx.constant(1), &v2);
+    let v331 = conj(&v330);
+    let v332 = mul(ctx.constant(1), &v331);
+    let v333 = add(&v330, &v332);
+    let v334 = mul(ctx.constant(15), &v333);
+    let v335 = if truth(&v334) {
+    let v336 = abs(&v334);
+    let v337 = mul(ctx.constant(1), &v336);
+    let v338 = add(&v334, &v337);
+    let v339 = if truth(&v338) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    (*(&v351)).clone()
+    (*(&v339)).clone()
     } else {
-    let v352 = conj(&v11);
-    let v353 = mul(ctx.constant(1), &v352);
-    let v354 = add(&v11, &v353);
-    let v355 = mul(ctx.constant(15), &v354);
-    let v356 = if truth(&v355) {
-    let v357 = abs(&v355);
-    let v358 = mul(ctx.constant(1), &v357);
-    let v359 = add(&v355, &v358);
-    let v360 = if truth(&v359) {
+    let v340 = conj(&v2);
+    let v341 = mul(ctx.constant(1), &v340);
+    let v342 = add(&v2, &v341);
+    let v343 = mul(ctx.constant(15), &v342);
+    let v344 = if truth(&v343) {
+    let v345 = abs(&v343);
+    let v346 = mul(ctx.constant(1), &v345);
+    let v347 = add(&v343, &v346);
+    let v348 = if truth(&v347) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    (*(&v360)).clone()
+    (*(&v348)).clone()
     } else {
-    let v361 = conj(&v74);
-    let v362 = mul(ctx.constant(1), &v361);
-    let v363 = add(&v74, &v362);
-    let v364 = mul(ctx.constant(15), &v363);
-    let v365 = if truth(&v364) {
-    let v366 = abs(&v364);
-    let v367 = mul(ctx.constant(1), &v366);
-    let v368 = add(&v364, &v367);
-    let v369 = if truth(&v368) {
+    let v349 = conj(&v10);
+    let v350 = mul(ctx.constant(1), &v349);
+    let v351 = add(&v10, &v350);
+    let v352 = mul(ctx.constant(15), &v351);
+    let v353 = if truth(&v352) {
+    let v354 = abs(&v352);
+    let v355 = mul(ctx.constant(1), &v354);
+    let v356 = add(&v352, &v355);
+    let v357 = if truth(&v356) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    (*(&v369)).clone()
+    (*(&v357)).clone()
     } else {
-    (*(ctx.constant(0))).clone()
-    };
-    (*(&v365)).clone()
-    };
-    (*(&v356)).clone()
-    };
-    let v370 = mul(ctx.constant(1), &v347);
-    (*(&v370)).clone()
-    };
-    let v371 = mul(ctx.constant(1), &v146);
-    let v372 = conj(&v371);
-    let v373 = mul(ctx.constant(1), &v372);
-    let v374 = add(&v371, &v373);
-    let v375 = mul(ctx.constant(15), &v374);
-    let v376 = if truth(&v375) {
-    let v377 = abs(&v375);
-    let v378 = mul(ctx.constant(1), &v377);
-    let v379 = add(&v375, &v378);
-    let v380 = if truth(&v379) {
+    let v358 = conj(&v73);
+    let v359 = mul(ctx.constant(1), &v358);
+    let v360 = add(&v73, &v359);
+    let v361 = mul(ctx.constant(15), &v360);
+    let v362 = if truth(&v361) {
+    let v363 = abs(&v361);
+    let v364 = mul(ctx.constant(1), &v363);
+    let v365 = add(&v361, &v364);
+    let v366 = if truth(&v365) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    (*(&v380)).clone()
+    (*(&v366)).clone()
     } else {
-    let v381 = conj(&v146);
-    let v382 = mul(ctx.constant(1), &v381);
-    let v383 = add(&v146, &v382);
-    let v384 = mul(ctx.constant(15), &v383);
-    let v385 = if truth(&v384) {
-    let v386 = abs(&v384);
-    let v387 = mul(ctx.constant(1), &v386);
-    let v388 = add(&v384, &v387);
-    let v389 = if truth(&v388) {
+    (*(ctx.constant(0))).clone()
+    };
+    (*(&v362)).clone()
+    };
+    (*(&v353)).clone()
+    };
+    let v367 = mul(ctx.constant(1), &v344);
+    (*(&v367)).clone()
+    };
+    let v368 = mul(ctx.constant(1), &v146);
+    let v369 = conj(&v368);
+    let v370 = mul(ctx.constant(1), &v369);
+    let v371 = add(&v368, &v370);
+    let v372 = mul(ctx.constant(15), &v371);
+    let v373 = if truth(&v372) {
+    let v374 = abs(&v372);
+    let v375 = mul(ctx.constant(1), &v374);
+    let v376 = add(&v372, &v375);
+    let v377 = if truth(&v376) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    (*(&v389)).clone()
+    (*(&v377)).clone()
     } else {
-    let v390 = conj(&v155);
-    let v391 = mul(ctx.constant(1), &v390);
-    let v392 = add(&v155, &v391);
-    let v393 = mul(ctx.constant(15), &v392);
-    let v394 = if truth(&v393) {
-    let v395 = abs(&v393);
-    let v396 = mul(ctx.constant(1), &v395);
-    let v397 = add(&v393, &v396);
-    let v398 = if truth(&v397) {
+    let v378 = conj(&v146);
+    let v379 = mul(ctx.constant(1), &v378);
+    let v380 = add(&v146, &v379);
+    let v381 = mul(ctx.constant(15), &v380);
+    let v382 = if truth(&v381) {
+    let v383 = abs(&v381);
+    let v384 = mul(ctx.constant(1), &v383);
+    let v385 = add(&v381, &v384);
+    let v386 = if truth(&v385) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    (*(&v398)).clone()
+    (*(&v386)).clone()
     } else {
-    let v399 = conj(&v214);
-    let v400 = mul(ctx.constant(1), &v399);
-    let v401 = add(&v214, &v400);
-    let v402 = mul(ctx.constant(15), &v401);
-    let v403 = if truth(&v402) {
-    let v404 = abs(&v402);
-    let v405 = mul(ctx.constant(1), &v404);
-    let v406 = add(&v402, &v405);
-    let v407 = if truth(&v406) {
+    let v387 = conj(&v154);
+    let v388 = mul(ctx.constant(1), &v387);
+    let v389 = add(&v154, &v388);
+    let v390 = mul(ctx.constant(15), &v389);
+    let v391 = if truth(&v390) {
+    let v392 = abs(&v390);
+    let v393 = mul(ctx.constant(1), &v392);
+    let v394 = add(&v390, &v393);
+    let v395 = if truth(&v394) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    (*(&v407)).clone()
+    (*(&v395)).clone()
     } else {
-    (*(ctx.constant(0))).clone()
-    };
-    (*(&v403)).clone()
-    };
-    (*(&v394)).clone()
-    };
-    let v408 = mul(ctx.constant(1), &v385);
-    (*(&v408)).clone()
-    };
-    let v409 = mul(&v338, &v376);
-    let v410 = add(ctx.constant(0), &v409);
-    let v411 = conj(ctx.constant(2));
-    let v412 = mul(ctx.constant(1), &v411);
-    let v413 = add(ctx.constant(2), &v412);
-    let v414 = mul(ctx.constant(15), &v413);
-    let v415 = if truth(&v414) {
-    let v416 = abs(&v414);
-    let v417 = mul(ctx.constant(1), &v416);
-    let v418 = add(&v414, &v417);
-    let v419 = if truth(&v418) {
+    let v396 = conj(&v213);
+    let v397 = mul(ctx.constant(1), &v396);
+    let v398 = add(&v213, &v397);
+    let v399 = mul(ctx.constant(15), &v398);
+    let v400 = if truth(&v399) {
+    let v401 = abs(&v399);
+    let v402 = mul(ctx.constant(1), &v401);
+    let v403 = add(&v399, &v402);
+    let v404 = if truth(&v403) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    (*(&v419)).clone()
+    (*(&v404)).clone()
     } else {
-    let v420 = conj(a3);
-    let v421 = mul(ctx.constant(1), &v420);
-    let v422 = add(a3, &v421);
-    let v423 = mul(ctx.constant(15), &v422);
-    let v424 = if truth(&v423) {
-    let v425 = abs(&v423);
-    let v426 = mul(ctx.constant(1), &v425);
-    let v427 = add(&v423, &v426);
-    let v428 = if truth(&v427) {
+    (*(ctx.constant(0))).clone()
+    };
+    (*(&v400)).clone()
+    };
+    (*(&v391)).clone()
+    };
+    let v405 = mul(ctx.constant(1), &v382);
+    (*(&v405)).clone()
+    };
+    let v406 = mul(&v335, &v373);
+    let v407 = add(ctx.constant(0), &v406);
+    let v408 = conj(ctx.constant(2));
+    let v409 = mul(ctx.constant(1), &v408);
+    let v410 = add(ctx.constant(2), &v409);
+    let v411 = mul(ctx.constant(15), &v410);
+    let v412 = if truth(&v411) {
+    let v413 = abs(&v411);
+    let v414 = mul(ctx.constant(1), &v413);
+    let v415 = add(&v411, &v414);
+    let v416 = if truth(&v415) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    (*(&v428)).clone()
+    (*(&v416)).clone()
     } else {
-    let v429 = conj(a10);
-    let v430 = mul(ctx.constant(1), &v429);
-    let v431 = add(a10, &v430);
-    let v432 = mul(ctx.constant(15), &v431);
-    let v433 = if truth(&v432) {
-    let v434 = abs(&v432);
-    let v435 = mul(ctx.constant(1), &v434);
-    let v436 = add(&v432, &v435);
-    let v437 = if truth(&v436) {
+    let v417 = conj(a3);
+    let v418 = mul(ctx.constant(1), &v417);
+    let v419 = add(a3, &v418);
+    let v420 = mul(ctx.constant(15), &v419);
+    let v421 = if truth(&v420) {
+    let v422 = abs(&v420);
+    let v423 = mul(ctx.constant(1), &v422);
+    let v424 = add(&v420, &v423);
+    let v425 = if truth(&v424) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    (*(&v437)).clone()
+    (*(&v425)).clone()
     } else {
-    let v438 = conj(a2);
-    let v439 = mul(ctx.constant(1), &v438);
-    let v440 = add(a2, &v439);
-    let v441 = mul(ctx.constant(15), &v440);
+    let v426 = conj(a10);
+    let v427 = mul(ctx.constant(1), &v426);
+    let v428 = add(a10, &v427);
+    let v429 = mul(ctx.constant(15), &v428);
+    let v430 = if truth(&v429) {
+    let v431 = abs(&v429);
+    let v432 = mul(ctx.constant(1), &v431);
+    let v433 = add(&v429, &v432);
+    let v434 = if truth(&v433) {
+    (*(ctx.constant(1))).clone()
+    } else {
+    (*(ctx.constant(0))).clone()
+    };
+    (*(&v434)).clone()
+    } else {
+    let v435 = mul(ctx.constant(1), a11);
+    let v436 = add(a2, &v435);
+    let v437 = mul(ctx.constant(15), &v436);
+    let v438 = if truth(&v437) {
+    let v439 = abs(&v437);
+    let v440 = mul(ctx.constant(1), &v439);
+    let v441 = add(&v437, &v440);
     let v442 = if truth(&v441) {
-    let v443 = abs(&v441);
-    let v444 = mul(ctx.constant(1), &v443);
-    let v445 = add(&v441, &v444);
-    let v446 = if truth(&v445) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
-    };
-    (*(&v446)).clone()
-    } else {
-    let v447 = conj(a9);
-    let v448 = mul(ctx.constant(1), &v447);
-    let v449 = add(a9, &v448);
-    let v450 = mul(ctx.constant(15), &v449);
-    let v451 = if truth(&v450) {
-    let v452 = abs(&v450);
-    let v453 = mul(ctx.constant(1), &v452);
-    let v454 = add(&v450, &v453);
-    let v455 = if truth(&v454) {
-    (*(ctx.constant(1))).clone()
-    } else {
-    (*(ctx.constant(0))).clone()
-    };
-    (*(&v455)).clone()
-    } else {
-    (*(ctx.constant(1))).clone()
-    };
-    (*(&v451)).clone()
     };
     (*(&v442)).clone()
+    } else {
+    let v443 = conj(a9);
+    let v444 = mul(ctx.constant(1), &v443);
+    let v445 = add(a9, &v444);
+    let v446 = mul(ctx.constant(15), &v445);
+    let v447 = if truth(&v446) {
+    let v448 = abs(&v446);
+    let v449 = mul(ctx.constant(1), &v448);
+    let v450 = add(&v446, &v449);
+    let v451 = if truth(&v450) {
+    (*(ctx.constant(1))).clone()
+    } else {
+    (*(ctx.constant(0))).clone()
     };
-    (*(&v433)).clone()
+    (*(&v451)).clone()
+    } else {
+    (*(ctx.constant(1))).clone()
     };
-    let v456 = mul(&v280, &v424);
-    (*(&v456)).clone()
+    (*(&v447)).clone()
     };
-    let v457 = mul(ctx.constant(1), &v338);
-    let v458 = mul(&v457, &v415);
-    let v459 = add(ctx.constant(0), &v458);
-    let v460 = mul(ctx.constant(16), ctx.constant(5));
-    let v461 = mul(&v460, &v410);
-    let v462 = mul(&v461, &v415);
-    let v463 = mul(&v462, &v459);
-    let v464 = add(&v332, &v463);
-    let v465 = mul(&v464, &v144);
-    let v466 = add(&v145, &v273);
-    let v467 = add(&v466, &v465);
-    (*(&v467)).clone()
+    (*(&v438)).clone()
+    };
+    (*(&v430)).clone()
+    };
+    let v452 = mul(&v278, &v421);
+    (*(&v452)).clone()
+    };
+    let v453 = mul(ctx.constant(1), &v335);
+    let v454 = mul(&v453, &v412);
+    let v455 = add(ctx.constant(0), &v454);
+    let v456 = mul(ctx.constant(16), ctx.constant(5));
+    let v457 = mul(&v456, &v407);
+    let v458 = mul(&v457, &v412);
+    let v459 = mul(&v458, &v455);
+    let v460 = add(&v329, &v459);
+    let v461 = mul(&v460, &v144);
+    let v462 = add(&v145, &v271);
+    let v463 = add(&v462, &v461);
+    (*(&v463)).clone()
 }
 
 fn branch_30<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<T>, a5: &C<T>, a6: &C<T>, a7: &C<T>, a8: &C<T>, a9: &C<T>, a10: &C<T>, ctx: &Context<T>) -> C<T> {
@@ -13439,153 +13443,167 @@ fn branch_30<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
 fn branch_31<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<T>, a5: &C<T>, a6: &C<T>, a7: &C<T>, a8: &C<T>, a9: &C<T>, a10: &C<T>, ctx: &Context<T>) -> C<T> {
     let v0 = powi(ctx.constant(0), -1, false);
     let v1 = if truth(a0) {
-    let v2 = mul(a0, a1);
-    let v3 = mul(&v2, ctx.constant(7));
-    let v4 = mul(a2, a2);
+    let v2 = conj(a1);
+    let v3 = mul(a1, &v2);
+    let v4 = conj(&v3);
     let v5 = add(&v3, &v4);
-    let v6 = if truth(&v5) {
-    (*(ctx.constant(2))).clone()
-    } else {
-    branch_28(a1, a2, a0, a3, &v0, a4, ctx)
-    };
-    let v7 = if truth(&v6) {
-    let v8 = add(a3, ctx.constant(2));
-    let v9 = mul(&v0, &v8);
-    let v10 = add(a4, ctx.constant(2));
-    let v11 = mul(&v0, &v10);
-    let v12 = powi(a0, -1, false);
-    let v13 = mul(a2, ctx.constant(10));
-    let v14 = mul(&v13, &v12);
-    let v15 = helper_17(&v9, &v11, &v14, a0, ctx);
-    (*(&v15)).clone()
-    } else {
-    branch_29(&v5, a0, a2, a1, a5, &v0, a6, a7, a8, a9, a10, a3, a4, ctx)
-    };
-    (*(&v7)).clone()
-    } else {
-    let v16 = if truth(a2) {
-    branch_30(a2, a1, a9, a10, a3, &v0, a5, a6, a4, a7, a8, ctx)
-    } else {
-    let v17 = if truth(a1) {
-    let v18 = conj(a1);
-    let v19 = add(a1, &v18);
-    let v20 = mul(ctx.constant(8), &v19);
-    let v21 = abs(&v20);
-    let v22 = mul(ctx.constant(1), &v21);
-    let v23 = add(&v20, &v22);
-    let v24 = if truth(&v23) {
-    (*(ctx.constant(1))).clone()
-    } else {
-    (*(ctx.constant(0))).clone()
-    };
-    let v25 = mul(ctx.constant(1), &v24);
-    let v26 = add(ctx.constant(0), &v25);
-    let v27 = mul(ctx.constant(1), &v26);
-    let v28 = add(ctx.constant(0), &v27);
-    let v29 = mul(a1, &v28);
-    let v30 = mul(ctx.constant(1), &v18);
-    let v31 = add(a1, &v30);
-    let v32 = mul(ctx.constant(15), &v31);
-    let v33 = if truth(&v32) {
-    let v34 = abs(&v32);
-    let v35 = mul(ctx.constant(1), &v34);
-    let v36 = add(&v32, &v35);
-    let v37 = if truth(&v36) {
-    (*(ctx.constant(1))).clone()
-    } else {
-    (*(ctx.constant(0))).clone()
-    };
-    (*(&v37)).clone()
-    } else {
-    let v38 = if truth(&v32) {
-    let v39 = abs(&v32);
-    let v40 = mul(ctx.constant(1), &v39);
-    let v41 = add(&v32, &v40);
-    let v42 = if truth(&v41) {
-    (*(ctx.constant(1))).clone()
-    } else {
-    (*(ctx.constant(0))).clone()
-    };
-    (*(&v42)).clone()
-    } else {
-    let v43 = conj(a10);
-    let v44 = mul(ctx.constant(1), &v43);
-    let v45 = add(a10, &v44);
-    let v46 = mul(ctx.constant(15), &v45);
-    let v47 = if truth(&v46) {
-    let v48 = abs(&v46);
-    let v49 = mul(ctx.constant(1), &v48);
-    let v50 = add(&v46, &v49);
-    let v51 = if truth(&v50) {
-    (*(ctx.constant(1))).clone()
-    } else {
-    (*(ctx.constant(0))).clone()
-    };
-    (*(&v51)).clone()
-    } else {
-    let v52 = conj(a2);
-    let v53 = mul(ctx.constant(1), &v52);
-    let v54 = add(a2, &v53);
-    let v55 = mul(ctx.constant(15), &v54);
-    let v56 = if truth(&v55) {
-    let v57 = abs(&v55);
-    let v58 = mul(ctx.constant(1), &v57);
-    let v59 = add(&v55, &v58);
-    let v60 = if truth(&v59) {
-    (*(ctx.constant(1))).clone()
-    } else {
-    (*(ctx.constant(0))).clone()
-    };
-    (*(&v60)).clone()
-    } else {
-    let v61 = conj(a9);
-    let v62 = mul(ctx.constant(1), &v61);
-    let v63 = add(a9, &v62);
-    let v64 = mul(ctx.constant(15), &v63);
-    let v65 = if truth(&v64) {
-    let v66 = abs(&v64);
-    let v67 = mul(ctx.constant(1), &v66);
-    let v68 = add(&v64, &v67);
-    let v69 = if truth(&v68) {
-    (*(ctx.constant(1))).clone()
-    } else {
-    (*(ctx.constant(0))).clone()
-    };
-    (*(&v69)).clone()
-    } else {
-    (*(ctx.constant(1))).clone()
-    };
-    (*(&v65)).clone()
-    };
-    (*(&v56)).clone()
-    };
-    (*(&v47)).clone()
-    };
-    (*(&v38)).clone()
-    };
-    let v70 = mul(ctx.constant(8), &v26);
-    let v71 = mul(&v70, &v33);
-    let v72 = helper_3(&v29, &v71, &v70, ctx);
-    let v73 = add(a3, ctx.constant(2));
-    let v74 = mul(&v0, &v73);
-    let v75 = mul(a5, &v0);
-    let v76 = mul(a6, &v0);
-    let v77 = add(a4, ctx.constant(2));
-    let v78 = mul(&v0, &v77);
-    let v79 = mul(a7, &v0);
-    let v80 = mul(a8, &v0);
-    let v81 = helper_15(&v74, &v75, &v76, &v78, &v79, &v80, ctx);
-    let v82 = mul(&v72, &v81);
-    (*(&v82)).clone()
+    let v6 = mul(ctx.constant(8), &v5);
+    let v7 = mul(ctx.constant(78), &v6);
+    let v8 = mul(a0, a2);
+    let v9 = mul(&v8, ctx.constant(7));
+    let v10 = mul(ctx.constant(79), &v6);
+    let v11 = mul(a1, a1);
+    let v12 = add(&v9, &v10);
+    let v13 = add(&v12, &v11);
+    let v14 = if truth(&v13) {
+    (*(&v13)).clone()
     } else {
     (*(ctx.constant(2))).clone()
+    };
+    let v15 = add(&v7, &v14);
+    let v16 = if truth(&v15) {
+    (*(ctx.constant(2))).clone()
+    } else {
+    branch_28(a2, &v2, a1, a0, a3, &v0, a4, ctx)
+    };
+    let v17 = if truth(&v16) {
+    let v18 = add(a3, ctx.constant(2));
+    let v19 = mul(&v0, &v18);
+    let v20 = add(a4, ctx.constant(2));
+    let v21 = mul(&v0, &v20);
+    let v22 = powi(a0, -1, false);
+    let v23 = mul(a1, ctx.constant(10));
+    let v24 = mul(&v23, &v22);
+    let v25 = helper_17(&v19, &v21, &v24, a0, ctx);
+    (*(&v25)).clone()
+    } else {
+    branch_29(&v15, a0, a1, a2, a5, &v0, a6, a7, a8, a9, a10, &v2, a3, a4, ctx)
     };
     (*(&v17)).clone()
+    } else {
+    let v26 = if truth(a1) {
+    branch_30(a1, a2, a9, a10, a3, &v0, a5, a6, a4, a7, a8, ctx)
+    } else {
+    let v27 = if truth(a2) {
+    let v28 = conj(a2);
+    let v29 = add(a2, &v28);
+    let v30 = mul(ctx.constant(8), &v29);
+    let v31 = abs(&v30);
+    let v32 = mul(ctx.constant(1), &v31);
+    let v33 = add(&v30, &v32);
+    let v34 = if truth(&v33) {
+    (*(ctx.constant(1))).clone()
+    } else {
+    (*(ctx.constant(0))).clone()
     };
-    (*(&v16)).clone()
+    let v35 = mul(ctx.constant(1), &v34);
+    let v36 = add(ctx.constant(0), &v35);
+    let v37 = mul(ctx.constant(1), &v36);
+    let v38 = add(ctx.constant(0), &v37);
+    let v39 = mul(a2, &v38);
+    let v40 = mul(ctx.constant(1), &v28);
+    let v41 = add(a2, &v40);
+    let v42 = mul(ctx.constant(15), &v41);
+    let v43 = if truth(&v42) {
+    let v44 = abs(&v42);
+    let v45 = mul(ctx.constant(1), &v44);
+    let v46 = add(&v42, &v45);
+    let v47 = if truth(&v46) {
+    (*(ctx.constant(1))).clone()
+    } else {
+    (*(ctx.constant(0))).clone()
     };
-    let v83 = mul(&v0, &v1);
-    (*(&v83)).clone()
+    (*(&v47)).clone()
+    } else {
+    let v48 = if truth(&v42) {
+    let v49 = abs(&v42);
+    let v50 = mul(ctx.constant(1), &v49);
+    let v51 = add(&v42, &v50);
+    let v52 = if truth(&v51) {
+    (*(ctx.constant(1))).clone()
+    } else {
+    (*(ctx.constant(0))).clone()
+    };
+    (*(&v52)).clone()
+    } else {
+    let v53 = conj(a10);
+    let v54 = mul(ctx.constant(1), &v53);
+    let v55 = add(a10, &v54);
+    let v56 = mul(ctx.constant(15), &v55);
+    let v57 = if truth(&v56) {
+    let v58 = abs(&v56);
+    let v59 = mul(ctx.constant(1), &v58);
+    let v60 = add(&v56, &v59);
+    let v61 = if truth(&v60) {
+    (*(ctx.constant(1))).clone()
+    } else {
+    (*(ctx.constant(0))).clone()
+    };
+    (*(&v61)).clone()
+    } else {
+    let v62 = conj(a1);
+    let v63 = mul(ctx.constant(1), &v62);
+    let v64 = add(a1, &v63);
+    let v65 = mul(ctx.constant(15), &v64);
+    let v66 = if truth(&v65) {
+    let v67 = abs(&v65);
+    let v68 = mul(ctx.constant(1), &v67);
+    let v69 = add(&v65, &v68);
+    let v70 = if truth(&v69) {
+    (*(ctx.constant(1))).clone()
+    } else {
+    (*(ctx.constant(0))).clone()
+    };
+    (*(&v70)).clone()
+    } else {
+    let v71 = conj(a9);
+    let v72 = mul(ctx.constant(1), &v71);
+    let v73 = add(a9, &v72);
+    let v74 = mul(ctx.constant(15), &v73);
+    let v75 = if truth(&v74) {
+    let v76 = abs(&v74);
+    let v77 = mul(ctx.constant(1), &v76);
+    let v78 = add(&v74, &v77);
+    let v79 = if truth(&v78) {
+    (*(ctx.constant(1))).clone()
+    } else {
+    (*(ctx.constant(0))).clone()
+    };
+    (*(&v79)).clone()
+    } else {
+    (*(ctx.constant(1))).clone()
+    };
+    (*(&v75)).clone()
+    };
+    (*(&v66)).clone()
+    };
+    (*(&v57)).clone()
+    };
+    (*(&v48)).clone()
+    };
+    let v80 = mul(ctx.constant(8), &v36);
+    let v81 = mul(&v80, &v43);
+    let v82 = helper_3(&v39, &v81, &v80, ctx);
+    let v83 = add(a3, ctx.constant(2));
+    let v84 = mul(&v0, &v83);
+    let v85 = mul(a5, &v0);
+    let v86 = mul(a6, &v0);
+    let v87 = add(a4, ctx.constant(2));
+    let v88 = mul(&v0, &v87);
+    let v89 = mul(a7, &v0);
+    let v90 = mul(a8, &v0);
+    let v91 = helper_15(&v84, &v85, &v86, &v88, &v89, &v90, ctx);
+    let v92 = mul(&v82, &v91);
+    (*(&v92)).clone()
+    } else {
+    (*(ctx.constant(2))).clone()
+    };
+    (*(&v27)).clone()
+    };
+    (*(&v26)).clone()
+    };
+    let v93 = mul(&v0, &v1);
+    (*(&v93)).clone()
 }
 
 fn branch_32<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<T>, a5: &C<T>, a6: &C<T>, a7: &C<T>, a8: &C<T>, a9: &C<T>, a10: &C<T>, a11: &C<T>, a12: &C<T>, a13: &C<T>, a14: &C<T>, a15: &C<T>, a16: &C<T>, a17: &C<T>, a18: &C<T>, ctx: &Context<T>) -> C<T> {
@@ -18889,279 +18907,151 @@ fn branch_55<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     } else {
     (*(ctx.constant(2))).clone()
     };
-    let v2 = abs(a0);
-    let v3 = mul(ctx.constant(1), &v2);
-    let v4 = add(a0, &v3);
-    let v5 = if truth(&v4) {
-    (*(ctx.constant(1))).clone()
-    } else {
+    let v2 = if truth(a2) {
     (*(ctx.constant(0))).clone()
+    } else {
+    (*(ctx.constant(2))).clone()
     };
-    let v6 = mul(ctx.constant(1), &v5);
-    let v7 = add(ctx.constant(0), &v6);
-    let v8 = mul(ctx.constant(10), &v7);
-    let v9 = add(ctx.constant(0), &v8);
-    let v10 = abs(a1);
-    let v11 = mul(ctx.constant(1), &v10);
-    let v12 = add(a1, &v11);
-    let v13 = if truth(&v12) {
-    (*(ctx.constant(1))).clone()
-    } else {
+    let v3 = if truth(a3) {
     (*(ctx.constant(0))).clone()
+    } else {
+    (*(ctx.constant(2))).clone()
     };
-    let v14 = mul(ctx.constant(1), &v13);
-    let v15 = add(ctx.constant(0), &v14);
-    let v16 = mul(ctx.constant(10), &v15);
-    let v17 = add(ctx.constant(0), &v16);
-    let v18 = mul(&v9, &v17);
-    let v19 = if truth(&v18) {
+    let v4 = if truth(a4) {
     (*(ctx.constant(0))).clone()
     } else {
-    let v20 = abs(a2);
+    (*(ctx.constant(2))).clone()
+    };
+    let v5 = if truth(a5) {
+    (*(ctx.constant(0))).clone()
+    } else {
+    (*(ctx.constant(2))).clone()
+    };
+    let v6 = mul(&v2, &v3);
+    let v7 = mul(&v6, &v4);
+    let v8 = mul(&v7, &v5);
+    let v9 = if truth(&v8) {
+    let v10 = mul(a2, a5);
+    let v11 = mul(&v10, ctx.constant(7));
+    let v12 = mul(a2, ctx.constant(1));
+    let v13 = mul(a5, ctx.constant(1));
+    let v14 = add(a1, &v12);
+    let v15 = add(&v14, &v13);
+    let v16 = mul(&v15, &v15);
+    let v17 = add(&v11, &v16);
+    let v18 = conj(&v17);
+    let v19 = add(&v17, &v18);
+    let v20 = mul(ctx.constant(8), &v19);
     let v21 = mul(ctx.constant(1), &v20);
-    let v22 = add(a2, &v21);
-    let v23 = if truth(&v22) {
+    let v22 = abs(&v21);
+    let v23 = mul(ctx.constant(1), &v22);
+    let v24 = add(&v21, &v23);
+    let v25 = if truth(&v24) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    let v24 = mul(ctx.constant(1), &v23);
-    let v25 = add(ctx.constant(0), &v24);
-    let v26 = mul(ctx.constant(10), &v25);
+    let v26 = mul(ctx.constant(1), &v25);
     let v27 = add(ctx.constant(0), &v26);
-    let v28 = abs(a3);
-    let v29 = mul(ctx.constant(1), &v28);
-    let v30 = add(a3, &v29);
-    let v31 = if truth(&v30) {
-    (*(ctx.constant(1))).clone()
-    } else {
+    let v28 = mul(ctx.constant(8), &v27);
+    let v29 = if truth(&v28) {
     (*(ctx.constant(0))).clone()
-    };
-    let v32 = mul(ctx.constant(1), &v31);
-    let v33 = add(ctx.constant(0), &v32);
-    let v34 = mul(ctx.constant(10), &v33);
-    let v35 = add(ctx.constant(0), &v34);
-    let v36 = abs(a4);
-    let v37 = mul(ctx.constant(1), &v36);
-    let v38 = add(a4, &v37);
-    let v39 = if truth(&v38) {
-    (*(ctx.constant(1))).clone()
     } else {
-    (*(ctx.constant(0))).clone()
-    };
+    let v30 = mul(a4, a5);
+    let v31 = mul(&v30, ctx.constant(7));
+    let v32 = mul(a4, ctx.constant(1));
+    let v33 = add(a0, &v13);
+    let v34 = add(&v33, &v32);
+    let v35 = mul(&v34, &v34);
+    let v36 = add(&v31, &v35);
+    let v37 = conj(&v36);
+    let v38 = add(&v36, &v37);
+    let v39 = mul(ctx.constant(8), &v38);
     let v40 = mul(ctx.constant(1), &v39);
-    let v41 = add(ctx.constant(0), &v40);
-    let v42 = mul(ctx.constant(10), &v41);
-    let v43 = add(ctx.constant(0), &v42);
-    let v44 = abs(a5);
+    let v41 = abs(&v40);
+    let v42 = mul(ctx.constant(1), &v41);
+    let v43 = add(&v40, &v42);
+    let v44 = if truth(&v43) {
+    (*(ctx.constant(1))).clone()
+    } else {
+    (*(ctx.constant(0))).clone()
+    };
     let v45 = mul(ctx.constant(1), &v44);
-    let v46 = add(a5, &v45);
-    let v47 = if truth(&v46) {
+    let v46 = add(ctx.constant(0), &v45);
+    let v47 = mul(ctx.constant(8), &v46);
+    let v48 = if truth(&v47) {
+    (*(ctx.constant(0))).clone()
+    } else {
+    let v49 = mul(a3, a4);
+    let v50 = mul(&v49, ctx.constant(7));
+    let v51 = mul(a3, ctx.constant(1));
+    let v52 = add(a1, &v32);
+    let v53 = add(&v52, &v51);
+    let v54 = mul(&v53, &v53);
+    let v55 = add(&v50, &v54);
+    let v56 = conj(&v55);
+    let v57 = add(&v55, &v56);
+    let v58 = mul(ctx.constant(8), &v57);
+    let v59 = mul(ctx.constant(1), &v58);
+    let v60 = abs(&v59);
+    let v61 = mul(ctx.constant(1), &v60);
+    let v62 = add(&v59, &v61);
+    let v63 = if truth(&v62) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    let v48 = mul(ctx.constant(1), &v47);
-    let v49 = add(ctx.constant(0), &v48);
-    let v50 = mul(ctx.constant(10), &v49);
-    let v51 = add(ctx.constant(0), &v50);
-    let v52 = mul(&v27, &v35);
-    let v53 = mul(&v52, &v43);
-    let v54 = mul(&v53, &v51);
-    let v55 = if truth(&v54) {
+    let v64 = mul(ctx.constant(1), &v63);
+    let v65 = add(ctx.constant(0), &v64);
+    let v66 = mul(ctx.constant(8), &v65);
+    let v67 = if truth(&v66) {
     (*(ctx.constant(0))).clone()
     } else {
-    let v56 = conj(a6);
-    let v57 = mul(ctx.constant(1), &v56);
-    let v58 = add(a6, &v57);
-    let v59 = mul(ctx.constant(15), &v58);
-    let v60 = if truth(&v59) {
-    (*(ctx.constant(0))).clone()
-    } else {
-    let v61 = conj(a7);
-    let v62 = mul(ctx.constant(1), &v61);
-    let v63 = add(a7, &v62);
-    let v64 = mul(ctx.constant(15), &v63);
-    let v65 = if truth(&v64) {
-    (*(ctx.constant(0))).clone()
-    } else {
-    let v66 = conj(a8);
-    let v67 = mul(ctx.constant(1), &v66);
-    let v68 = add(a8, &v67);
-    let v69 = mul(ctx.constant(15), &v68);
-    let v70 = if truth(&v69) {
-    (*(ctx.constant(0))).clone()
-    } else {
-    let v71 = conj(a9);
-    let v72 = mul(ctx.constant(1), &v71);
-    let v73 = add(a9, &v72);
-    let v74 = mul(ctx.constant(15), &v73);
-    let v75 = if truth(&v74) {
-    (*(ctx.constant(0))).clone()
-    } else {
-    (*(ctx.constant(2))).clone()
-    };
-    (*(&v75)).clone()
-    };
-    (*(&v70)).clone()
-    };
-    (*(&v65)).clone()
-    };
-    let v76 = if truth(&v60) {
-    (*(ctx.constant(0))).clone()
-    } else {
-    (*(ctx.constant(2))).clone()
-    };
-    (*(&v76)).clone()
-    };
-    (*(&v55)).clone()
-    };
-    let v77 = if truth(a2) {
-    (*(ctx.constant(0))).clone()
-    } else {
-    (*(ctx.constant(2))).clone()
-    };
-    let v78 = if truth(a3) {
-    (*(ctx.constant(0))).clone()
-    } else {
-    (*(ctx.constant(2))).clone()
-    };
-    let v79 = if truth(a4) {
-    (*(ctx.constant(0))).clone()
-    } else {
-    (*(ctx.constant(2))).clone()
-    };
-    let v80 = if truth(a5) {
-    (*(ctx.constant(0))).clone()
-    } else {
-    (*(ctx.constant(2))).clone()
-    };
-    let v81 = mul(&v77, &v78);
-    let v82 = mul(&v81, &v79);
-    let v83 = mul(&v82, &v80);
-    let v84 = if truth(&v83) {
-    let v85 = mul(a2, a5);
-    let v86 = mul(&v85, ctx.constant(7));
-    let v87 = mul(a2, ctx.constant(1));
-    let v88 = mul(a5, ctx.constant(1));
-    let v89 = add(a1, &v87);
-    let v90 = add(&v89, &v88);
-    let v91 = mul(&v90, &v90);
-    let v92 = add(&v86, &v91);
-    let v93 = conj(&v92);
-    let v94 = add(&v92, &v93);
-    let v95 = mul(ctx.constant(8), &v94);
-    let v96 = mul(ctx.constant(1), &v95);
-    let v97 = abs(&v96);
-    let v98 = mul(ctx.constant(1), &v97);
-    let v99 = add(&v96, &v98);
-    let v100 = if truth(&v99) {
+    let v68 = mul(a2, a3);
+    let v69 = mul(&v68, ctx.constant(7));
+    let v70 = add(a0, &v12);
+    let v71 = add(&v70, &v51);
+    let v72 = mul(&v71, &v71);
+    let v73 = add(&v69, &v72);
+    let v74 = conj(&v73);
+    let v75 = add(&v73, &v74);
+    let v76 = mul(ctx.constant(8), &v75);
+    let v77 = mul(ctx.constant(1), &v76);
+    let v78 = abs(&v77);
+    let v79 = mul(ctx.constant(1), &v78);
+    let v80 = add(&v77, &v79);
+    let v81 = if truth(&v80) {
     (*(ctx.constant(1))).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    let v101 = mul(ctx.constant(1), &v100);
-    let v102 = add(ctx.constant(0), &v101);
-    let v103 = mul(ctx.constant(8), &v102);
-    let v104 = if truth(&v103) {
-    (*(ctx.constant(0))).clone()
-    } else {
-    let v105 = mul(a4, a5);
-    let v106 = mul(&v105, ctx.constant(7));
-    let v107 = mul(a4, ctx.constant(1));
-    let v108 = add(a0, &v88);
-    let v109 = add(&v108, &v107);
-    let v110 = mul(&v109, &v109);
-    let v111 = add(&v106, &v110);
-    let v112 = conj(&v111);
-    let v113 = add(&v111, &v112);
-    let v114 = mul(ctx.constant(8), &v113);
-    let v115 = mul(ctx.constant(1), &v114);
-    let v116 = abs(&v115);
-    let v117 = mul(ctx.constant(1), &v116);
-    let v118 = add(&v115, &v117);
-    let v119 = if truth(&v118) {
-    (*(ctx.constant(1))).clone()
-    } else {
-    (*(ctx.constant(0))).clone()
-    };
-    let v120 = mul(ctx.constant(1), &v119);
-    let v121 = add(ctx.constant(0), &v120);
-    let v122 = mul(ctx.constant(8), &v121);
-    let v123 = if truth(&v122) {
-    (*(ctx.constant(0))).clone()
-    } else {
-    let v124 = mul(a3, a4);
-    let v125 = mul(&v124, ctx.constant(7));
-    let v126 = mul(a3, ctx.constant(1));
-    let v127 = add(a1, &v107);
-    let v128 = add(&v127, &v126);
-    let v129 = mul(&v128, &v128);
-    let v130 = add(&v125, &v129);
-    let v131 = conj(&v130);
-    let v132 = add(&v130, &v131);
-    let v133 = mul(ctx.constant(8), &v132);
-    let v134 = mul(ctx.constant(1), &v133);
-    let v135 = abs(&v134);
-    let v136 = mul(ctx.constant(1), &v135);
-    let v137 = add(&v134, &v136);
-    let v138 = if truth(&v137) {
-    (*(ctx.constant(1))).clone()
-    } else {
-    (*(ctx.constant(0))).clone()
-    };
-    let v139 = mul(ctx.constant(1), &v138);
-    let v140 = add(ctx.constant(0), &v139);
-    let v141 = mul(ctx.constant(8), &v140);
-    let v142 = if truth(&v141) {
-    (*(ctx.constant(0))).clone()
-    } else {
-    let v143 = mul(a2, a3);
-    let v144 = mul(&v143, ctx.constant(7));
-    let v145 = add(a0, &v87);
-    let v146 = add(&v145, &v126);
-    let v147 = mul(&v146, &v146);
-    let v148 = add(&v144, &v147);
-    let v149 = conj(&v148);
-    let v150 = add(&v148, &v149);
-    let v151 = mul(ctx.constant(8), &v150);
-    let v152 = mul(ctx.constant(1), &v151);
-    let v153 = abs(&v152);
-    let v154 = mul(ctx.constant(1), &v153);
-    let v155 = add(&v152, &v154);
-    let v156 = if truth(&v155) {
-    (*(ctx.constant(1))).clone()
-    } else {
-    (*(ctx.constant(0))).clone()
-    };
-    let v157 = mul(ctx.constant(1), &v156);
-    let v158 = add(ctx.constant(0), &v157);
-    let v159 = mul(ctx.constant(8), &v158);
-    let v160 = if truth(&v159) {
+    let v82 = mul(ctx.constant(1), &v81);
+    let v83 = add(ctx.constant(0), &v82);
+    let v84 = mul(ctx.constant(8), &v83);
+    let v85 = if truth(&v84) {
     (*(ctx.constant(0))).clone()
     } else {
     (*(ctx.constant(2))).clone()
     };
-    (*(&v160)).clone()
+    (*(&v85)).clone()
     };
-    (*(&v142)).clone()
+    (*(&v67)).clone()
     };
-    (*(&v123)).clone()
+    (*(&v48)).clone()
     };
-    (*(&v104)).clone()
+    (*(&v29)).clone()
     } else {
     (*(ctx.constant(0))).clone()
     };
-    let v161 = mul(&v0, &v1);
-    let v162 = mul(&v161, &v19);
-    let v163 = mul(&v162, &v84);
-    let v164 = if truth(&v163) {
-    let v165 = helper_32(a2, a3, a4, a5, a0, a1, a9, a8, a7, a6, ctx);
-    (*(&v165)).clone()
+    let v86 = mul(&v0, &v1);
+    let v87 = mul(&v86, &v9);
+    let v88 = if truth(&v87) {
+    let v89 = helper_32(a2, a3, a4, a5, a0, a1, a6, a7, a8, a9, ctx);
+    (*(&v89)).clone()
     } else {
-    branch_54(a5, a6, a7, a4, a0, a3, a8, a2, a1, ctx)
+    branch_54(a5, a9, a8, a4, a0, a3, a7, a2, a1, ctx)
     };
-    (*(&v164)).clone()
+    (*(&v88)).clone()
 }
 
 fn branch_56<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<T>, a5: &C<T>, a6: &C<T>, a7: &C<T>, a8: &C<T>, ctx: &Context<T>) -> C<T> {
@@ -21889,7 +21779,7 @@ fn branch_63<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     let v179 = mul(&v178, &v178);
     let v180 = mul(ctx.constant(1), &v179);
     let v181 = mul(ctx.constant(5), ctx.constant(5));
-    let v182 = mul(ctx.constant(80), &v181);
+    let v182 = mul(ctx.constant(82), &v181);
     let v183 = add(&v62, &v164);
     let v184 = add(&v183, &v169);
     let v185 = add(&v184, &v174);
@@ -22152,7 +22042,7 @@ fn branch_64<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     let v179 = mul(&v178, &v178);
     let v180 = mul(ctx.constant(1), &v179);
     let v181 = mul(ctx.constant(5), ctx.constant(5));
-    let v182 = mul(ctx.constant(80), &v181);
+    let v182 = mul(ctx.constant(82), &v181);
     let v183 = add(&v62, &v164);
     let v184 = add(&v183, &v169);
     let v185 = add(&v184, &v174);
@@ -22338,7 +22228,7 @@ fn branch_65<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     let v114 = mul(&v101, &v101);
     let v115 = mul(ctx.constant(1), &v114);
     let v116 = mul(ctx.constant(5), ctx.constant(5));
-    let v117 = mul(ctx.constant(82), &v116);
+    let v117 = mul(ctx.constant(84), &v116);
     let v118 = add(&v50, &v115);
     let v119 = add(&v118, &v117);
     let v120 = mul(&v2, &v5);
@@ -24463,7 +24353,7 @@ fn branch_71<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
 }
 
 fn branch_72<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<T>, a5: &C<T>, a6: &C<T>, a7: &C<T>, a8: &C<T>, a9: &C<T>, a10: &C<T>, a11: &C<T>, a12: &C<T>, a13: &C<T>, a14: &C<T>, a15: &C<T>, a16: &C<T>, a17: &C<T>, ctx: &Context<T>) -> C<T> {
-    let v0 = powf(a0, ctx.constant(83), false);
+    let v0 = powf(a0, ctx.constant(85), false);
     let v1 = mul(a1, a2);
     let v2 = mul(&v1, a3);
     let v3 = mul(&v2, &v0);
@@ -24777,7 +24667,7 @@ fn branch_73<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     let v72 = helper_3(&v61, &v71, &v70, ctx);
     let v73 = add(&v25, &v48);
     let v74 = add(&v73, &v72);
-    let v75 = powf(a5, ctx.constant(83), false);
+    let v75 = powf(a5, ctx.constant(85), false);
     let v76 = mul(a0, a6);
     let v77 = mul(&v76, a7);
     let v78 = mul(&v77, &v75);
@@ -24939,7 +24829,7 @@ fn branch_73<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
 
 fn branch_74<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<T>, a5: &C<T>, a6: &C<T>, a7: &C<T>, a8: &C<T>, a9: &C<T>, a10: &C<T>, a11: &C<T>, a12: &C<T>, a13: &C<T>, a14: &C<T>, a15: &C<T>, a16: &C<T>, a17: &C<T>, a18: &C<T>, a19: &C<T>, a20: &C<T>, a21: &C<T>, a22: &C<T>, a23: &C<T>, a24: &C<T>, ctx: &Context<T>) -> C<T> {
     let v0 = powi(a0, -1, false);
-    let v1 = powf(a1, ctx.constant(83), false);
+    let v1 = powf(a1, ctx.constant(85), false);
     let v2 = mul(a2, a3);
     let v3 = mul(&v2, a4);
     let v4 = mul(&v3, &v1);
@@ -25284,7 +25174,7 @@ fn branch_75<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     let v72 = mul(ctx.constant(8), &v60);
     let v73 = mul(&v72, &v67);
     let v74 = helper_3(&v63, &v73, &v72, ctx);
-    let v75 = powf(a5, ctx.constant(83), false);
+    let v75 = powf(a5, ctx.constant(85), false);
     let v76 = mul(a0, a6);
     let v77 = mul(&v76, a7);
     let v78 = mul(&v77, &v75);
@@ -25452,7 +25342,7 @@ fn branch_75<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
 
 fn branch_76<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<T>, a5: &C<T>, a6: &C<T>, a7: &C<T>, a8: &C<T>, a9: &C<T>, a10: &C<T>, a11: &C<T>, a12: &C<T>, a13: &C<T>, a14: &C<T>, a15: &C<T>, a16: &C<T>, a17: &C<T>, a18: &C<T>, a19: &C<T>, a20: &C<T>, a21: &C<T>, a22: &C<T>, a23: &C<T>, a24: &C<T>, ctx: &Context<T>) -> C<T> {
     let v0 = powi(a0, -1, false);
-    let v1 = powf(a1, ctx.constant(83), false);
+    let v1 = powf(a1, ctx.constant(85), false);
     let v2 = mul(a2, a3);
     let v3 = mul(&v2, a4);
     let v4 = mul(&v3, &v1);
@@ -25796,7 +25686,7 @@ fn branch_77<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     let v71 = mul(ctx.constant(8), &v59);
     let v72 = mul(&v71, &v66);
     let v73 = helper_3(&v62, &v72, &v71, ctx);
-    let v74 = powf(a4, ctx.constant(83), false);
+    let v74 = powf(a4, ctx.constant(85), false);
     let v75 = mul(a0, a5);
     let v76 = mul(&v75, a6);
     let v77 = mul(&v76, &v74);
@@ -26073,7 +25963,7 @@ fn branch_78<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     let v71 = helper_3(&v60, &v70, &v69, ctx);
     let v72 = add(&v25, &v48);
     let v73 = add(&v72, &v71);
-    let v74 = powf(a4, ctx.constant(83), false);
+    let v74 = powf(a4, ctx.constant(85), false);
     let v75 = mul(a0, a5);
     let v76 = mul(&v75, a6);
     let v77 = mul(&v76, &v74);
@@ -26344,7 +26234,7 @@ fn branch_79<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     let v71 = mul(ctx.constant(8), &v59);
     let v72 = mul(&v71, &v66);
     let v73 = helper_3(&v62, &v72, &v71, ctx);
-    let v74 = powf(a4, ctx.constant(83), false);
+    let v74 = powf(a4, ctx.constant(85), false);
     let v75 = mul(a0, a5);
     let v76 = mul(&v75, a6);
     let v77 = mul(&v76, &v74);
@@ -26511,7 +26401,7 @@ fn branch_79<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
 }
 
 fn branch_80<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<T>, a5: &C<T>, a6: &C<T>, a7: &C<T>, a8: &C<T>, a9: &C<T>, a10: &C<T>, a11: &C<T>, a12: &C<T>, a13: &C<T>, a14: &C<T>, a15: &C<T>, a16: &C<T>, a17: &C<T>, a18: &C<T>, a19: &C<T>, ctx: &Context<T>) -> C<T> {
-    let v0 = powf(a0, ctx.constant(83), false);
+    let v0 = powf(a0, ctx.constant(85), false);
     let v1 = mul(a1, a2);
     let v2 = mul(&v1, a3);
     let v3 = mul(&v2, &v0);
@@ -27583,7 +27473,7 @@ fn branch_83<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     let v152 = mul(ctx.constant(1), &v0);
     let v153 = mul(&v152, &v3);
     let v154 = mul(&v153, &v151);
-    let v155 = mul(ctx.constant(84), &v0);
+    let v155 = mul(ctx.constant(86), &v0);
     let v156 = mul(&v155, &v3);
     let v157 = mul(&v156, &v146);
     let v158 = add(&v154, &v157);
@@ -27994,7 +27884,7 @@ fn branch_85<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     let v111 = powi(a4, -1, false);
     let v112 = mul(&v38, &v111);
     let v113 = helper_3(&v112, &v48, &v47, ctx);
-    let v114 = mul(ctx.constant(85), &v113);
+    let v114 = mul(ctx.constant(87), &v113);
     let v115 = mul(ctx.constant(1), &v52);
     let v116 = helper_2(&v93, &v103, &v102, &v38, &v48, &v47, ctx);
     let v117 = helper_1(&v93, &v103, &v102, &v38, &v48, &v47, ctx);
@@ -28009,14 +27899,14 @@ fn branch_85<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<
     let v126 = mul(&v119, &v119);
     let v127 = mul(ctx.constant(1), &v126);
     let v128 = mul(ctx.constant(5), ctx.constant(5));
-    let v129 = mul(ctx.constant(86), &v128);
+    let v129 = mul(ctx.constant(88), &v128);
     let v130 = add(&v110, &v125);
     let v131 = add(&v130, &v127);
     let v132 = add(&v131, &v129);
     let v133 = mul(ctx.constant(1), &v0);
     let v134 = mul(&v133, &v3);
     let v135 = mul(&v134, &v132);
-    let v136 = mul(ctx.constant(80), &v0);
+    let v136 = mul(ctx.constant(82), &v0);
     let v137 = mul(&v136, &v3);
     let v138 = mul(&v137, &v128);
     let v139 = add(&v135, &v138);
@@ -28151,7 +28041,7 @@ fn branch_86<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, ctx: &C
     let v88 = mul(&v87, &v28);
     let v89 = mul(&v56, &v83);
     let v90 = mul(ctx.constant(5), ctx.constant(5));
-    let v91 = mul(ctx.constant(87), &v90);
+    let v91 = mul(ctx.constant(89), &v90);
     let v92 = add(&v89, &v91);
     let v93 = mul(ctx.constant(6), &v92);
     let v94 = add(&v88, &v93);
@@ -46502,7 +46392,7 @@ fn branch_135<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C
     let v26 = mul(ctx.constant(8), &v13);
     let v27 = mul(&v26, &v21);
     let v28 = helper_3(&v17, &v27, &v26, ctx);
-    let v29 = mul(ctx.constant(83), &v28);
+    let v29 = mul(ctx.constant(85), &v28);
     let v30 = mul(a0, ctx.constant(1));
     let v31 = conj(&v30);
     let v32 = add(&v30, &v31);

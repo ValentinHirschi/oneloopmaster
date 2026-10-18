@@ -34,6 +34,12 @@ pub(crate) fn box_finite_massless(p: [&Atom; 6]) -> Atom {
 // OneLOop selects its contour-based representation for complex masses and
 // these timelike configurations. Exact inequalities replace its numerical
 // proximity tests. Keep the boxf representation for kinematics boxc rejects.
+//
+// Four real masses keep this selection: the boxf4 (Denner-Nierste-Scharf)
+// chart is wrong in a few relabellings of some boxes (in 12 of the 1432
+// relabellings that took it, in 8 of 88 random four-mass boxes), but the
+// contour box costs 1.5 to 4 times as much on the recorded NinjaRS streams,
+// where boxf4 is right.
 fn finite_box_representation(p: [&Atom; 6], m: [&Atom; 4], fallback: Atom) -> Atom {
     let complex_mass = any_nonzero(m.map(sheet_exact::im));
     let all_external_nonnegative = p[..4]
@@ -43,6 +49,20 @@ fn finite_box_representation(p: [&Atom; 6], m: [&Atom; 4], fallback: Atom) -> At
     let use_contour = any_nonzero([complex_mass, all_external_nonnegative, channels_nonnegative])
         * box_complex::supported_kinematics(p);
     if_nonzero_else(&use_contour, box_complex::expression(p, m), fallback)
+}
+
+// Three massive lines take the contour representation (at the vanishing-width
+// limit for real masses) wherever it supports the kinematics. Outside
+// OneLOop's timelike configurations its real-mass boxf33 chart depends on the
+// labelling: in a sweep of 154 random three-mass boxes, 39 had a wrong value
+// in some of their 24 relabellings, as had the NinjaRS box of
+// tests/d0_real_mass_orderings.rs in 8 (OneLOop 3.6 included).
+fn finite_three_mass_representation(p: [&Atom; 6], m: [&Atom; 4], fallback: Atom) -> Atom {
+    if_nonzero_else(
+        &box_complex::supported_kinematics(p),
+        box_complex::expression(p, m),
+        fallback,
+    )
 }
 
 pub(crate) fn box_finite_four_masses(p: [&Atom; 6], m: [&Atom; 4]) -> Atom {
@@ -864,7 +884,7 @@ pub(crate) fn box_three_masses_ir(
         box_finite_three_masses_zero_third(finite_p, masses[1], masses[2], masses[3]),
         box_finite_three_masses_zero_third(cyclic_p, masses[2], masses[3], masses[1]),
     );
-    let finite = finite_series(finite_box_representation(p, masses, ordinary));
+    let finite = finite_series(finite_three_mass_representation(p, masses, ordinary));
     let infrared = box_three_masses_16(
         p[1], p[2], p[4], p[5], masses[1], masses[2], masses[3], mu_squared,
     );

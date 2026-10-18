@@ -8,7 +8,13 @@
 //! with a zero root out of place, the 't Hooft-Veltman C0 continuation, the
 //! one-mass and massless infrared boxes, and the finite one-, three- and
 //! four-mass boxes (root lips, chart choice and exact double roots). References
-//! are taken where OneLOop's double and quadruple precision results agree.
+//! are taken where OneLOop's double and quadruple precision results agree,
+//! except for the real-mass three-mass boxes of lines 471-474 and 585-588,
+//! where both agree on the wrong imaginary part of OneLOop's real-mass boxf33
+//! chart (-26.894 and -0.15379): their references are the contour box at 256
+//! bits (native code and interpreted expressions agree), which OneLOop's own
+//! complex-mass route approaches as the widths vanish
+//! (tests/d0_real_mass_orderings.rs).
 #![cfg(feature = "generated-evaluators")]
 use oneloop::{
     EvaluationBackend, NativeEvaluator, PrecisionEvaluator, ScalarIntegral, evaluate_with_backend,
@@ -123,6 +129,25 @@ fn index(family: ScalarIntegral) -> usize {
 /// order) are two-mass triangles with a small complex mass.
 const BINARY64_TOLERANCE: f64 = 5e-10;
 
+/// Lines 471-474, a real-mass three-mass box exactly at the pseudo-threshold
+/// p3 = m3 next to the massless fourth line, keep nine digits in binary64
+/// (5.8e-10 to 7.8e-10 by evaluator; exact at 256 bits) in the contour box,
+/// which three-mass boxes now use wherever it supports the kinematics. The
+/// boxf33 chart used before had the wrong imaginary part here (-26.894
+/// instead of +27.690), as in some relabellings of about a quarter of
+/// real-mass three-mass boxes (tests/d0_real_mass_orderings.rs).
+const CONTOUR_BINARY64_LIMITED: [usize; 4] = [471, 472, 473, 474];
+const CONTOUR_BINARY64_TOLERANCE: f64 = 2e-9;
+
+/// The binary64 tolerance of a fixture line.
+fn binary64_tolerance(line: usize, tolerance: f64) -> f64 {
+    if CONTOUR_BINARY64_LIMITED.contains(&line) {
+        CONTOUR_BINARY64_TOLERANCE
+    } else {
+        tolerance
+    }
+}
+
 #[test]
 fn native_binary64_matches_oneloop() {
     on_stack(|| {
@@ -137,7 +162,7 @@ fn native_binary64_matches_oneloop() {
                     .evaluate(&row.args, &mut output)
                     .unwrap();
                 let error = error(&output, &row.expected);
-                if !(error <= BINARY64_TOLERANCE) {
+                if !(error <= binary64_tolerance(row.line, BINARY64_TOLERANCE)) {
                     failures.push(format!(
                         "line {} (hand-written kernels: {handwritten}): {output:?} vs {:?} ({error:e})",
                         row.line, row.expected
@@ -232,7 +257,7 @@ fn expression_and_symjit_backends_match_oneloop() {
                 let mut output = [C::new(f64::NAN, f64::NAN); 3];
                 evaluate_with_backend(row.family, &row.args, &mut output, backend).unwrap();
                 let error = error(&output, &row.expected);
-                if !(error <= tolerance) {
+                if !(error <= binary64_tolerance(row.line, tolerance)) {
                     failures.push(format!(
                         "line {} ({}): {output:?} vs {:?} ({error:e})",
                         row.line,
@@ -401,7 +426,7 @@ fn triangles_and_boxes_are_invariant_under_relabelling() {
                         .evaluate(&image, &mut output)
                         .unwrap();
                     let error = error(&output, &row.expected);
-                    if !(error <= IMAGE_TOLERANCE) {
+                    if !(error <= binary64_tolerance(row.line, IMAGE_TOLERANCE)) {
                         failures.push(format!(
                         "line {} image {number} (hand-written kernels: {handwritten}) {image:?}: {output:?} ({error:e})",
                         row.line

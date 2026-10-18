@@ -205,7 +205,9 @@ pub(super) fn d0(a: &[Z], k: &Constants<f64>) -> Option<Z> {
             // The infrared sector (both massless-adjacent legs on shell) and
             // the non-contour finite formula use the generated code.
             let finite = nz(p[0] - m[1]) || nz(p[3] - m[3]);
-            (finite && use_contour(p, m)).then(|| boxc(p, m, k))
+            // `finite_three_mass_representation`: the contour wherever it
+            // supports the kinematics.
+            (finite && supported_kinematics(p)).then(|| boxc(p, m, k))
         }
         _ => None,
     }
