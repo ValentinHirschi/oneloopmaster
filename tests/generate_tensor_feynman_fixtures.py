@@ -7,16 +7,20 @@ directly in Feynman-parameter space with mpmath (45 significant digits):
   B_{1^n}(p², m0², m1²) = (-1)^(n+1) int_0^1 x^n log((D(x) - i0)/mu²) dx,
   D(x) = p² x² + (m1² - m0² - p²) x + m0²,
 
-for n = 0..3 (B0, B1, B11, B111; OneLOop normalization, denominators
+for n = 0..4 (B0, B1, B11, B111, B1111; OneLOop normalization, denominators
 (q²-m0²)((q+p)²-m1²)). This shares nothing with OneLOop's root/bnlog
-algorithm. The rows probe small momenta, normal and pseudo thresholds and
+algorithm (nor with its rank-four mass swap, whose sign OneLOop 3.4/3.6 get
+wrong). The rows probe small momenta, normal and pseudo thresholds and
 their neighbourhoods, massless propagators (on and near shell), complex
-masses, large mass ratios, real negative masses and the gg -> HHH top loop.
+masses, large mass ratios, real negative masses and the gg -> HHH top loop;
+the `rank4_*` rows add every sector of the rank-four mass swap, a dyadic
+p² ladder 2^-4..2^-24 and other renormalization scales.
 
   python3 tests/generate_tensor_feynman_fixtures.py [--jobs 16]
 
 Requires mpmath. Rows: `# name <label>` then
-`p² m0_re m0_im m1_re m1_im mu² B0_re B0_im B1_re B1_im B11_re B11_im B111_re B111_im`.
+`p² m0_re m0_im m1_re m1_im mu² B0_re B0_im B1_re B1_im B11_re B11_im B111_re B111_im
+B1111_re B1111_im`.
 """
 
 import argparse
@@ -81,6 +85,28 @@ def cases():
             add(f"negative_{a:g}_{b:g}_{p:g}", p, R(a), R(b))
     for p in [0.0, HIGGS, -48125.0, 450.0**2, 600.0**2, -104375.0, 135625.0, 83125.0, 1e-9]:
         add(f"top_loop_{p:g}", p, R(TOP), R(TOP), mu2=1e4)
+    # Rank four: the points of the masters study (native_rank4_prototype.py)
+    # and of the exact-expression reference (src/tests.rs), each sector of the
+    # mass swap in both orders, a dyadic p² ladder and large momenta.
+    for p, m0, m1 in [(3, 0.75, 1.5), (11, 1.125, 0.625), (-7.25, 0.375, 2.875), (0, 2, 5),
+                      (0, 5, 2), (2.5, 0, 1.5), (2.5, 1.5, 0), (3, 1.5, 0.75), (0.0625, 1.5, 1.0),
+                      (10000, 2, 1), (0, 1.5, 1.5), (1.5, 0, 1.5), (1.5, 1.5, 0), (0, 0, 1.5),
+                      (0, 1.5, 0), (-2.5, 0, 1.5), (-2.5, 1.5, 0)]:
+        add(f"rank4_sector_{p:g}_{m0:g}_{m1:g}", p, R(m0), R(m1))
+    for m0, m1, tag in [((0.7, -0.03), (1.4, -0.08), "complex"), ((1.4, -0.08), (0.7, -0.03), "complex_swapped"),
+                        (R(0), (1.4, -0.08), "complex_m0_zero"), ((1.4, -0.08), R(0), "complex_m1_zero")]:
+        for p in [0.0, 3.0, -3.0, 0.25]:
+            add(f"rank4_{tag}_{p:g}", p, m0, m1)
+    for m0, m1, tag in [(R(1), R(1.5), "unequal"), (R(1.5), R(1), "swapped"), (R(0.75), R(0.75), "equal"),
+                        ((0.7, -0.03), (1.4, -0.08), "complex")]:
+        for k in range(4, 25, 2):
+            for sign in (1, -1):
+                add(f"rank4_ladder_{tag}_{sign * 2.0**-k:g}", sign * 2.0**-k, m0, m1)
+    for p in [1e4, -1e4, 1e8, -1e8]:
+        for m0, m1 in [(2.0, 1.0), (1.0, 2.0)]:
+            add(f"rank4_large_{p:g}_{m0:g}_{m1:g}", p, R(m0), R(m1))
+    for p, m0, m1 in [(3, 0.75, 1.5), (3, 1.5, 0.75), (0, 2, 5), (0, 5, 2), (2.5, 0, 1.5), (2.5, 1.5, 0)]:
+        add(f"rank4_scale_{p:g}_{m0:g}_{m1:g}", p, R(m0), R(m1), mu2=0.3)
     seen, unique = set(), []
     for row in rows:
         key = tuple(float(v).hex() for v in (row[1], *row[2], *row[3], row[4]))
@@ -109,7 +135,7 @@ def reference(row):
     p, mu2 = mp.mpf(p), mp.mpf(mu2)
     m0, m1 = mp.mpc(*m0), mp.mpc(*m1)
     if p == 0 and m0 == 0 and m1 == 0:
-        return " ".join(["0.0 0.0"] * 4)
+        return " ".join(["0.0 0.0"] * 5)
     if p != 0:
         # Factor D = p (x - r1)(x - r2) with stably computed roots, so that
         # D keeps its relative precision next to (double) roots.
@@ -132,7 +158,7 @@ def reference(row):
     points.append(mp.mpf(1))
     values = [
         (-1) ** (n + 1) * mp.quad(lambda x: x**n * log_lip(D(x) / mu2), points, maxdegree=12)
-        for n in range(4)
+        for n in range(5)
     ]
     # Format here: mpmath numbers unpickled in the parent round to its precision.
     text = lambda x: mp.nstr(x, 40, min_fixed=1, max_fixed=0)
@@ -149,7 +175,7 @@ def main():
         values = pool.map(reference, rows, chunksize=4)
     lines = [
         "# Feynman-parameter bubble references (tests/generate_tensor_feynman_fixtures.py, mpmath).",
-        "# p2 m0_re m0_im m1_re m1_im mu2 then re/im of the finite parts of B0 B1 B11 B111",
+        "# p2 m0_re m0_im m1_re m1_im mu2 then re/im of the finite parts of B0 B1 B11 B111 B1111",
     ]
     for (name, p, m0, m1, mu2), result in zip(rows, values):
         lines.append(f"# name {name}")

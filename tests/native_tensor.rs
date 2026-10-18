@@ -89,17 +89,27 @@ fn to_float(z: Complex<f64>, bits: u32) -> Complex<Float> {
 }
 
 fn evaluate_float(row: &Row, bits: u32) -> Vec<Complex<Float>> {
+    evaluate_float_as(row.family, row, bits)
+}
+
+/// [`evaluate_float`] of `family` at the inputs of `row`.
+fn evaluate_float_as(family: TensorIntegral, row: &Row, bits: u32) -> Vec<Complex<Float>> {
     let mut evaluator =
-        NativeTensorEvaluator::<Float>::with_binary_precision(row.family, bits).unwrap();
+        NativeTensorEvaluator::<Float>::with_binary_precision(family, bits).unwrap();
     let input: Vec<_> = row.input.iter().map(|&z| to_float(z, bits)).collect();
-    let mut output = vec![to_float(Complex::new(0., 0.), bits); row.family.outputs()];
+    let mut output = vec![to_float(Complex::new(0., 0.), bits); family.outputs()];
     evaluator.evaluate(&input, &mut output).unwrap();
     output
 }
 
 fn evaluate_f64(row: &Row) -> Vec<Complex<f64>> {
-    let mut evaluator = NativeTensorEvaluator::<f64>::new(row.family).unwrap();
-    let mut output = vec![Complex::new(f64::NAN, f64::NAN); row.family.outputs()];
+    evaluate_f64_as(row.family, row)
+}
+
+/// [`evaluate_f64`] of `family` at the inputs of `row`.
+fn evaluate_f64_as(family: TensorIntegral, row: &Row) -> Vec<Complex<f64>> {
+    let mut evaluator = NativeTensorEvaluator::<f64>::new(family).unwrap();
+    let mut output = vec![Complex::new(f64::NAN, f64::NAN); family.outputs()];
     evaluator.evaluate(&row.input, &mut output).unwrap();
     output
 }
@@ -494,12 +504,15 @@ fn rank_three_bubble_matches_ninja_formulas() {
 #[test]
 fn batches_validate_rows_and_match_single_rows() {
     let rows = rows();
-    for family in [
-        TensorIntegral::An,
-        TensorIntegral::B11,
-        TensorIntegral::B111,
+    // B1111 has no OneLOop fixtures (OneLOop's rank-four mass swap has the
+    // wrong sign); it runs on the B111 rows.
+    for (family, source) in [
+        (TensorIntegral::An, TensorIntegral::An),
+        (TensorIntegral::B11, TensorIntegral::B11),
+        (TensorIntegral::B111, TensorIntegral::B111),
+        (TensorIntegral::B1111, TensorIntegral::B111),
     ] {
-        let selected: Vec<_> = rows.iter().filter(|row| row.family == family).collect();
+        let selected: Vec<_> = rows.iter().filter(|row| row.family == source).collect();
         let input: Vec<_> = selected
             .iter()
             .flat_map(|row| row.input.iter().copied())
@@ -510,7 +523,12 @@ fn batches_validate_rows_and_match_single_rows() {
             .evaluate_batch(&input, &mut output, selected.len())
             .unwrap();
         for (row, values) in selected.iter().zip(output.chunks_exact(family.outputs())) {
-            assert_eq!(values, evaluate_f64(row).as_slice(), "{}", row.name);
+            assert_eq!(
+                values,
+                evaluate_f64_as(family, row).as_slice(),
+                "{}",
+                row.name
+            );
         }
         evaluator.evaluate_batch(&[], &mut [], 0).unwrap();
         // One invalid row rejects the whole batch without writing any output.
@@ -544,7 +562,7 @@ fn batches_validate_rows_and_match_single_rows() {
 struct FeynmanRow {
     name: String,
     input: Vec<Complex<f64>>,
-    /// Finite parts of B0, B1, B11, B111 at 40 digits.
+    /// Finite parts of B0, B1, B11, B111, B1111 at 40 digits.
     expected: Vec<Complex<Float>>,
 }
 
@@ -562,7 +580,7 @@ fn feynman_rows() -> Vec<FeynmanRow> {
             continue;
         }
         let words: Vec<&str> = line.split_whitespace().collect();
-        assert_eq!(words.len(), 14, "{line}");
+        assert_eq!(words.len(), 16, "{line}");
         let value = |i: usize| words[i].parse::<f64>().unwrap();
         let input = vec![
             Complex::new(value(0), 0.),
@@ -587,7 +605,7 @@ fn feynman_rows() -> Vec<FeynmanRow> {
 fn as_row(row: &FeynmanRow) -> Row {
     Row {
         name: row.name.clone(),
-        family: TensorIntegral::B111,
+        family: TensorIntegral::B1111,
         input: row.input.clone(),
         expected: vec![],
     }
@@ -596,17 +614,24 @@ fn as_row(row: &FeynmanRow) -> Row {
 #[test]
 fn bubbles_match_feynman_parameter_integrals() {
     let rows = feynman_rows();
-    assert!(rows.len() >= 590, "{}", rows.len());
+    assert!(rows.len() >= 720, "{}", rows.len());
     let (mut worst_float, mut worst_f64) = (0.0_f64, 0.0_f64);
+    let mut worst_rank_four = (0.0_f64, 0.0_f64);
     for row in &rows {
         let tensor_row = as_row(row);
         let reference = evaluate_float(&tensor_row, 320);
         let sensitivity = momentum_sensitivity(&tensor_row, &reference, 53);
         let actual = evaluate_f64(&tensor_row);
-        let mut rank_two = NativeTensorEvaluator::<f64>::new(TensorIntegral::B11).unwrap();
-        let mut rank_two_output = vec![Complex::new(f64::NAN, f64::NAN); 9];
-        rank_two.evaluate(&row.input, &mut rank_two_output).unwrap();
-        assert_eq!(rank_two_output, actual[..9], "{}", row.name);
+        // The lower families are the leading part of B1111, bitwise.
+        for (family, length) in [(TensorIntegral::B11, 9), (TensorIntegral::B111, 12)] {
+            assert_eq!(
+                evaluate_f64_as(family, &tensor_row),
+                actual[..length],
+                "{} {}",
+                row.name,
+                family.name()
+            );
+        }
         // Near (not at) a massless on-shell point, lna = -log((m²-p²)/mu²) and
         // bnlog(n, (p²-m²)/p²) both grow like log|p²-m²| and cancel: OneLOop's
         // representation keeps absolute, not relative, binary64 accuracy there.
@@ -617,15 +642,23 @@ fn bubbles_match_feynman_parameter_integrals() {
                 && p.re != mass.re
                 && (p.re - mass.re).abs() <= 1e-9 * mass.re.abs()
         });
+        // B1111 relative to the largest coefficient of the row: its mass-swap
+        // reconstruction cancels to below its terms (native_tensor_b1111.rs).
+        let largest = row.expected.iter().map(float_norm).fold(0.0, f64::max);
         for (n, expected) in row.expected.iter().enumerate() {
             let size = if near_on_shell {
                 1.0
+            } else if n == 4 {
+                largest + 1e-3
             } else {
                 float_norm(expected) + 1e-3
             };
             // The algorithm itself (roots, lips, bnlog series) at 320 bits.
             let error = difference(&reference[3 * n], expected) / size;
             worst_float = worst_float.max(error);
+            if n == 4 {
+                worst_rank_four.0 = worst_rank_four.0.max(error);
+            }
             assert!(
                 error < 1e-24,
                 "{} B rank {n}: 320-bit {} vs integral {expected} ({error:e})",
@@ -638,6 +671,9 @@ fn bubbles_match_feynman_parameter_integrals() {
                 .max(0.)
                 / size;
             worst_f64 = worst_f64.max(error);
+            if n == 4 {
+                worst_rank_four.1 = worst_rank_four.1.max(error);
+            }
             assert!(
                 error < BINARY64_TOLERANCE,
                 "{} B rank {n}: f64 {:?} vs integral {expected} ({error:e})",
@@ -647,7 +683,9 @@ fn bubbles_match_feynman_parameter_integrals() {
         }
     }
     eprintln!(
-        "Feynman-parameter references: worst 320-bit {worst_float:e}, binary64 {worst_f64:e}"
+        "Feynman-parameter references: worst 320-bit {worst_float:e}, binary64 {worst_f64:e} \
+         (B1111: {:e}, {:e})",
+        worst_rank_four.0, worst_rank_four.1
     );
 }
 
@@ -657,14 +695,17 @@ fn bubbles_match_feynman_parameter_integrals() {
 #[test]
 fn massless_propagators_keep_exact_unit_roots() {
     let (mut checked, mut worst) = (0, 0.0_f64);
-    for row in feynman_rows()
-        .iter()
-        .filter(|row| row.name.starts_with("massless_") || row.name.starts_with("p0_m"))
-    {
+    for row in feynman_rows().iter().filter(|row| {
+        row.name.starts_with("massless_")
+            || row.name.starts_with("p0_m")
+            || row.name.starts_with("rank4_sector_0_0_")
+            || row.name.starts_with("rank4_sector_0_1.5_0")
+    }) {
         let actual = evaluate_f64(&as_row(row));
         for (n, expected) in row.expected.iter().enumerate() {
             // Relative to max(|B|, 1): OneLOop's B(p; m1, m0) -> B(p; m0, m1)
-            // reconstruction cancels O(1) terms (B111(0; 0, mu²) = -1/16).
+            // reconstruction cancels O(1) terms (B111(0; 0, mu²) = -1/16,
+            // B1111(0; 0, mu²) = 1/25).
             // p² * (1/p²) != 1 used to cost up to 4e-15 here.
             let error =
                 difference(&to_float(actual[3 * n], 320), expected) / float_norm(expected).max(1.0);
@@ -679,5 +720,5 @@ fn massless_propagators_keep_exact_unit_roots() {
         checked += 1;
     }
     eprintln!("massless closed forms: worst binary64 relative error {worst:e}");
-    assert!(checked >= 18, "{checked}");
+    assert!(checked >= 20, "{checked}");
 }

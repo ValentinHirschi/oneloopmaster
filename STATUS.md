@@ -4,6 +4,30 @@ This page preserves the September 8 development snapshot. See the
 [Symbolica main migration report](SYMBOLICA_3_MIGRATION.md) for the current
 dependency setup and validation.
 
+## Rank-four bubble tensors (2026-10-18)
+
+`NativeTensorEvaluator` has a fourth family, `TensorIntegral::B1111`
+(`[B0, B1, B11, B111, B1111]`, for numerator rank `n+2`), on every numeric
+type, with a binary64 specialization; see
+[NATIVE_BACKEND.md](NATIVE_BACKEND.md#rank-four-b1111). `B11` and `B111` are
+bitwise unchanged on every route, including Ninja's recorded bubble calls.
+
+- **OneLOop's `B1111` is wrong in every mass-swap branch.** OneLOop 3.6 and 3.4
+  negate `B0' + 4B1' + 6B11' + 4B111' + B1111'` when they reconstruct
+  `B1111(p; m0, m1)` from the swapped masses: at `p² = 0` with `|m1| >= |m0|`,
+  and at `p² != 0` with `|m1| < |m0|` (massless or not). The native family and
+  the exact `b1111` use the plus sign; OneLOop (and Ninja's `avholo`) must not
+  serve as a `B1111` reference. `tests/native_tensor_b1111.rs` checks the swap
+  identity `B_n = (-1)^n sum_k C(n,k) B_k'` in every branch.
+- **The exact `b1111` loses digits at small momenta in fixed precision.** Its
+  Passarino-Veltman form divides by `2p²` per rank above one: binary64 errors
+  are 4e-6 at `p²/m² = 2^-8` and 0.6 at `2^-12`, DoubleFloat 4e-10 at `2^-16`
+  and 2.9 at `2^-24`; `Float` needs about `4 log2(m²/p²)` extra bits.
+- **Recommendation:** fixed-precision carriers (`f64`, `DoubleFloat`) take
+  the bubble tensors `B1`-`B1111` from `NativeTensorEvaluator`, which keeps
+  `B1111` within 2e-15 of `max_k |B_k|` in binary64 on the `2^-4..2^-24`
+  ladder, and within 1e-14 down to `p² = 1e-300`.
+
 ## Current development status (2026-09-08)
 
 Direct generic Rust evaluation is now the default for the five scalar masters.
@@ -155,7 +179,8 @@ preserved older acceptance results below.
 ## Current expression coverage
 
 - A0 and tadpole tensors through rank four.
-- B0, dB0 and bubble tensor coefficients through rank four.
+- B0, dB0 and bubble tensor coefficients through rank four (the longitudinal
+  `B1`-`B1111` also as native `NativeTensorEvaluator` families).
 - C0 and D0 dispatch for every mass mask, including the existing infrared sectors.
 - The negative-Källén C0 representation and the all-zero-momentum massive
   triangle limit.

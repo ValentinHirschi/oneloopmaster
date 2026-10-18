@@ -94,8 +94,8 @@ This is not a runtime scalar-master evaluator callback.
 ## Tensor coefficients
 
 [`tensor.rs`](src/native/tensor.rs) is a hand-written generic port of OneLOop's
-bubble tensor routines (`bub0`-`bub111`, `bnlog`, `solabc`) and `tadpn`, exposed
-as `NativeTensorEvaluator<T>` with `TensorIntegral::{An, B11, B111}`. It is not
+bubble tensor routines (`bub0`-`bub1111`, `bnlog`, `solabc`) and `tadpn`, exposed
+as `NativeTensorEvaluator<T>` with `TensorIntegral::{An, B11, B111, B1111}`. It is not
 generated from the symbolic expressions: their Passarino-Veltman forms cancel
 like `(m²/p²)^rank` at small momenta, while OneLOop's root-pair representation
 with the logarithmic `bnlog` series stays accurate there. It keeps OneLOop's
@@ -110,13 +110,64 @@ masses below threshold, and the `bnlog` series by Estrin's scheme on a fixed
 8, 16 or 24 coefficients instead of Horner's rule; `DoubleFloat` and `Float`
 keep the generic code. `tests/native_tensor_binary64.rs` compares it with the
 generic binary64 code and 320 bits on 8,000 random rows over every sector, with
-the symbolic `b0`-`b111`/`an` expressions at 256 bits, and with OneLOop on every
+the symbolic `b0`-`b1111`/`an` expressions at 256 bits, and with OneLOop on every
 bubble/tadpole call of Ninja's recorded streams. Besides OneLOop's
-values and Ninja's B111 formulas, `tests/native_tensor.rs` checks all four
-bubble coefficients against direct Feynman-parameter integrals (595 rows,
+values and Ninja's B111 formulas, `tests/native_tensor.rs` checks all five
+bubble coefficients against direct Feynman-parameter integrals (728 rows,
 `tests/generate_tensor_feynman_fixtures.py`, mpmath): 320-bit results agree
 to 3e-27. Validation and timings are in
 [the 2026-10-17 report](performance/2026-10-17-claude/README.md).
+
+### Rank four (`B1111`)
+
+`TensorIntegral::B1111` returns `[B0, B1, B11, B111, B1111]` for reductions with
+numerator rank `n+2`, with `B1111 = 1/(5 eps) - int_0^1 x^4 log(D(x)/mu²) dx`.
+It is `bub1111` with one deliberate difference: after the mass swap (taken for
+`p² = 0` with `|m1| >= |m0|`, and for `p² != 0` with `|m1| < |m0|`, including the
+massless branch) the result is `B_n = (-1)^n sum_k C(n,k) B_k'`, i.e.
+`B1111 = B0' + 4 B1' + 6 B11' + 4 B111' + B1111'`. OneLOop 3.6 and 3.4 negate
+this sum in all three swap branches (`avh_olo.f90` of OneLOop-3.6 in
+MadGraph5_aMC@NLO's CutTools, lines 3400, 3424 and 3439; `avh_olo_bub.h90` of
+OneLOop-3.4 in IREGI, lines 89, 115 and 132), so their `B1111` has the wrong
+sign wherever the swap is taken, not only at zero momentum (e.g. the corrected
+`B1111(0; 2, 5) = -0.2998475029970859`, where OneLOop returns `+0.2998...`).
+Neither OneLOop nor a library built on it (such as Ninja's `avholo`) is a valid
+`B1111` reference;
+the tests use Feynman-parameter integrals, the exact `b1111` expression and the
+swap identity instead.
+
+At 53 bits rank four needs 9 series coefficients at `|y|_1 = 0.01` and 17 at
+`0.2`, one more than the binary64 tables hold. Rank four therefore keeps the 8,
+16 and 24 coefficients with its own radii, `0.0085` and `0.17` (8 and 16
+coefficients reach `0.0090` and `0.1736`; all 24 reach `0.534`), checked by
+`Binary64::new`. The rank-four length is chosen apart from the others only in
+the `B1111` instantiation (a compile-time condition), so ranks zero to three are
+evaluated exactly as before: `B11` and `B111` are bitwise unchanged, and the
+first four coefficients of `B1111` are bitwise those of `B111` on every route
+(binary64 kernels, generic binary64 code, `DoubleFloat`, `Float`).
+
+`tests/native_tensor_b1111.rs` checks every route against the exact
+`b0`-`b1111` expressions (2,576 rows; 320 bits, or 1280/5120 where the
+Passarino-Veltman form cancels beyond 320; Float(256) within 2e-61, DoubleFloat
+2e-29, binary64 within 5e-14 or the generic code's own accuracy), against the
+Feynman-parameter integrals per sector, on a dyadic ladder `p² = ±2^-4..2^-24`,
+and the swap identity in every branch and both mass orders (binary64 4.4e-15,
+DoubleFloat 8e-26 at `|p²| = 1e300` where its logarithm keeps about 90 bits,
+320 bits 1.5e-83, relative to the size of the terms). Binary64 errors of
+`B1111` are measured relative to the largest coefficient of the row: the swap
+reconstruction cancels to a value up to about ten times smaller than its terms.
+
+The exact `b1111` expression is a Passarino-Veltman recursion that divides by
+`2p²` at each rank above one and has no small-momentum branch. In fixed
+precision it loses about `4 log10(m²/p²)` digits: in binary64 at masses
+`(1, 1.5)` its relative error is 4e-6 at `p² = 2^-8`, 0.6 at `2^-12` and 1e15
+at `2^-24` (also the `1/eps` coefficient, which it obtains through the same
+recursion); in `DoubleFloat` it is 4e-10 at `2^-16` and 2.9 at `2^-24`
+(masses of order one). The native family keeps
+2e-15 relative to `max_k |B_k|` over the whole ladder. Fixed-precision callers
+(`f64`, `DoubleFloat`, binary64 fast paths) should take bubble tensors from
+`NativeTensorEvaluator`; `Float` can use either at a working precision that
+covers the cancellation.
 
 ## Verification and performance gates
 

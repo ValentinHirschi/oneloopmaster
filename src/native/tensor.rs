@@ -1,7 +1,7 @@
 //! Direct Rust bubble and tadpole tensor coefficients.
 //!
-//! This is a port of OneLOop's `bub0`/`bub1`/`bub11`/`bub111`, `bnlog`,
-//! `solabc` and `tadpn` (A. van Hameren, `avh_olo.f90`, after Denner and
+//! This is a port of OneLOop's `bub0`/`bub1`/`bub11`/`bub111`/`bub1111`,
+//! `bnlog`, `solabc` and `tadpn` (A. van Hameren, `avh_olo.f90`, after Denner and
 //! Dittmaier, Nucl. Phys. B734 (2006) 62) to the generic [`NativeFloat`]
 //! domains. It keeps OneLOop's algorithm: the mass ordering by `|Re m|+|Im m|`,
 //! the root-pair representation `lna - bnlog(n, x1) - bnlog(n, x2)` for every
@@ -18,8 +18,13 @@
 //! - `y = log(1-1/x)` is formed with `log1p` and shared by all ranks of a
 //!   root. The series is used for `|y|_1 < 1/2` with a precision-dependent
 //!   term count, which bounds the direct formula's cancellation (about
-//!   `|x|^(n+1)`) by roughly 1.6 digits at rank three. OneLOop switches near
-//!   `|y| = 1/(8(n+1))`, where the rank-three direct formula loses about six.
+//!   `|x|^(n+1)`) by roughly 1.6 digits at rank three (2 at rank four).
+//!   OneLOop switches near `|y| = 1/(8(n+1))`, where the rank-three direct
+//!   formula loses about six.
+//! - The reconstruction after a mass swap is `B_n = (-1)^n sum_k C(n,k) B_k'`
+//!   at every rank. OneLOop's `bub1111` (3.4 and 3.6) negates the rank-four
+//!   sum in each of its three swap branches, so its `B1111` has the wrong sign
+//!   whenever the swap is taken; this port does not.
 //!
 //! Inputs are `p²` (real), `m0²`, `m1²` with `Im <= 0`, and a positive real
 //! `mu²` (the scale is passed squared, unlike OneLOop's `rmu`). Coefficients are
@@ -39,8 +44,8 @@ use symbolica::domains::{
 
 mod binary64;
 
-/// Highest supported longitudinal bubble rank (`B111`).
-pub(crate) const MAX_BUBBLE_RANK: usize = 3;
+/// Highest supported longitudinal bubble rank (`B1111`).
+pub(crate) const MAX_BUBBLE_RANK: usize = 4;
 
 /// Upper bound of the L1 norm of `y = log(1-1/x)` for the series of `bnlog`.
 const SERIES_RADIUS: f64 = 0.5;
@@ -127,14 +132,14 @@ pub(crate) struct TensorKernel<T> {
     two: T,
     half: T,
     pi: T,
-    /// `k+1` and `1/(k+1)` for `k = 0..=3`.
-    counts: [T; 4],
-    inverse: [T; 4],
-    /// `1/(k+1)^2` for `k = 0..=3`.
-    inverse_squared: [T; 4],
+    /// `k+1` and `1/(k+1)` for `k = 0..=4`.
+    counts: [T; MAX_BUBBLE_RANK + 1],
+    inverse: [T; MAX_BUBBLE_RANK + 1],
+    /// `1/(k+1)^2` for `k = 0..=4`.
+    inverse_squared: [T; MAX_BUBBLE_RANK + 1],
     /// Harmonic numbers `H_(n+1)`: `bnlog(n, 1) = -H_(n+1)`.
-    harmonic: [T; 4],
-    series: [BnlogSeries<T>; 4],
+    harmonic: [T; MAX_BUBBLE_RANK + 1],
+    series: [BnlogSeries<T>; MAX_BUBBLE_RANK + 1],
 }
 
 impl<T: NativeFloat> TensorKernel<T> {
@@ -155,12 +160,14 @@ impl<T: NativeFloat> TensorKernel<T> {
                 rational(3, 2),
                 rational(11, 6),
                 rational(25, 12),
+                rational(137, 60),
             ],
             series: [
                 BnlogSeries::new(0, bits, &prototype)?,
                 BnlogSeries::new(1, bits, &prototype)?,
                 BnlogSeries::new(2, bits, &prototype)?,
                 BnlogSeries::new(3, bits, &prototype)?,
+                BnlogSeries::new(4, bits, &prototype)?,
             ],
         })
     }
@@ -212,7 +219,7 @@ impl<T: NativeFloat> TensorKernel<T> {
     ///
     /// For real `0 < x < 1`, `1 - 1/x` lies on the negative axis and
     /// `upper_lip` selects `+i pi` (OneLOop's `sgn` of `Im x`).
-    fn bnlog(&self, x: &C<T>, upper_lip: bool, rank: usize, out: &mut [C<T>; 4]) {
+    fn bnlog(&self, x: &C<T>, upper_lip: bool, rank: usize, out: &mut [C<T>; MAX_BUBBLE_RANK + 1]) {
         let real = x.im.is_fully_zero();
         if real && x.re == self.one {
             for (value, harmonic) in out.iter_mut().zip(&self.harmonic).take(rank + 1) {
@@ -255,7 +262,8 @@ impl<T: NativeFloat> TensorKernel<T> {
             }
         } else {
             // (1 - x^(n+1)) y - sum_(k=0..n) x^k/(n+1-k).
-            let mut powers: [C<T>; 5] = std::array::from_fn(|_| self.complex(self.one.clone()));
+            let mut powers: [C<T>; MAX_BUBBLE_RANK + 2] =
+                std::array::from_fn(|_| self.complex(self.one.clone()));
             for k in 1..=rank + 1 {
                 powers[k] = mul(&powers[k - 1], x);
             }
@@ -273,8 +281,8 @@ impl<T: NativeFloat> TensorKernel<T> {
         }
     }
 
-    /// `[B0, B1, B11, B111]` through `rank`, as `[finite, 1/eps, 1/eps²]`
-    /// triples. `input` is `[p², m0², m1², mu²]`, already validated.
+    /// `[B0, B1, B11, B111, B1111]` through `rank`, as `[finite, 1/eps,
+    /// 1/eps²]` triples. `input` is `[p², m0², m1², mu²]`, already validated.
     pub(crate) fn bubble(&self, input: &[C<T>], rank: usize, output: &mut [C<T>]) {
         debug_assert!(rank <= MAX_BUBBLE_RANK && output.len() == 3 * (rank + 1));
         let momentum = &input[0].re;
@@ -296,9 +304,10 @@ impl<T: NativeFloat> TensorKernel<T> {
             (&input[1], &input[2])
         };
 
-        let mut roots: [[C<T>; 4]; 2] =
+        let mut roots: [[C<T>; MAX_BUBBLE_RANK + 1]; 2] =
             std::array::from_fn(|_| std::array::from_fn(|_| self.complex(self.zero.clone())));
-        let mut finite: [C<T>; 4] = std::array::from_fn(|_| self.complex(self.zero.clone()));
+        let mut finite: [C<T>; MAX_BUBBLE_RANK + 1] =
+            std::array::from_fn(|_| self.complex(self.zero.clone()));
         let reconstruct;
         if momentum.is_fully_zero() {
             let lna = -self.mass_log(m1, mu_squared);
@@ -388,14 +397,22 @@ impl<T: NativeFloat> TensorKernel<T> {
             *value = -value.clone();
         }
         if reconstruct {
-            // B(p; m0, m1) from B(p; m1, m0) (the q -> -q-p substitution).
-            let [b0, b1, b11, b111] = finite.clone();
+            // B(p; m0, m1) from B(p; m1, m0) (the q -> -q-p substitution):
+            // B_n = (-1)^n sum_k C(n,k) B_k', with a plus sign at rank four.
+            let [b0, b1, b11, b111, b1111] = finite.clone();
             finite[1] = -(b0.clone() + &b1);
             if rank >= 2 {
                 finite[2] = b11.clone() + &Self::scale(&b1, &self.two) + &b0;
             }
             if rank >= 3 {
-                finite[3] = -(b111 + &Self::scale(&(b11 + &b1), &self.counts[2]) + &b0);
+                finite[3] =
+                    -(b111.clone() + &Self::scale(&(b11.clone() + &b1), &self.counts[2]) + &b0);
+            }
+            if rank >= 4 {
+                finite[4] = b1111
+                    + &Self::scale(&(b111 + &b1), &self.counts[3])
+                    + &Self::scale(&b11, &(self.counts[2].clone() * &self.two))
+                    + &b0;
             }
         }
         let poles = [
@@ -403,6 +420,7 @@ impl<T: NativeFloat> TensorKernel<T> {
             -self.half.clone(),
             self.inverse[2].clone(),
             -self.inverse[3].clone(),
+            self.inverse[4].clone(),
         ];
         for (n, (value, pole)) in finite.into_iter().zip(poles).enumerate().take(rank + 1) {
             output[3 * n] = value;
@@ -455,6 +473,10 @@ pub enum TensorIntegral {
     B11,
     /// `[B0, B1, B11, B111]`, for reductions with numerator rank `n+1`.
     B111,
+    /// `[B0, B1, B11, B111, B1111]`, for reductions with numerator rank
+    /// `n+2`. `B1111 = 1/(5 eps) - int_0^1 x^4 log(D(x)/mu²) dx`; its
+    /// first four coefficients are those of [`B111`](Self::B111), bitwise.
+    B1111,
 }
 
 impl TensorIntegral {
@@ -464,6 +486,7 @@ impl TensorIntegral {
             Self::An => "An",
             Self::B11 => "B11",
             Self::B111 => "B111",
+            Self::B1111 => "B1111",
         }
     }
 
@@ -471,7 +494,7 @@ impl TensorIntegral {
     pub fn arity(self) -> usize {
         match self {
             Self::An => 2,
-            Self::B11 | Self::B111 => 4,
+            Self::B11 | Self::B111 | Self::B1111 => 4,
         }
     }
 
@@ -480,6 +503,7 @@ impl TensorIntegral {
         match self {
             Self::An | Self::B11 => 3,
             Self::B111 => 4,
+            Self::B1111 => 5,
         }
     }
 
@@ -494,13 +518,14 @@ impl TensorIntegral {
             Self::An => &["A0", "A00", "A0000"],
             Self::B11 => &["B0", "B1", "B11"],
             Self::B111 => &["B0", "B1", "B11", "B111"],
+            Self::B1111 => &["B0", "B1", "B11", "B111", "B1111"],
         }
     }
 
     fn scalar_domain(self) -> crate::ScalarIntegral {
         match self {
             Self::An => crate::ScalarIntegral::A0,
-            Self::B11 | Self::B111 => crate::ScalarIntegral::B0,
+            Self::B11 | Self::B111 | Self::B1111 => crate::ScalarIntegral::B0,
         }
     }
 }
@@ -636,6 +661,7 @@ impl<T: NativeFloat> NativeTensorEvaluator<T> {
             TensorIntegral::An => self.kernel.tadpole(input, output),
             TensorIntegral::B11 => self.kernel.bubble(input, 2, output),
             TensorIntegral::B111 => self.kernel.bubble(input, 3, output),
+            TensorIntegral::B1111 => self.kernel.bubble(input, 4, output),
         }
     }
 
@@ -682,10 +708,13 @@ fn binary64_row<T: NativeFloat>(
             .map(|(input, output)| kernel.tadpole(input, output))
             .is_some(),
         TensorIntegral::B11 => cast::<T, 4, 9>(input, output)
-            .map(|(input, output)| kernel.bubble::<2>(input, output))
+            .map(|(input, output)| kernel.bubble::<2, 4, 5>(input, output))
             .is_some(),
         TensorIntegral::B111 => cast::<T, 4, 12>(input, output)
-            .map(|(input, output)| kernel.bubble::<3>(input, output))
+            .map(|(input, output)| kernel.bubble::<3, 4, 5>(input, output))
+            .is_some(),
+        TensorIntegral::B1111 => cast::<T, 4, 15>(input, output)
+            .map(|(input, output)| kernel.bubble_rank_four(input, output))
             .is_some(),
     }
 }

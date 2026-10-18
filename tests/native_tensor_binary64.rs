@@ -1,9 +1,10 @@
 //! The binary64 tensor kernels (`NativeTensorEvaluator<f64>`) against the
 //! generic code of the same algorithm in binary64 (`set_binary64(false)`), at
 //! 320 bits and against the exact symbolic expressions (`b0`, `b1`, `b11`,
-//! `b111`, `an`) at 256 bits: randomized kinematics over every sector, and
-//! every distinct bubble/tadpole call of Ninja's recorded master streams,
-//! also against OneLOop.
+//! `b111`, `b1111`, `an`) at 256 bits: randomized kinematics over every
+//! sector, and every distinct bubble/tadpole call of Ninja's recorded master
+//! streams, also against OneLOop (through rank three; OneLOop's rank-four
+//! mass swap has the wrong sign).
 use oneloop::{LaurentSeries, NativeTensorEvaluator, TensorIntegral};
 use symbolica::{
     atom::{Atom, AtomCore},
@@ -75,15 +76,20 @@ fn evaluate_float(family: TensorIntegral, input: &[C], bits: u32) -> Vec<Complex
 /// Largest change of each output at 320 bits when p² moves by a relative
 /// 2^-53: threshold rows are ill-conditioned (`Im B ~ sqrt(p² - threshold)`),
 /// so no binary64 algorithm can do better for an input rounded to binary64.
+/// `reference` holds the 12 outputs of `B111` or the 15 of `B1111`.
 fn momentum_sensitivity(input: &[C], reference: &[Complex<Float>]) -> Vec<f64> {
     if input[0].re == 0. {
         return vec![0.; reference.len()];
     }
+    let family = if reference.len() == TensorIntegral::B1111.outputs() {
+        TensorIntegral::B1111
+    } else {
+        TensorIntegral::B111
+    };
     let mut sensitivity = vec![0.0_f64; reference.len()];
     for sign in [-1.0, 1.0] {
         let mut evaluator =
-            NativeTensorEvaluator::<Float>::with_binary_precision(TensorIntegral::B111, 320)
-                .unwrap();
+            NativeTensorEvaluator::<Float>::with_binary_precision(family, 320).unwrap();
         let mut shifted: Vec<_> = input.iter().map(|&z| to_float(z, 320)).collect();
         let factor = Float::with_val(320, 1) + Float::with_val(320, sign * 2f64.powi(-53));
         shifted[0].re = shifted[0].re.clone() * factor;
@@ -149,18 +155,32 @@ fn bubble_point(rng: &mut Rng) -> Vec<C> {
 /// Errors of the binary64 kernels and of the generic binary64 code, scaled
 /// like `native_tensor.rs`, after removing the input conditioning.
 fn errors(input: &[C]) -> (Vec<f64>, Vec<f64>, Vec<C>, Vec<C>) {
-    let family = TensorIntegral::B111;
+    let family = TensorIntegral::B1111;
     let fast = evaluate_f64(family, input, true);
     let generic = evaluate_f64(family, input, false);
     let reference = evaluate_float(family, input, 320);
     let sensitivity = momentum_sensitivity(input, &reference);
+    // B1111 relative to the row's largest coefficient (native_tensor_b1111.rs):
+    // its mass-swap reconstruction cancels to below its terms.
+    let sizes: Vec<f64> = (0..reference.len())
+        .map(|index| {
+            if index < 12 {
+                float_norm(&reference[index]) + 1e-3
+            } else {
+                (0..5)
+                    .map(|k| float_norm(&reference[3 * k + index % 3]))
+                    .fold(0.0, f64::max)
+                    + 1e-3
+            }
+        })
+        .collect();
     let scaled = |values: &[C]| -> Vec<f64> {
         values
             .iter()
             .zip(&reference)
             .zip(&sensitivity)
-            .map(|((value, reference), sensitivity)| {
-                let size = float_norm(reference) + 1e-3;
+            .zip(&sizes)
+            .map(|(((value, reference), sensitivity), size)| {
                 ((difference(&to_float(*value, 320), reference) - 4. * sensitivity).max(0.)) / size
             })
             .collect()
@@ -177,19 +197,27 @@ fn binary64_kernels_match_generic_code_and_higher_precision() {
     let mut rng = Rng(0x2545_f491_4f6c_dd1d);
     let (mut all_fast, mut all_generic) = (Vec::new(), Vec::new());
     let (mut fast_better, mut generic_better) = (0, 0);
-    let mut failures = Vec::new();
+    let (mut failures, mut less_accurate) = (Vec::new(), Vec::new());
     for _ in 0..8000 {
         let input = bubble_point(&mut rng);
         let (fast, generic, fast_values, _) = errors(&input);
-        // B11 is the leading part of B111, bitwise.
+        // B11 and B111 are the leading parts of B1111, bitwise.
         assert_eq!(
             evaluate_f64(TensorIntegral::B11, &input, true),
             fast_values[..9],
             "{input:?}"
         );
+        assert_eq!(
+            evaluate_f64(TensorIntegral::B111, &input, true),
+            fast_values[..12],
+            "{input:?}"
+        );
         for (index, (&fast, &generic)) in fast.iter().zip(&generic).enumerate() {
             if fast > 16. * generic.max(f64::EPSILON) && fast > NOISE {
                 generic_better += 1;
+                less_accurate.push(format!(
+                    "{input:?} output {index}: binary64 kernels {fast:e}, generic {generic:e}"
+                ));
             }
             if generic > 16. * fast.max(f64::EPSILON) && generic > NOISE {
                 fast_better += 1;
@@ -218,7 +246,7 @@ fn binary64_kernels_match_generic_code_and_higher_precision() {
         show(&generic)
     );
     assert!(failures.is_empty(), "{}", failures.join("\n"));
-    assert_eq!(generic_better, 0);
+    assert_eq!(generic_better, 0, "{}", less_accurate.join("\n"));
     // No systematic loss: every quantile within twice the generic code's.
     for (fast, generic) in fast.iter().zip(&generic) {
         assert!(
@@ -307,8 +335,41 @@ fn ninja_stream_rows_match_oneloop_and_higher_precision() {
     let rows = stream_rows();
     assert_eq!(rows.len(), 290);
     let (mut worst_oneloop, mut worst_reference, mut worst_generic) = (0.0_f64, 0.0_f64, 0.0_f64);
+    let mut worst_rank_four = 0.0_f64;
     let mut attributed = Vec::new();
     for row in &rows {
+        if row.family != TensorIntegral::An {
+            // B1111 at Ninja's bubble kinematics: the leading part bitwise
+            // that of the requested family, B1111 itself against 320 bits.
+            let family = TensorIntegral::B1111;
+            let actual = evaluate_f64(family, &row.input, true);
+            let generic = evaluate_f64(family, &row.input, false);
+            let reference = evaluate_float(family, &row.input, 320);
+            assert_eq!(
+                evaluate_f64(row.family, &row.input, true),
+                actual[..row.family.outputs()],
+                "{}",
+                row.case
+            );
+            for index in 12..15 {
+                // Relative to the row's largest coefficient, as in
+                // native_tensor_b1111.rs (the mass swap cancels at rank four).
+                let size = (0..5)
+                    .map(|k| float_norm(&reference[3 * k + index % 3]))
+                    .fold(0.0, f64::max)
+                    + 1e-3;
+                let error = difference(&to_float(actual[index], 320), &reference[index]) / size;
+                let generic_error =
+                    difference(&to_float(generic[index], 320), &reference[index]) / size;
+                worst_rank_four = worst_rank_four.max(error);
+                assert!(
+                    error < BINARY64_TOLERANCE && error <= (4. * generic_error).max(NOISE),
+                    "{} {:?} B1111 output {index}: {error:e} against 320 bits (generic {generic_error:e})",
+                    row.case,
+                    row.input
+                );
+            }
+        }
         let actual = evaluate_f64(row.family, &row.input, true);
         let reference = evaluate_float(row.family, &row.input, 320);
         let generic = evaluate_f64(row.family, &row.input, false);
@@ -352,8 +413,8 @@ fn ninja_stream_rows_match_oneloop_and_higher_precision() {
         }
     }
     eprintln!(
-        "Ninja stream rows: worst against 320 bits {worst_reference:e} (generic code {worst_generic:e}), \
-         against OneLOop {worst_oneloop:e}; \
+        "Ninja stream rows: worst against 320 bits {worst_reference:e} (generic code {worst_generic:e}; \
+         B1111 at the bubble rows {worst_rank_four:e}), against OneLOop {worst_oneloop:e}; \
          OneLOop differs by more than 1e-13 where this kernel matches 320 bits: {}",
         attributed.join(", ")
     );
@@ -369,8 +430,11 @@ fn symbolic_coefficients(family: TensorIntegral, parameters: &[Atom]) -> Vec<Ato
                 oneloop::b1(p, m0, m1, mu),
                 oneloop::b11(p, m0, m1, mu),
             ];
-            if family == TensorIntegral::B111 {
+            if family != TensorIntegral::B11 {
                 series.push(oneloop::b111(p, m0, m1, mu));
+            }
+            if family == TensorIntegral::B1111 {
+                series.push(oneloop::b1111(p, m0, m1, mu));
             }
             series
         }
@@ -427,8 +491,10 @@ fn binary64_kernels_match_symbolic_expressions() {
         .map(|row| (row.family, row.input))
         .collect();
     let mut rng = Rng(0x6a09_e667_f3bc_c908);
-    for _ in 0..1500 {
-        rows.push((TensorIntegral::B111, bubble_point(&mut rng)));
+    let bubbles: Vec<_> = (0..1500).map(|_| bubble_point(&mut rng)).collect();
+    // B1111 on the same points: its first twelve outputs are those of B111.
+    for family in [TensorIntegral::B111, TensorIntegral::B1111] {
+        rows.extend(bubbles.iter().map(|input| (family, input.clone())));
     }
     for _ in 0..300 {
         let scale = rng.log_uniform(1e-6, 1e6);
@@ -442,6 +508,7 @@ fn binary64_kernels_match_symbolic_expressions() {
         TensorIntegral::An,
         TensorIntegral::B11,
         TensorIntegral::B111,
+        TensorIntegral::B1111,
     ];
     let mut at_256: Vec<Symbolic> = families.iter().map(|&f| symbolic(f, 256)).collect();
     let mut at_1024: Vec<Symbolic> = families.iter().map(|&f| symbolic(f, 1024)).collect();
@@ -456,7 +523,12 @@ fn binary64_kernels_match_symbolic_expressions() {
         let sensitivity = if *family == TensorIntegral::An {
             vec![0.; 12]
         } else {
-            let reference = evaluate_float(TensorIntegral::B111, input, 320);
+            let widest = if *family == TensorIntegral::B1111 {
+                TensorIntegral::B1111
+            } else {
+                TensorIntegral::B111
+            };
+            let reference = evaluate_float(widest, input, 320);
             momentum_sensitivity(input, &reference)
         };
         for index in 0..family.outputs() {

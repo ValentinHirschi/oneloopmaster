@@ -17,14 +17,24 @@
 //! - The series of `bnlog` is evaluated with Estrin's scheme instead of
 //!   Horner's rule, on the first 8 coefficients of each rank for
 //!   `|y|_1 <= 0.01`, the first 16 for `|y|_1 <= 0.2` (enough there for the
-//!   `2^-57` truncation bound of every rank, see [`Binary64::new`]), and
-//!   otherwise on all of them (15 to 23 per rank, zero padded to 16 or 24).
-//!   Horner's rule over the minimal count is a dependent chain of up to 21
-//!   complex multiply-adds per rank; Estrin's has 3 to 5 levels, and real `y`
-//!   needs no complex arithmetic at all.
+//!   `2^-57` truncation bound of ranks zero to three, see [`Binary64::new`]),
+//!   and otherwise on all of them (15 to 24 per rank, zero padded to 16 or
+//!   24). Rank four needs 9 and 17 coefficients at those radii, so it keeps
+//!   the same three lengths with its own, smaller radii (`0.0085` and `0.17`;
+//!   8 and 16 coefficients reach `0.0090` and `0.1736` there). Horner's rule
+//!   over the minimal count is a dependent chain of up to 23 complex
+//!   multiply-adds per rank; Estrin's has 3 to 5 levels, and real `y` needs
+//!   no complex arithmetic at all.
 //!
 //! Each rank's value depends only on the row and that rank, so the rank-two
-//! coefficients of `B111` are bitwise those of `B11`.
+//! coefficients of `B111` are bitwise those of `B11`, and the rank-three
+//! coefficients of `B1111` bitwise those of `B111`. Rank four changes nothing
+//! in the `B11` and `B111` kernels: its series length is chosen apart from the
+//! others only when `RANK == 4` (a compile-time condition), their per-rank
+//! arrays keep their lengths (the `W` and `P` parameters of
+//! [`Binary64::bubble`]), and the rank-four kernel is not inlined into the
+//! callers of the others. Their machine code is that of the crate before rank
+//! four (compared instruction by instruction on x86-64).
 use super::{BnlogSeries, MAX_BUBBLE_RANK, SERIES_RADIUS};
 use crate::native::primitives::{C, inverse, sqrt};
 use std::f64::consts::PI;
@@ -37,10 +47,14 @@ const TINY: usize = 8;
 const SHORT: usize = 16;
 /// Coefficients evaluated otherwise (zero padded).
 const LONG: usize = 24;
-/// Largest `|y|_1` for which 8 coefficients meet every rank's bound.
+/// Largest `|y|_1` for which 8 coefficients meet the bound of ranks 0 to 3.
 const TINY_RADIUS: f64 = 0.01;
-/// Largest `|y|_1` for which 16 coefficients meet every rank's bound.
+/// Largest `|y|_1` for which 16 coefficients meet the bound of ranks 0 to 3.
 const SHORT_RADIUS: f64 = 0.2;
+/// [`TINY_RADIUS`] of rank four (8 coefficients reach `|y|_1 = 0.0090`).
+const TINY_RADIUS_4: f64 = 0.0085;
+/// [`SHORT_RADIUS`] of rank four (16 coefficients reach `|y|_1 = 0.1736`).
+const SHORT_RADIUS_4: f64 = 0.17;
 
 /// How many coefficients of the series a row needs.
 #[derive(Clone, Copy)]
@@ -61,16 +75,42 @@ impl Length {
             Self::Long
         }
     }
+
+    /// [`Self::of`] for rank four.
+    #[inline(always)]
+    fn of_rank_four(size: f64) -> Self {
+        if size <= TINY_RADIUS_4 {
+            Self::Tiny
+        } else if size <= SHORT_RADIUS_4 {
+            Self::Short
+        } else {
+            Self::Long
+        }
+    }
+
+    /// The length of rank `n` of a `RANK` family, given `length = of(size)`:
+    /// `of(size)` except for rank four (resolved at compile time for
+    /// `RANK <= 3`).
+    #[inline(always)]
+    fn of_rank<const RANK: usize>(n: usize, size: f64, length: Self) -> Self {
+        if RANK == 4 && n == 4 {
+            Self::of_rank_four(size)
+        } else {
+            length
+        }
+    }
 }
 
 const ZERO: C64 = C64 { re: 0.0, im: 0.0 };
+/// Ranks `0..=MAX_BUBBLE_RANK`.
+const RANKS: usize = MAX_BUBBLE_RANK + 1;
 /// `1/(n+1)`, `1/(n+1)^2`, `n+1` and the harmonic numbers `H_(n+1)`.
-const INVERSE: [f64; 4] = [1.0, 0.5, 1.0 / 3.0, 0.25];
-const INVERSE_SQUARED: [f64; 4] = [1.0, 0.25, 1.0 / 9.0, 0.0625];
-const COUNTS: [f64; 4] = [1.0, 2.0, 3.0, 4.0];
-const HARMONIC: [f64; 4] = [1.0, 1.5, 11.0 / 6.0, 25.0 / 12.0];
-/// The `1/epsilon` coefficients of `B0, B1, B11, B111`.
-const POLES: [f64; 4] = [1.0, -0.5, 1.0 / 3.0, -0.25];
+const INVERSE: [f64; RANKS] = [1.0, 0.5, 1.0 / 3.0, 0.25, 0.2];
+const INVERSE_SQUARED: [f64; RANKS] = [1.0, 0.25, 1.0 / 9.0, 0.0625, 0.04];
+const COUNTS: [f64; RANKS] = [1.0, 2.0, 3.0, 4.0, 5.0];
+const HARMONIC: [f64; RANKS] = [1.0, 1.5, 11.0 / 6.0, 25.0 / 12.0, 137.0 / 60.0];
+/// The `1/epsilon` coefficients of `B0, B1, B11, B111, B1111`.
+const POLES: [f64; RANKS] = [1.0, -0.5, 1.0 / 3.0, -0.25, 0.2];
 
 #[inline(always)]
 fn complex(re: f64, im: f64) -> C64 {
@@ -264,23 +304,29 @@ fn estrin_long_complex(c: &[f64; LONG], y: &Powers<C64>) -> C64 {
 #[derive(Clone)]
 pub(super) struct Binary64 {
     /// The first [`TINY`] coefficients of each rank.
-    tiny: [[f64; TINY]; MAX_BUBBLE_RANK + 1],
+    tiny: [[f64; TINY]; RANKS],
     /// The first [`SHORT`] coefficients of each rank (zero padded).
-    short: [[f64; SHORT]; MAX_BUBBLE_RANK + 1],
+    short: [[f64; SHORT]; RANKS],
     /// All coefficients of each rank (zero padded).
-    long: [[f64; LONG]; MAX_BUBBLE_RANK + 1],
+    long: [[f64; LONG]; RANKS],
 }
 
 impl Binary64 {
     /// The coefficients of the parent module's series at 53 bits. Checks the
     /// three truncations: with all coefficients every rank meets its bound up
     /// to [`SERIES_RADIUS`], with [`SHORT`] up to [`SHORT_RADIUS`] and with
-    /// [`TINY`] up to [`TINY_RADIUS`].
+    /// [`TINY`] up to [`TINY_RADIUS`] (for rank four up to [`SHORT_RADIUS_4`]
+    /// and [`TINY_RADIUS_4`]).
     pub(super) fn new() -> Result<Self, String> {
-        let mut tiny = [[0.0; TINY]; MAX_BUBBLE_RANK + 1];
-        let mut short = [[0.0; SHORT]; MAX_BUBBLE_RANK + 1];
-        let mut long = [[0.0; LONG]; MAX_BUBBLE_RANK + 1];
+        let mut tiny = [[0.0; TINY]; RANKS];
+        let mut short = [[0.0; SHORT]; RANKS];
+        let mut long = [[0.0; LONG]; RANKS];
         for rank in 0..=MAX_BUBBLE_RANK {
+            let (short_radius, tiny_radius) = if rank == 4 {
+                (SHORT_RADIUS_4, TINY_RADIUS_4)
+            } else {
+                (SHORT_RADIUS, TINY_RADIUS)
+            };
             let series = BnlogSeries::<f64>::new(rank, 53, &0.0)?;
             let needed = |radius: f64| {
                 series
@@ -291,8 +337,8 @@ impl Binary64 {
             };
             if series.coefficients.len() > LONG
                 || needed(SERIES_RADIUS) > series.coefficients.len()
-                || needed(SHORT_RADIUS) > SHORT
-                || needed(TINY_RADIUS) > TINY
+                || needed(short_radius) > SHORT
+                || needed(tiny_radius) > TINY
             {
                 return Err("binary64 bnlog series exceeds its fixed length".into());
             }
@@ -330,9 +376,16 @@ impl Binary64 {
 
     /// `bnlog(n, x)` for `n = 0..=RANK` and real `x != 0`, given `w = -1/x`
     /// (formed by the caller from the inputs). For `0 < x < 1`, `upper_lip`
-    /// selects `+i pi` for `log(1-1/x)`.
+    /// selects `+i pi` for `log(1-1/x)`. `W` and `P` are the array lengths
+    /// of [`Self::bubble`].
     #[inline(always)]
-    fn bnlog_real<const RANK: usize>(&self, x: f64, w: f64, upper_lip: bool, out: &mut [C64; 4]) {
+    fn bnlog_real<const RANK: usize, const W: usize, const P: usize>(
+        &self,
+        x: f64,
+        w: f64,
+        upper_lip: bool,
+        out: &mut [C64; W],
+    ) {
         if x == 1.0 {
             for (value, harmonic) in out.iter_mut().zip(HARMONIC).take(RANK + 1) {
                 *value = complex(-harmonic, 0.0);
@@ -361,12 +414,13 @@ impl Binary64 {
                 if n > 0 {
                     power *= xy;
                 }
+                let length = Length::of_rank::<RANK>(n, y.abs(), length);
                 let series = self.series(n, &powers, length);
                 *value = complex(-COUNTS[n] * (series * y * power), 0.0);
             }
         } else {
             // (1 - x^(n+1)) y - sum_(k=0..n) x^k/(n+1-k), y = Y + i angle.
-            let mut powers = [1.0; 5];
+            let mut powers = [1.0; P];
             for k in 1..=RANK + 1 {
                 powers[k] = powers[k - 1] * x;
             }
@@ -384,9 +438,14 @@ impl Binary64 {
     /// `bnlog(n, x)` for `n = 0..=RANK` and complex `x` (a real `x` takes
     /// [`Self::bnlog_real`] with its lip).
     #[inline(always)]
-    fn bnlog<const RANK: usize>(&self, x: C64, upper_lip: bool, out: &mut [C64; 4]) {
+    fn bnlog<const RANK: usize, const W: usize, const P: usize>(
+        &self,
+        x: C64,
+        upper_lip: bool,
+        out: &mut [C64; W],
+    ) {
         if x.im == 0.0 {
-            return self.bnlog_real::<RANK>(x.re, -1.0 / x.re, upper_lip, out);
+            return self.bnlog_real::<RANK, W, P>(x.re, -1.0 / x.re, upper_lip, out);
         }
         let reciprocal = inverse(&x);
         let y = log1p(complex(-reciprocal.re, -reciprocal.im));
@@ -406,11 +465,12 @@ impl Binary64 {
                 if n > 0 {
                     power = mul(power, xy);
                 }
+                let length = Length::of_rank::<RANK>(n, magnitude, length);
                 let series = self.series_complex(n, &powers, length);
                 *value = scale(mul(mul(series, y), power), -COUNTS[n]);
             }
         } else {
-            let mut powers = [complex(1.0, 0.0); 5];
+            let mut powers = [complex(1.0, 0.0); P];
             for k in 1..=RANK + 1 {
                 powers[k] = mul(powers[k - 1], x);
             }
@@ -425,10 +485,26 @@ impl Binary64 {
         }
     }
 
-    /// `[B0, B1, B11, B111]` through `RANK`; see the parent's `bubble`.
+    /// `[B0, B1, B11, B111, B1111]`, [`Self::bubble`] at rank four. Out of
+    /// line, so that the callers of the lower ranks keep their code.
+    #[inline(never)]
+    pub(super) fn bubble_rank_four(&self, input: &[C64; 4], output: &mut [C64]) {
+        self.bubble::<4, 5, 6>(input, output);
+    }
+
+    /// `[B0, B1, B11, B111, B1111]` through `RANK`; see the parent's `bubble`.
+    /// `W` (at least `RANK+1`) is the length of the per-rank arrays and `P =
+    /// W+1` that of the root powers: 4 and 5 through rank three (`B11` as
+    /// `bubble::<2, 4, 5>`, `B111` as `bubble::<3, 4, 5>`), as before rank
+    /// four existed, so that those kernels compile to the same code.
     #[inline]
-    pub(super) fn bubble<const RANK: usize>(&self, input: &[C64; 4], output: &mut [C64]) {
-        debug_assert!(RANK <= MAX_BUBBLE_RANK && output.len() == 3 * (RANK + 1));
+    pub(super) fn bubble<const RANK: usize, const W: usize, const P: usize>(
+        &self,
+        input: &[C64; 4],
+        output: &mut [C64],
+    ) {
+        const { assert!(RANK < W && W <= RANKS && P == W + 1) };
+        debug_assert!(output.len() == 3 * (RANK + 1));
         let momentum = input[0].re;
         let mu_squared = input[3].re;
         if momentum == 0.0 && is_zero(input[1]) && is_zero(input[2]) {
@@ -446,8 +522,8 @@ impl Binary64 {
             (input[1], input[2])
         };
         let real_masses = m0.im == 0.0 && m1.im == 0.0;
-        let mut roots = [ZERO; 4];
-        let mut finite = [ZERO; 4];
+        let mut roots = [ZERO; W];
+        let mut finite = [ZERO; W];
         let reconstruct;
         if momentum == 0.0 {
             let lna = neg(mass_log(m1, mu_squared));
@@ -461,13 +537,13 @@ impl Binary64 {
                 let difference = sub(m1, m0);
                 let lip = difference.re < 0.0;
                 if is_zero(m0) {
-                    self.bnlog_real::<RANK>(1.0, -1.0, lip, &mut roots);
+                    self.bnlog_real::<RANK, W, P>(1.0, -1.0, lip, &mut roots);
                 } else if real_masses {
                     let (x, w) = (m1.re / difference.re, -difference.re / m1.re);
-                    self.bnlog_real::<RANK>(x, w, lip, &mut roots);
+                    self.bnlog_real::<RANK, W, P>(x, w, lip, &mut roots);
                 } else {
                     let x = crate::native::primitives::mul(&m1, &inverse(&difference));
-                    self.bnlog::<RANK>(x, lip, &mut roots);
+                    self.bnlog::<RANK, W, P>(x, lip, &mut roots);
                 }
                 for (n, value) in finite.iter_mut().enumerate().take(RANK + 1) {
                     *value = scale(sub(lna, roots[n]), INVERSE[n]);
@@ -492,10 +568,10 @@ impl Binary64 {
                 if shifted_mass.im == 0.0 {
                     let x = -shifted_mass.re / momentum;
                     let w = momentum / shifted_mass.re;
-                    self.bnlog_real::<RANK>(x, w, lip, &mut roots);
+                    self.bnlog_real::<RANK, W, P>(x, w, lip, &mut roots);
                 } else {
                     let x = complex(-shifted_mass.re / momentum, -shifted_mass.im / momentum);
-                    self.bnlog::<RANK>(x, lip, &mut roots);
+                    self.bnlog::<RANK, W, P>(x, lip, &mut roots);
                 }
                 for (n, value) in finite.iter_mut().enumerate().take(RANK + 1) {
                     // (((lna - bnlog) (n+1)) + 1)/(n+1)^2.
@@ -517,7 +593,7 @@ impl Binary64 {
                     // Complex-conjugate roots: bnlog(x1) + bnlog(x2) is
                     // 2 Re bnlog(x1), where x1 = (-b + i sqrt(-D))/(2a).
                     let x = complex(-linear / twice_a, (-discriminant).sqrt() / twice_a);
-                    self.bnlog::<RANK>(x, true, &mut roots);
+                    self.bnlog::<RANK, W, P>(x, true, &mut roots);
                     for (n, value) in finite.iter_mut().enumerate().take(RANK + 1) {
                         let sum = complex(lna.re - 2.0 * roots[n].re, lna.im);
                         *value = scale(sum, INVERSE[n]);
@@ -543,9 +619,9 @@ impl Binary64 {
                             -twice_a / minus,
                         )
                     };
-                    let mut second = [ZERO; 4];
-                    self.bnlog_real::<RANK>(x1, w1, true, &mut roots);
-                    self.bnlog_real::<RANK>(x2, w2, false, &mut second);
+                    let mut second = [ZERO; W];
+                    self.bnlog_real::<RANK, W, P>(x1, w1, true, &mut roots);
+                    self.bnlog_real::<RANK, W, P>(x2, w2, false, &mut second);
                     for (n, value) in finite.iter_mut().enumerate().take(RANK + 1) {
                         *value = scale(sub(sub(lna, roots[n]), second[n]), INVERSE[n]);
                     }
@@ -569,9 +645,9 @@ impl Binary64 {
                         scale(minus, 1.0 / twice_a),
                     )
                 };
-                let mut second = [ZERO; 4];
-                self.bnlog::<RANK>(x1, true, &mut roots);
-                self.bnlog::<RANK>(x2, false, &mut second);
+                let mut second = [ZERO; W];
+                self.bnlog::<RANK, W, P>(x1, true, &mut roots);
+                self.bnlog::<RANK, W, P>(x2, false, &mut second);
                 for (n, value) in finite.iter_mut().enumerate().take(RANK + 1) {
                     *value = scale(sub(sub(lna, roots[n]), second[n]), INVERSE[n]);
                 }
@@ -583,11 +659,20 @@ impl Binary64 {
             *value = neg(*value);
         }
         if reconstruct {
-            // B(p; m0, m1) from B(p; m1, m0) (the q -> -q-p substitution).
-            let [b0, b1, b11, b111] = finite;
+            // B(p; m0, m1) from B(p; m1, m0) (the q -> -q-p substitution):
+            // B_n = (-1)^n sum_k C(n,k) B_k', with a plus sign at rank four.
+            let (b0, b1, b11, b111) = (finite[0], finite[1], finite[2], finite[3]);
             finite[1] = neg(add(b0, b1));
             finite[2] = add(add(b11, scale(b1, 2.0)), b0);
             finite[3] = neg(add(add(b111, scale(add(b11, b1), 3.0)), b0));
+            if RANK >= 4 {
+                // finite[W - 1] is finite[4] here (W = 5).
+                let b1111 = finite[W - 1];
+                finite[W - 1] = add(
+                    add(add(b1111, scale(add(b111, b1), 4.0)), scale(b11, 6.0)),
+                    b0,
+                );
+            }
         }
         for (n, value) in finite.into_iter().enumerate().take(RANK + 1) {
             output[3 * n] = value;
