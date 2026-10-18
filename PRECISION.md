@@ -53,6 +53,20 @@ explicit resource limits; see [expression inspection](README.md#combining-integr
   supplied to the callback, including `mu_squared`. Transparent function-map compilation
   remains available and avoids making the master opaque to an outer optimizer.
 
+- One expression branch depends on the working precision: the dilogarithm
+  divided difference of nearly coincident arguments (`sheet_exact::near_difference`)
+  uses a Bernoulli expansion through `s^22` only when its first omitted term,
+  bounded by `8 (max|s|²/39)^12`, leaves `1` unchanged at the working precision
+  (`(1 + bound) - 1 == 0`). That holds throughout in binary64, but at 256 bits
+  only for `|s| < 3e-3`; otherwise the direct difference is used, whose loss
+  stays in the tracked precision. DoubleFloat represents `1 + bound` exactly and
+  keeps the direct difference. Every other branch is an exact test.
+- `Float` tracks a difference with the bits left after its cancellation and
+  computes later operations at that precision, even when the difference is
+  exact. Coefficients that are invariants (`m2 - m3 - p2` for equal masses, or
+  a coefficient sum equal to a tiny invariant) are therefore formed without
+  such cancellation in the contour box (`tests/d0_tiny_invariant.rs`).
+
 `EvaluationBackend::{Native, SymJit, Expression}` selects the manual Rust route.
 `DEFAULT_BACKEND` is Native, selected from measured mixed-family throughput.
 `PrecisionEvaluator::with_backend(..., EvaluationBackend::Native)` selects direct

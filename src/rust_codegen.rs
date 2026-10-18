@@ -364,7 +364,7 @@ struct Generator<'a> {
 
 impl<'a> Generator<'a> {
     fn module(&mut self, graph: &Graph, inline_arithmetic: bool) -> Result<String, String> {
-        let body = self.body(graph, true)?;
+        let body = self.body(graph, true, &[])?;
         let mut output = header();
         output.push_str("#![allow(unused_imports, unused_variables)]\nuse super::{C, Context, NativeFloat};\nuse super::primitives::*;\n");
         if inline_arithmetic {
@@ -383,19 +383,31 @@ impl<'a> Generator<'a> {
         Ok(output)
     }
 
-    fn helper(&mut self, graph: &Graph) -> Result<String, String> {
+    /// `bound[i]` is the global constant every call passes as parameter `i`;
+    /// such parameters are read from `ctx` and left out of the signature.
+    fn helper(&mut self, graph: &Graph, bound: &[Option<usize>]) -> Result<Callee, String> {
         if graph.output_count != 1 {
             return Err("native helper must have one output".into());
         }
-        let body = self.body(graph, false)?;
+        let body = self.body(graph, false, bound)?;
+        let constant = (0..graph.input_count)
+            .map(|index| bound.get(index).copied().flatten().is_some())
+            .collect::<Vec<_>>();
         // Child names are already canonical, so body+signature identify the
         // implementation even when Symbolica assigned different capture tags.
-        let normalized = format!("{}:{}:{body}", graph.input_count, graph.output_count);
+        let normalized = format!(
+            "{}:{}:{constant:?}:{body}",
+            graph.input_count, graph.output_count
+        );
         if let Some(name) = self.normalized.get(&normalized) {
-            return Ok(name.clone());
+            return Ok(Callee {
+                name: name.clone(),
+                constant,
+            });
         }
         let name = format!("helper_{}", self.helpers.len());
         let parameters = (0..graph.input_count)
+            .filter(|index| !constant[*index])
             .map(|index| format!("a{index}: &C<T>"))
             .chain(std::iter::once("ctx: &Context<T>".into()))
             .collect::<Vec<_>>()
@@ -404,21 +416,29 @@ impl<'a> Generator<'a> {
             "fn {name}<T: NativeFloat>({parameters}) -> C<T> {{\n{body}}}\n\n"
         ));
         self.normalized.insert(normalized, name.clone());
-        Ok(name)
+        Ok(Callee { name, constant })
     }
 
-    fn body(&mut self, graph: &Graph, entry: bool) -> Result<String, String> {
-        let mut callees = HashMap::new();
+    fn body(
+        &mut self,
+        graph: &Graph,
+        entry: bool,
+        bound: &[Option<usize>],
+    ) -> Result<String, String> {
+        let constants = self.constants.graph_constants(graph)?;
+        let mut callees = HashMap::<Signature, Callee>::new();
         for child in &graph.sub_evaluators {
-            let name = self.helper(&child.instructions)?;
+            let callee = self.helper(
+                &child.instructions,
+                &constant_arguments(graph, &constants, bound, child),
+            )?;
             let signature = (child.symbol, child.tags.clone());
-            if let Some(previous) = callees.insert(signature, name.clone())
-                && previous != name
+            if let Some(previous) = callees.insert(signature, callee.clone())
+                && previous != callee
             {
                 return Err("ambiguous exported helper signature".into());
             }
         }
-        let constants = self.constants.graph_constants(graph)?;
         let labels = labels(&graph.instructions)?;
         let live = liveness(&graph.instructions, graph.output_count, &labels)?;
         let mut emitter = Emitter {
@@ -437,7 +457,11 @@ impl<'a> Generator<'a> {
             if entry {
                 writeln!(output, "    let a{index} = &input[{index}];").unwrap();
             }
-            environment.insert(Slot::Param(index), format!("a{index}"));
+            let value = match bound.get(index).copied().flatten() {
+                Some(global) => format!("ctx.constant({global})"),
+                None => format!("a{index}"),
+            };
+            environment.insert(Slot::Param(index), value);
         }
         for (index, global) in constants.into_iter().enumerate() {
             environment.insert(Slot::Const(index), format!("ctx.constant({global})"));
@@ -460,6 +484,66 @@ impl<'a> Generator<'a> {
             writeln!(output, "    {}", results[0]).unwrap();
         }
         Ok(output)
+    }
+}
+
+/// A shared body called from a graph, as its call sites see it.
+#[derive(Clone, Debug, PartialEq)]
+struct Callee {
+    name: String,
+    /// Parameters bound to one constant at every call; calls omit them.
+    constant: Vec<bool>,
+}
+
+impl From<&str> for Callee {
+    fn from(name: &str) -> Self {
+        Self {
+            name: name.into(),
+            constant: Vec::new(),
+        }
+    }
+}
+
+/// Symbolica passes the constants a shared body uses as arguments, through
+/// every enclosing body. For each parameter of `child`, the global constant
+/// that all of its calls in `graph` pass (directly or through a parameter of
+/// `graph` that is itself bound), so the body can read it from `ctx`.
+fn constant_arguments(
+    graph: &Graph,
+    constants: &[usize],
+    bound: &[Option<usize>],
+    child: &SubEvaluator,
+) -> Vec<Option<usize>> {
+    let mut common: Option<Vec<Option<usize>>> = None;
+    for instruction in &graph.instructions {
+        let Instruction::Fun(_, function, _) = instruction else {
+            continue;
+        };
+        let (symbol, tags, arguments) = &**function;
+        if *symbol != child.symbol || *tags != child.tags {
+            continue;
+        }
+        let values = arguments
+            .iter()
+            .map(|slot| match slot {
+                Slot::Const(index) => constants.get(*index).copied(),
+                Slot::Param(index) => bound.get(*index).copied().flatten(),
+                _ => None,
+            })
+            .collect::<Vec<_>>();
+        common = Some(match common {
+            None => values,
+            Some(previous) if previous.len() == values.len() => previous
+                .into_iter()
+                .zip(values)
+                .map(|(first, second)| if first == second { first } else { None })
+                .collect(),
+            Some(_) => return Vec::new(),
+        });
+    }
+    match common {
+        Some(values) if values.len() == child.instructions.input_count => values,
+        _ => Vec::new(),
     }
 }
 
@@ -782,7 +866,7 @@ struct Emitter<'a, 'b> {
     instructions: &'a [Instruction],
     labels: HashMap<usize, usize>,
     live: Vec<BTreeSet<Slot>>,
-    callees: HashMap<Signature, String>,
+    callees: HashMap<Signature, Callee>,
     next: usize,
     /// Only bindings that dominate the current instruction are reusable.
     /// Branch-local bindings never escape except through explicit phi tuples.
@@ -1009,11 +1093,18 @@ impl Emitter<'_, '_> {
                 }
                 Instruction::Fun(target, function, _) => {
                     let (symbol, tags, arguments) = &**function;
+                    let callee = self.callees.get(&(*symbol, tags.clone()));
                     let values = arguments
                         .iter()
-                        .map(|slot| read(environment, *slot))
+                        .enumerate()
+                        .filter(|(index, _)| {
+                            !callee.is_some_and(|callee| {
+                                callee.constant.get(*index).copied().unwrap_or(false)
+                            })
+                        })
+                        .map(|(_, slot)| read(environment, *slot))
                         .collect::<Result<Vec<_>, _>>()?;
-                    let call = if let Some(name) = self.callees.get(&(*symbol, tags.clone())) {
+                    let call = if let Some(Callee { name, .. }) = callee {
                         format!(
                             "{name}({}ctx)",
                             if values.is_empty() {
@@ -1143,6 +1234,80 @@ mod tests {
         let module = emitter.emit_graph(&graph, EmitOptions::default()).unwrap();
         assert!(module.source.contains("ctx.constant(1)"));
         assert_eq!(emitter.constants().len(), 2);
+    }
+
+    #[test]
+    fn constant_arguments_are_read_from_the_context_through_nested_helpers() {
+        crate::initialization::ensure_symbolica_state();
+        let [outer, inner] = ["rust_emitter_constant_outer", "rust_emitter_constant_inner"]
+            .map(|name| symbolica::symbol!(name));
+        let number = |value: i64| Complex::new(Rational::from(value), Rational::from(0));
+        let call = |target, symbol, arguments| {
+            Instruction::Fun(target, Box::new((symbol, Vec::new(), arguments)), false)
+        };
+        let graph = |input_count, constants, instructions, sub_evaluators| Graph {
+            input_count,
+            output_count: 1,
+            temporary_count: 2,
+            instructions,
+            constants,
+            constant_functions: Vec::new(),
+            sub_evaluators,
+        };
+        // inner(x, c) = x c; outer(x, c, d) = inner(x, c) + d. Every call
+        // passes 7 as `c`, while `d` is 11 at one call and 7 at the other.
+        let inner_body = graph(
+            2,
+            Vec::new(),
+            vec![Instruction::Mul(Slot::Out(0), vec![Slot::Param(0), Slot::Param(1)], 0)],
+            Vec::new(),
+        );
+        let outer_body = graph(
+            3,
+            Vec::new(),
+            vec![
+                call(Slot::Temp(0), inner, vec![Slot::Param(0), Slot::Param(1)]),
+                Instruction::Add(Slot::Out(0), vec![Slot::Temp(0), Slot::Param(2)], 0),
+            ],
+            vec![SubEvaluator {
+                symbol: inner,
+                tags: Vec::new(),
+                instructions: inner_body,
+            }],
+        );
+        let entry = graph(
+            1,
+            vec![number(7), number(11)],
+            vec![
+                call(Slot::Temp(0), outer, vec![Slot::Param(0), Slot::Const(0), Slot::Const(1)]),
+                call(Slot::Temp(1), outer, vec![Slot::Param(0), Slot::Const(0), Slot::Const(0)]),
+                Instruction::Add(Slot::Out(0), vec![Slot::Temp(0), Slot::Temp(1)], 0),
+            ],
+            vec![SubEvaluator {
+                symbol: outer,
+                tags: Vec::new(),
+                instructions: outer_body,
+            }],
+        );
+        let mut emitter = RustEmitter::default();
+        let module = emitter.emit_graph(&entry, EmitOptions::default()).unwrap();
+        let source = &module.source;
+        assert!(source.contains("fn helper_0<T: NativeFloat>(a0: &C<T>, ctx: &Context<T>)"), "{source}");
+        assert!(source.contains("mul(a0, ctx.constant(0))"), "{source}");
+        assert!(
+            source.contains("fn helper_1<T: NativeFloat>(a0: &C<T>, a2: &C<T>, ctx: &Context<T>)"),
+            "{source}"
+        );
+        assert!(source.contains("helper_0(a0, ctx)"), "{source}");
+        assert!(source.contains("helper_1(a0, ctx.constant(1), ctx)"), "{source}");
+        assert!(source.contains("helper_1(a0, ctx.constant(0), ctx)"), "{source}");
+        let probe = PURE_NUMERIC_PROBE.replace(
+            "struct Context<T>(std::marker::PhantomData<T>);",
+            "struct Context<T>(Vec<T>);\nimpl<T> Context<T> { fn constant(&self, index: usize) -> &T { &self.0[index] } }",
+        );
+        compile_probe(&format!(
+            "{probe}\nmod primitives {{ pub(super) use super::{{add,mul,powi,truth}}; }}\nmod generated {{\n{source}}}\nfn main() {{ let ctx = Context(vec![7.0, 11.0]); assert_eq!(generated::evaluate(&[2.0], &ctx), [46.0]); }}"
+        ));
     }
 
     pub(super) const PURE_NUMERIC_PROBE: &str = r#"
@@ -1493,7 +1658,7 @@ fn powi<T: NativeFloat>(a: &T, exponent: i64, _: bool) -> T {
                 normalized: HashMap::new(),
                 outlines: Outlines::default(),
             };
-            let body = generator.body(&graph, true).unwrap();
+            let body = generator.body(&graph, true, &[]).unwrap();
             assert!(generator.outlines.functions.is_empty());
             body
         }
@@ -1619,7 +1784,7 @@ fn main() {
         };
         // Exercise actual entry parameter aliases, not only an environment
         // assembled by the test: outlined functions cannot refer to `input`.
-        let body = generator.body(&graph, true).unwrap();
+        let body = generator.body(&graph, true, &[]).unwrap();
         assert_eq!(
             generator.outlines.functions.len(),
             2,

@@ -52,7 +52,11 @@ expressions does not update these kernels: an expression change in these
 sectors must be transcribed as well (as were the continuation fixes checked by
 `tests/permutation_regressions.rs`: exact r-function roots at zero momenta and
 thresholds, the roots, chart choice and root lips of `trif3`, the root lips of
-`boxf4`, and the contour box's double-root split and real residue logarithms). `tests/native_handwritten.rs` checks them
+`boxf4`, and the contour box's double-root split and real residue logarithms;
+and the conditioning fixes of `tests/c0_coincident_roots.rs` and
+`tests/d0_tiny_invariant.rs`: the term-wise dilogarithm divided difference of
+`sheet_exact::near_difference`, `log(x)/(1-x)` next to one through
+`log_one_plus_body`, and the contour box's exact coefficient sums). `tests/native_handwritten.rs` checks them
 against the generated expressions at 256 bits on randomized kinematics and on
 every distinct C0/D0 call of the recorded Ninja benchmark streams
 (`tests/data/ninja_master_rows.txt`); `src/native/handwritten/box_contour.rs`
@@ -65,9 +69,13 @@ regulators and then-unrepaired sectors would undo repairs already made here.
 The original Fortran wrapper and that separate numerical port remain untouched.
 
 Exact rational constants, pi and fixed-argument dilogarithms are described in
-generated initialization data and converted once at working precision. The
-Symbolica instruction export includes symbolic constant metadata: its numeric
-zero placeholders must never be mistaken for exact zeros by another backend.
+generated initialization data and converted once at working precision.
+Symbolica's export passes the constants a shared body uses as arguments,
+through every enclosing body; the emitter reads a helper parameter that is the
+same constant at every call from the context instead, and leaves it out of the
+helper's signature. The Symbolica instruction export includes symbolic
+constant metadata: its numeric zero placeholders must never be mistaken for
+exact zeros by another backend.
 
 ## Numeric domains
 

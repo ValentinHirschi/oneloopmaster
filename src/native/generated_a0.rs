@@ -8,51 +8,51 @@ use super::primitives::{inline_add as add, inline_mul as mul};
 pub(super) fn evaluate<T: NativeFloat>(input: &[C<T>], ctx: &Context<T>) -> [C<T>; 3] {
     let a0 = &input[0];
     let a1 = &input[1];
-    let v0 = helper_0(a0, a1, ctx.constant(2), ctx.constant(1), ctx.constant(0), ctx.constant(3), ctx.constant(4), ctx.constant(5), ctx);
+    let v0 = helper_0(a0, a1, ctx);
     let v1 = helper_1(a0, a1, ctx);
-    let v2 = helper_2(a0, a1, ctx.constant(2), ctx);
+    let v2 = helper_2(a0, a1, ctx);
     [(*(&v0)).clone(), (*(&v1)).clone(), (*(&v2)).clone()]
 }
 
-fn helper_0<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<T>, a5: &C<T>, a6: &C<T>, a7: &C<T>, ctx: &Context<T>) -> C<T> {
+fn helper_0<T: NativeFloat>(a0: &C<T>, a1: &C<T>, ctx: &Context<T>) -> C<T> {
     let v22 = if truth(a0) {
         let v0 = powi(a1, -1, false);
         let v1 = mul(a0, &v0);
         let v2 = if truth(&v1) {
             (*(&v1)).clone()
         } else {
-            (*(a2)).clone()
+            (*(ctx.constant(2))).clone()
         };
         let v3 = conj(&v2);
-        let v4 = mul(a3, &v3);
+        let v4 = mul(ctx.constant(1), &v3);
         let v5 = add(&v2, &v4);
         let v18 = if truth(&v5) {
             let v6 = log(&v2);
             (*(&v6)).clone()
         } else {
             let v7 = abs(&v2);
-            let v8 = mul(a3, &v7);
+            let v8 = mul(ctx.constant(1), &v7);
             let v9 = add(&v2, &v8);
             let v10 = if truth(&v9) {
-                (*(a4)).clone()
+                (*(ctx.constant(0))).clone()
             } else {
-                (*(a2)).clone()
+                (*(ctx.constant(2))).clone()
             };
-            let v11 = mul(a5, &v10);
-            let v12 = add(a4, &v11);
+            let v11 = mul(ctx.constant(3), &v10);
+            let v12 = add(ctx.constant(0), &v11);
             let v13 = mul(&v2, &v12);
             let v14 = log(&v13);
-            let v15 = mul(a6, a7);
+            let v15 = mul(ctx.constant(4), ctx.constant(5));
             let v16 = mul(&v15, &v10);
             let v17 = add(&v14, &v16);
             (*(&v17)).clone()
         };
-        let v19 = mul(a3, &v18);
-        let v20 = add(a4, &v19);
+        let v19 = mul(ctx.constant(1), &v18);
+        let v20 = add(ctx.constant(0), &v19);
         let v21 = mul(a0, &v20);
         (*(&v21)).clone()
     } else {
-        (*(a2)).clone()
+        (*(ctx.constant(2))).clone()
     };
     (*(&v22)).clone()
 }
@@ -61,7 +61,7 @@ fn helper_1<T: NativeFloat>(a0: &C<T>, a1: &C<T>, ctx: &Context<T>) -> C<T> {
     (*(a0)).clone()
 }
 
-fn helper_2<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, ctx: &Context<T>) -> C<T> {
-    (*(a2)).clone()
+fn helper_2<T: NativeFloat>(a0: &C<T>, a1: &C<T>, ctx: &Context<T>) -> C<T> {
+    (*(ctx.constant(2))).clone()
 }
 

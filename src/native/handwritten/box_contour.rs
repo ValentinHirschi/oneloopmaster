@@ -35,6 +35,15 @@ fn norm(a: Z) -> f64 {
     a.re * a.re + a.im * a.im
 }
 
+/// `coefficient_sum`: the left-to-right sum of `terms`, or the invariant
+/// `exact` it equals when the sum cancels by more than 2^16.
+#[inline]
+fn coefficient_sum(terms: &[Z], exact: Z) -> Z {
+    let numeric = terms.iter().fold(ZERO, |sum, &term| sum + term);
+    let scale: f64 = terms.iter().map(|&term| norm(term)).sum();
+    if negative(4294967296.0 * norm(exact) - scale) { exact } else { numeric }
+}
+
 /// `negative` of a real value: `x - |x|` is nonzero (x < 0, inf or NaN).
 #[inline(always)]
 pub(super) fn negative(x: f64) -> bool {
@@ -436,7 +445,7 @@ fn planar(y1: &Cont, y2: &Cont, p1: bool, p2: bool, a: Z, b: Z, c: Z, dc: Z, rea
 }
 
 fn t1(
-    [a, c, g, h, d, e, f, j, dpe, dd_, de, df, dj, ddpe]: [Z; 14],
+    [a, c, g, h, d, e, f, j, dpe, dd_, de, df, dj, ddpe, ac]: [Z; 15],
     k: &Constants<f64>,
 ) -> Z {
     let kk = h * a - c * g;
@@ -449,7 +458,7 @@ fn t1(
     let y1 = continued_root(r1_, kk, l, dl, dn, dn2);
     let y2 = continued_root(r2_, kk, l, dl, dn, dn2);
     dv(
-        -s3(&y1, &y2, ZERO, ONE, a + c, dpe, f, ddpe, df, k)
+        -s3(&y1, &y2, ZERO, ONE, coefficient_sum(&[a, c], ac), dpe, f, ddpe, df, k)
             + s3(&y1, &y2, ZERO, ONE, ZERO, g + h, j, ZERO, dj, k)
             - s3(&y1, &y2, ZERO, ONE, ZERO, g, j, ZERO, dj, k)
             + s3(&y1, &y2, ZERO, ONE, a, d, f, dd_, df, k),
@@ -576,7 +585,7 @@ fn real_intersections_absent(coefficients: [Z; 9]) -> bool {
 
 fn tfun_selected(
     a: Z, b: Z, c: Z, g: Z, h: Z, d: Z, e: Z, f: Z, j: Z, dpe: Z, dpf: Z, beta: Z,
-    data: &BetaData, dd_: Z, de: Z, df: Z, dj: Z, ddpe: Z, ddpf: Z, k: &Constants<f64>,
+    data: &BetaData, dd_: Z, de: Z, df: Z, dj: Z, ddpe: Z, ddpf: Z, abc: Z, k: &Constants<f64>,
 ) -> Z {
     let [y1, y2] = &data.y;
     let p1 = inside(beta, y1);
@@ -585,7 +594,7 @@ fn tfun_selected(
         - s3(y1, y2, ZERO, ONE - beta, ZERO, g + h, j, ZERO, dj, k)
         + s3(y1, y2, ZERO, -beta, ZERO, g, j, ZERO, dj, k)
         - s3(y1, y2, beta, ONE, b, c + e, a + dpf, de, ddpf, k)
-        + s3(y1, y2, ZERO, ONE - beta, a + b + c, dpe, f, ddpe, df, k)
+        + s3(y1, y2, ZERO, ONE - beta, coefficient_sum(&[a, b, c], abc), dpe, f, ddpe, df, k)
         - s3(y1, y2, ZERO, -beta, a, d, f, dd_, df, k);
     let real = real_intersections_absent([a, b, c, g, h, d, e, f, j]);
     let residue = planar(y1, y2, p1, p2, data.a, data.b, data.c, data.dc, real, k);
@@ -594,7 +603,7 @@ fn tfun_selected(
 }
 
 fn tfun(
-    [a, b, c, gin, hin, d, e, f, jin, dpe, dpf, dd_, de, df, djin, ddpe, ddpf]: [Z; 17],
+    [a, b, c, gin, hin, d, e, f, jin, dpe, dpf, dd_, de, df, djin, ddpe, ddpf, abc]: [Z; 18],
     k: &Constants<f64>,
 ) -> Z {
     let sj = isign(jin, isign(djin, -1));
@@ -615,17 +624,19 @@ fn tfun(
             let d2 = min(distance(beta2, &data2.y[0]), distance(beta2, &data2.y[1]));
             let use_first = if d1 - 1.0 != 0.0 { negative(d2 - d1) } else { true };
             let (beta, data) = if use_first { (beta1, data1) } else { (beta2, data2) };
-            tfun_selected(a, b, c, g, h, d, e, f, j, dpe, dpf, beta, &data, dd_, de, df, dj, ddpe, ddpf, k)
+            tfun_selected(a, b, c, g, h, d, e, f, j, dpe, dpf, beta, &data, dd_, de, df, dj, ddpe, ddpf, abc, k)
         } else {
+            // a = 0: b + c = abc, and the new a + c is b.
+            let bc = coefficient_sum(&[b, c], abc);
             t1(
                 [
-                    b + c,
+                    bc,
                     -c,
                     -g - h,
                     g,
-                    -dpe - r(2.0) * (b + c),
+                    -dpe - r(2.0) * bc,
                     d + c,
-                    dpe + b + c + f,
+                    dpe + bc + f,
                     g + h + j,
                     -e - r(2.0) * b - c,
                     -ddpe,
@@ -633,12 +644,14 @@ fn tfun(
                     ddpe + df,
                     dj,
                     -de,
+                    b,
                 ],
                 k,
             )
         }
     } else {
-        t1([a, c, g, h, d, e, f, j, dpe, dd_, de, df, dj, ddpe], k)
+        // b = 0: a + c = abc.
+        t1([a, c, g, h, d, e, f, j, dpe, dd_, de, df, dj, ddpe, abc], k)
     };
     -(r(sj as f64) * value)
 }
@@ -758,6 +771,8 @@ fn zero_external(p: [Z; 6], m: [Z; 4], k: &Constants<f64>) -> Z {
             dm[0] - dm[1],
             dm[1] - dm[3],
             dm[2],
+            // a + b + c, simplified as in the expression.
+            p[5],
         ],
         k,
     ) - tfun(
@@ -779,6 +794,7 @@ fn zero_external(p: [Z; 6], m: [Z; 4], k: &Constants<f64>) -> Z {
             dm[0] - dm[1],
             dm[0] - dm[3],
             dm[2],
+            p[3] - p[0],
         ],
         k,
     )
@@ -830,6 +846,7 @@ fn ordered(p: [Z; 6], m: [Z; 4], k: &Constants<f64>) -> Z {
             de1,
             dm[0] - dm[3],
             dm[1],
+            p[3],
         ],
         k,
     ) + o1
@@ -852,6 +869,7 @@ fn ordered(p: [Z; 6], m: [Z; 4], k: &Constants<f64>) -> Z {
                 de1,
                 dm[0] - dm[3],
                 dm[2],
+                p[3],
             ],
             k,
         )
@@ -875,6 +893,7 @@ fn ordered(p: [Z; 6], m: [Z; 4], k: &Constants<f64>) -> Z {
                     de1,
                     dm[1] - dm[3],
                     dm[2],
+                    p[5],
                 ],
                 k,
             )
@@ -1215,7 +1234,14 @@ mod expression_tests {
                     x
                 },
             );
-            compare("t1", 14, 1500, 0, |x| t1(core::array::from_fn(|i| x[i]), &c), &any(14));
+            // The last argument is `a + c`, which the callers form exactly; the
+            // first 14 keep the random stream of the 14-argument comparison.
+            let stream = std::cell::RefCell::new(Rng(0x9e3779b97f4a7c15 ^ 14));
+            compare("t1", 15, 1500, 0, |x| t1(core::array::from_fn(|i| x[i]), &c), &|_| {
+                let mut x = any(14)(&mut stream.borrow_mut());
+                x.push(x[0] + x[1]);
+                x
+            });
             compare("t13", 18, 1500, 0, |x| t13(core::array::from_fn(|i| x[i]), &c), &any(18));
             // Physical structure: real momentum combinations, masses with
             // nonpositive widths, imaginary infinitesimal directions.

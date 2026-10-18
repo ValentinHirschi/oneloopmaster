@@ -9,7 +9,11 @@ check the SymJIT backend as well. The C0 and D0 assets were rebuilt afterwards
 from the compact definitions (registered r-function and root helpers): C0 with
 the exact zero coefficient of the two-mass triangle at a vanishing invariant
 (`tests/float_branch_decisions.rs`), D0 with the contour residue's sheet
-windings separated (`tests/d0_vanishing_gram.rs`).
+windings separated (`tests/d0_vanishing_gram.rs`). Both were rebuilt again on
+2026-10-18 with the term-wise dilogarithm divided difference and
+`log(x)/(1-x)` next to one (`tests/c0_coincident_roots.rs`) and the contour
+box's exact coefficient sums (`tests/d0_tiny_invariant.rs`); both tests also
+check the SymJIT backend.
 
 Previous generations: 2026-09-29 with released Symbolica and Numerica 3.0.1 and
 SymJIT 2.26.0, and the C0 asset of 2026-09-22 (zero-root ordering of the finite
@@ -37,8 +41,8 @@ exhaustive analytic-region coverage.
 | A0 | 1,488 | `b034aa19e48f3f62b7029f2c88ad4f14e19ff6d9580979d43868349c5e651a0d` |
 | B0 | 15,375 | `0730c8a390d31c508fbece0760186627dc851b8ccf2da787072f8c2788f50354` |
 | dB0 | 61,566 | `5f145ba984ffe2bdffb9355557a9272c3006d0a601e845cd48877d5d19ea4d77` |
-| C0 | 86,330 | `1dd3da62d2fabbefa5aa4008181f3fbc74266d0c66dcaf7ad5e3f92f91913012` |
-| D0 | 1,861,137 | `98dad062fd7a915136d52ebf4a109f315d82934473182bdc77c1ff1927863f40` |
+| C0 | 101,145 | `114aa366c67aa769e4e7ccc9305361b3c11ae312f7c21efa8d60c82d018bb504` |
+| D0 | 1,880,550 | `6d09f1198a82dc40537ee0be4d7de94b922b20b6d238604906a99868b178e908` |
 
 The embedded files use the `oneloop-evaluator-v3` discriminator, which binds
 the Symbolica IR schema and strict compilation policy without claiming backend

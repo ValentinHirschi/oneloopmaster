@@ -25,6 +25,11 @@ defects found by a OneLOop sweep (`tests/oracle_sweep.py`,
 sign of its zero-momentum `B1111` when the second mass is the heavier one, and
 real-mass contour boxes whose value differs from OneLOop's vanishing-width
 limit (`tests/data/real_mass_limits.txt`); the expressions follow the limit.
+Dilogarithm divided differences of nearly coincident or small arguments are
+evaluated term by term, as OneLOop's `dilog2_c` (a two-mass C0 with nearly
+coincident roots was off by 2.4e-13 in binary64, now 2e-15 to 9e-15 on every
+route: `tests/c0_coincident_roots.rs`), and the contour box no longer loses a
+tiny invariant to cancellation in `Float` (`tests/d0_tiny_invariant.rs`).
 
 This work is based on **Andreas van Hameren's OneLOop package**. The original
 algorithms, analytic continuation conventions and Fortran reference results are

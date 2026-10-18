@@ -10,17 +10,17 @@ pub(super) fn evaluate<T: NativeFloat>(input: &[C<T>], ctx: &Context<T>) -> [C<T
     let a1 = &input[1];
     let a2 = &input[2];
     let a3 = &input[3];
-    let v0 = helper_0(a0, a1, a2, a3, ctx.constant(1), ctx.constant(7), ctx.constant(2), ctx.constant(6), ctx.constant(8), ctx.constant(0), ctx.constant(3), ctx.constant(9), ctx.constant(5), ctx.constant(4), ctx);
-    let v1 = helper_1(a0, a1, a2, a3, ctx.constant(0), ctx.constant(2), ctx);
-    let v2 = helper_2(a0, a1, a2, a3, ctx.constant(2), ctx);
+    let v0 = helper_0(a0, a1, a2, a3, ctx);
+    let v1 = helper_1(a0, a1, a2, a3, ctx);
+    let v2 = helper_2(a0, a1, a2, a3, ctx);
     [(*(&v0)).clone(), (*(&v1)).clone(), (*(&v2)).clone()]
 }
 
-fn helper_0<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<T>, a5: &C<T>, a6: &C<T>, a7: &C<T>, a8: &C<T>, a9: &C<T>, a10: &C<T>, a11: &C<T>, a12: &C<T>, a13: &C<T>, ctx: &Context<T>) -> C<T> {
+fn helper_0<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, ctx: &Context<T>) -> C<T> {
     let v312 = if truth(a0) {
-        branch_1(a1, a2, a4, a0, a5, a6, a7, a8, a9, a10, a11, a12, a13, a3, ctx)
+        branch_1(a1, a2, a0, a3, ctx)
     } else {
-        let v240 = mul(a2, a4);
+        let v240 = mul(a2, ctx.constant(1));
         let v241 = add(a1, &v240);
         let v311 = if truth(&v241) {
             let v242 = powi(&v241, -1, false);
@@ -30,28 +30,28 @@ fn helper_0<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<T
                 let v245 = if truth(&v244) {
                     (*(&v244)).clone()
                 } else {
-                    (*(a6)).clone()
+                    (*(ctx.constant(2))).clone()
                 };
                 let v246 = conj(&v245);
-                let v247 = mul(a4, &v246);
+                let v247 = mul(ctx.constant(1), &v246);
                 let v248 = add(&v245, &v247);
                 let v261 = if truth(&v248) {
                     let v249 = log(&v245);
                     (*(&v249)).clone()
                 } else {
                     let v250 = abs(&v245);
-                    let v251 = mul(a4, &v250);
+                    let v251 = mul(ctx.constant(1), &v250);
                     let v252 = add(&v245, &v251);
                     let v253 = if truth(&v252) {
-                        (*(a9)).clone()
+                        (*(ctx.constant(0))).clone()
                     } else {
-                        (*(a6)).clone()
+                        (*(ctx.constant(2))).clone()
                     };
-                    let v254 = mul(a10, &v253);
-                    let v255 = add(a9, &v254);
+                    let v254 = mul(ctx.constant(3), &v253);
+                    let v255 = add(ctx.constant(0), &v254);
                     let v256 = mul(&v245, &v255);
                     let v257 = log(&v256);
-                    let v258 = mul(a12, a13);
+                    let v258 = mul(ctx.constant(5), ctx.constant(4));
                     let v259 = mul(&v258, &v253);
                     let v260 = add(&v257, &v259);
                     (*(&v260)).clone()
@@ -59,7 +59,7 @@ fn helper_0<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<T
                 let v262 = mul(a1, &v261);
                 (*(&v262)).clone()
             } else {
-                (*(a6)).clone()
+                (*(ctx.constant(2))).clone()
             };
             let v284 = if truth(a2) {
                 let v264 = powi(a3, -1, false);
@@ -67,28 +67,28 @@ fn helper_0<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<T
                 let v266 = if truth(&v265) {
                     (*(&v265)).clone()
                 } else {
-                    (*(a6)).clone()
+                    (*(ctx.constant(2))).clone()
                 };
                 let v267 = conj(&v266);
-                let v268 = mul(a4, &v267);
+                let v268 = mul(ctx.constant(1), &v267);
                 let v269 = add(&v266, &v268);
                 let v282 = if truth(&v269) {
                     let v270 = log(&v266);
                     (*(&v270)).clone()
                 } else {
                     let v271 = abs(&v266);
-                    let v272 = mul(a4, &v271);
+                    let v272 = mul(ctx.constant(1), &v271);
                     let v273 = add(&v266, &v272);
                     let v274 = if truth(&v273) {
-                        (*(a9)).clone()
+                        (*(ctx.constant(0))).clone()
                     } else {
-                        (*(a6)).clone()
+                        (*(ctx.constant(2))).clone()
                     };
-                    let v275 = mul(a10, &v274);
-                    let v276 = add(a9, &v275);
+                    let v275 = mul(ctx.constant(3), &v274);
+                    let v276 = add(ctx.constant(0), &v275);
                     let v277 = mul(&v266, &v276);
                     let v278 = log(&v277);
-                    let v279 = mul(a12, a13);
+                    let v279 = mul(ctx.constant(5), ctx.constant(4));
                     let v280 = mul(&v279, &v274);
                     let v281 = add(&v278, &v280);
                     (*(&v281)).clone()
@@ -96,13 +96,13 @@ fn helper_0<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<T
                 let v283 = mul(a2, &v282);
                 (*(&v283)).clone()
             } else {
-                (*(a6)).clone()
+                (*(ctx.constant(2))).clone()
             };
-            let v285 = mul(a4, &v284);
+            let v285 = mul(ctx.constant(1), &v284);
             let v286 = add(&v263, &v285);
-            let v287 = mul(a4, &v242);
+            let v287 = mul(ctx.constant(1), &v242);
             let v288 = mul(&v287, &v286);
-            let v289 = add(a9, &v288);
+            let v289 = add(ctx.constant(0), &v288);
             (*(&v289)).clone()
         } else {
             let v310 = if truth(a1) {
@@ -111,36 +111,36 @@ fn helper_0<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<T
                 let v292 = if truth(&v291) {
                     (*(&v291)).clone()
                 } else {
-                    (*(a6)).clone()
+                    (*(ctx.constant(2))).clone()
                 };
                 let v293 = conj(&v292);
-                let v294 = mul(a4, &v293);
+                let v294 = mul(ctx.constant(1), &v293);
                 let v295 = add(&v292, &v294);
                 let v308 = if truth(&v295) {
                     let v296 = log(&v292);
                     (*(&v296)).clone()
                 } else {
                     let v297 = abs(&v292);
-                    let v298 = mul(a4, &v297);
+                    let v298 = mul(ctx.constant(1), &v297);
                     let v299 = add(&v292, &v298);
                     let v300 = if truth(&v299) {
-                        (*(a9)).clone()
+                        (*(ctx.constant(0))).clone()
                     } else {
-                        (*(a6)).clone()
+                        (*(ctx.constant(2))).clone()
                     };
-                    let v301 = mul(a10, &v300);
-                    let v302 = add(a9, &v301);
+                    let v301 = mul(ctx.constant(3), &v300);
+                    let v302 = add(ctx.constant(0), &v301);
                     let v303 = mul(&v292, &v302);
                     let v304 = log(&v303);
-                    let v305 = mul(a12, a13);
+                    let v305 = mul(ctx.constant(5), ctx.constant(4));
                     let v306 = mul(&v305, &v300);
                     let v307 = add(&v304, &v306);
                     (*(&v307)).clone()
                 };
-                let v309 = mul(a4, &v308);
+                let v309 = mul(ctx.constant(1), &v308);
                 (*(&v309)).clone()
             } else {
-                (*(a6)).clone()
+                (*(ctx.constant(2))).clone()
             };
             (*(&v310)).clone()
         };
@@ -149,17 +149,17 @@ fn helper_0<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<T
     (*(&v312)).clone()
 }
 
-fn helper_1<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<T>, a5: &C<T>, ctx: &Context<T>) -> C<T> {
+fn helper_1<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, ctx: &Context<T>) -> C<T> {
     let v2 = if truth(a0) {
-        (*(a4)).clone()
+        (*(ctx.constant(0))).clone()
     } else {
         let v1 = if truth(a1) {
-            (*(a4)).clone()
+            (*(ctx.constant(0))).clone()
         } else {
             let v0 = if truth(a2) {
-                (*(a4)).clone()
+                (*(ctx.constant(0))).clone()
             } else {
-                (*(a5)).clone()
+                (*(ctx.constant(2))).clone()
             };
             (*(&v0)).clone()
         };
@@ -168,73 +168,73 @@ fn helper_1<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<T
     (*(&v2)).clone()
 }
 
-fn helper_2<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<T>, ctx: &Context<T>) -> C<T> {
-    (*(a4)).clone()
+fn helper_2<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, ctx: &Context<T>) -> C<T> {
+    (*(ctx.constant(2))).clone()
 }
 
-fn branch_0<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<T>, a5: &C<T>, a6: &C<T>, a7: &C<T>, a8: &C<T>, a9: &C<T>, a10: &C<T>, a11: &C<T>, a12: &C<T>, a13: &C<T>, ctx: &Context<T>) -> C<T> {
-    let v0 = mul(a0, a1);
-    let v1 = add(a2, a3);
+fn branch_0<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, ctx: &Context<T>) -> C<T> {
+    let v0 = mul(a0, ctx.constant(1));
+    let v1 = add(a1, a2);
     let v2 = add(&v1, &v0);
-    let v3 = mul(a1, &v2);
-    let v4 = mul(a2, a0);
-    let v5 = mul(&v4, a4);
-    let v6 = mul(a2, a1);
-    let v7 = add(a3, &v0);
+    let v3 = mul(ctx.constant(1), &v2);
+    let v4 = mul(a1, a0);
+    let v5 = mul(&v4, ctx.constant(7));
+    let v6 = mul(a1, ctx.constant(1));
+    let v7 = add(a2, &v0);
     let v8 = add(&v7, &v6);
     let v9 = mul(&v8, &v8);
     let v10 = add(&v5, &v9);
     let v11 = sqrt(&v10);
     let v12 = add(&v3, &v11);
     let v13 = abs(&v12);
-    let v14 = mul(a1, &v11);
+    let v14 = mul(ctx.constant(1), &v11);
     let v15 = add(&v3, &v14);
     let v16 = abs(&v15);
-    let v17 = mul(a1, &v16);
+    let v17 = mul(ctx.constant(1), &v16);
     let v18 = add(&v13, &v17);
     let v19 = if truth(&v18) {
     (*(&v18)).clone()
     } else {
-    (*(a5)).clone()
+    (*(ctx.constant(2))).clone()
     };
     let v20 = abs(&v19);
-    let v21 = mul(a1, &v20);
+    let v21 = mul(ctx.constant(1), &v20);
     let v22 = add(&v19, &v21);
     let v23 = if truth(&v22) {
     let v24 = powi(&v15, -1, false);
-    let v25 = mul(a3, a6);
+    let v25 = mul(a2, ctx.constant(6));
     let v26 = mul(&v25, &v24);
     (*(&v26)).clone()
     } else {
-    let v27 = powi(a2, -1, false);
-    let v28 = mul(a7, &v12);
+    let v27 = powi(a1, -1, false);
+    let v28 = mul(ctx.constant(8), &v12);
     let v29 = mul(&v28, &v27);
     (*(&v29)).clone()
     };
     let v30 = if truth(&v23) {
-    let v31 = mul(a1, &v8);
+    let v31 = mul(ctx.constant(1), &v8);
     let v32 = add(&v11, &v31);
     let v33 = abs(&v32);
     let v34 = add(&v14, &v31);
     let v35 = abs(&v34);
-    let v36 = mul(a1, &v35);
+    let v36 = mul(ctx.constant(1), &v35);
     let v37 = add(&v33, &v36);
     let v38 = if truth(&v37) {
     (*(&v37)).clone()
     } else {
-    (*(a5)).clone()
+    (*(ctx.constant(2))).clone()
     };
     let v39 = abs(&v38);
-    let v40 = mul(a1, &v39);
+    let v40 = mul(ctx.constant(1), &v39);
     let v41 = add(&v38, &v40);
     let v42 = if truth(&v41) {
     let v43 = powi(&v34, -1, false);
-    let v44 = mul(a0, a6);
+    let v44 = mul(a0, ctx.constant(6));
     let v45 = mul(&v44, &v43);
     (*(&v45)).clone()
     } else {
-    let v46 = powi(a2, -1, false);
-    let v47 = mul(a7, &v32);
+    let v46 = powi(a1, -1, false);
+    let v47 = mul(ctx.constant(8), &v32);
     let v48 = mul(&v47, &v46);
     (*(&v48)).clone()
     };
@@ -243,28 +243,28 @@ fn branch_0<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<T
     let v51 = if truth(&v50) {
     (*(&v50)).clone()
     } else {
-    (*(a5)).clone()
+    (*(ctx.constant(2))).clone()
     };
     let v52 = conj(&v51);
-    let v53 = mul(a1, &v52);
+    let v53 = mul(ctx.constant(1), &v52);
     let v54 = add(&v51, &v53);
     let v55 = if truth(&v54) {
     let v56 = log(&v51);
     (*(&v56)).clone()
     } else {
     let v57 = abs(&v51);
-    let v58 = mul(a1, &v57);
+    let v58 = mul(ctx.constant(1), &v57);
     let v59 = add(&v51, &v58);
     let v60 = if truth(&v59) {
-    (*(a8)).clone()
+    (*(ctx.constant(0))).clone()
     } else {
-    (*(a5)).clone()
+    (*(ctx.constant(2))).clone()
     };
-    let v61 = mul(a9, &v60);
-    let v62 = add(a8, &v61);
+    let v61 = mul(ctx.constant(3), &v60);
+    let v62 = add(ctx.constant(0), &v61);
     let v63 = mul(&v51, &v62);
     let v64 = log(&v63);
-    let v65 = mul(a10, a11);
+    let v65 = mul(ctx.constant(9), ctx.constant(5));
     let v66 = mul(&v65, &v60);
     let v67 = add(&v64, &v66);
     (*(&v67)).clone()
@@ -272,43 +272,43 @@ fn branch_0<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<T
     let v68 = mul(&v23, &v55);
     (*(&v68)).clone()
     } else {
-    (*(a5)).clone()
+    (*(ctx.constant(2))).clone()
     };
     let v69 = if truth(&v22) {
-    let v70 = powi(a2, -1, false);
-    let v71 = mul(a7, &v15);
+    let v70 = powi(a1, -1, false);
+    let v71 = mul(ctx.constant(8), &v15);
     let v72 = mul(&v71, &v70);
     (*(&v72)).clone()
     } else {
     let v73 = powi(&v12, -1, false);
-    let v74 = mul(a3, a6);
+    let v74 = mul(a2, ctx.constant(6));
     let v75 = mul(&v74, &v73);
     (*(&v75)).clone()
     };
     let v76 = if truth(&v69) {
-    let v77 = mul(a1, &v8);
+    let v77 = mul(ctx.constant(1), &v8);
     let v78 = add(&v11, &v77);
     let v79 = abs(&v78);
     let v80 = add(&v14, &v77);
     let v81 = abs(&v80);
-    let v82 = mul(a1, &v81);
+    let v82 = mul(ctx.constant(1), &v81);
     let v83 = add(&v79, &v82);
     let v84 = if truth(&v83) {
     (*(&v83)).clone()
     } else {
-    (*(a5)).clone()
+    (*(ctx.constant(2))).clone()
     };
     let v85 = abs(&v84);
-    let v86 = mul(a1, &v85);
+    let v86 = mul(ctx.constant(1), &v85);
     let v87 = add(&v84, &v86);
     let v88 = if truth(&v87) {
-    let v89 = powi(a2, -1, false);
-    let v90 = mul(a7, &v80);
+    let v89 = powi(a1, -1, false);
+    let v90 = mul(ctx.constant(8), &v80);
     let v91 = mul(&v90, &v89);
     (*(&v91)).clone()
     } else {
     let v92 = powi(&v78, -1, false);
-    let v93 = mul(a0, a6);
+    let v93 = mul(a0, ctx.constant(6));
     let v94 = mul(&v93, &v92);
     (*(&v94)).clone()
     };
@@ -317,28 +317,28 @@ fn branch_0<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<T
     let v97 = if truth(&v96) {
     (*(&v96)).clone()
     } else {
-    (*(a5)).clone()
+    (*(ctx.constant(2))).clone()
     };
     let v98 = conj(&v97);
-    let v99 = mul(a1, &v98);
+    let v99 = mul(ctx.constant(1), &v98);
     let v100 = add(&v97, &v99);
     let v101 = if truth(&v100) {
     let v102 = log(&v97);
     (*(&v102)).clone()
     } else {
     let v103 = abs(&v97);
-    let v104 = mul(a1, &v103);
+    let v104 = mul(ctx.constant(1), &v103);
     let v105 = add(&v97, &v104);
     let v106 = if truth(&v105) {
-    (*(a8)).clone()
+    (*(ctx.constant(0))).clone()
     } else {
-    (*(a5)).clone()
+    (*(ctx.constant(2))).clone()
     };
-    let v107 = mul(a9, &v106);
-    let v108 = add(a8, &v107);
+    let v107 = mul(ctx.constant(3), &v106);
+    let v108 = add(ctx.constant(0), &v107);
     let v109 = mul(&v97, &v108);
     let v110 = log(&v109);
-    let v111 = mul(a11, a12);
+    let v111 = mul(ctx.constant(5), ctx.constant(4));
     let v112 = mul(&v111, &v106);
     let v113 = add(&v110, &v112);
     (*(&v113)).clone()
@@ -346,82 +346,82 @@ fn branch_0<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<T
     let v114 = mul(&v69, &v101);
     (*(&v114)).clone()
     } else {
-    (*(a5)).clone()
+    (*(ctx.constant(2))).clone()
     };
-    let v115 = powi(a13, -1, false);
+    let v115 = powi(a3, -1, false);
     let v116 = mul(a0, &v115);
     let v117 = if truth(&v116) {
     (*(&v116)).clone()
     } else {
-    (*(a5)).clone()
+    (*(ctx.constant(2))).clone()
     };
     let v118 = conj(&v117);
-    let v119 = mul(a1, &v118);
+    let v119 = mul(ctx.constant(1), &v118);
     let v120 = add(&v117, &v119);
     let v121 = if truth(&v120) {
     let v122 = log(&v117);
     (*(&v122)).clone()
     } else {
     let v123 = abs(&v117);
-    let v124 = mul(a1, &v123);
+    let v124 = mul(ctx.constant(1), &v123);
     let v125 = add(&v117, &v124);
     let v126 = if truth(&v125) {
-    (*(a8)).clone()
+    (*(ctx.constant(0))).clone()
     } else {
-    (*(a5)).clone()
+    (*(ctx.constant(2))).clone()
     };
-    let v127 = mul(a9, &v126);
-    let v128 = add(a8, &v127);
+    let v127 = mul(ctx.constant(3), &v126);
+    let v128 = add(ctx.constant(0), &v127);
     let v129 = mul(&v117, &v128);
     let v130 = log(&v129);
-    let v131 = mul(a11, a12);
+    let v131 = mul(ctx.constant(5), ctx.constant(4));
     let v132 = mul(&v131, &v126);
     let v133 = add(&v130, &v132);
     (*(&v133)).clone()
     };
-    let v134 = mul(a1, &v121);
-    let v135 = add(a6, &v30);
+    let v134 = mul(ctx.constant(1), &v121);
+    let v135 = add(ctx.constant(6), &v30);
     let v136 = add(&v135, &v76);
     let v137 = add(&v136, &v134);
     (*(&v137)).clone()
 }
 
-fn branch_1<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<T>, a5: &C<T>, a6: &C<T>, a7: &C<T>, a8: &C<T>, a9: &C<T>, a10: &C<T>, a11: &C<T>, a12: &C<T>, a13: &C<T>, ctx: &Context<T>) -> C<T> {
+fn branch_1<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, ctx: &Context<T>) -> C<T> {
     let v0 = if truth(a0) {
     let v1 = if truth(a1) {
-    branch_0(a0, a2, a3, a1, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, ctx)
+    branch_0(a0, a2, a1, a3, ctx)
     } else {
-    let v2 = powi(a3, -1, false);
-    let v3 = mul(a3, a2);
+    let v2 = powi(a2, -1, false);
+    let v3 = mul(a2, ctx.constant(1));
     let v4 = add(a0, &v3);
     let v5 = if truth(&v4) {
-    let v6 = powi(a13, -1, false);
+    let v6 = powi(a3, -1, false);
     let v7 = mul(&v4, &v6);
     let v8 = if truth(&v7) {
     (*(&v7)).clone()
     } else {
-    (*(a5)).clone()
+    (*(ctx.constant(2))).clone()
     };
     let v9 = conj(&v8);
-    let v10 = mul(a2, &v9);
+    let v10 = mul(ctx.constant(1), &v9);
     let v11 = add(&v8, &v10);
     let v12 = if truth(&v11) {
     let v13 = log(&v8);
     (*(&v13)).clone()
     } else {
     let v14 = abs(&v8);
-    let v15 = mul(a2, &v14);
+    let v15 = mul(ctx.constant(1), &v14);
     let v16 = add(&v8, &v15);
     let v17 = if truth(&v16) {
-    (*(a8)).clone()
+    (*(ctx.constant(0))).clone()
     } else {
-    (*(a5)).clone()
+    (*(ctx.constant(2))).clone()
     };
-    let v18 = mul(a9, &v17);
-    let v19 = add(a8, &v18);
+    let v18 = mul(ctx.constant(3), &v17);
+    let v19 = add(ctx.constant(0), &v18);
     let v20 = mul(&v8, &v19);
     let v21 = log(&v20);
-    let v22 = mul(a11, a12);
+    let v22 = mul(ctx.constant(5), ctx.constant(4));
     let v23 = mul(&v22, &v17);
     let v24 = add(&v21, &v23);
     (*(&v24)).clone()
@@ -429,37 +429,37 @@ fn branch_1<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<T
     let v25 = mul(&v4, &v12);
     (*(&v25)).clone()
     } else {
-    (*(a5)).clone()
+    (*(ctx.constant(2))).clone()
     };
-    let v26 = mul(a2, &v5);
+    let v26 = mul(ctx.constant(1), &v5);
     let v27 = if truth(a0) {
-    let v28 = powi(a13, -1, false);
+    let v28 = powi(a3, -1, false);
     let v29 = mul(a0, &v28);
     let v30 = if truth(&v29) {
     (*(&v29)).clone()
     } else {
-    (*(a5)).clone()
+    (*(ctx.constant(2))).clone()
     };
     let v31 = conj(&v30);
-    let v32 = mul(a2, &v31);
+    let v32 = mul(ctx.constant(1), &v31);
     let v33 = add(&v30, &v32);
     let v34 = if truth(&v33) {
     let v35 = log(&v30);
     (*(&v35)).clone()
     } else {
     let v36 = abs(&v30);
-    let v37 = mul(a2, &v36);
+    let v37 = mul(ctx.constant(1), &v36);
     let v38 = add(&v30, &v37);
     let v39 = if truth(&v38) {
-    (*(a8)).clone()
+    (*(ctx.constant(0))).clone()
     } else {
-    (*(a5)).clone()
+    (*(ctx.constant(2))).clone()
     };
-    let v40 = mul(a9, &v39);
-    let v41 = add(a8, &v40);
+    let v40 = mul(ctx.constant(3), &v39);
+    let v41 = add(ctx.constant(0), &v40);
     let v42 = mul(&v30, &v41);
     let v43 = log(&v42);
-    let v44 = mul(a11, a12);
+    let v44 = mul(ctx.constant(5), ctx.constant(4));
     let v45 = mul(&v44, &v39);
     let v46 = add(&v43, &v45);
     (*(&v46)).clone()
@@ -467,47 +467,47 @@ fn branch_1<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<T
     let v47 = mul(a0, &v34);
     (*(&v47)).clone()
     } else {
-    (*(a5)).clone()
+    (*(ctx.constant(2))).clone()
     };
     let v48 = add(&v26, &v27);
-    let v49 = mul(a2, &v2);
+    let v49 = mul(ctx.constant(1), &v2);
     let v50 = mul(&v49, &v48);
-    let v51 = add(a6, &v50);
+    let v51 = add(ctx.constant(6), &v50);
     (*(&v51)).clone()
     };
     (*(&v1)).clone()
     } else {
-    let v52 = powi(a3, -1, false);
-    let v53 = mul(a3, a2);
+    let v52 = powi(a2, -1, false);
+    let v53 = mul(a2, ctx.constant(1));
     let v54 = add(a1, &v53);
     let v55 = if truth(&v54) {
-    let v56 = powi(a13, -1, false);
+    let v56 = powi(a3, -1, false);
     let v57 = mul(&v54, &v56);
     let v58 = if truth(&v57) {
     (*(&v57)).clone()
     } else {
-    (*(a5)).clone()
+    (*(ctx.constant(2))).clone()
     };
     let v59 = conj(&v58);
-    let v60 = mul(a2, &v59);
+    let v60 = mul(ctx.constant(1), &v59);
     let v61 = add(&v58, &v60);
     let v62 = if truth(&v61) {
     let v63 = log(&v58);
     (*(&v63)).clone()
     } else {
     let v64 = abs(&v58);
-    let v65 = mul(a2, &v64);
+    let v65 = mul(ctx.constant(1), &v64);
     let v66 = add(&v58, &v65);
     let v67 = if truth(&v66) {
-    (*(a8)).clone()
+    (*(ctx.constant(0))).clone()
     } else {
-    (*(a5)).clone()
+    (*(ctx.constant(2))).clone()
     };
-    let v68 = mul(a9, &v67);
-    let v69 = add(a8, &v68);
+    let v68 = mul(ctx.constant(3), &v67);
+    let v69 = add(ctx.constant(0), &v68);
     let v70 = mul(&v58, &v69);
     let v71 = log(&v70);
-    let v72 = mul(a11, a12);
+    let v72 = mul(ctx.constant(5), ctx.constant(4));
     let v73 = mul(&v72, &v67);
     let v74 = add(&v71, &v73);
     (*(&v74)).clone()
@@ -515,37 +515,37 @@ fn branch_1<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<T
     let v75 = mul(&v54, &v62);
     (*(&v75)).clone()
     } else {
-    (*(a5)).clone()
+    (*(ctx.constant(2))).clone()
     };
-    let v76 = mul(a2, &v55);
+    let v76 = mul(ctx.constant(1), &v55);
     let v77 = if truth(a1) {
-    let v78 = powi(a13, -1, false);
+    let v78 = powi(a3, -1, false);
     let v79 = mul(a1, &v78);
     let v80 = if truth(&v79) {
     (*(&v79)).clone()
     } else {
-    (*(a5)).clone()
+    (*(ctx.constant(2))).clone()
     };
     let v81 = conj(&v80);
-    let v82 = mul(a2, &v81);
+    let v82 = mul(ctx.constant(1), &v81);
     let v83 = add(&v80, &v82);
     let v84 = if truth(&v83) {
     let v85 = log(&v80);
     (*(&v85)).clone()
     } else {
     let v86 = abs(&v80);
-    let v87 = mul(a2, &v86);
+    let v87 = mul(ctx.constant(1), &v86);
     let v88 = add(&v80, &v87);
     let v89 = if truth(&v88) {
-    (*(a8)).clone()
+    (*(ctx.constant(0))).clone()
     } else {
-    (*(a5)).clone()
+    (*(ctx.constant(2))).clone()
     };
-    let v90 = mul(a9, &v89);
-    let v91 = add(a8, &v90);
+    let v90 = mul(ctx.constant(3), &v89);
+    let v91 = add(ctx.constant(0), &v90);
     let v92 = mul(&v80, &v91);
     let v93 = log(&v92);
-    let v94 = mul(a11, a12);
+    let v94 = mul(ctx.constant(5), ctx.constant(4));
     let v95 = mul(&v94, &v89);
     let v96 = add(&v93, &v95);
     (*(&v96)).clone()
@@ -553,12 +553,12 @@ fn branch_1<T: NativeFloat>(a0: &C<T>, a1: &C<T>, a2: &C<T>, a3: &C<T>, a4: &C<T
     let v97 = mul(a1, &v84);
     (*(&v97)).clone()
     } else {
-    (*(a5)).clone()
+    (*(ctx.constant(2))).clone()
     };
     let v98 = add(&v76, &v77);
-    let v99 = mul(a2, &v52);
+    let v99 = mul(ctx.constant(1), &v52);
     let v100 = mul(&v99, &v98);
-    let v101 = add(a6, &v100);
+    let v101 = add(ctx.constant(6), &v100);
     (*(&v101)).clone()
     };
     (*(&v0)).clone()

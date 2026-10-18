@@ -108,9 +108,23 @@ fn sheet_parameters() -> [Symbol; 3] {
     ]
 }
 
-fn log_ratio_body(arguments: &[Atom; 3], neighborhood: Atom) -> Atom {
+/// `near` takes the logarithm of an unreflected value within 1/2 of one
+/// through [log_one_plus_body] (as `log(v) + i pi phase`): the native and
+/// SymJIT `log|v|` is only accurate in absolute terms, and `log(q)/(1-q)` of a
+/// quotient of nearly coincident roots lost their relative gap in digits.
+/// The Dual neighborhoods keep the plain logarithm, whose derivatives are
+/// holomorphic.
+fn log_ratio_body(arguments: &[Atom; 3], neighborhood: Atom, near: bool) -> Atom {
     let difference = Atom::num(1) - physical(&arguments[0], &arguments[2]);
-    let logarithm = log_symbol().call(arguments.as_slice());
+    let mut logarithm = log_symbol().call(arguments.as_slice());
+    if near {
+        let [value, phase, odd] = arguments;
+        let offset = value - Atom::num(1);
+        let close = negative(&(Atom::num(4) * re(&(&offset * offset.conj())) - 1));
+        let accurate =
+            log_one_plus_symbol().call((value, &offset)) + i() * Symbol::PI.to_atom() * phase;
+        logarithm = choose(odd, logarithm.clone(), choose(&close, accurate, logarithm));
+    }
     let quotient = &logarithm / &difference;
     // A nonzero sheet logarithm at one is a pole, not a removable limit.
     let at_one = choose(&logarithm, quotient.clone(), neighborhood);
@@ -134,7 +148,8 @@ pub(crate) fn with_neighborhoods(map: &FunctionMap, order: usize) -> Result<Func
     let local = local
         .replace(variable)
         .with(physical(&arguments[0], &arguments[2]));
-    let mut map = map.with_replaced_body(log_ratio_symbol(), log_ratio_body(&arguments, local))?;
+    let mut map =
+        map.with_replaced_body(log_ratio_symbol(), log_ratio_body(&arguments, local, false))?;
     let arguments = product_parameters().map(Symbol::to_atom);
     let parts = product_parts(&arguments, true, false);
     for (component, body) in parts.into_iter().enumerate() {
@@ -163,12 +178,228 @@ fn difference_sheets(arguments: &[Atom; 6]) -> [SheetAtom; 2] {
     })
 }
 
-fn difference_body(first: &SheetAtom, second: &SheetAtom, coincident: Atom) -> Atom {
+/// `near` selects [near_difference] where the direct difference cancels. The
+/// Dual neighborhoods keep the direct difference: [log_one_plus_body] forms
+/// real parts, which carry no holomorphic derivative.
+fn difference_body(first: &SheetAtom, second: &SheetAtom, coincident: Atom, near: bool) -> Atom {
     let difference = first.value() - second.value();
+    let [upper, lower] = [first.dilog(), second.dilog()];
+    let numerator = &upper - &lower;
+    let direct = &numerator / &difference;
+    let noncoincident = if near {
+        // The values cancel by more than 16: the direct difference loses more
+        // than four bits. Only then are the other forms considered.
+        let norm = |z: &Atom| re(&(z * z.conj()));
+        let cancels = negative(&(Atom::num(256) * norm(&numerator) - norm(&upper)));
+        choose(&cancels, near_difference(first, second, direct.clone()), direct)
+    } else {
+        direct
+    };
+    choose(&difference, noncoincident, coincident)
+}
+
+fn log_one_plus_symbol() -> Symbol {
+    symbolica::symbol!("__olo_log_one_plus")
+}
+
+/// The principal `log(q)` of `q = 1 + w`, given both, with its relative
+/// precision for small `|w|`.
+///
+/// `log(1 + w)` would take `log|1 + w|` of a rounded modulus, which next to
+/// one has an absolute error of a few units: the native and SymJIT complex
+/// logarithms form `|z|` within a few ulps, and their `log(q)/(1 - q)` of a
+/// quotient `q = 1 + w` lost `|w|` relative digits. Here, for `|w| < 1/2`,
+/// `log|1 + w| = log1p(2 Re w + |w|²)/2` with Kahan's
+/// `log1p(t) = log(u) t/(u-1)`, `u = 1 + t` (a real logarithm), and the
+/// argument is the angle of `1 + w`. Farther from one the logarithm of `q` is
+/// direct (`q` itself is formed by the caller without rounding `1 + w`).
+fn log_one_plus_body(q: &Atom, w: &Atom) -> Atom {
+    let norm = re(&(w * w.conj()));
+    let t = Atom::num(2) * re(w) + &norm;
+    let u = super::grouped(&(Atom::num(1) + &t));
+    let offset = &u - Atom::num(1);
+    let log1p = choose(&offset, u.log() * &t / &offset, t.clone());
+    // Im(1 + w) = Im w exactly, so the angle keeps its relative precision too.
+    let angle = im(&(Atom::num(1) + w).log());
+    let near = negative(&(Atom::num(4) * norm - 1));
+    choose(&near, log1p / 2 + i() * angle, q.log())
+}
+
+fn series_symbol(degree: u32) -> Symbol {
+    if degree == SERIES_DEGREES[0] {
+        symbolica::symbol!("__olo_sheet_dilog_series_short")
+    } else {
+        symbolica::symbol!("__olo_sheet_dilog_series")
+    }
+}
+
+/// Highest powers of the series variables kept in [series_body]: the short
+/// expansion suffices in binary64 for `|s| < 1/4`, the long one for `|s| < 1.24`.
+const SERIES_DEGREES: [u32; 2] = [10, 22];
+
+/// `(f(s1) - f(s2))/(s1 - s2)` for `f(s) = Li2(1 - e^-s) = sum_n B_n s^(n+1)/(n+1)!`,
+/// through `s^degree` (OneLOop's `sumterms_c`). `h_n = (s1^(n+1) -
+/// s2^(n+1))/(s1 - s2)` is built from `h_n = s1 h_(n-1) + s2^n`, which has no
+/// cancellation when `s1` and `s2` nearly coincide.
+fn series_body(first: &Atom, second: &Atom, degree: u32) -> Atom {
+    // a_n = B_n/n! from sum_(j<=n) a_j/(n+1-j)! = 0 (n >= 1), exactly.
+    let factorial = |n: u32| Atom::num(symbolica::domains::integer::Integer::factorial(n));
+    let mut bernoulli = vec![Atom::num(1)];
+    for n in 1..=degree {
+        let sum = (0..n).fold(Atom::num(0), |sum, j| {
+            sum + &bernoulli[j as usize] / factorial(n + 1 - j)
+        });
+        bernoulli.push(-sum);
+    }
+    let mut power = Atom::num(1);
+    let mut complete = Atom::num(1);
+    let mut series = Atom::num(1);
+    for n in 1..=degree {
+        power = &power * second;
+        complete = first * &complete + &power;
+        if !bernoulli[n as usize].is_zero() {
+            series += &bernoulli[n as usize] / Atom::num(n + 1) * &complete;
+        }
+    }
+    series
+}
+
+/// The divided difference where `(Li2(1-x1) - Li2(1-x2))/(x1 - x2)` cancels.
+///
+/// The direct difference loses the digits that the two values share: about
+/// `|x|/|x1 - x2|` for nearly coincident arguments (nearly coincident
+/// triangle roots lost three digits in binary64), and `pi²/6` divided by
+/// `|x1 - x2| |log x|` when both arguments are small, which includes a zero
+/// partner. As OneLOop's `dilog2_c`, the representation of [dilog_body]
+/// (reflected below `Re = 1/2`, inverted outside the unit circle) is divided
+/// term by term instead: the polylogarithm through the Bernoulli expansion in
+/// `s = -log(n)` or `-log(1-n)` of the normalized `n` ([series_body]), the
+/// logarithms through `log(q)/(1-q)` of their quotients, formed from the
+/// quotients' offsets from one ([log_one_plus_body]). No term cancels, and
+/// `pi²/6` drops out.
+///
+/// [difference_body] calls it only where the two dilogarithms cancel by more
+/// than 16 (four bits). The expansion is then used when both arguments share
+/// their phase and parity; and their side of the unit circle, unless the
+/// phase is -1, 0 or 1, where the continued `Li2(1-x)` is continuous across it
+/// and the representation inside holds on both sides; and when the first
+/// omitted term, bounded by `8 (max|s|²/39)^12 > 8 (max|s|/(2 pi))^24`, does
+/// not change `1` at the working precision (the expansion through `s^10` is
+/// used when `8 (max|s|²/39)^6` does not). In binary64 that holds for
+/// `|s| < 1.24`, which covers nearly coincident arguments anywhere, but at 256
+/// bits only for `|s| < 3e-3`: higher precisions mostly keep the direct
+/// difference, whose loss stays visible in the tracked precision. Double-double
+/// arithmetic represents `1 + bound` exactly and keeps it too. A zero partner
+/// of an argument below 1/2 in modulus (`Li2(1) = pi²/6` on every sheet) has
+/// the closed form `-Li2(x)/x - L(x) log(1-x)/x`.
+fn near_difference(first: &SheetAtom, second: &SheetAtom, direct: Atom) -> Atom {
+    let one = Atom::num(1);
+    let i_pi = i() * Symbol::PI.to_atom();
+    let norm = |z: &Atom| re(&(z * z.conj()));
+    let less = |a: Atom, b: &Atom| negative(&(a - b));
+    let log_one_plus = |q: &Atom, w: &Atom| log_one_plus_symbol().call((q, w));
+    // log(q)/(1-q) of a quotient q = 1 + w on its principal sheet.
+    let ratio_log = |q: &Atom, w: &Atom| choose(w, log_one_plus(q, w) / -w, Atom::num(-1));
+    // The sheet logarithm L(x) = log(v) + i pi phase.
+    let logarithm = |s: &SheetAtom| s.value.log() + &i_pi * &s.phase;
+    let [x1, x2] = [first.value(), second.value()];
+    let [m1, m2] = [norm(&x1), norm(&x2)];
+    let small = |m: &Atom| less(Atom::num(4) * m, &one);
+    let zero_partner = |x: &Atom, s: &SheetAtom| {
+        -(crate::dilog_atom(x) / x) - log_one_plus(&(&one - x), &-x) / x * logarithm(s)
+    };
+
+    // dilog_body's inversion test, on the same arithmetic.
+    let inverted = |s: &SheetAtom| negative(&(&one - &s.value * s.value.conj()));
+    let [inverted_1, inverted_2] = [inverted(first), inverted(second)];
+    // Across the unit circle the continued Li2(1-x) is continuous for the
+    // phases -1, 0, 1, and the representation inside holds on both sides;
+    // higher windings jump there (OneLOop's dilog2_c adds the jump).
+    let straddle = &inverted_1 - &inverted_2;
+    let phase = &second.phase;
+    let unwound = choose(&(phase * (phase * phase - 1)), Atom::num(0), Atom::num(1));
+    let inversion = choose(&straddle, Atom::num(0), inverted_2.clone());
+    let normalized = |x: &Atom| choose(&inversion, &one / x, x.clone());
+    let [n1, n2] = [normalized(&x1), normalized(&x2)];
+    // 1 - n, formed without cancellation next to n = 1.
+    let complement = |x: &Atom| choose(&inversion, (x - &one) / x, &one - x);
+    let [c1, c2] = [complement(&x1), complement(&x2)];
+    // n1 - n2, without forming the rounded reciprocals' difference.
+    let gap_n = choose(&inversion, (&x2 - &x1) * &n1 * &n2, &x1 - &x2);
+    // 1/n2, without another reciprocal outside the unit circle.
+    let inverse_n2 = choose(&inversion, x2.clone(), &one / &x2);
+    let below = negative(&(Atom::num(2) * re(&n2) - 1));
+    let sign = &one - Atom::num(2) * &inversion;
+    // -log(1-n); above 1/2 the parity is even and -log(n) = -sign log(v).
+    let variable = |n: &Atom, c: &Atom, s: &SheetAtom| {
+        choose(&below, -log_one_plus(c, &-n), -(&sign * s.value.log()))
+    };
+    let [s1, s2] = [variable(&n1, &c1, first), variable(&n2, &c2, second)];
+    let [r1, r2] = [norm(&s1), norm(&s2)];
+    let largest = choose(&less(r1.clone(), &r2), r2, r1);
+    // The first omitted terms of the short and long expansions.
+    let truncated = |power: i64| {
+        super::grouped(&(&one + Atom::num(8) * (&largest / 39).pow(power))) - &one
+    };
+    let series = choose(
+        &truncated(6),
+        series_symbol(SERIES_DEGREES[1]).call((&s1, &s2)),
+        series_symbol(SERIES_DEGREES[0]).call((&s1, &s2)),
+    );
+    let truncated = truncated(12);
+    // log(q)/(1-q) for q = n1/n2 and (1-n1)/(1-n2), from their offsets from one.
+    let rho = ratio_log(&(&n1 * &inverse_n2), &(&gap_n * &inverse_n2)) * &inverse_n2;
+    let sigma = ratio_log(&(&c1 / &c2), &(-&gap_n / &c2)) / &c2;
+    let [l1, l2] = [logarithm(first), logarithm(second)];
+    let even = &sign * (&second.phase - &second.odd);
+    // pi²/6 - Li2(n) - log(1-n) Lambda(n), with Lambda = sign L.
+    let reflected = &sigma * (&series - &sign * &l2) - &s1 * &rho;
+    // Li2(1-n) - i pi even log(1-n).
+    let unreflected = &series * &rho - choose(&even, &i_pi * &even * &sigma, Atom::num(0));
+    let normalized_difference = choose(&below, reflected, unreflected);
+    // Outside: Li2(1-x) = -B(1/x) - L²/2 with B the normalized form above.
+    let offset = (&first.value - &second.value) / &second.value;
+    let outer = &n1 * &n2 * &normalized_difference
+        + (&l1 + &l2) / 2 * ratio_log(&(&first.value / &second.value), &offset) * &n2;
+    let expansion = choose(&inversion, outer, normalized_difference);
+
+    // The form to use: 0 the direct difference, 1 the expansion, 2 and 3 the
+    // zero-partner limits of x1 and x2. The direct difference appears once.
+    let [direct_kind, expansion_kind] = [Atom::num(0), Atom::num(1)];
+    let candidate = choose(
+        &(&first.phase - &second.phase),
+        direct_kind.clone(),
+        choose(
+            &(&first.odd - &second.odd),
+            direct_kind.clone(),
+            choose(
+                &straddle,
+                choose(
+                    &unwound,
+                    choose(&truncated, direct_kind.clone(), expansion_kind.clone()),
+                    direct_kind.clone(),
+                ),
+                choose(&truncated, direct_kind.clone(), expansion_kind),
+            ),
+        ),
+    );
+    let kind = choose(
+        &second.value,
+        choose(
+            &first.value,
+            candidate,
+            choose(&small(&m2), Atom::num(3), direct_kind.clone()),
+        ),
+        choose(&small(&m1), Atom::num(2), direct_kind),
+    );
     choose(
-        &difference,
-        (first.dilog() - second.dilog()) / &difference,
-        coincident,
+        &kind,
+        choose(
+            &(&kind - 1),
+            choose(&(&kind - 2), zero_partner(&x2, second), zero_partner(&x1, first)),
+            expansion,
+        ),
+        direct,
     )
 }
 
@@ -264,7 +495,7 @@ fn with_dilog_neighborhoods(mut map: FunctionMap, order: usize) -> Result<Functi
     );
     map.with_replaced_body(
         difference_symbol(),
-        difference_body(&first, &second, coincident),
+        difference_body(&first, &second, coincident, false),
     )
 }
 
@@ -406,7 +637,7 @@ fn register_impl(function_map: &mut FunctionMap, grouped_predicates: bool) {
         .add_function_with_options(
             log_ratio_symbol(),
             variables.to_vec(),
-            log_ratio_body(&atoms, Atom::num(-1)),
+            log_ratio_body(&atoms, Atom::num(-1), std::env::var("ZZ_GEN_LOG").is_err()),
             super::native_function_options(),
         )
         .expect("unique sheet logarithm ratio");
@@ -424,13 +655,50 @@ fn register_impl(function_map: &mut FunctionMap, grouped_predicates: bool) {
             super::native_function_options(),
         )
         .expect("unique sheet dilogarithm");
+    let [q, w] = [
+        symbolica::symbol!("__olo_log_one_plus_value"),
+        symbolica::symbol!("__olo_log_one_plus_offset"),
+    ];
+    function_map
+        .add_function_with_options(
+            log_one_plus_symbol(),
+            vec![q, w],
+            log_one_plus_body(&q.to_atom(), &w.to_atom()),
+            super::native_function_options(),
+        )
+        .expect("unique log(1 + w)");
+    let [a, b] = [
+        symbolica::symbol!("__olo_dilog_series_a"),
+        symbolica::symbol!("__olo_dilog_series_b"),
+    ];
+    for degree in SERIES_DEGREES {
+        function_map
+            .add_function_with_options(
+                series_symbol(degree),
+                vec![a, b],
+                series_body(&a.to_atom(), &b.to_atom(), degree),
+                super::native_function_options(),
+            )
+            .expect("unique dilogarithm series");
+    }
     let variables = difference_parameters();
     let [first, second] = difference_sheets(&variables.map(Symbol::to_atom));
     function_map
         .add_function_with_options(
             difference_symbol(),
             variables.to_vec(),
-            difference_body(&first, &second, first.log_over_one_minus()),
+            // At coincidence the plain log(x)/(1-x), the primal of the Dual
+            // neighborhoods' limit (`with_dilog_neighborhoods`).
+            difference_body(
+                &first,
+                &second,
+                log_ratio_body(
+                    &[first.value.clone(), first.phase.clone(), first.odd.clone()],
+                    Atom::num(-1),
+                    false,
+                ),
+                std::env::var("ZZ_GEN_DD").is_err(),
+            ),
             super::native_function_options(),
         )
         .expect("unique sheet dilogarithm difference");
@@ -444,6 +712,11 @@ pub(crate) struct SheetAtom {
 }
 
 impl SheetAtom {
+    #[cfg(test)]
+    pub(crate) fn raw(value: Atom, phase: Atom, odd: Atom) -> Self {
+        Self { value, phase, odd }
+    }
+
     pub(crate) fn lower(value: Atom) -> Self {
         Self::from_value(value, false)
     }
@@ -560,6 +833,135 @@ pub(crate) fn divided_difference(first: &SheetAtom, second: &SheetAtom) -> Atom 
 mod tests {
     use super::*;
     use symbolica::prelude::{Complex, Float, RealLike};
+
+    /// [near_difference] against the direct difference at 400 bits, on pairs
+    /// of one sheet (phases -3..3) where the direct difference cancels: both
+    /// arguments small, nearly coincident (relative gaps 1e-9 to 0.3, also
+    /// across the unit circle for phases -1, 0, 1), and a zero partner; and
+    /// both large, where the direct difference is used. Binary64 must be
+    /// accurate to about a hundred units (the direct difference of gaps above
+    /// 1/32 on winding sheets loses up to seven bits), and 256 bits too (the direct
+    /// difference, whose cancellation is at most 2^50 here, or the expansion
+    /// where its bound allows it). The direct difference alone fails this by up
+    /// to eight orders of magnitude.
+    #[test]
+    fn near_divided_differences_match_high_precision() {
+        let s = ["dd_v1", "dd_p1", "dd_o1", "dd_v2", "dd_p2", "dd_o2"]
+            .map(|name| symbolica::symbol!(name).to_atom());
+        let first = SheetAtom::raw(s[0].clone(), s[1].clone(), s[2].clone());
+        let second = SheetAtom::raw(s[3].clone(), s[4].clone(), s[5].clone());
+        let expressions = [
+            divided_difference(&first, &second),
+            (first.dilog() - second.dilog()) / (first.value() - second.value()),
+        ];
+        let mut map = FunctionMap::new();
+        register(&mut map);
+        let exact = Atom::evaluator_multiple(
+            &expressions.iter().map(Atom::as_view).collect::<Vec<_>>(),
+            &s,
+        )
+        .function_map(map.into())
+        .build()
+        .unwrap();
+        let mut binary64 = exact
+            .clone()
+            .map_coeff(&|v| Complex::new(v.re.to_f64(), v.im.to_f64()));
+        let precise = |bits: u32| {
+            exact.clone().map_coeff_with_prec(
+                &|v| {
+                    Complex::new(
+                        v.re.to_multi_prec_float(bits),
+                        v.im.to_multi_prec_float(bits),
+                    )
+                },
+                bits,
+            )
+        };
+        let (mut p256, mut p400) = (precise(256), precise(400));
+        let mut state = 0x2545_f491_4f6c_dd1d_u64;
+        let mut uniform = move || {
+            state ^= state << 13;
+            state ^= state >> 7;
+            state ^= state << 17;
+            (state >> 11) as f64 / (1u64 << 53) as f64
+        };
+        let polar = |modulus: f64, uniform: &mut dyn FnMut() -> f64| {
+            let angle = (uniform() - 0.5) * std::f64::consts::PI;
+            Complex::new(modulus * angle.cos(), modulus * angle.sin())
+        };
+        let (mut worst, mut worst_256) = (0f64, 0f64);
+        let mut failures = Vec::new();
+        for k in 0..4000 {
+            let phase = (uniform() * 7.0) as i64 - 3;
+            let (v1, v2) = match k % 4 {
+                0 => (
+                    polar(10f64.powf(-6.0 + 5.09 * uniform()), &mut uniform),
+                    polar(10f64.powf(-6.0 + 5.09 * uniform()), &mut uniform),
+                ),
+                1 => (
+                    polar(10f64.powf(0.35 + 4.5 * uniform()), &mut uniform),
+                    polar(10f64.powf(0.35 + 4.5 * uniform()), &mut uniform),
+                ),
+                2 => {
+                    let mut modulus = 10f64.powf(-1.3 + 2.6 * uniform());
+                    if (modulus - 1.0).abs() < 0.02 {
+                        modulus = 1.5;
+                    }
+                    let v2 = polar(modulus, &mut uniform);
+                    let gap = 10f64.powf(-9.0 + 8.5 * uniform());
+                    let angle = 2.0 * std::f64::consts::PI * uniform();
+                    let factor = Complex::new(1.0 + gap * angle.cos(), gap * angle.sin());
+                    let v1 = Complex::new(
+                        v2.re * factor.re - v2.im * factor.im,
+                        v2.re * factor.im + v2.im * factor.re,
+                    );
+                    let crosses = (v1.norm_squared() - 1.0) * (v2.norm_squared() - 1.0) <= 0.0;
+                    if v1.re < 0.0 || (crosses && phase.abs() > 1) {
+                        continue;
+                    }
+                    (v1, v2)
+                }
+                _ => (
+                    polar(10f64.powf(-6.0 + 5.65 * uniform()), &mut uniform),
+                    Complex::new(0.0, 0.0),
+                ),
+            };
+            let odd = phase.rem_euclid(2) as f64;
+            let input = [
+                v1,
+                Complex::new(phase as f64, 0.0),
+                Complex::new(odd, 0.0),
+                v2,
+                Complex::new(phase as f64, 0.0),
+                Complex::new(odd, 0.0),
+            ];
+            let mut out = [Complex::new(0.0, 0.0); 2];
+            binary64.evaluate(&input, &mut out);
+            let exact_input = |bits: u32| {
+                input.map(|z| Complex::new(Float::with_val(bits, z.re), Float::with_val(bits, z.im)))
+            };
+            let fresh = |bits: u32| {
+                core::array::from_fn::<_, 2, _>(|_| Complex::new(Float::new(bits), Float::new(bits)))
+            };
+            let (mut o256, mut o400) = (fresh(256), fresh(400));
+            p256.evaluate(&exact_input(256), &mut o256);
+            p400.evaluate(&exact_input(400), &mut o400);
+            let reference = &o400[1];
+            let scale = reference.re.to_f64().hypot(reference.im.to_f64());
+            let error = (out[0].re - reference.re.to_f64()).hypot(out[0].im - reference.im.to_f64()) / scale;
+            let error_256 = (o256[0].re.clone() - &reference.re)
+                .to_f64()
+                .hypot((o256[0].im.clone() - &reference.im).to_f64())
+                / scale;
+            worst = worst.max(error);
+            worst_256 = worst_256.max(error_256);
+            if !(error <= 3e-14) || !(error_256 <= 1e-60) {
+                failures.push(format!("{input:?}: binary64 {error:e}, 256 bits {error_256:e}"));
+            }
+        }
+        eprintln!("worst binary64 {worst:e}, worst 256 bits {worst_256:e}");
+        assert!(failures.is_empty(), "{}", failures[..failures.len().min(10)].join("\n"));
+    }
     #[test]
     fn sheet_product_and_quotient_reference_values() {
         let args = ["sheet_pair_a", "sheet_pair_b", "sheet_pair_s"]

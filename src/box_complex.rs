@@ -33,6 +33,36 @@ fn min(a: &Atom, b: &Atom) -> Atom {
     if_nonzero_else(&less(a, b), a.clone(), b.clone())
 }
 
+/// The sum of `terms`, added left to right as in OneLOop's `boxc`.
+///
+/// Symbolica orders the terms of a sum canonically, so `m2 - m3 - p2` need
+/// not subtract the masses first. For equal masses and a tiny `p2`, forming
+/// `(m2 - p2) - m3` instead keeps the value `-p2` in `Float`, but tracks it with
+/// only the bits left after the cancellation, and every later operation on it
+/// runs at that precision (a D0 with `p2 = 2^-114` lost 129 bits from 132
+/// bits up). Each partial sum is kept by [grouped].
+fn in_order(terms: &[Atom]) -> Atom {
+    terms[1..]
+        .iter()
+        .fold(terms[0].clone(), |sum, term| grouped(&sum) + term)
+}
+
+/// The coefficient sum `terms[0] + terms[1] + ...` of a quadratic, or `exact`,
+/// the invariant it equals, when the sum cancels by more than 2^16.
+///
+/// A tiny invariant (`p2 = 2^-114` in a D0 with masses 29929, computed as
+/// `(2^-114 + 40000) - 40000`) is lost to cancellation, in `Float` with the
+/// tracked precision of the difference. Otherwise the sum is formed from the
+/// coefficients themselves, as in OneLOop: the edge quadratics then stay
+/// consistent with the conic they restrict, which kinematics within an ulp of
+/// a threshold (an exact double root of one and not the other) rely on.
+fn coefficient_sum(terms: &[&Atom], exact: &Atom) -> Atom {
+    let numeric = terms.iter().fold(Atom::num(0), |sum, term| sum + *term);
+    let scale = terms.iter().fold(Atom::num(0), |sum, term| sum + norm(term));
+    let cancels = less(&(Atom::num(1u64 << 32) * norm(exact)), &scale);
+    if_nonzero_else(&cancels, exact.clone(), numeric)
+}
+
 fn imaginary_sign(z: &Atom, fallback: &Atom) -> Atom {
     let imaginary = im(z);
     if_nonzero_else(&imaginary, sign_nonnegative(&imaginary), fallback.clone())
@@ -466,7 +496,9 @@ fn planar(x: [&Atom; 13]) -> Atom {
         )
 }
 
-fn t1([a, c, g, h, d, e, f, j, dpe, dd, de, df, dj, ddpe]: [&Atom; 14]) -> Atom {
+/// `ac` is `a + c`, formed by the caller from the invariants it stands for
+/// (see [coefficient_sum]).
+fn t1([a, c, g, h, d, e, f, j, dpe, dd, de, df, dj, ddpe, ac]: [&Atom; 15]) -> Atom {
     let k = h * a - c * g;
     let l = h * d - c * j - e * g;
     let n = h * f - e * j;
@@ -476,7 +508,7 @@ fn t1([a, c, g, h, d, e, f, j, dpe, dd, de, df, dj, ddpe]: [&Atom; 14]) -> Atom 
     let [y1, y2] = roots(&k, &l, &n).map(|y| continued_root(y, &k, &l, &dl, &dn, &dn2));
     let zero = Atom::num(0);
     let one = Atom::num(1);
-    (-s3_call(&y1, &y2, &zero, &one, &(a + c), dpe, f, ddpe, df)
+    (-s3_call(&y1, &y2, &zero, &one, &coefficient_sum(&[a, c], ac), dpe, f, ddpe, df)
         + s3_call(&y1, &y2, &zero, &one, &zero, &(g + h), j, &zero, dj)
         - s3_call(&y1, &y2, &zero, &one, &zero, g, j, &zero, dj)
         + s3_call(&y1, &y2, &zero, &one, a, d, f, dd, df))
@@ -654,7 +686,8 @@ fn tfun_selected(
         dj,
         ddpe,
         ddpf,
-    ]: [&Atom; 18],
+        abc,
+    ]: [&Atom; 19],
 ) -> Atom {
     let data = beta_data(beta, b, c, g, h, d, e, f, j, dd, de, df, dj);
     let [y1, y2] = &data.y;
@@ -666,7 +699,7 @@ fn tfun_selected(
         - s3_call(y1, y2, &zero, &(1 - beta), &zero, &(g + h), j, &zero, dj)
         + s3_call(y1, y2, &zero, &(-beta), &zero, g, j, &zero, dj)
         - s3_call(y1, y2, beta, &one, b, &(c + e), &(a + dpf), de, ddpf)
-        + s3_call(y1, y2, &zero, &(1 - beta), &(a + b + c), dpe, f, ddpe, df)
+        + s3_call(y1, y2, &zero, &(1 - beta), &coefficient_sum(&[a, b, c], abc), dpe, f, ddpe, df)
         - s3_call(y1, y2, &zero, &(-beta), a, d, f, dd, df);
     let real = real_intersections_absent([a, b, c, g, h, d, e, f, j]);
     let residue = call(
@@ -698,7 +731,8 @@ fn tfun(
         djin,
         ddpe,
         ddpf,
-    ]: [&Atom; 17],
+        abc,
+    ]: [&Atom; 18],
 ) -> Atom {
     let sj = imaginary_sign(jin, &imaginary_sign(djin, &Atom::num(-1)));
     let g = -&sj * gin;
@@ -728,23 +762,26 @@ fn tfun(
     let general = call(
         "tfun_selected",
         [
-            a, b, c, &g, &h, d, e, f, &j, dpe, dpf, &beta, dd, de, df, &dj, ddpe, ddpf,
+            a, b, c, &g, &h, d, e, f, &j, dpe, dpf, &beta, dd, de, df, &dj, ddpe, ddpf, abc,
         ],
     );
+    // b = 0: a + c = abc.
     let no_b = call(
         "t1",
-        [a, c, &g, &h, d, e, f, &j, dpe, dd, de, df, &dj, ddpe],
+        [a, c, &g, &h, d, e, f, &j, dpe, dd, de, df, &dj, ddpe, abc],
     );
+    // a = 0: b + c = abc, and the new a + c is b.
+    let bc = coefficient_sum(&[b, c], abc);
     let no_a = call(
         "t1",
         [
-            &(b + c),
+            &bc,
             &(-c),
             &(-&g - &h),
             &g,
-            &(-dpe - Atom::num(2) * (b + c)),
+            &(-dpe - Atom::num(2) * &bc),
             &(d + c),
-            &(dpe + b + c + f),
+            &(dpe + &bc + f),
             &(&g + &h + &j),
             &(-e - Atom::num(2) * b - c),
             &(-ddpe),
@@ -752,6 +789,7 @@ fn tfun(
             &(ddpe + df),
             &dj,
             &(-de),
+            b,
         ],
     );
     -sj * if_nonzero_else(b, if_nonzero_else(a, general, no_a), no_b)
@@ -763,12 +801,12 @@ fn no_opposite_chart(p: [&Atom; 6], m: [&Atom; 4]) -> Atom {
     let c = p[3] - p[4] - p[2];
     let g = p[1];
     let h = p[5] - p[1] - p[2];
-    let d = m[2] - m[3] - p[2];
-    let e = m[0] - m[2] + p[2] - p[3];
+    let d = in_order(&[m[2] - m[3], -p[2]]);
+    let e = in_order(&[m[0] - m[2], p[2].clone(), -p[3]]);
     let f = m[3];
-    let k = m[1] - m[2] - p[5] + p[2];
-    let dpe = m[0] - m[3] - p[3];
-    let dpk = m[1] - m[3] - p[5];
+    let k = in_order(&[m[1] - m[2], -p[5], p[2].clone()]);
+    let dpe = in_order(&[m[0] - m[3], -p[3]]);
+    let dpk = in_order(&[m[1] - m[3], -p[5]]);
     let dpf = m[2] - p[2];
     call(
         "t13",
@@ -800,9 +838,9 @@ fn no_opposite_chart_regular(p: [&Atom; 6], m: [&Atom; 4]) -> Atom {
     let c = p[3] - p[4] - p[2];
     let g = p[1];
     let h = p[5] - p[1] - p[2];
-    let d = m[2] - m[3] - p[2];
-    let e = m[0] - m[2] + p[2] - p[3];
-    let j = m[1] - m[2] - p[5] + p[2];
+    let d = in_order(&[m[2] - m[3], -p[2]]);
+    let e = in_order(&[m[0] - m[2], p[2].clone(), -p[3]]);
+    let j = in_order(&[m[1] - m[2], -p[5], p[2].clone()]);
     let k = &h * &a - &c * g;
     let l = &a * &d + &h * &e - &d * g - &c * &j;
     let n = &d * (&e - &j) + (&h - &c) * m[3];
@@ -852,15 +890,16 @@ fn zero_external(p: [&Atom; 6], m: [&Atom; 4]) -> Atom {
     let c = p[5] - p[1] - p[2];
     let h = p[3] - p[4] - p[5] + p[1];
     let j = p[4] - p[0] - p[1];
-    let d = m[2] - m[3] - p[2];
-    let e = m[1] - m[2] - p[5] + p[2];
-    let k = m[0] - m[1] + p[5] - p[3];
+    let d = in_order(&[m[2] - m[3], -p[2]]);
+    let e = in_order(&[m[1] - m[2], -p[5], p[2].clone()]);
+    let k = in_order(&[m[0] - m[1], p[5].clone(), -p[3]]);
     let f = m[3];
     let cph = p[3] - p[4] - p[2];
-    let dpe = m[1] - m[3] - p[5];
-    let epk = m[0] - m[2] + p[2] - p[3];
-    let dek = m[0] - m[3] - p[3];
+    let dpe = in_order(&[m[1] - m[3], -p[5]]);
+    let epk = in_order(&[m[0] - m[2], p[2].clone(), -p[3]]);
+    let dek = in_order(&[m[0] - m[3], -p[3]]);
     let dpf = m[2] - p[2];
+    let bj = b + &j;
     call(
         "tfun",
         [
@@ -881,12 +920,13 @@ fn zero_external(p: [&Atom; 6], m: [&Atom; 4]) -> Atom {
             &(&dm[0] - &dm[1]),
             &(&dm[1] - &dm[3]),
             &dm[2],
+            &(a + b + &c),
         ],
     ) - call(
         "tfun",
         [
             a,
-            &(b + &j),
+            &bj,
             &cph,
             &h,
             &j,
@@ -902,6 +942,7 @@ fn zero_external(p: [&Atom; 6], m: [&Atom; 4]) -> Atom {
             &(&dm[0] - &dm[1]),
             &(&dm[0] - &dm[3]),
             &dm[2],
+            &(a + &bj + &cph),
         ],
     )
 }
@@ -914,17 +955,17 @@ fn ordered(p: [&Atom; 6], m: [&Atom; 4]) -> Atom {
     let c = p[5] - p[1] - p[2];
     let h = p[3] - p[4] - p[5] + p[1];
     let j = p[4] - p[0] - p[1];
-    let d = m[2] - m[3] - p[2];
-    let e = m[1] - m[2] - p[5] + p[2];
-    let k = m[0] - m[1] + p[5] - p[3];
+    let d = in_order(&[m[2] - m[3], -p[2]]);
+    let e = in_order(&[m[1] - m[2], -p[5], p[2].clone()]);
+    let k = in_order(&[m[0] - m[1], p[5].clone(), -p[3]]);
     let f = m[3];
     let abc = p[5];
     let bgj = p[4];
     let jph = p[3] - p[0] - p[5];
     let cph = p[3] - p[4] - p[2];
-    let dpe = m[1] - m[3] - p[5];
-    let epk = m[0] - m[2] + p[2] - p[3];
-    let dek = m[0] - m[3] - p[3];
+    let dpe = in_order(&[m[1] - m[3], -p[5]]);
+    let epk = in_order(&[m[0] - m[2], p[2].clone(), -p[3]]);
+    let dek = in_order(&[m[0] - m[3], -p[3]]);
     let dpf = m[2] - p[2];
     let def = m[1] - p[5];
     let [x1, x2] = roots(g, &j, b);
@@ -953,6 +994,7 @@ fn ordered(p: [&Atom; 6], m: [&Atom; 4]) -> Atom {
             &de1,
             &(&dm[0] - &dm[3]),
             &dm[1],
+            &(abc + g + &jph),
         ],
     ) + &o1
         * call(
@@ -975,6 +1017,7 @@ fn ordered(p: [&Atom; 6], m: [&Atom; 4]) -> Atom {
                 &de1,
                 &(&dm[0] - &dm[3]),
                 &dm[2],
+                &(a + bgj + &cph),
             ],
         )
         + &alpha
@@ -998,6 +1041,7 @@ fn ordered(p: [&Atom; 6], m: [&Atom; 4]) -> Atom {
                     &de1,
                     &(&dm[1] - &dm[3]),
                     &dm[2],
+                    &(a + b + &c),
                 ],
             )
 }
@@ -1225,12 +1269,12 @@ pub(crate) fn register(map: &mut FunctionMap) {
     define(map, "distance", 4, |x| {
         distance(core::array::from_fn(|idx| &x[idx]))
     });
-    define(map, "t1", 14, |x| t1(core::array::from_fn(|idx| &x[idx])));
+    define(map, "t1", 15, |x| t1(core::array::from_fn(|idx| &x[idx])));
     define(map, "t13", 18, |x| t13(core::array::from_fn(|idx| &x[idx])));
-    define(map, "tfun_selected", 18, |x| {
+    define(map, "tfun_selected", 19, |x| {
         tfun_selected(core::array::from_fn(|idx| &x[idx]))
     });
-    define(map, "tfun", 17, |x| {
+    define(map, "tfun", 18, |x| {
         tfun(core::array::from_fn(|idx| &x[idx]))
     });
     define(map, "sort", 4, |x| {

@@ -31,7 +31,10 @@ pub(crate) struct Constants<T: NativeFloat> {
     pub(crate) pi: T,
     pub(crate) pi2_6: T,
     pub(crate) one_c: C<T>,
+    pub(crate) two_fifty_six: T,
     small_ints: [T; 9],
+    /// `B_n/(n+1)!` for `n = 1, 2, 4, ..., 22` (`sheet_exact::series_body`).
+    pub(crate) bernoulli: [T; 12],
 }
 
 impl<T: NativeFloat> Constants<T> {
@@ -40,9 +43,34 @@ impl<T: NativeFloat> Constants<T> {
         let two = prototype.from_i64(2);
         let pi = prototype.pi();
         let pi2_6 = pi.clone() * &pi / &prototype.from_i64(6);
+        // B_n/(n+1)! for n = 1, 2, 4, ..., 22, as exact rationals.
+        const BERNOULLI: [(i64, i64); 12] = [
+            (-1, 2),
+            (1, 6),
+            (-1, 30),
+            (1, 42),
+            (-1, 30),
+            (5, 66),
+            (-691, 2730),
+            (7, 6),
+            (-3617, 510),
+            (43867, 798),
+            (-174611, 330),
+            (854513, 138),
+        ];
+        let bernoulli = core::array::from_fn(|k| {
+            let n = if k == 0 { 1 } else { 2 * k as u32 };
+            let (numerator, denominator) = BERNOULLI[k];
+            let factorial = symbolica::domains::integer::Integer::factorial(n + 1);
+            let value = symbolica::domains::rational::Rational::from((numerator, denominator))
+                / &symbolica::domains::rational::Rational::from(factorial);
+            prototype.from_rational(&value)
+        });
         Self {
+            bernoulli,
             half: one.clone() / &two,
             four: prototype.from_i64(4),
+            two_fifty_six: prototype.from_i64(256),
             one_c: C::new(one.clone(), prototype.zero()),
             small_ints: core::array::from_fn(|i| prototype.from_i64(i as i64 - 4)),
             one,
