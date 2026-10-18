@@ -144,6 +144,47 @@ fn vanishing_line_coefficient_in_binary64() {
     });
 }
 
+/// The box of [vanishing_line_coefficient_in_binary64] with s23 = 4 (1 ± r),
+/// r = 1e-15 to 1e-3: the line coefficient g + h is then tiny but nonzero,
+/// and an edge of one of the two equivalent contours has a far real root
+/// (-j/(g + h)), whose dilogarithm terms in `r1` cancelled by eps |z|. One
+/// contour is chosen by a rounding tie in their distances; the far root's
+/// `r1` now takes `log(-z) + log(1 - x/z)` (`far_root_series`). Every
+/// binary64 route within 1e-11 (it was 8.7e-11 to 5.7e-4 at seven of the
+/// points; SymJIT keeps 1.1e-12 at r = 1e-3, the others about 1e-13).
+#[test]
+fn near_vanishing_line_coefficient_in_binary64() {
+    on_stack(|| {
+        let mut inputs = Vec::new();
+        for exponent in -15..=-3 {
+            for sign in [1.0, -1.0] {
+                let s23 = 4.0 * (1.0 + sign * 10f64.powi(exponent));
+                inputs.push(input(&format!(
+                    "4 0.34422897492297583 6.686564391522424 4.0 0.0 0.6479305255028737 0.0 {s23} 0.6479305255028737 0.0 0.10671797382773325 0.0 0.5221278889743961 0.0 0.6479305255028737 0.0"
+                )));
+            }
+        }
+        check(&inputs, 1e-11);
+    });
+}
+
+/// Boxes with four nonzero external invariants (`ordered` chart), one of
+/// them small, where an edge quadratic of the contour box has a far root
+/// (z ~ 1/p): binary64 lost 8e-8 to 2.6e-7 in them (on every route), now
+/// about 1e-14.
+#[test]
+fn small_invariant_far_roots_in_binary64() {
+    on_stack(|| {
+        let rows = [
+            "4 1.0 18.8840097268825 10.677737251090688 7.034860342543298 -4.2989078387932686e-08 -13.275793535406482 -3.4740556278588395 1.0 0.0 4.0 -0.004 9.0 -0.009000000000000001 2.25 0.0",
+            "4 1.0 1.049117728706553 -4.086919791754306 -17.295029216916348 4.0145476766715875 -5.650859931483727e-07 1.6782371324416272 0.0 0.0 1.0 -0.001 4.0 0.0 0.25 -0.00025",
+            "4 1.0 11.617875798789232 -0.744837868542971 -7.052242444793189e-09 -3.9680588028846664 13.164984413016446 3.52240459046804 4.0 -0.004 2.25 0.0 4.0 0.0 1.0 0.0",
+            "4 1.0 5.7845549642802 17.960753665104853 12.366077520191222 -8.872180355075018 -1.2982401519401603e-07 7.061802149749648 9.0 0.0 0.0 0.0 4.0 0.0 4.0 -0.004",
+        ];
+        check(&rows.map(input), 1e-12);
+    });
+}
+
 /// A box with a vanishing channel (s23 = 0) in its four cyclic labellings,
 /// two of which take the contour box's zero-external chart: p4² is within
 /// two ulps of m1² beside the massless fourth line. Edge quadratics that end

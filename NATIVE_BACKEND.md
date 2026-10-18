@@ -59,8 +59,8 @@ and the conditioning fixes of `tests/c0_coincident_roots.rs` and
 `log_one_plus_body`, and the contour box's exact coefficient sums; the
 contour representation for every real-mass three-mass box it supports, of
 `tests/d0_real_mass_orderings.rs`; and the contour box's Källén
-discriminants, massless-end roots, exact line sums and expansion about
-beta = 1 of `tests/d0_contour_thresholds.rs`).
+discriminants, massless-end roots, exact line sums, expansion about
+beta = 1 and far-root `r1` of `tests/d0_contour_thresholds.rs`).
 `tests/native_handwritten.rs` checks them
 against the generated expressions at 256 bits on randomized kinematics and on
 every distinct C0/D0 call of the recorded Ninja benchmark streams

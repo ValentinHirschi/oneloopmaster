@@ -410,7 +410,56 @@ fn r1(x: [&Atom; 10]) -> Atom {
         if_nonzero(&oz, dd(&(&qo / &q1), &(&qo / &q2)) * &oz / (&yz1 * &yz2)),
         dd(&(&q1 / &qo), &(&q2 / &qo)) / oz,
     );
-    logarithms + dilog_z + dilog_o
+    if_nonzero_else(
+        &far_root(y1, y2, &hzz),
+        far_root_series(&zz, &yy1, &yy2, fy, &qz),
+        logarithms + dilog_z + dilog_o,
+    )
+}
+
+/// Nonzero when `z` is so far from the interval and the poles that the
+/// eight-term [far_root_series] is exact at the working precision:
+/// `16 (max(1, |y1|², |y2|²)/|z|²)⁴` leaves 1 unchanged.
+///
+/// For a far real root (a nearly vanishing linear coefficient, `|z| = 1e15`
+/// in a contour box with `p3 = p5`) the dilogarithm terms of [r1] sit next to
+/// the cut on different sheets: each carries `i pi n log(1 - q)` with
+/// `1 - q = y/z`, so they are O(1/|y|) and cancel, while `1 - q` formed from
+/// the rounded quotient costs eps |z| (1e-12 at |z| = 1e3, 1e-6 at 1e9, O(1)
+/// at 1e15 in binary64).
+fn far_root(y1: &Atom, y2: &Atom, hzz: &Atom) -> Atom {
+    let larger = |a: Atom, b: Atom| if_nonzero_else(&less(&a, &b), b, a);
+    let scale = larger(larger(Atom::num(1), re(&norm(y1))), re(&norm(y2)));
+    let ratio = grouped(&(scale / re(hzz)));
+    let squared = &ratio * &ratio;
+    let bound = Atom::num(16) * &squared * &squared;
+    if_nonzero_else(&(grouped(&(1 + bound)) - 1), Atom::num(0), Atom::num(1))
+}
+
+/// [r1] for a far root: `log(x - z) = log(-z) + log(1 - x/z)` on (0, 1) on
+/// the continued sheets, so `r1 = fy log(-z) - sum M_n/(n zⁿ)` with the moments
+/// `M_n` of `1/((x - y1)(x - y2))` (`M_0 = fy`, `M_1 = y1 fy + L2` with
+/// `L2 = log((1 - y2)/(-y2))`, and
+/// `M_n = 1/(n - 1) + (y1 + y2) M_{n-1} - y1 y2 M_{n-2}`).
+fn far_root_series(z: &Continued, y1: &Continued, y2: &Continued, fy: &Atom, qz: &Q) -> Atom {
+    let l2 = y2.complement(1).sheet().log() - y2.complement(0).sheet().log();
+    let sum_y = grouped(&(&y1.value + &y2.value));
+    let product_y = grouped(&(&y1.value * &y2.value));
+    let inverse = grouped(&(Atom::num(1) / &z.value));
+    // Each moment expanded as a polynomial in y1 + y2, y1 y2, M_0 and M_1, so
+    // that it does not repeat the earlier moments as subexpressions.
+    let mut moments = vec![fy.clone(), grouped(&(&y1.value * fy + l2))];
+    for n in 2..=8i64 {
+        let next = Atom::num(1) / Atom::num(n - 1) + &sum_y * &moments[n as usize - 1]
+            - &product_y * &moments[n as usize - 2];
+        moments.push(next.expand());
+    }
+    // Horner in 1/z: sum_{n=1}^{8} M_n/n z^-n.
+    let mut sum = &moments[8] / Atom::num(8);
+    for n in (1..8).rev() {
+        sum = grouped(&(&moments[n] / Atom::num(n as i64) + &inverse * &sum));
+    }
+    fy * qz.log() - &inverse * &sum
 }
 
 fn s3_double_real([y1, y2, z, a]: [&Atom; 4]) -> Atom {

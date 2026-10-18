@@ -269,6 +269,25 @@ fn r0(y1: &Cont, y2: &Cont, k: &Constants<f64>) -> Z {
     }
 }
 
+/// `far_root_series`: `r1` for a far root, fy log(-z) - sum_{n<=8} M_n/(n zⁿ).
+fn far_root_series(zz: &Cont, yy1: &Cont, yy2: &Cont, fy: Z, k: &Constants<f64>) -> Z {
+    let l2 = yy2.complement(1.0).sheet().log(k) - yy2.complement(0.0).sheet().log(k);
+    let sum_y = yy1.v + yy2.v;
+    let product_y = yy1.v * yy2.v;
+    let inv = inverse(&zz.v);
+    let mut m = [ZERO; 9];
+    m[0] = fy;
+    m[1] = yy1.v * fy + l2;
+    for n in 2..=8 {
+        m[n] = r(1.0 / (n - 1) as f64) + sum_y * m[n - 1] - product_y * m[n - 2];
+    }
+    let mut sum = m[8] * r(1.0 / 8.0);
+    for n in (1..8).rev() {
+        sum = m[n] * r(1.0 / n as f64) + inv * sum;
+    }
+    fy * zz.complement(0.0).sheet().log(k) - inv * sum
+}
+
 fn r1(zz: &Cont, yy1: &Cont, yy2: &Cont, fy: Z, k: &Constants<f64>) -> Z {
     let (z, y1, y2) = (zz.v, yy1.v, yy2.v);
     let oz = ONE - z;
@@ -283,6 +302,17 @@ fn r1(zz: &Cont, yy1: &Cont, yy2: &Cont, fy: Z, k: &Constants<f64>) -> Z {
     let hz2 = norm(yz2);
     let hzz = norm(z);
     let hoz = norm(oz);
+    // `far_root`; below |z|² = 2^14 its bound is at least 2^-52.
+    if hzz >= 16384.0 {
+        let larger = |a: f64, b: f64| if negative(a - b) { b } else { a };
+        let scale = larger(larger(1.0, norm(y1)), norm(y2));
+        let ratio = scale / hzz;
+        let squared = ratio * ratio;
+        let bound = 16.0 * squared * squared;
+        if (1.0 + bound) - 1.0 == 0.0 {
+            return far_root_series(zz, yy1, yy2, fy, k);
+        }
+    }
     let zsmall = negative(hzz - hz1) && negative(hzz - hz2) && negative(hzz - hoz);
     let osmall = negative(hoz - hz1) && negative(hoz - hz2);
     let logarithms = if zsmall || osmall {
@@ -1377,6 +1407,47 @@ mod expression_tests {
 
     fn split(x: &[Z]) -> ([Z; 6], [Z; 4]) {
         (core::array::from_fn(|i| x[i]), core::array::from_fn(|i| x[6 + i]))
+    }
+
+    /// `r1` of a far root (|z| = 1e2 to 1e17, real or complex, poles in the
+    /// strip around the interval): the hand-written port and the binary64
+    /// expression against the expression at 256 bits, within 1e-12 (below the
+    /// series threshold, |z| ~ 140, the general form keeps about eps |z|). Its
+    /// dilogarithm terms, taken next to the cut on different sheets, cancel by
+    /// eps |z| (1e-6 at |z| = 1e9, O(1) at 1e15) unless `far_root_series` is
+    /// used.
+    #[test]
+    fn far_root_r1_matches_high_precision() {
+        crate::tests::large_stack(|| {
+            let c = k();
+            let mut exact = evaluator("r1", 10);
+            let mut rng = Rng(0x5eed);
+            let mut failures = vec![];
+            for sample in 0..32 {
+                let y = |rng: &mut Rng| Cont {
+                    v: Z { re: 2.0 * rng.uniform() - 0.5, im: rng.uniform() - 0.5 },
+                    f: Z { re: rng.uniform() - 0.5, im: rng.uniform() - 0.5 },
+                    s: Z { re: rng.uniform() - 0.5, im: rng.uniform() - 0.5 },
+                };
+                let (y1, y2) = (y(&mut rng), y(&mut rng));
+                let exponent = 2 + (sample % 16) as i32;
+                let sign = if rng.below(2) == 0 { 1.0 } else { -1.0 };
+                let big = sign * 10f64.powi(exponent) * (1.0 + rng.uniform());
+                let im = if sample % 3 == 0 { big * (rng.uniform() - 0.5) } else { 0.0 };
+                let zz = Cont { v: Z { re: big, im }, f: Z { re: 0.0, im: -big }, s: ZERO };
+                let fy = r0(&y1, &y2, &c);
+                let args = [zz.v, zz.f, zz.s, y1.v, y1.f, y1.s, y2.v, y2.f, y2.s, fy];
+                let truth = precise("r1", &args);
+                let abs = |z: Z| z.re.hypot(z.im);
+                for (route, value) in [("port", r1(&zz, &y1, &y2, fy, &c)), ("expression", exact(&args))] {
+                    let error = abs(value - truth) / abs(truth);
+                    if !(error <= 1e-12) {
+                        failures.push(format!("{route} |z| = {:.1e}: {error:.1e} ({value:?} vs {truth:?})", abs(zz.v)));
+                    }
+                }
+            }
+            assert!(failures.is_empty(), "{failures:#?}");
+        });
     }
 
     #[test]

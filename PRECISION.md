@@ -53,14 +53,19 @@ explicit resource limits; see [expression inspection](README.md#combining-integr
   supplied to the callback, including `mu_squared`. Transparent function-map compilation
   remains available and avoids making the master opaque to an outer optimizer.
 
-- One expression branch depends on the working precision: the dilogarithm
+- Two expression branches depend on the working precision. The dilogarithm
   divided difference of nearly coincident arguments (`sheet_exact::near_difference`)
   uses a Bernoulli expansion through `s^22` only when its first omitted term,
   bounded by `8 (max|s|²/39)^12`, leaves `1` unchanged at the working precision
   (`(1 + bound) - 1 == 0`). That holds throughout in binary64, but at 256 bits
   only for `|s| < 3e-3`; otherwise the direct difference is used, whose loss
   stays in the tracked precision. DoubleFloat represents `1 + bound` exactly and
-  keeps the direct difference. Every other branch is an exact test.
+  keeps the direct difference. Likewise the contour box's `r1` takes its
+  far-root form, `fy log(-z) - sum_{n<=8} M_n/(n z^n)`, only when
+  `16 (max(1, |y1|², |y2|²)/|z|²)⁴` leaves 1 unchanged (in binary64 for
+  `|z|` beyond about 140 `max(1, |y|)`; at 128 bits and more only for huge
+  roots, where the general form costs eps `|z|`). Every other branch is an
+  exact test.
 - Each quadratic of the contour box's `s3` is the Feynman polynomial of a
   two-point subgraph, `p x² + (mi - mj - p) x + mj`: its discriminant is the
   Källén function `λ(p, mi, mj)` and its values at the ends of the
