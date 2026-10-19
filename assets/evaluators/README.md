@@ -26,7 +26,9 @@ rebuilt on 2026-10-19 with the one- and two-adjacent-mass boxes' `solabc`
 roots and dilogarithm complements next to collinear limits
 (`tests/d0_collinear_limits.rs`, likewise), and again with the massless
 box's complements and the exact discriminants next to collinear limits
-(same test).
+(same test). C0 and D0 were rebuilt again with the divided difference's
+selection taking the dilogarithms as arguments
+(`tests/expression_construction.rs`).
 
 Previous generations: 2026-09-29 with released Symbolica and Numerica 3.0.1 and
 SymJIT 2.26.0, and the C0 asset of 2026-09-22 (zero-root ordering of the finite
@@ -54,8 +56,8 @@ exhaustive analytic-region coverage.
 | A0 | 1,488 | `b034aa19e48f3f62b7029f2c88ad4f14e19ff6d9580979d43868349c5e651a0d` |
 | B0 | 15,375 | `0730c8a390d31c508fbece0760186627dc851b8ccf2da787072f8c2788f50354` |
 | dB0 | 61,566 | `5f145ba984ffe2bdffb9355557a9272c3006d0a601e845cd48877d5d19ea4d77` |
-| C0 | 101,453 | `c9ead5acc13ae9847347885772fa2eb212ed6c3cf974de66ce1a00b5eca73456` |
-| D0 | 1,960,379 | `1a01559dcca2c5e2add2cfc17ddba3d27084ab2febed167509be5fc7f528e07b` |
+| C0 | 102,902 | `f8c7109ac1cb09158e53cd128f83c655577fd60edb91b2b645d7f4e2d453072d` |
+| D0 | 1,949,831 | `9041f4a5328ac434d03e75abc871e8e68110fb38e19852e8b95033723bf579e8` |
 
 The embedded files use the `oneloop-evaluator-v3` discriminator, which binds
 the Symbolica IR schema and strict compilation policy without claiming backend

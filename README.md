@@ -30,6 +30,11 @@ evaluated term by term, as OneLOop's `dilog2_c` (a two-mass C0 with nearly
 coincident roots was off by 2.4e-13 in binary64, now 2e-15 to 9e-15 on every
 route: `tests/c0_coincident_roots.rs`), and the contour box no longer loses a
 tiny invariant to cancellation in `Float` (`tests/d0_tiny_invariant.rs`).
+The two dilogarithms reach that choice as arguments of a registered
+function: Symbolica's evaluator calls a registered function anew at every
+occurrence of its call, and with the dilogarithm calls repeated inside the
+cancellation test the interpreted D0 and C0 took twice as long at 700 bits
+(`tests/expression_construction.rs`).
 Massless, one- and two-adjacent-mass boxes next to a collinear limit (a
 small invariant between two massless lines) take `1 - x` of their
 dilogarithm arguments next to one from the kinematics: binary64 keeps 2e-13

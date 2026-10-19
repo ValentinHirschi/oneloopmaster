@@ -250,18 +250,52 @@ fn difference_body(
             )
         }
     };
-    let numerator = &upper - &lower;
-    let direct = &numerator / &gap;
     let noncoincident = if near {
-        // The values cancel by more than 16: the direct difference loses more
-        // than four bits. Only then are the other forms considered.
-        let norm = |z: &Atom| re(&(z * z.conj()));
-        let cancels = negative(&(Atom::num(256) * norm(&numerator) - norm(&upper)));
-        choose(&cancels, near_difference(first, second, direct.clone()), direct)
+        // Symbolica's evaluator calls a registered function at every
+        // occurrence of the call: the dilogarithms are passed to the
+        // selection once, as its arguments.
+        select_symbol().call((
+            &upper,
+            &lower,
+            &gap,
+            &first.value,
+            &first.phase,
+            &first.odd,
+            &second.value,
+            &second.phase,
+            &second.odd,
+        ))
     } else {
-        direct
+        (&upper - &lower) / &gap
     };
     choose(&difference, noncoincident, coincident)
+}
+
+fn select_symbol() -> Symbol {
+    symbolica::symbol!("__olo_sheet_dilog_difference_select")
+}
+
+fn select_parameters() -> [Symbol; 3] {
+    ["__olo_dds_upper", "__olo_dds_lower", "__olo_dds_gap"].map(|s| symbolica::symbol!(s))
+}
+
+/// The divided difference `(upper - lower)/gap` of the dilogarithms of
+/// `first` and `second` ([difference_body]), or [near_difference] where it
+/// cancels by more than 16.
+///
+/// The test takes `upper` and the numerator more than once. Symbolica's
+/// evaluator calls a registered function anew at every occurrence of its
+/// call, and with the dilogarithm calls inside the test the interpreted D0 and
+/// C0 took twice as long at 700 bits; as arguments of this function they are
+/// evaluated once.
+fn select_body(first: &SheetAtom, second: &SheetAtom, upper: &Atom, lower: &Atom, gap: &Atom) -> Atom {
+    let numerator = upper - lower;
+    let direct = &numerator / gap;
+    // The values cancel by more than 16: the direct difference loses more
+    // than four bits. Only then are the other forms considered.
+    let norm = |z: &Atom| re(&(z * z.conj()));
+    let cancels = negative(&(Atom::num(256) * norm(&numerator) - norm(upper)));
+    choose(&cancels, near_difference(first, second, direct.clone()), direct)
 }
 
 fn log_one_plus_symbol() -> Symbol {
@@ -794,6 +828,16 @@ fn register_impl(function_map: &mut FunctionMap, grouped_predicates: bool) {
             super::native_function_options(),
         )
         .expect("unique sheet dilogarithm difference");
+    let selection = select_parameters();
+    let [upper, lower, gap] = selection.map(Symbol::to_atom);
+    function_map
+        .add_function_with_options(
+            select_symbol(),
+            [selection.as_slice(), variables.as_slice()].concat(),
+            select_body(&first, &second, &upper, &lower, &gap),
+            super::native_function_options(),
+        )
+        .expect("unique sheet dilogarithm difference selection");
     let complements = complement_parameters();
     let [w1, w2] = complements.map(Symbol::to_atom);
     function_map
