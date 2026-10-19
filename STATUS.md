@@ -17,17 +17,23 @@ SymJIT) and 7.5e-12 interpreted; it is now within 1.9e-14 to 4.1e-14 on every ro
   one pole within 5e-6 to 7e-5 of the root of each line edge; each edge's
   `s3` term rounded `y - z` differently. The offset now comes from Vieta's
   product with the poles' own `a1 = g + beta h` where it cancels by more than
-  64 ([PRECISION.md](PRECISION.md)).
+  64 ([PRECISION.md](PRECISION.md)); since the section below, only where `a1`
+  itself cancels by more than 64.
 - **NaN at an exactly vanishing Gram determinant in binary64.** `K` of one
-  contour is `b (g + beta' h)` of the other; where it rounded to zero the
-  native binary64 code (hand-written and generated) returned NaN. The second
-  contour is used then.
+  contour is `b (g + beta' h)` of the other; where it rounded to zero
+  binary64 returned NaN, on every route: the reported box gave NaN in native
+  code only, but at 09b2c74 28% to 40% of the 1-ulp perturbations of all six
+  invariants of that box gave NaN on every binary64 route (hand-written,
+  generated, interpreted and SymJIT). The second contour is used then: none
+  of the 3,000 perturbations (1 to 6 ulps, 1e-16 to 1e-9 relative, equal
+  `p1², p2², p4²`) is non-finite on any route, all within 1.7e-13.
 - **Scan.** `tests/data/near_threshold_boxes.txt` (200 random physical boxes,
   `tests/generate_near_threshold_rows.py`, OneLOop 3.6 quadruple-precision
   references): every binary64 route within 5e-12 on 199 rows (3.2e-12 at
   most), where 34 were beyond it and 22 beyond 1e-9 before (OneLOop's double
   precision: 32 and 16). On 1,000 more such boxes (seeds 2 to 6) 4 to 6 per
-  route remain beyond 1e-11 (at most 3.2e-11), against 110 to 117 before.
+  route remain beyond 1e-11 (at most 3.2e-11), against 110 to 117 before; on
+  fresh seeds (101 to 105) up to about 8e-11.
 - **Remaining.** Line 73 of the scan keeps 1.1e-10 to 3.2e-10, as before
   (OneLOop 5.5e-11): a nearly double contour direction in one `tfun` and
   nearly coincident poles next to an edge's end in the others, whose
@@ -152,9 +158,92 @@ SymJIT) and 7.5e-12 interpreted; it is now within 1.9e-14 to 4.1e-14 on every ro
   lanes) contain such boxes (44 in all; right before and after, within
   2e-14 of COLLIER), so their bits change once NinjaRS uses this revision.
 
+## Contour-box regressions of the combined change (2026-10-19)
+
+The D0 oracle sweeps (seeds 1 to 4, every row checked against its 256-bit
+value) found three contour boxes that the line offsets and second contour
+above made worse than 09b2c74. Worst binary64 error over the 24 relabellings
+and the hand-written, generated, interpreted and SymJIT routes
+(`tests/d0_contour_regressions.rs`, references COLLIER 1.2.9 in quadruple
+precision fed the exact binary64 inputs):
+
+| Box | 09b2c74 | line products (9a898ee) | now |
+|---|---|---|---|
+| three complex masses (`4 1.0 0.0 596.64 -14.72 1.0 9.0 -0.411 ...`) | 2.9e-12 | 3.9e-10 | 2.9e-12 |
+| three real masses (`4 1.0 0.01348 0.01433 50.50 -0.4886 ...`) | 5.8e-13 | 1.7e-11 | 5.7e-13 |
+| `p4 = 0`, `p1² = s12 = Re m1² = Re m4²`, `s23` one ulp below, `m2 = 0` | 130 times the value | NaN | 7.7e-12 |
+| the same with `s23` 1e-9, 1e-4 (relative) below `p1²` | 1.7, 8.1e-6 | 4.3, 2.5e-5 | 2.1e-12, 1.3e-12 |
+| relabelled, `p3²` 1e-11, 1e-7 below `s12` | 71, 1.5e-2 | 170, 5.9e-2 | 1.2e-12, 1.2e-12 |
+
+- **The line products only for a line nearly parallel to the contour
+  direction.** A pole also lies next to a line edge's root where the conic
+  nearly vanishes at the line's intersection with that edge; there `a1` is of
+  the size of its terms, the product's polynomial `Q(u) - ratio B(u)`
+  cancels at least as much as `y - z` (by 4e5 against 1e4 in the three-mass
+  boxes), and the line's term cancels against the conic's term on the same
+  edge, whose root lies next to the same pole: both must keep `y - z` from
+  the same rounded pole. The products are now taken only where `a1 = g +
+  beta h` cancels by more than 64 (`4096 |a1|² < |g|² + |beta h|²`), and not
+  on an edge whose intersection with the line lies on the conic to within
+  the square root of the rounding (`2^52 |Q - ratio B|²` below the sum of the
+  conic coefficients' norms; with the product there the one-ulp box lost
+  1e-5 at 128 bits). The first two boxes are back to their 09b2c74 errors
+  (the second bitwise on the hand-written route).
+- **A pole at a Feynman-parameter corner.** In the third box the line passes
+  within an ulp of the corner (1, 0) of `zero_external`'s triangle, where the
+  massless `m2` makes the conic vanish: a pole lies within 4e-31 of it, at an
+  `x` next to 1 that binary64 resolves only to eps (the line product, exactly
+  zero there, gave `log 0`). `zero_external` now takes the reflected labelling
+  `(p1, p4, p3, p2, s23, s12; m1, m0, m3, m2)` where `m2` is massless and
+  the line passes nearer (1, 0) than (0, 0): the corner is then at the
+  origin, where the pole keeps its relative precision. In some relabellings
+  the pole then lies next to x = 0 of an edge whose line root is at the other
+  end, and `r1`'s dilogarithms take the complements `1 - x` of their
+  arguments from the poles (`y/z`, `y/(y - z)`, `(1 - y)/(1 - z)`,
+  `(y - 1)/(y - z)`, through `sheet_exact::complement_difference`): from the
+  rounded quotient a pole 7e-16 from x = 0 lost 8% of `log(1 - x)` on a
+  winding sheet (1.2 times the value in 8 relabellings, at 09b2c74 too). The
+  hand-written kernel forms a complement only where its dilogarithm takes
+  `log(1 - x)` on a winding sheet or has an `x` that rounds to one.
+- **An `a1` at the rounding level.** Where the selected contour's `a1` rounds
+  to zero, the products take `2^-52 g` in its place: the offsets are
+  proportional to it, and the logarithm of the common factor cancels between
+  the line edges; with exact zero offsets each edge took `log 0`. Of 400
+  boxes with the Gram determinant at the rounding level (seeds 201, 202 of
+  `tests/generate_near_threshold_rows.py`), 112 were beyond 1e-6 on some
+  route at 09b2c74 and 5 at 9a898ee (four of them O(1) on one or two
+  routes); now 3, at most 5.1e-3 (below).
+- **`K` guard.** A first contour whose `K` vanishes where the second's does
+  not is no longer selected when it encloses a pole either (the switch above
+  applied only when it encloses none); no such box was observed.
+- **Checks** (against 9a898ee and 09b2c74):
+  - D0 oracle sweeps, seeds 1 to 4, native, `--generated` and `--expression`
+    routes: all 12 failure lists identical to both; OneLOop-unstable rows
+    counted as binary64-unstable drop from 364/364/376 (seed 3) to 348 and
+    from 404 to 392 (seed 4).
+  - Every one of the 37,642 captured sweep rows on the four binary64 routes
+    against its 256-bit value: 112 to 156 rows per route improve by more
+    than 10 times (most of them three-mass boxes); the only rows worse than at
+    9a898ee are the 8 relabellings of one seed-1 box (below), wrong at both
+    revisions.
+  - The near-threshold scans: `tests/data/near_threshold_boxes.txt` as
+    before (line 73 below); seeds 2 to 6: 4 to 7 rows per route beyond 1e-11,
+    at most 4.0e-11 (9a898ee: 4 to 6, 3.2e-11; such rows move by 1e-11 under
+    1-ulp perturbations on either revision); seeds 101 to 105: 3 to 5, at
+    most 4.4e-11 (9a898ee: 7.8e-11).
+  - The 309 distinct D0 calls of NinjaRS's master streams: worst 1.9e-12
+    hand-written, 1.7e-12 generated, 1.8e-12 interpreted, 5.2e-12 SymJIT
+    (9a898ee: 3.6e-12, 3.7e-12, 8.8e-12, 1.7e-11). Their binary64 bits
+    change on 117 (hand-written), 202 (generated), 208 (interpreted) and 214
+    (SymJIT) of them against 9a898ee.
+  - Retired instructions per D0 call on the 22 NinjaRS `*.masters.json`
+    streams against 09b2c74: geometric mean -0.12%, at most +0.29%
+    (syn-n4-r5), at least -0.63% (9a898ee: +0.21%, +0.47%, -0.06%).
+  - Definitions: 100,424,043 bytes (gate 100,663,296).
+
 ## Open D0 limitations after these changes (2026-10-19)
 
-Found while validating the three sections above together. Unless a bullet
+Found while validating the sections above together. Unless a bullet
 says otherwise, each one is the same at 09b2c74. References are COLLIER 1.2.9
 in quadruple precision (COLI and DD branches, fed the exact binary64 inputs)
 and the 256-bit expressions, which agree on every row quoted here unless a
@@ -196,20 +285,52 @@ bullet says otherwise.
   lost up to 6e-7 on the rows they got right. The loss comes from the
   collinear machinery, not from the sheets.
 - **Contour box next to a vanishing Gram determinant.** Line 73 of
-  `tests/data/near_threshold_boxes.txt` keeps 1.1e-10 to 3.2e-10 (OneLOop's
-  double precision 5.5e-11), as before. One `tfun` has a nearly double
-  contour direction; in the others, nearly coincident poles sit next to an
-  edge's end, and their quadratic `s3` terms (about 5e3 each) cancel to
-  about 3e2. Of 1,000 more such boxes (seeds 2 to 6 of
-  `tests/generate_near_threshold_rows.py`), 4 per route remain beyond 1e-11
-  (6 on SymJIT), at most 3.2e-11 (09b2c74: 110 to 117 per route). One cause
-  is a cancellation of about 1000 between the three `tfun`. Another is a
-  pole next to an integration endpoint: there the `r1` dilogarithm arguments'
-  `1 - x` would need complements, as in `sheet_exact::complement_difference`.
+  `tests/data/near_threshold_boxes.txt` keeps 1.3e-11 (interpreted) to
+  3.2e-10 (hand-written; OneLOop's double precision 5.5e-11), as at 09b2c74.
+  One `tfun` has a nearly double contour direction; in the others, nearly
+  coincident poles sit next to an edge's end, and their quadratic `s3` terms
+  (about 5e3 each) cancel to about 3e2. Of 1,000 more such boxes (seeds 2 to
+  6 of `tests/generate_near_threshold_rows.py`), 4 to 7 per route remain
+  beyond 1e-11, at most 4.0e-11 (09b2c74: 110 to 117 per route), and of
+  1,000 on seeds 101 to 105 3 to 5, at most 4.4e-11. Such rows move by
+  1e-11 under 1-ulp perturbations of their invariants. One cause is a
+  cancellation of about 1000 between the three `tfun`; another, a pole next
+  to an integration endpoint, now takes the complements `1 - x` of the `r1`
+  dilogarithms' arguments where their sheets wind (section above).
+- **Contour box with the Gram determinant at the rounding level.** Where the
+  selected contour's `a1 = g + beta h` rounds to zero and the masses are
+  equal and complex, the poles are real in binary64 and lose the imaginary
+  parts of order `a1 Im m²` that choose their lips: `4 1.0 2.7819050504399936
+  2.3889525049365044 2.388952504936503 105.83204530964998 51.91801797559696
+  9.555810019746128` with `m² = 2.2406833551152996 - 0.0005207803841710876i`
+  four times keeps 5.1e-3 on the hand-written and interpreted routes in every
+  relabelling (the generated code and SymJIT 8e-14; 0.34 at 09b2c74).
+  Two more of those 400 boxes keep 9.7e-4 and 4.0e-3 on one route. The box is
+  the known-failure fixture of `tests/d0_contour_regressions.rs`.
+- **A conic singular at a massless corner.** `4 1.0 0.1113435943976259
+  108.23851883958666 0.11134359439762591 -0.012515862621692797 9.0 0.0 0 0
+  0.11134359439762591 0 9.0 0 0.11134359439762591 0` (`p1²` one ulp below
+  `m2² = m4² = p3²`, massless `m1`): in the contour box's labellings the
+  conic's value and gradient vanish at the massless corner to within
+  rounding. Every binary64 route is wrong in every relabelling, as at
+  09b2c74 (then NaN in 8, by 1.4e-2 in 4 and by 0.3 in 12; now NaN in 16 and
+  1.4e-2 in 8, so 8 relabellings of the seed-1 sweep went from 0.3 to NaN).
+  Known-failure fixture of `tests/d0_contour_regressions.rs`.
+- **128 bits next to a corner.** At 128 bits the boxes of
+  `tests/d0_contour_regressions.rs` with a pole within `t²` of a corner keep
+  `2^-128/t²` of its offset: the relabellings agree only to 1e-16 to 1e-29,
+  and the one-ulp box is within 1.2e-11 (native) to 3.8e-11 (interpreted) in
+  16 relabellings (20 at 09b2c74). Further from on shell, Float's tracked
+  precision of the poles' small components costs the labelling with the
+  corner at the origin up to 2.5e-7 at 128 bits (2.4e-7 at 09b2c74; `p3²`
+  3e-16 below `s12`), which the reflection now also takes for 8 of the
+  relabellings that kept 1e-15 at 128 bits at 09b2c74 (and gave O(1) errors
+  in binary64). 256 bits keep 1e-15 (and agree to 1e-30).
 - **Regressions against 09b2c74 in the D0 oracle sweeps.** Seeds 1 to 4 of
   `tests/oracle_sweep.py` give the same failure lists as 09b2c74 on every
   route. Comparing every evaluated row (all 24 relabellings) with the 256-bit
-  value, four boxes lose accuracy:
+  value, four boxes lost accuracy; the three contour boxes are fixed (section
+  above):
   - `4 1.0 0.0 596.6380017856613 -14.719542747253795 1.0 9.0
     -0.41134991169772017 0 0 0.17229848844808035 -0.0042830249130855775 9.0
     -0.48397362776576125 1.0 -0.00011332140135807317` (three complex masses,
@@ -234,8 +355,9 @@ bullet says otherwise.
     3.3e-11 on the native routes, 2.8e-11 on SymJIT and 6.8e-12 interpreted,
     where 09b2c74 kept 1.2e-15.
 
-  The first three come from the contour box's line offsets and second
-  contour. The last comes from the two-mass sheets.
+  The first three came from the contour box's line offsets and second
+  contour and are fixed (section above). The last comes from the two-mass
+  sheets.
 
 ## Rank-four bubble tensors (2026-10-18)
 

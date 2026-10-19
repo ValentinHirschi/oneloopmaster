@@ -66,7 +66,11 @@ discriminants, massless-end roots, exact line sums, expansion about
 beta = 1 and far-root `r1` of `tests/d0_contour_thresholds.rs`; and the line
 edges' pole offsets from Vieta's product and the second contour where the
 first one's `K` vanishes of `tests/d0_vanishing_gram.rs`, the product formed
-only where an offset cancels).
+only where an offset cancels; and of `tests/d0_contour_regressions.rs`, the
+product only for a line parallel to the contour direction, the
+zero-external labelling with a massless corner at the origin, and the
+dilogarithms' complements from the poles, formed only where a dilogarithm
+takes `log(1 - x)` on a winding sheet or has an `x` that rounds to one).
 `tests/native_handwritten.rs` checks them
 against the generated expressions at 256 bits on randomized kinematics and on
 every distinct C0/D0 call of the recorded Ninja benchmark streams

@@ -119,16 +119,42 @@ explicit resource limits; see [expression inspection](README.md#combining-integr
   threshold of 16 also fired on the recorded NinjaRS gg → HH stream, without
   an accuracy gain on the scans, for 0.56% more retired instructions per D0
   call there (0.47% with 64).
-  `K` of one beta is `b a1'` of the other, so the default (first) contour is
-  singular where `a1'` vanishes in binary64 (0/0; native code returned NaN at
-  a box with `Gram/(p1² p2² p3²)` at rounding level): the second contour is
-  taken then (`tfun`). The box keeps 1.9e-14 to 4.1e-14 on the binary64 routes,
+  `Q(u) - ratio B(u)` is the conic at the line's intersection with the edge,
+  so a pole also lies next to an edge's root where the conic nearly vanishes
+  there, with an `a1` of the size of its terms. Then the polynomial cancels at
+  least as much as `y - z`, and the line's term cancels against the conic's
+  term on the same edge, whose root lies next to the same pole; both must
+  take `y - z` from the same rounded pole (with the product, three-mass boxes
+  lost 1.7e-11 and 3.9e-10 where 09b2c74 kept 5.8e-13 and 2.9e-12). The
+  product is therefore taken only where `a1` itself cancels by more than 64
+  (`4096 |a1|² < |g|² + |beta h|²`), and not on an edge whose intersection
+  lies on the conic to within the square root of the rounding; an `a1` that
+  rounds to zero is taken as `2^-52 g`, whose logarithm cancels between the
+  edges (exactly zero offsets gave `log 0` on each edge).
+  `K` of one beta is `b a1'` of the other, so a contour is singular where
+  `a1'` of the other vanishes in binary64 (0/0; every binary64 route returned
+  NaN in 28% to 40% of the 1-ulp perturbations of a box with
+  `Gram/(p1² p2² p3²)` at rounding level): such a first contour is not taken
+  where the second's `K` does not vanish (`tfun`). The box keeps 1.9e-14 to 4.1e-14 on the binary64 routes,
   and 199 of 200 random boxes next to a vanishing Gram determinant keep 3.2e-12
   (`tests/d0_vanishing_gram.rs`, references OneLOop 3.6 in quadruple
   precision); OneLOop's double precision loses more than 1e-9 on 16 of them.
   The remaining one (1.1e-10 to 3.2e-10, OneLOop 5.5e-11) has a nearly double
   `beta` in one `tfun` and nearly coincident poles next to an edge's end in
   the others, whose quadratic `s3` terms cancel by 20.
+- A pole next to an end of a contour-box edge puts the arguments of `r1`'s
+  dilogarithms (`(y - z)/(-z)` and the like) next to one, where a sheet with
+  windings carries `i pi n log(1 - x)`; from the rounded quotient `1 - x` keeps
+  only its absolute precision (8% of the logarithm for a pole 7e-16 from
+  x = 0). `r1` now takes the complements from the poles (`y/z`, `y/(y - z)`,
+  `(1 - y)/(1 - z)`, `(y - 1)/(y - z)`, `sheet_exact::complement_difference`).
+  Next to the end x = 1 the pole itself keeps only eps of its offset: with a
+  zero external invariant, a massless `m2` and the line through the corner
+  (1, 0) of the parameter triangle within an ulp (an invariant within an ulp
+  of a squared mass), a pole lay 4e-31 from that corner and the box was wrong
+  by up to 130 times its value. `zero_external` then takes the reflected
+  labelling, which moves that corner to the origin
+  (`tests/d0_contour_regressions.rs`: every relabelling within 7.7e-12).
 - The finite massless, one-mass and two-adjacent-mass boxes (OneLOop's
   `boxf0`, `boxf1` and `boxf2`) take dilogarithms of `X r34/r13` and
   `X r24/r12` for the roots `X` of a quadratic that tends to

@@ -8,7 +8,7 @@
 #![allow(clippy::too_many_arguments)] // The source's named polynomial coefficients.
 use super::super::primitives::{C, NativeFloat, inverse};
 use super::Constants;
-use super::sheet::{Sheet, dd};
+use super::sheet::{Sheet, dd, dd_given};
 
 pub(super) type Z = C<f64>;
 
@@ -332,17 +332,18 @@ fn r1_with(zz: &Cont, yy1: &Cont, yy2: &Cont, fy: Z, line: Option<&LineProduct>,
         let nearer = if nearer_first { hz1 } else { hz2 };
         if negative(4096.0 * nearer - hzz) {
             // An exactly real `y - z` stays real (its lip follows the
-            // directions).
+            // directions); a vanishing product keeps `y - z`.
             let over = |near: Z, far: Z| {
-                let offset = line.over(far);
-                if near.im != 0.0 { offset } else { r(offset.re) }
+                line.over(far).map(|offset| if near.im != 0.0 { offset } else { r(offset.re) })
             };
             if nearer_first {
-                yz1 = over(yz1, yz2);
-                hz1 = norm(yz1);
-                given[0] = true;
-            } else {
-                yz2 = over(yz2, yz1);
+                if let Some(offset) = over(yz1, yz2) {
+                    yz1 = offset;
+                    hz1 = norm(yz1);
+                    given[0] = true;
+                }
+            } else if let Some(offset) = over(yz2, yz1) {
+                yz2 = offset;
                 hz2 = norm(yz2);
                 given[1] = true;
             }
@@ -406,23 +407,26 @@ fn r1_with(zz: &Cont, yy1: &Cont, yy2: &Cont, fy: Z, line: Option<&LineProduct>,
         };
         dv(first - second, y1 - y2)
     };
+    // The complements 1 - x of the dilogarithms' arguments from the poles
+    // (`r1`): a pole next to an end of the interval puts one next to one.
+    // They are formed only where the dilogarithm takes them (`dd_given`).
     let dilog_z = if zsmall {
         if nz(z) {
-            dv(dd(&qz.div(&q1), &qz.div(&q2), k) * z, yz1 * yz2)
+            dv(dd_given(&qz.div(&q1), || dv(y1, yz1), &qz.div(&q2), || dv(y2, yz2), k) * z, yz1 * yz2)
         } else {
             ZERO
         }
     } else {
-        dv(dd(&q1.div(&qz), &q2.div(&qz), k), z)
+        dv(dd_given(&q1.div(&qz), || dv(y1, z), &q2.div(&qz), || dv(y2, z), k), z)
     };
     let dilog_o = if !zsmall && osmall {
         if nz(oz) {
-            dv(dd(&qo.div(&q1), &qo.div(&q2), k) * oz, yz1 * yz2)
+            dv(dd_given(&qo.div(&q1), || dv(y1 - ONE, yz1), &qo.div(&q2), || dv(y2 - ONE, yz2), k) * oz, yz1 * yz2)
         } else {
             ZERO
         }
     } else {
-        dv(dd(&q1.div(&qo), &q2.div(&qo), k), oz)
+        dv(dd_given(&q1.div(&qo), || dv(ONE - y1, oz), &q2.div(&qo), || dv(ONE - y2, oz), k), oz)
     };
     logarithms + dilog_z + dilog_o
 }
@@ -637,10 +641,11 @@ fn s3_linear(y1: &Cont, y2: &Cont, d: Z, e: Z, b: Z, c: Z, dc: Z, far: Z, k: &Co
 }
 
 /// `s3_line`: a line edge of `tfun_selected` (its `[d, e, b, c, far]` in
-/// the `LineProduct`).
-fn s3_line(y1: &Cont, y2: &Cont, dc: Z, line: &LineProduct, k: &Constants<f64>) -> Z {
+/// the `LineProduct`), whose product is given only for a line nearly parallel
+/// to the contour direction (`parallel`).
+fn s3_line(y1: &Cont, y2: &Cont, dc: Z, line: &LineProduct, parallel: bool, k: &Constants<f64>) -> Z {
     let [d, e, b, c, far] = line.line;
-    s3_with(y1, y2, d, e, ZERO, b, c, ZERO, dc, [ZERO, ZERO, c, far], Some(line), k)
+    s3_with(y1, y2, d, e, ZERO, b, c, ZERO, dc, [ZERO, ZERO, c, far], parallel.then_some(line), k)
 }
 
 /// `line_product`: the product `(Y1 - z)(Y2 - z)` of the mapped poles'
@@ -649,28 +654,45 @@ fn s3_line(y1: &Cont, y2: &Cont, dc: Z, line: &LineProduct, k: &Constants<f64>) 
 /// formed by `r1_with` only where an offset cancels. With the scale `s = b`
 /// (1 for `far = 0`), `U = s u` and `ratio = num/den`, the nearer offset is
 /// `a1 (den (Q_b U² + Q_e U s + Q_f s²) - num s (b1 U + c1 s))/(K s² den e²)`
-/// over the farther one, with one division.
+/// over the farther one, with one division. `a1` is the poles' own, or its
+/// rounding level `2^-52 g` where it vanishes (`tfun_selected`); `conic`
+/// holds `b, e, f` and then `a, c, d`.
 struct LineProduct<'a> {
     line: [Z; 5],
     ratio: [Z; 2],
-    conic: &'a [Z; 3],
+    conic: &'a [Z; 6],
     data: &'a BetaData,
+    a1: Z,
 }
 
 impl LineProduct<'_> {
-    /// The product over the farther pole's offset `far` (zero for `far = 0`).
-    fn over(&self, far_offset: Z) -> Z {
+    /// The product over the farther pole's offset `far` (zero for `far = 0`),
+    /// or `None` where the product vanishes or the line's intersection with
+    /// the edge lies on the conic to within the square root of the rounding
+    /// (`line_product`; the expression's `r1_line` then keeps `y - z`).
+    fn over(&self, far_offset: Z) -> Option<Z> {
         let [d, e, b, c, far] = self.line;
-        let [qb, qe, qf] = *self.conic;
-        let BetaData { a: a1, b: b1, c: c1, k: kk, .. } = *self.data;
+        let [qb, qe, qf, ..] = *self.conic;
+        let BetaData { b: b1, c: c1, k: kk, .. } = *self.data;
+        let a1 = self.a1;
         let (scale, scaled_u) = if nz(far) { (b, -(e * c + d * b)) } else { (ONE, e - d) };
         // ratio = 0 for a vanishing denominator, as the expression's if_nonzero.
         let [num, den] = if nz(self.ratio[1]) { self.ratio } else { [ZERO, ONE] };
         let quadratic = (qb * scaled_u + qe * scale) * scaled_u + qf * scale * scale;
         let linear = b1 * scaled_u + c1 * scale;
-        let numerator = a1 * (den * quadratic - num * scale * linear);
+        let value = den * quadratic - num * scale * linear;
+        // The conic's value against its coefficients, with the value's scale
+        // den s² (`line_product`).
+        let conic_norm = self.conic.iter().fold(0.0, |sum, &q| sum + norm(q));
+        if !negative(conic_norm * norm(den * scale * scale) - 4503599627370496.0 * norm(value)) {
+            return None;
+        }
+        let numerator = a1 * value;
+        if !nz(numerator) {
+            return None;
+        }
         let denominator = kk * scale * scale * den * e * e * far_offset;
-        if nz(far_offset) && nz(e) { dv(numerator, denominator) } else { ZERO }
+        Some(if nz(far_offset) && nz(e) { dv(numerator, denominator) } else { ZERO })
     }
 }
 
@@ -837,11 +859,16 @@ fn tfun_selected(
     let sum = coefficient_sum(&[a, b, c], abc);
     // The line edges x = 1, y = x and y = 0 as the `[d, e, b, c, far]` of
     // their s3 terms, and h u + j over a1 at their roots' preimages u.
-    let conic = [b, e, f];
-    let line = |line: [Z; 5], ratio: [Z; 2]| LineProduct { line, ratio, conic: &conic, data };
-    let integral = s3_line(y1, y2, dj, &line([beta, ONE, h, gj, ghj], [r(-1.0), ONE]), k)
-        - s3_line(y1, y2, dj, &line([ZERO, -w, gh, j, ghj], [j, gh]), k)
-        + s3_line(y1, y2, dj, &line([ZERO, -beta, g, j, gj], [j, g]), k)
+    let conic = [b, e, f, a, c, d];
+    // The products only for a line nearly parallel to the contour direction
+    // (a1 = g + beta h cancels by more than 64), with an a1 that rounds to
+    // zero at its rounding level 2^-52 g (`box_complex::tfun_selected`).
+    let parallel = negative(4096.0 * norm(data.a) - (norm(g) + norm(beta * h)));
+    let a1 = if nz(data.a) { data.a } else { g * r(1.0 / 4503599627370496.0) };
+    let line = |line: [Z; 5], ratio: [Z; 2]| LineProduct { line, ratio, conic: &conic, data, a1 };
+    let integral = s3_line(y1, y2, dj, &line([beta, ONE, h, gj, ghj], [r(-1.0), ONE]), parallel, k)
+        - s3_line(y1, y2, dj, &line([ZERO, -w, gh, j, ghj], [j, gh]), parallel, k)
+        + s3_line(y1, y2, dj, &line([ZERO, -beta, g, j, gj], [j, g]), parallel, k)
         - s3(y1, y2, beta, ONE, b, c + e, a + dpf, de, ddpf, [lambda_bc, b, q10, q11], k)
         + s3(y1, y2, ZERO, -w, sum, dpe, f, ddpe, df, [lambda_abc, abc, f, q11], k)
         - s3(y1, y2, ZERO, -beta, a, d, f, dd_, df, [lambda_a, a, f, q10], k);
@@ -882,8 +909,9 @@ fn tfun(
             let min = |x: f64, y: f64| if negative(x - y) { x } else { y };
             let d1 = min(distance(beta1, &data1.y[0]), distance(beta1, &data1.y[1]));
             let d2 = min(distance(beta2, &data2.y[0]), distance(beta2, &data2.y[1]));
-            // By default the first, unless its K vanishes (`tfun`).
-            let use_first = if d1 - 1.0 != 0.0 { negative(d2 - d1) } else { nz(data1.k) || !nz(data2.k) };
+            // By default the first; never a first contour whose K vanishes
+            // where the second's does not (`tfun`).
+            let use_first = (if d1 - 1.0 != 0.0 { negative(d2 - d1) } else { true }) && (nz(data1.k) || !nz(data2.k));
             let (beta, w, data) = if use_first { (beta1, w1, data1) } else { (beta2, w2, data2) };
             tfun_selected(a, b, c, g, h, d, e, f, j, dpe, dpf, beta, w, &data, dd_, de, df, dj, ddpe, ddpf, abc, edges, [gh, gj, ghj], k)
         } else {
@@ -1020,7 +1048,20 @@ fn opposite(p: [Z; 6], m: [Z; 4], k: &Constants<f64>) -> Z {
     opposite_chart(p, m, k)
 }
 
+/// `zero_external`: `zero_external_chart` reflected where `m2` is massless
+/// and the line passes nearer the corner (1, 0) than (0, 0).
 fn zero_external(p: [Z; 6], m: [Z; 4], k: &Constants<f64>) -> Z {
+    if !nz(m[2]) && nz(m[3]) && nz(p[1]) {
+        let at_10 = m[0] - m[1] + p[1] - p[4];
+        let at_00 = m[0] - m[1] + p[5] - p[3];
+        if negative(norm(at_10) - norm(at_00)) {
+            return zero_external_chart([p[0], p[3], p[2], p[1], p[5], p[4]], [m[1], m[0], m[3], m[2]], k);
+        }
+    }
+    zero_external_chart(p, m, k)
+}
+
+fn zero_external_chart(p: [Z; 6], m: [Z; 4], k: &Constants<f64>) -> Z {
     let dm = mass_directions(m);
     let a = p[2];
     let b = p[1];
@@ -1577,10 +1618,10 @@ mod expression_tests {
             // The line variants take the product (y1 - z)(y2 - z) of the
             // poles' offsets; a third of the samples put a pole within 1e-6
             // of the root, where the product replaces its offset.
-            let conic = [ZERO, ZERO, ONE];
+            let conic = [ZERO, ZERO, ONE, ZERO, ZERO, ZERO];
             let data = |product: Z| BetaData { a: product, b: ZERO, c: ZERO, dc: ZERO, k: ONE, y: [Cont { v: ZERO, f: ZERO, s: ZERO }; 2] };
-            fn given<'a>(data: &'a BetaData, conic: &'a [Z; 3]) -> LineProduct<'a> {
-                LineProduct { line: [ZERO, ONE, ONE, ZERO, ONE], ratio: [ZERO, ONE], conic, data }
+            fn given<'a>(data: &'a BetaData, conic: &'a [Z; 6]) -> LineProduct<'a> {
+                LineProduct { line: [ZERO, ONE, ONE, ZERO, ONE], ratio: [ZERO, ONE], conic, data, a1: data.a }
             }
             let near = |rng: &mut Rng, root: Z| root + Z { re: 1e-6 * rng.real(), im: 1e-6 * rng.real() };
             compare(
@@ -1607,7 +1648,7 @@ mod expression_tests {
                     // `over` maps the product by 1/e², the expression takes it mapped.
                     let data = data(x[12] * x[7] * x[7]);
                     let line = LineProduct { line: [x[6], x[7], x[8], x[9], x[11]], ..given(&data, &conic) };
-                    s3_line(&cont(&x[0..3]), &cont(&x[3..6]), x[10], &line, &c)
+                    s3_line(&cont(&x[0..3]), &cont(&x[3..6]), x[10], &line, true, &c)
                 },
                 &|rng: &mut Rng| {
                     let mut x = any(11)(rng);

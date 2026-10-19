@@ -81,7 +81,16 @@ offset of a pole from their root from Vieta's product with the poles' own
 `g + beta h`, and a contour whose `K` vanishes exactly gives way to the other:
 the NinjaRS gg → HHH box is now within 4.1e-14 on every binary64 route (3.6e-11
 before), and of 200 random such boxes all but one are within 3.2e-12, where 34
-were beyond 5e-12 and 22 beyond 1e-9 (`tests/d0_vanishing_gram.rs`).
+were beyond 5e-12 and 22 beyond 1e-9 (`tests/d0_vanishing_gram.rs`). The
+product is taken only where `g + beta h` itself cancels: where the conic
+nearly vanishes at the line's intersection with an edge, the line's and the
+conic's terms keep `y - z` from the same pole (three-mass boxes lost up to
+3.9e-10 otherwise). Next to a corner of the Feynman-parameter triangle, a box
+with a zero external invariant and a massless line takes the labelling that
+puts the corner at the origin, and the contour box's dilogarithms take their
+complements `1 - x` from the poles: a box with an invariant one ulp from a
+squared mass, wrong by up to 130 times its value, is within 7.7e-12 in every
+relabelling (`tests/d0_contour_regressions.rs`).
 
 This work is based on **Andreas van Hameren's OneLOop package**. The original
 algorithms, analytic continuation conventions and Fortran reference results are

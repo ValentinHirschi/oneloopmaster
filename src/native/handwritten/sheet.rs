@@ -130,14 +130,36 @@ impl<T: NativeFloat> Sheet<T> {
     }
 
     /// Continued `Li2(1-x)` (`dilog_body` with Li2(1)=pi²/6 at x=0, 0 at x=1).
+    #[inline]
     pub(crate) fn dilog(&self, c: &Constants<T>) -> C<T> {
+        self.dilog_with(None::<fn() -> C<T>>, c)
+    }
+
+    /// [`Self::dilog`] given the complement `w = 1 - x` of the physical value,
+    /// formed by the caller without rounding `x` (`dilog_body` with a
+    /// complement), where `1 - x` matters: at an `x` that rounds to one, and
+    /// for `log(1-x)` on a sheet with windings (the `i pi n log(1-x)` that
+    /// next to `x = 1` is the logarithm of a small quantity). `w` is formed
+    /// only there; elsewhere the rounded `1 - x` changes `Li2(1-x)` by eps.
+    #[inline]
+    pub(crate) fn dilog_given(&self, w: impl FnOnce() -> C<T>, c: &Constants<T>) -> C<T> {
+        self.dilog_with(Some(w), c)
+    }
+
+    #[inline(always)]
+    fn dilog_with(&self, given: Option<impl FnOnce() -> C<T>>, c: &Constants<T>) -> C<T> {
         if is_zero(&self.v) {
             return C::new(c.pi2_6.clone(), c.one.zero());
         }
         let argument = self.value();
         let nonunit = sub(&argument, &c.one_c);
+        let mut given = given;
+        let mut complement = None;
         if is_zero(&nonunit) {
-            return C::new(c.one.zero(), c.one.zero());
+            match given.take().map(|w| w()) {
+                Some(w) if !is_zero(&w) => complement = Some(w),
+                _ => return C::new(c.one.zero(), c.one.zero()),
+            }
         }
         let odd = self.odd as i32;
         let even = self.phase - odd;
@@ -159,6 +181,20 @@ impl<T: NativeFloat> Sheet<T> {
             let mut value = neg(&polylog2(&normalized));
             value.re += &c.pi2_6;
             sub(&value, &mul(&log_one_minus, &sheet_logarithm))
+        } else if let Some(w) = complement.or_else(|| if even != 0 { given.map(|w| w()) } else { None }) {
+            // 1 - 1/x = -w/x where inverted.
+            let one_minus = if inverted { neg(&mul(&w, &normalized)) } else { w };
+            let log_one_minus = log(&one_minus);
+            let value = polylog2(&one_minus);
+            if even != 0 {
+                let f = c.pi.clone() * &c.from_int(even);
+                sub(
+                    &value,
+                    &C::new(-(log_one_minus.im.clone() * &f), log_one_minus.re.clone() * &f),
+                )
+            } else {
+                value
+            }
         } else {
             let value = polylog2(&one_minus);
             if even != 0 {
@@ -215,12 +251,38 @@ impl<T: NativeFloat> Sheet<T> {
 /// `sheet_exact::near_difference` where the two values cancel by more than 16.
 #[inline(always)]
 pub(crate) fn dd<T: NativeFloat>(first: &Sheet<T>, second: &Sheet<T>, c: &Constants<T>) -> C<T> {
+    dd_with(first, second, |s: &Sheet<T>| s.dilog(c), |s: &Sheet<T>| s.dilog(c), c)
+}
+
+/// `complement_difference`: [`dd`] whose dilogarithms take the complements
+/// `1 - x` from `w1` and `w2` where they matter ([`Sheet::dilog_given`]). The
+/// gap stays `x1 - x2`: the expression's `w2 - w1` differs from it only where
+/// both arguments lie next to one.
+#[inline(always)]
+pub(crate) fn dd_given<T: NativeFloat>(
+    first: &Sheet<T>,
+    w1: impl FnOnce() -> C<T>,
+    second: &Sheet<T>,
+    w2: impl FnOnce() -> C<T>,
+    c: &Constants<T>,
+) -> C<T> {
+    dd_with(first, second, |s: &Sheet<T>| s.dilog_given(w1, c), |s: &Sheet<T>| s.dilog_given(w2, c), c)
+}
+
+#[inline(always)]
+fn dd_with<T: NativeFloat>(
+    first: &Sheet<T>,
+    second: &Sheet<T>,
+    upper: impl FnOnce(&Sheet<T>) -> C<T>,
+    lower: impl FnOnce(&Sheet<T>) -> C<T>,
+    c: &Constants<T>,
+) -> C<T> {
     let difference = sub(&first.value(), &second.value());
     if is_zero(&difference) {
         return first.plain_log_over_one_minus(c);
     }
-    let upper = first.dilog(c);
-    let numerator = sub(&upper, &second.dilog(c));
+    let upper = upper(first);
+    let numerator = sub(&upper, &lower(second));
     // `negative(256 |numerator|² - |upper|²)` as one comparison: the same
     // decision, since a difference of distinct values is never zero.
     if c.two_fifty_six.clone() * &norm(&numerator) < norm(&upper) {
