@@ -4,6 +4,31 @@ This page preserves the September 8 development snapshot. See the
 [Symbolica main migration report](SYMBOLICA_3_MIGRATION.md) for the current
 dependency setup and validation.
 
+## Contour box near a vanishing Gram determinant (2026-10-19)
+
+Boxes with two nearly parallel external momenta (their invariant next to its
+threshold, e.g. two Higgs bosons nearly at rest relative to each other in
+gg → HHH) take the contour representation. The NinjaRS gg → HHH box of
+`tests/d0_vanishing_gram.rs` lost 3.4e-11 to 3.6e-11 in binary64 (native,
+SymJIT) and 7.5e-12 interpreted; it is now within 1.9e-14 to 4.1e-14 on every route.
+
+- **Cause.** Two of the canonical relabelling's three `tfun` have a contour
+  direction nearly parallel to their line (`g + beta h` 1.4e-5 of `g`), and
+  one pole within 5e-6 to 7e-5 of the root of each line edge; each edge's
+  `s3` term rounded `y - z` differently. The offset now comes from Vieta's
+  product with the poles' own `a1 = g + beta h` where it cancels by more than
+  64 ([PRECISION.md](PRECISION.md)).
+- **Scan.** `tests/data/near_threshold_boxes.txt` (200 random physical boxes,
+  `tests/generate_near_threshold_rows.py`, OneLOop 3.6 quadruple-precision
+  references): every binary64 route within 5e-12 on 199 rows (3.2e-12 at
+  most), where 34 were beyond it and 22 beyond 1e-9 before (OneLOop's double
+  precision: 32 and 16). On 1,000 more such boxes (seeds 2 to 6) 4 to 6 per
+  route remain beyond 1e-11 (at most 3.2e-11), against 110 to 117 before.
+- **Remaining.** Line 73 of the scan keeps 1.1e-10 to 3.2e-10, as before
+  (OneLOop 5.5e-11): a nearly double contour direction in one `tfun` and
+  nearly coincident poles next to an edge's end in the others, whose
+  quadratic `s3` terms cancel.
+
 ## Rank-four bubble tensors (2026-10-18)
 
 `NativeTensorEvaluator` has a fourth family, `TensorIntegral::B1111`

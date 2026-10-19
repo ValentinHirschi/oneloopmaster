@@ -60,6 +60,13 @@ discriminants as exact Källén functions and their roots at massless ends
 exactly, so a pseudo-threshold next to a massless line keeps 1e-14 in
 binary64 on both sides instead of losing 8 to 10 digits at it (or 7 next to
 it), also within an ulp of it (`tests/d0_contour_thresholds.rs`).
+Next to a vanishing Gram determinant (two external momenta nearly parallel,
+their invariant next to its threshold, as for two Higgs bosons nearly at rest
+relative to each other in gg → HHH) the contour box's line edges take the
+offset of a pole from their root from Vieta's product with the poles' own
+`g + beta h`: the NinjaRS gg → HHH box is now within 4.1e-14 on every binary64 route (3.6e-11
+before), and of 200 random such boxes all but one are within 3.2e-12, where 34
+were beyond 5e-12 and 22 beyond 1e-9 (`tests/d0_vanishing_gram.rs`).
 
 This work is based on **Andreas van Hameren's OneLOop package**. The original
 algorithms, analytic continuation conventions and Fortran reference results are

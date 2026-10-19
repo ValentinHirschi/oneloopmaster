@@ -40,6 +40,11 @@ impl SheetAtom {
         let difference = 1 - &self.argument;
         choose(&difference, &self.logarithm / &difference, Atom::num(-1))
     }
+    /// The offset `x - 1` only restores digits of the numerical maps; the
+    /// inspection form is the continued logarithm itself.
+    pub(crate) fn log_given(&self, _: &Atom) -> Atom {
+        self.log()
+    }
     pub(crate) fn dilog(&self) -> Atom {
         symbolica::symbol!("__olo_inspect_sheet_dilog").call((&self.argument, &self.logarithm))
     }

@@ -127,6 +127,10 @@ fn log_ratio_symbol() -> Symbol {
     symbolica::symbol!("__olo_sheet_log_over_one_minus")
 }
 
+fn log_given_symbol() -> Symbol {
+    symbolica::symbol!("__olo_sheet_log_given")
+}
+
 fn difference_symbol() -> Symbol {
     symbolica::symbol!("__olo_sheet_dilog_difference")
 }
@@ -174,6 +178,28 @@ fn log_ratio_body(arguments: &[Atom; 3], neighborhood: Atom, near: bool) -> Atom
     choose(&difference, quotient, at_one)
 }
 
+/// The sheet logarithm `log(v) + i pi phase` given the offset `w = x - 1` of
+/// the physical value, which the caller forms without rounding `x` (the
+/// contour box's quotients of a pole and a root next to it,
+/// [SheetAtom::log_given]): `near` takes an unreflected value within 1/2 of
+/// one from `w` through [log_one_plus_body], as [log_ratio_body] does from
+/// `v - 1`. The Dual neighborhoods keep the plain logarithm.
+fn log_given_body(arguments: &[Atom; 3], w: &Atom, near: bool) -> Atom {
+    let logarithm = log_symbol().call(arguments.as_slice());
+    if !near {
+        return logarithm;
+    }
+    let [value, phase, odd] = arguments;
+    let close = negative(&(Atom::num(4) * re(&(w * w.conj())) - 1));
+    let accurate = log_one_plus_symbol().call((value, w)) + i() * Symbol::PI.to_atom() * phase;
+    choose(odd, logarithm.clone(), choose(&close, accurate, logarithm))
+}
+
+fn log_given_parameters() -> [Symbol; 4] {
+    let [value, phase, odd] = sheet_parameters();
+    [value, phase, odd, symbolica::symbol!("__olo_sheet_offset")]
+}
+
 /// Generate the complete local polynomial before Dualizer selects a zero primal.
 /// The requested order is the largest total degree of the actual Dual shape.
 pub(crate) fn with_neighborhoods(map: &FunctionMap, order: usize) -> Result<FunctionMap, String> {
@@ -193,6 +219,8 @@ pub(crate) fn with_neighborhoods(map: &FunctionMap, order: usize) -> Result<Func
         .with(physical(&arguments[0], &arguments[2]));
     let mut map =
         map.with_replaced_body(log_ratio_symbol(), log_ratio_body(&arguments, local, false))?;
+    let offset = log_given_parameters()[3].to_atom();
+    map = map.with_replaced_body(log_given_symbol(), log_given_body(&arguments, &offset, false))?;
     let arguments = product_parameters().map(Symbol::to_atom);
     let parts = product_parts(&arguments, true, false);
     for (component, body) in parts.into_iter().enumerate() {
@@ -748,6 +776,15 @@ fn register_impl(function_map: &mut FunctionMap, grouped_predicates: bool) {
             super::native_function_options(),
         )
         .expect("unique sheet logarithm ratio");
+    let given = log_given_parameters();
+    function_map
+        .add_function_with_options(
+            log_given_symbol(),
+            given.to_vec(),
+            log_given_body(&atoms, &given[3].to_atom(), true),
+            super::native_function_options(),
+        )
+        .expect("unique sheet logarithm of a given offset");
     function_map
         .add_function_with_options(
             dilog_symbol(),
@@ -904,6 +941,12 @@ impl SheetAtom {
 
     pub(crate) fn log_over_one_minus(&self) -> Atom {
         log_ratio_symbol().call((&self.value, &self.phase, &self.odd))
+    }
+
+    /// [Self::log] given `w = x - 1`, formed by the caller without rounding
+    /// the physical value `x` ([log_given_body]).
+    pub(crate) fn log_given(&self, w: &Atom) -> Atom {
+        log_given_symbol().call((&self.value, &self.phase, &self.odd, w))
     }
 
     /// This sheet without its winding, and the winding `n` (in units of

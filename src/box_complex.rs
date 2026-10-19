@@ -205,6 +205,27 @@ fn r0_call(y1: &Continued, y2: &Continued) -> Atom {
     )
 }
 
+/// [r0_call] given `delta = y1 - y2` ([r0_line]).
+fn r0_line_call(y1: &Continued, y2: &Continued, delta: &Atom) -> Atom {
+    call(
+        "r0_line",
+        [
+            &y1.value, &y1.first, &y1.second, &y2.value, &y2.first, &y2.second, delta,
+        ],
+    )
+}
+
+/// [r1_call] of a line edge, given the product `(y1 - z)(y2 - z)` ([r1_line]).
+fn r1_line_call(z: &Continued, y1: &Continued, y2: &Continued, fy: &Atom, product: &Atom) -> Atom {
+    call(
+        "r1_line",
+        [
+            &z.value, &z.first, &z.second, &y1.value, &y1.first, &y1.second, &y2.value, &y2.first,
+            &y2.second, fy, product,
+        ],
+    )
+}
+
 fn r1_call(z: &Continued, y1: &Continued, y2: &Continued, fy: &Atom) -> Atom {
     call(
         "r1",
@@ -266,6 +287,29 @@ fn s3_linear_call(
         far,
     };
     s3_call(y1, y2, d, e, &zero, b, c, &zero, dc, edge)
+}
+
+/// [s3_linear_call] for a line edge of [tfun_selected], given the product
+/// `(y1 - z)(y2 - z)` of the mapped poles' offsets from its root `z`
+/// ([line_product]).
+fn s3_line_call(
+    y1: &Continued,
+    y2: &Continued,
+    d: &Atom,
+    e: &Atom,
+    b: &Atom,
+    c: &Atom,
+    dc: &Atom,
+    far: &Atom,
+    product: &Atom,
+) -> Atom {
+    call(
+        "s3_line",
+        [
+            &y1.value, &y1.first, &y1.second, &y2.value, &y2.first, &y2.second, d, e, b, c, dc,
+            far, product,
+        ],
+    )
 }
 
 fn eta(a: &Atom, sa: &Atom, b: &Atom, sb: &Atom, c: &Atom, sc: &Atom) -> Atom {
@@ -349,16 +393,77 @@ fn r0(x: [&Atom; 6]) -> Atom {
         )
 }
 
+/// [r0] given `delta = y1 - y2`, formed by the caller without rounding the
+/// poles ([r1_line]). With `1 - q0 = delta/y1` and `1 - q1 = -delta/(1 - y1)`,
+/// `r0 = (log(q0) - log(q1) + i pi (n0 - n1))/delta`, the logarithms next to
+/// one from the quotients' offsets `-delta/y1` and `delta/(1 - y1)`
+/// ([SheetAtom::log_given]). A vanishing `delta` keeps [r0]'s limit.
+fn r0_line(x: [&Atom; 7]) -> Atom {
+    let delta = x[6];
+    let y1 = Continued::from_args([x[0], x[1], x[2]]);
+    let y2 = Continued::from_args([x[3], x[4], x[5]]);
+    let (q0, n0) = (&y2.complement(0).sheet() / &y1.complement(0).sheet()).split_winding();
+    let (q1, n1) = (&y2.complement(1).sheet() / &y1.complement(1).sheet()).split_winding();
+    let logarithms = q0.log_given(&(-delta / &y1.value))
+        - q1.log_given(&(delta / (1 - &y1.value)))
+        + i() * Symbol::PI.to_atom() * (n0 - n1);
+    if_nonzero_else(delta, logarithms / delta, r0_call(&y1, &y2))
+}
+
 fn r1(x: [&Atom; 10]) -> Atom {
+    r1_with(x, None)
+}
+
+/// [r1] of a line edge, given the product `(y1 - z)(y2 - z)` of the poles'
+/// offsets from the root (the last argument, [line_product]). Next to a
+/// vanishing Gram determinant a pole lies within 1e-5 of the root of each line
+/// edge, and `y - z` formed from the rounded values lost those digits in every
+/// quotient and logarithm of the offset. Where the nearer pole's `y - z`
+/// cancels by more than 64 (`4096 |y - z|² < |z|²`), its offset is the product
+/// over the farther pole's; elsewhere both are `y - z`, as in [r1].
+fn r1_line(x: [&Atom; 11]) -> Atom {
+    r1_with(core::array::from_fn(|index| x[index]), Some(x[10]))
+}
+
+fn r1_with(x: [&Atom; 10], product: Option<&Atom>) -> Atom {
     let zz = Continued::from_args([x[0], x[1], x[2]]);
     let yy1 = Continued::from_args([x[3], x[4], x[5]]);
     let yy2 = Continued::from_args([x[6], x[7], x[8]]);
     let (z, y1, y2, fy) = (&zz.value, &yy1.value, &yy2.value, x[9]);
     let oz: Atom = 1 - z;
-    let yz1 = y1 - z;
-    let yz2 = y2 - z;
-    let q1 = yy1.subtract(&zz).sheet();
-    let q2 = yy2.subtract(&zz).sheet();
+    let [direct1, direct2] = [y1 - z, y2 - z];
+    let (yz1, yz2, flags) = match product {
+        None => (direct1, direct2, None),
+        Some(product) => {
+            let [n1, n2] = [norm(&direct1), norm(&direct2)];
+            let nearer_first = less(&n1, &n2);
+            let nearer = if_nonzero_else(&nearer_first, n1, n2);
+            let cancels = less(&(Atom::num(4096) * nearer), &norm(z));
+            let flags = [&nearer_first * &cancels, (1 - nearer_first) * cancels];
+            // An exactly real `y - z` (real pole and root) stays real: the
+            // lip then follows the infinitesimal directions, not the rounded
+            // imaginary part of the quotient.
+            let from = |near: &Atom, far: &Atom| {
+                let offset = if_nonzero(far, product / far);
+                if_nonzero_else(&im(near), offset.clone(), re(&offset))
+            };
+            (
+                if_nonzero_else(&flags[0], from(&direct1, &direct2), direct1.clone()),
+                if_nonzero_else(&flags[1], from(&direct2, &direct1), direct2),
+                Some(flags),
+            )
+        }
+    };
+    let offset = |y: &Continued, value: &Atom| Continued {
+        value: value.clone(),
+        ..y.subtract(&zz)
+    };
+    let q1 = offset(&yy1, &yz1).sheet();
+    let q2 = offset(&yy2, &yz2).sheet();
+    let r0_call = |index: usize, y: &Continued, z: &Continued, delta: &Atom| match &flags {
+        None => r0_call(y, z),
+        Some(flags) => if_nonzero_else(&flags[index], r0_line_call(y, z, delta), r0_call(y, z)),
+    };
     let qz = zz.complement(0).sheet();
     let qo = zz.complement(1).sheet();
     let h12 = norm(&(y1 - y2));
@@ -378,10 +483,10 @@ fn r1(x: [&Atom; 10]) -> Atom {
     let ratio = (&q1 / &q2).log_over_one_minus();
     let zlimit = fy * q1.log() - (&product_log / 2 + &ylog - qo.log()) * &ratio / &yz2;
     let olimit = fy * q1.log() - (-&product_log / 2 + &ylog + qz.log()) * &ratio / &yz2;
-    let near_y2 = fy * q1.log() - r0_call(&yy2, &zz) * &ratio;
-    let near_y1 = fy * q2.log() - r0_call(&yy1, &zz) * (&q2 / &q1).log_over_one_minus();
-    let ordinary = (if_nonzero(&yz1, &yz1 * q1.log() * r0_call(&yy1, &zz))
-        - if_nonzero(&yz2, &yz2 * q2.log() * r0_call(&yy2, &zz)))
+    let near_y2 = fy * q1.log() - r0_call(1, &yy2, &zz, &yz2) * &ratio;
+    let near_y1 = fy * q2.log() - r0_call(0, &yy1, &zz, &yz1) * (&q2 / &q1).log_over_one_minus();
+    let ordinary = (if_nonzero(&yz1, &yz1 * q1.log() * r0_call(0, &yy1, &zz, &yz1))
+        - if_nonzero(&yz2, &yz2 * q2.log() * r0_call(1, &yy2, &zz, &yz2)))
         / (y1 - y2);
     let logarithms = if_nonzero_else(
         &zsmall,
@@ -497,21 +602,11 @@ fn outside_closed_interval(y: &Atom) -> Atom {
     )
 }
 
-/// The integral over `x` in (0, 1) of `log(a x² + b x + c)` against the poles
-/// `y1, y2` mapped by `y -> (d + y)/e`.
-///
-/// Each quadratic (`a` nonzero) is the Feynman polynomial of a two-point
-/// subgraph, which the caller passes from the invariants (see [Edge]): its
-/// discriminant `lambda = λ(p, near, far)` ([kallen]), `p` and the masses
-/// `near` and `far` at x = 0 and x = 1. An exact double root is then decided exactly,
-/// next to one the roots keep their separation `sqrt(lambda)/a` and the signs
-/// of their slopes `2 a z + b = ±sqrt(lambda)`, and a massless end is an
-/// exact root. A linear `b x + c` passes `far = b + c`.
-fn s3(x: [&Atom; 17]) -> Atom {
-    let mut y1 = Continued::from_args([x[0], x[1], x[2]]);
-    let mut y2 = Continued::from_args([x[3], x[4], x[5]]);
-    let [d, e, a, b, c, db, dc] = [x[6], x[7], x[8], x[9], x[10], x[11], x[12]];
-    let [lambda, p, near, far] = [x[13], x[14], x[15], x[16]];
+/// The poles `y1, y2` of `s3`'s arguments mapped by `y -> (d + y)/e`, `r0`
+/// of them and the sign that continues the coefficients' logarithms.
+fn s3_poles(y: [&Atom; 6], [d, e, b, c, db, dc]: [&Atom; 6]) -> (Continued, Continued, Atom, Atom) {
+    let mut y1 = Continued::from_args([y[0], y[1], y[2]]);
+    let mut y2 = Continued::from_args([y[3], y[4], y[5]]);
     let minus_one = Atom::num(-1);
     let simc = imaginary_sign(
         c,
@@ -523,6 +618,78 @@ fn s3(x: [&Atom; 17]) -> Atom {
         y.second = &y.second / e;
     }
     let fy = r0_call(&y1, &y2);
+    (y1, y2, fy, simc)
+}
+
+/// `s3` of a linear `b x + c` (`far = b + c`) against the mapped poles, with
+/// the product of the poles' offsets from its root when the caller has it.
+fn s3_linear_term(
+    [y1, y2]: [&Continued; 2],
+    fy: &Atom,
+    simc: &Atom,
+    [b, c, db, dc, far]: [&Atom; 5],
+    product: Option<&Atom>,
+) -> Atom {
+    let zero = Atom::num(0);
+    let mut z = continued_root(
+        if_nonzero_else(far, -c / b, Atom::num(1)),
+        &zero,
+        b,
+        db,
+        dc,
+        &zero,
+    );
+    let known = any_nonzero([im(&z.value), im(&z.first), im(&z.second)]);
+    z.second = if_nonzero_else(
+        &known,
+        z.second.clone(),
+        -i() * simc * sign_nonnegative(&re(b)) * Symbol::ABS.call((re(&z.value),)),
+    );
+    let sz = z.sign();
+    let sb = imaginary_sign(db, simc);
+    let r1 = match product {
+        None => r1_call(&z, y1, y2, fy),
+        Some(product) => r1_line_call(&z, y1, y2, fy, product),
+    };
+    fy * (Q::with_sign(b.clone(), sb.clone()).log() + eta(b, &sb, &(-&z.value), &(-&sz), c, simc))
+        + r1
+}
+
+/// [s3] of a line edge of [tfun_selected] (`a = db = 0`), given the product
+/// `(y1 - z)(y2 - z)` of the mapped poles' offsets from the root `z = -c/b`
+/// (1 for `far = 0`), formed by [line_product].
+fn s3_line(x: [&Atom; 13]) -> Atom {
+    let zero = Atom::num(0);
+    let [d, e, b, c, dc, far, product] = [x[6], x[7], x[8], x[9], x[10], x[11], x[12]];
+    let (y1, y2, fy, simc) = s3_poles(
+        [x[0], x[1], x[2], x[3], x[4], x[5]],
+        [d, e, b, c, &zero, dc],
+    );
+    let linear = s3_linear_term(
+        [&y1, &y2],
+        &fy,
+        &simc,
+        [b, c, &zero, dc, far],
+        Some(product),
+    );
+    let constant = if_nonzero(c, Q::with_sign(c.clone(), simc).log() * &fy);
+    if_nonzero(e, if_nonzero_else(b, linear, constant) / e)
+}
+
+/// The integral over `x` in (0, 1) of `log(a x² + b x + c)` against the poles
+/// `y1, y2` mapped by `y -> (d + y)/e`.
+///
+/// Each quadratic (`a` nonzero) is the Feynman polynomial of a two-point
+/// subgraph, which the caller passes from the invariants (see [Edge]): its
+/// discriminant `lambda = λ(p, near, far)` ([kallen]), `p` and the masses
+/// `near` and `far` at x = 0 and x = 1. An exact double root is then decided exactly,
+/// next to one the roots keep their separation `sqrt(lambda)/a` and the signs
+/// of their slopes `2 a z + b = ±sqrt(lambda)`, and a massless end is an
+/// exact root. A linear `b x + c` passes `far = b + c`.
+fn s3(x: [&Atom; 17]) -> Atom {
+    let [d, e, a, b, c, db, dc] = [x[6], x[7], x[8], x[9], x[10], x[11], x[12]];
+    let [lambda, p, near, far] = [x[13], x[14], x[15], x[16]];
+    let (y1, y2, fy, simc) = s3_poles([x[0], x[1], x[2], x[3], x[4], x[5]], [d, e, b, c, db, dc]);
     let ra = re(a);
     let rea = sign_nonnegative(&ra);
     // solabc's roots with sqrt(lambda): the first has slope 2 a z + b equal
@@ -629,26 +796,7 @@ fn s3(x: [&Atom; 17]) -> Atom {
         call("s3_double_real", [&y1.value, &y2.value, &z0, a]),
         ordinary_quadratic,
     );
-    let mut z = continued_root(
-        if_nonzero_else(far, -c / b, Atom::num(1)),
-        &zero,
-        b,
-        db,
-        dc,
-        &zero,
-    );
-    let known = any_nonzero([im(&z.value), im(&z.first), im(&z.second)]);
-    z.second = if_nonzero_else(
-        &known,
-        z.second.clone(),
-        -i() * &simc * sign_nonnegative(&re(b)) * Symbol::ABS.call((re(&z.value),)),
-    );
-    let sz = z.sign();
-    let sb = imaginary_sign(db, &simc);
-    let linear = &fy
-        * (Q::with_sign(b.clone(), sb.clone()).log()
-            + eta(b, &sb, &(-&z.value), &(-&sz), c, &simc))
-        + r1_call(&z, &y1, &y2, &fy);
+    let linear = s3_linear_term([&y1, &y2], &fy, &simc, [b, c, db, dc, far], None);
     let constant = if_nonzero(c, Q::with_sign(c.clone(), simc).log() * &fy);
     if_nonzero(
         e,
@@ -905,6 +1053,39 @@ fn beta_data(
     }
 }
 
+/// The product `(Y1 - z)(Y2 - z)` of the offsets of the mapped poles
+/// `Y = (d + y)/e` of [beta_data] from the root `z` of a line edge `b x + c`
+/// (the `[d, e, b, c, far]` of its [s3_line] term), where `h u + j = ratio a1`
+/// at the preimage `u = e z - d`.
+///
+/// The poles are the roots of `K y² + L y + N = a1 Q(y) - (h y + j) B(y)`,
+/// with `a1 = g + beta h`, `Q(y) = b y² + e y + f` and `B(y) = b1 y + c1`; at
+/// `u` the quadratic is `a1 (Q(u) - ratio B(u))`, exactly proportional to
+/// `a1`, so that `(y1 - u)(y2 - u) = a1 (Q(u) - ratio B(u))/K` (Vieta). Next
+/// to a vanishing Gram determinant `a1` is small (the line is nearly parallel
+/// to the contour direction `(1, beta)`), and one pole lies next to the root
+/// of every line edge: at the NinjaRS gg -> HHH D0 within 5e-6 to 7e-5 of
+/// roots of order one, with `a1/g = 1.4e-5`. `y - z` formed from the rounded
+/// pole and root lost those digits, and each edge lost them differently: the
+/// edges' terms then failed to cancel by 1e-12 of themselves (D0 3.6e-11 in
+/// binary64). [r1_line] takes the nearer pole's offset from this product and
+/// the farther pole's direct offset, with the poles' own `a1` and `K`, so that
+/// every edge sees the offsets from the line the rounded `a1` describes.
+fn line_product(
+    data: &BetaData,
+    [d, e, b, c, far]: [&Atom; 5],
+    ratio: &Atom,
+    [qb, qe, qf]: [&Atom; 3],
+) -> Atom {
+    let u = if_nonzero_else(far, -(e * c + d * b) / b, e - d);
+    let quadratic = (qb * &u + qe) * &u + qf;
+    let linear = &data.b * &u + &data.c;
+    if_nonzero(
+        e,
+        &data.a * (quadratic - ratio * linear) / (&data.k * e * e),
+    )
+}
+
 /// Nonzero when the real line `g x + h y + j = 0` meets the real conic
 /// `a x² + b y² + c x y + d x + e y + f = 0` at complex conjugate points.
 ///
@@ -980,10 +1161,16 @@ fn tfun_selected(
         near,
         far,
     };
+    // The line edges x = 1, y = x and y = 0 as the `[d, e, b, c, far]` of
+    // their s3 terms, and h u + j over a1 at their roots' preimages u.
+    let product = |line: [&Atom; 5], ratio: Atom| line_product(&data, line, &ratio, [b, e, f]);
+    let product_x1 = product([beta, &one, h, gj, ghj], Atom::num(-1));
+    let product_diagonal = product([&zero, &(-w), gh, j, ghj], if_nonzero(gh, j / gh));
+    let product_y0 = product([&zero, &(-beta), g, j, gj], if_nonzero(g, j / g));
     // 1 - beta is -w.
-    let integral = s3_linear_call(y1, y2, beta, &one, h, gj, dj, ghj)
-        - s3_linear_call(y1, y2, &zero, &(-w), gh, j, dj, ghj)
-        + s3_linear_call(y1, y2, &zero, &(-beta), g, j, dj, gj)
+    let integral = s3_line_call(y1, y2, beta, &one, h, gj, dj, ghj, &product_x1)
+        - s3_line_call(y1, y2, &zero, &(-w), gh, j, dj, ghj, &product_diagonal)
+        + s3_line_call(y1, y2, &zero, &(-beta), g, j, dj, gj, &product_y0)
         - s3_call(y1, y2, beta, &one, b, &(c + e), &(a + dpf), de, ddpf, edge(lambda_bc, b, q10, q11))
         + s3_call(y1, y2, &zero, &(-w), &sum, dpe, f, ddpe, df, edge(lambda_abc, abc, f, q11))
         - s3_call(y1, y2, &zero, &(-beta), a, d, f, dd, df, edge(lambda_a, a, f, q10));
@@ -1661,8 +1848,17 @@ pub(crate) fn register(map: &mut FunctionMap) {
     });
     define(map, "kallen", 3, |x| kallen(core::array::from_fn(|idx| &x[idx])));
     define(map, "r0", 6, |x| r0(core::array::from_fn(|idx| &x[idx])));
+    define(map, "r0_line", 7, |x| {
+        r0_line(core::array::from_fn(|idx| &x[idx]))
+    });
     define(map, "r1", 10, |x| r1(core::array::from_fn(|idx| &x[idx])));
+    define(map, "r1_line", 11, |x| {
+        r1_line(core::array::from_fn(|idx| &x[idx]))
+    });
     define(map, "s3", 17, |x| s3(core::array::from_fn(|idx| &x[idx])));
+    define(map, "s3_line", 13, |x| {
+        s3_line(core::array::from_fn(|idx| &x[idx]))
+    });
     define(map, "s3_double_real", 4, |x| {
         s3_double_real(core::array::from_fn(|idx| &x[idx]))
     });
