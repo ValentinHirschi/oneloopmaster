@@ -120,10 +120,15 @@ of the finite-order evaluators documented below.
 
 The direct Symbolica dependency remains versioned, but the Rust and both Python
 build roots pin Symbolica, Numerica and Graphica to one tested integration through
-`[patch.crates-io]`. The current integration is `e679e8c1` from
+`[patch.crates-io]`. The current integration is `9cdc2949` from
 [`ValentinHirschi/symbolica`](https://github.com/ValentinHirschi/symbolica), on
-`claude/oneloopmaster-integration-dilog`: the previous integration `2c06f245`
-(`codex/oneloopmaster-integration`) plus the binary64 dilogarithm kernel of
+`claude/oneloopmaster-integration-float-products`. It is the previous
+integration `e679e8c1` (`claude/oneloopmaster-integration-dilog`) plus
+single-rounded `Float` products and exact factors of ±1 from
+[PR97](https://github.com/symbolica-dev/symbolica/pull/97). Without them,
+exact branch tests in arbitrary precision took wrong branches (STATUS.md).
+`e679e8c1` is in turn `2c06f245` (`codex/oneloopmaster-integration`) plus the
+binary64 dilogarithm kernel of
 [PR89](https://github.com/symbolica-dev/symbolica/pull/89). Cargo fetches this
 source automatically; no sibling checkout is required for the standalone build.
 

@@ -20,8 +20,8 @@ pyo3 = { version = "0.28", features = ["extension-module", "abi3-py39"] }
 symbolica = { version = "3.0.1", default-features = false, features = ["python_export", "tracing_max_level_info", "integer-gmp", "float-mpfr", "native_code_generation", "bincode"] }
 
 [patch.crates-io]
-# Temporary, tested integration of upstream Symbolica PRs #82, #83, #84, #87, #88 and #89.
+# Temporary, tested integration of upstream Symbolica PRs #82, #83, #84, #87, #88, #89 and #97.
 # Keep all three packages on one source; embedding hosts supply their own patch.
-symbolica = { git = "https://github.com/ValentinHirschi/symbolica", rev = "e679e8c129ce15ec50c46ffb4ff4b59aeb7813b8" }
-numerica = { git = "https://github.com/ValentinHirschi/symbolica", rev = "e679e8c129ce15ec50c46ffb4ff4b59aeb7813b8" }
-graphica = { git = "https://github.com/ValentinHirschi/symbolica", rev = "e679e8c129ce15ec50c46ffb4ff4b59aeb7813b8" }
+symbolica = { git = "https://github.com/ValentinHirschi/symbolica", rev = "9cdc2949cdb153478c1eca0d40690dc0abfc616e" }
+numerica = { git = "https://github.com/ValentinHirschi/symbolica", rev = "9cdc2949cdb153478c1eca0d40690dc0abfc616e" }
+graphica = { git = "https://github.com/ValentinHirschi/symbolica", rev = "9cdc2949cdb153478c1eca0d40690dc0abfc616e" }
