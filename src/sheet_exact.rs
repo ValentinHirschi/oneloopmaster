@@ -60,11 +60,11 @@ fn log_body(value: &Atom, phase: &Atom, odd: &Atom) -> Atom {
 
 /// The continued `Li2(1-x)` on the sheet `(value, phase, odd)`.
 ///
-/// With `complement`, the given `w = 1 - x` replaces `1 - x` in `log(1-x)` and
-/// `Li2(1-x)` (`-w/x` in the inverted form), and decides the inversion: next
-/// to `x = 1` on a sheet with windings the dilogarithm carries
-/// `i pi n log(1-x)`, and `1 - x` formed from a rounded `x` loses `|1 - x|`
-/// relative digits ([complement_difference]).
+/// With `complement`, the given `w = 1 - x` decides the inversion and, above
+/// half, replaces `1 - x` in `log(1-x)` and `Li2(1-x)` (`-w/x` in the
+/// inverted form): next to `x = 1` on a sheet with windings the dilogarithm
+/// carries `i pi n log(1-x)`, and `1 - x` formed from a rounded `x` loses
+/// `|1 - x|` relative digits ([complement_difference]).
 fn dilog_body(
     value: &Atom,
     phase: &Atom,
@@ -89,15 +89,20 @@ fn dilog_body(
             negative(&(Atom::num(2) * re(w) - re(&(w * w.conj())))),
         ),
     };
-    let one_minus = complement.map(|w| choose(&inverted, -w / &argument, w.clone()));
+    let given = complement.map(|w| choose(&inverted, -w / &argument, w.clone()));
     let normalized = choose(&inverted, Atom::num(1) / &argument, argument);
-    let one_minus = one_minus.unwrap_or_else(|| Atom::num(1) - &normalized);
+    let below_half = negative(&(Atom::num(2) * re(&normalized) - 1));
+    // Below half `1 - n` keeps its relative precision; far from one the given
+    // complement (about -x) does not, so it is taken only above half.
+    let one_minus = match given {
+        None => Atom::num(1) - &normalized,
+        Some(given) => choose(&below_half, Atom::num(1) - &normalized, given),
+    };
     let logarithm = choose(&inverted, -value.log(), value.log());
     let even = choose(&inverted, -&even, even);
     let odd = choose(&inverted, -odd, odd.clone());
     let sheet_logarithm = &logarithm + &i_pi * (&even + &odd);
     let log_one_minus = one_minus.log();
-    let below_half = negative(&(Atom::num(2) * re(&normalized) - 1));
     let below =
         &pi_squared / 6 - crate::dilog_atom(&normalized) - &log_one_minus * &sheet_logarithm;
     let above = crate::dilog_atom(&one_minus) - &log_one_minus * &i_pi * even;
@@ -221,8 +226,10 @@ fn difference_sheets(arguments: &[Atom; 6]) -> [SheetAtom; 2] {
 /// real parts, which carry no holomorphic derivative.
 ///
 /// With `complements` (`1 - x` of both arguments, [complement_difference]) the
-/// dilogarithms take them, and the gap is `w2 - w1` where the complements are
-/// the smaller ones.
+/// dilogarithms take them, and the gap is `w2 - w1` when both arguments are
+/// within 1/2 of one. Farther out `x1 - x2` loses nothing, and the
+/// complements, formed by the caller from other expressions than the values,
+/// need not round as the values whose dilogarithms the numerator holds.
 fn difference_body(
     first: &SheetAtom,
     second: &SheetAtom,
@@ -235,8 +242,8 @@ fn difference_body(
         None => ([first.dilog(), second.dilog()], difference.clone()),
         Some([w1, w2]) => {
             let norm = |z: &Atom| re(&(z * z.conj()));
-            let values = norm(&first.value) + norm(&second.value);
-            let near_one = negative(&(norm(w1) + norm(w2) - values));
+            let near = |w: &Atom| negative(&(Atom::num(4) * norm(w) - 1));
+            let near_one = near(w1) * near(w2);
             (
                 [first.dilog_complement(w1), second.dilog_complement(w2)],
                 choose(&near_one, w2 - w1, difference.clone()),

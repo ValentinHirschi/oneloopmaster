@@ -20,14 +20,32 @@ pub(crate) fn box_finite_massless(p: [&Atom; 6]) -> Atom {
     // and (b + d)/(2a) the opposite one, with d >= 0 for a real positive
     // discriminant; the formula divides by the latter root.
     // Both roots are cancellation-free (Vieta), keeping their labels.
-    let discriminant = physical_sqrt(&(&b * &b - Atom::num(4) * &a * &c));
+    let gap = channel_gap([&r12, &r13, &r24, &r34]);
+    let sum = &r13 * &r24 + &r12 * &r34;
+    let square = collinear_square(&gap, sum, &r14 * &r23, Atom::num(0));
+    let discriminant = physical_sqrt(&square);
     let (root_2, root_1) = labelled_quadratic_roots(&a, &(-&b), &c, &discriminant);
     let qx1 = Q::with_sign(root_1.clone(), sign_nonnegative(&r23));
     let qx2 = Q::with_sign(root_2.clone(), -sign_nonnegative(&r23));
     let [q12, q13, q14, q23, q24, q34] =
         [&r12, &r13, &r14, &r23, &r24, &r34].map(|r| Q::lower(r.clone()));
-    let mut finite = dd(&(&qx1 * &(&q34 / &q13)), &(&qx2 * &(&q34 / &q13))) * &r34 / &r13;
-    finite += dd(&(&qx1 * &(&q24 / &q12)), &(&qx2 * &(&q24 / &q12))) * &r24 / &r12;
+    // 1 - X/u for u = r13/r34 and r12/r24, where the quadratic is r14 r23 u:
+    // next to a collinear limit (r14 or r23 small) one argument of each pair
+    // is next to one ([root_complements]). The offsets X - u are the roots
+    // of the shifted quadratic, with the roots' labels.
+    let complements = |numerator: &Atom, denominator: &Atom, shifted_b: Atom| {
+        let shifted_c = &r14 * &r23 * numerator / denominator;
+        let (offset_2, offset_1) =
+            labelled_quadratic_roots(&a, &(-shifted_b), &shifted_c, &discriminant);
+        let scale = denominator / numerator;
+        [-offset_1 * &scale, -offset_2 * scale]
+    };
+    let [w1, w2] = complements(&r13, &r34, -&gap - &r14 * &r23);
+    let [y1, y2] = [&qx1, &qx2].map(|x| x * &(&q34 / &q13));
+    let mut finite = complement_difference(&y1, &w1, &y2, &w2) * &r34 / &r13;
+    let [w1, w2] = complements(&r12, &r24, &gap - &r14 * &r23);
+    let [y1, y2] = [&qx1, &qx2].map(|x| x * &(&q24 / &q12));
+    finite += complement_difference(&y1, &w1, &y2, &w2) * &r24 / &r12;
     let logarithmic = -(&qx1 / &qx2).log_over_one_minus() / &root_2;
     finite +=
         logarithmic * ((qx1.log() + qx2.log()) / 2 - q12.log() - q13.log() + q14.log() + q23.log());
@@ -335,16 +353,48 @@ pub(crate) fn box_finite_four_masses(p: [&Atom; 6], m: [&Atom; 4]) -> Atom {
     )
 }
 
+/// `N = P - R` for the channel product `P = r13 r24` and the external
+/// product `R = r12 r34` of the finite boxes' quadratics, formed once.
+///
+/// Next to a collinear limit (an invariant between two massless lines that
+/// is small but nonzero) and to `P = R`, the discriminant is next to `N²`,
+/// and the two dilogarithm terms grow as `1/N` and cancel each other (by 560
+/// in a two-mass box with `N = 2e-3 P`, which binary64 kept to 1e-11 for
+/// collinear invariants of 1e-5 to 1e-12). Their shifted coefficients
+/// `b - 2 a u` are `-N` and `N` up to the collinear terms; summed with those
+/// in the evaluator's own order, each term rounded `N` differently, and the
+/// residue of their cancellation was the result's error. Taken as one
+/// value, `N` cancels between them as it does analytically.
+fn channel_gap([r12, r13, r24, r34]: [&Atom; 4]) -> Atom {
+    grouped(&(r13 * r24 - r12 * r34))
+}
+
+/// `b² - 4ac` of the finite boxes' quadratics with `b = P + R - T`, the
+/// collinear term `T` (`r14 r23`, `k14 r23` with two masses) and
+/// `4ac = 4PR - rest`, as `N² - T (2 (P + R) - T) + rest` with `N = P - R`
+/// ([channel_gap]) and `sum = P + R`.
+///
+/// Next to a collinear limit `T` and `rest` are small, and `b² - 4ac`
+/// cancels by `b²/d²` where `P` is next to `R`. There the dilogarithm terms
+/// grow as `1/d` and cancel each other, and the rounding residue of
+/// `b² - 4ac` became the result's: of 300 one- and two-adjacent-mass boxes
+/// with p1² from 1e-14 to 1e-4 and `P/R - 1` from 1e-6 to 0.1, 16 lost 1e-10
+/// to 3e-5 in binary64 (a massless box with `P/R - 1 = 2e-3` 1e-7).
+fn collinear_square(gap: &Atom, sum: Atom, collinear: Atom, rest: Atom) -> Atom {
+    gap.pow(2) - &collinear * (Atom::num(2) * sum - &collinear) + rest
+}
+
 /// Roots `X1, X2` of `a X² - b X + c` as OneLOop's `solabc` returns them
 /// (negated): the larger directly, the other from Vieta's product
-/// ([ordered_negative_quadratic_roots]); and the discriminant's square root.
+/// ([ordered_negative_quadratic_roots]); and the square root of the
+/// discriminant `square`, `b² - 4ac` in a form exact for the caller.
 ///
 /// Next to a collinear limit (an invariant between two massless lines that
 /// is small but nonzero) `a` or `c` is small and one root is small; formed
 /// directly, `(b - d)/(2a)` lost it to cancellation (a one-mass box with
 /// p2² = -1.3e-10 kept 4e-9 in binary64, OneLOop 8e-14).
-fn solabc_roots(a: &Atom, b: &Atom, c: &Atom) -> (Atom, Atom, Atom) {
-    let discriminant = physical_sqrt(&(b * b - Atom::num(4) * a * c));
+fn solabc_roots(a: &Atom, b: &Atom, c: &Atom, square: &Atom) -> (Atom, Atom, Atom) {
+    let discriminant = physical_sqrt(square);
     let (x1, x2) = ordered_negative_quadratic_roots(a, b, c, &discriminant);
     (x1, x2, discriminant)
 }
@@ -380,7 +430,14 @@ pub(crate) fn box_finite_one_mass(p: [&Atom; 6], mass: &Atom) -> Atom {
     let a = &r34 * &r24;
     let b = &r13 * &r24 + &r12 * &r34 - &r14 * &r23;
     let c = &r12 * &r13 - &r23;
-    let (x1, x2, discriminant) = solabc_roots(&a, &b, &c);
+    let gap = channel_gap([&r12, &r13, &r24, &r34]);
+    let square = collinear_square(
+        &gap,
+        &r13 * &r24 + &r12 * &r34,
+        &r14 * &r23,
+        Atom::num(4) * &r23 * &r24 * &r34,
+    );
+    let (x1, x2, discriminant) = solabc_roots(&a, &b, &c, &square);
     // Real roots inherit their lips from OneLOop's p -> p(1 + i eps).
     let massive = &sr * &sm;
     let massless = &sr * &sr;
@@ -403,7 +460,7 @@ pub(crate) fn box_finite_one_mass(p: [&Atom; 6], mass: &Atom) -> Atom {
     let [w1, w2] = root_complements(
         quadratic,
         &(&r34 / &r13),
-        &(&r12 * &r34 - &r13 * &r24 - &r14 * &r23),
+        &(-&gap - &r14 * &r23),
         &(&r23 * (&r13 * &r14 / &r34 - 1)),
     );
     let [y1, y2] = [&qx1, &qx2].map(|x| x * &(&q34 / &q13));
@@ -412,7 +469,7 @@ pub(crate) fn box_finite_one_mass(p: [&Atom; 6], mass: &Atom) -> Atom {
     let [w1, w2] = root_complements(
         quadratic,
         &(&r24 / &r12),
-        &(&r13 * &r24 - &r12 * &r34 - &r14 * &r23),
+        &(&gap - &r14 * &r23),
         &(&r23 * (&r12 * &r14 / &r24 - 1)),
     );
     let [y1, y2] = [&qx1, &qx2].map(|x| x * &(&q24 / &q12));
@@ -473,7 +530,7 @@ pub(crate) fn box_finite_three_masses_zero_third(
     let a = &r34 / &r24 - &r23;
     let b = -&r13 * &d24 + &k12 * &r34 - &k14 * &r23;
     let c = &k12 * &r13 + &r24 * &r34 - &k14 * &r24 * &r13 - &r23;
-    let (x1, x2, _) = solabc_roots(&a, &b, &c);
+    let (x1, x2, _) = solabc_roots(&a, &b, &c, &(&b * &b - Atom::num(4) * &a * &c));
     // Real roots inherit their lips from OneLOop's p -> p(1 + i eps).
     let dk24 = -p[5] / (&sm2 * &sm4);
     let [dr24, dd24, weight] = r_function_velocity(&k24, &r24, &d24, &dk24);
@@ -533,7 +590,14 @@ pub(crate) fn box_finite_two_adjacent(p: [&Atom; 6], mass_3: &Atom, mass_4: &Ato
     let a = &r34 * &r24 - &r23;
     let b = &r13 * &r24 + &r12 * &r34 - &k14 * &r23;
     let c = &r12 * &r13 - &r23;
-    let (x1, x2, discriminant) = solabc_roots(&a, &b, &c);
+    let gap = channel_gap([&r12, &r13, &r24, &r34]);
+    let square = collinear_square(
+        &gap,
+        &r13 * &r24 + &r12 * &r34,
+        &k14 * &r23,
+        Atom::num(4) * &r23 * (&r24 * &r34 + &r12 * &r13 - &r23),
+    );
+    let (x1, x2, discriminant) = solabc_roots(&a, &b, &c, &square);
     // Real roots inherit their lips from OneLOop's p -> p(1 + i eps).
     let [d12, d13] = [p[3], p[5]].map(|v| -v / (&sr * &sm4));
     let dk14 = -p[2] / (&sm3 * &sm4);
@@ -578,13 +642,13 @@ pub(crate) fn box_finite_two_adjacent(p: [&Atom; 6], mass_3: &Atom, mass_4: &Ato
         let shifted_c = &r23 * (&k14 * &u - &u * &u - 1);
         root_complements(quadratic, &(Atom::num(1) / &u), &shifted_b, &shifted_c)
     };
-    let [w1, w2] = complements(&r13 / &r34, &r12 * &r34 - &r13 * &r24);
+    let [w1, w2] = complements(&r13 / &r34, -&gap);
     let term_13 = if_nonzero_else(
         &r13,
         if_nonzero(&r34, complement_difference(&x1_13, &w1, &x2_13, &w2) * &r34 / &r13),
         limit_13,
     );
-    let [w1, w2] = complements(&r12 / &r24, &r13 * &r24 - &r12 * &r34);
+    let [w1, w2] = complements(&r12 / &r24, gap.clone());
     let term_12 = if_nonzero_else(
         &r12,
         if_nonzero(&r24, complement_difference(&x1_12, &w1, &x2_12, &w2) * &r24 / &r12),
