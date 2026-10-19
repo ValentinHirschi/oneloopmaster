@@ -88,6 +88,17 @@ pub(crate) fn divided_difference(first: &SheetAtom, second: &SheetAtom) -> Atom 
     )
 }
 
+/// The complements `1 - x` only restore digits of the numerical maps; the
+/// inspection form is the divided difference itself.
+pub(crate) fn complement_difference(
+    first: &SheetAtom,
+    _: &Atom,
+    second: &SheetAtom,
+    _: &Atom,
+) -> Atom {
+    divided_difference(first, second)
+}
+
 pub(crate) fn register(map: &mut FunctionMap) {
     crate::sheet_exact::register_for_inspection(map);
     let parameters = [

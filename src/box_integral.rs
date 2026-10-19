@@ -1,7 +1,10 @@
 //! Box mass sectors and infrared formulas.
 use super::*;
 use sheet_exact::sqrt_lower as physical_sqrt;
-use sheet_exact::{SheetAtom as Q, divided_difference as dd, im, negative, re, sign_nonnegative};
+use sheet_exact::{
+    SheetAtom as Q, complement_difference, divided_difference as dd, im, negative, re,
+    sign_nonnegative,
+};
 
 pub(crate) fn box_finite_massless(p: [&Atom; 6]) -> Atom {
     let r12 = -p[0];
@@ -332,6 +335,39 @@ pub(crate) fn box_finite_four_masses(p: [&Atom; 6], m: [&Atom; 4]) -> Atom {
     )
 }
 
+/// Roots `X1, X2` of `a X² - b X + c` as OneLOop's `solabc` returns them
+/// (negated): the larger directly, the other from Vieta's product
+/// ([ordered_negative_quadratic_roots]); and the discriminant's square root.
+///
+/// Next to a collinear limit (an invariant between two massless lines that
+/// is small but nonzero) `a` or `c` is small and one root is small; formed
+/// directly, `(b - d)/(2a)` lost it to cancellation (a one-mass box with
+/// p2² = -1.3e-10 kept 4e-9 in binary64, OneLOop 8e-14).
+fn solabc_roots(a: &Atom, b: &Atom, c: &Atom) -> (Atom, Atom, Atom) {
+    let discriminant = physical_sqrt(&(b * b - Atom::num(4) * a * c));
+    let (x1, x2) = ordered_negative_quadratic_roots(a, b, c, &discriminant);
+    (x1, x2, discriminant)
+}
+
+/// The complements `1 - s X1, 1 - s X2` of the dilogarithm arguments `s X`,
+/// from the offsets of the roots of `a X² - b X + c` from `u = 1/s`
+/// ([ordered_root_offsets]), given `b - 2 a u` and the quadratic at `u`.
+///
+/// When the invariant `r23` between the two massless lines of a one-mass or
+/// two-adjacent-mass box is small, the quadratic tends to `(r34 X - r13)
+/// (r24 X - r12)`, and `X r34/r13` and `X r24/r12` approach one: their
+/// differences from one are proportional to `r23`, which the closed forms of
+/// the quadratic at `u` keep ([complement_difference]).
+fn root_complements(
+    [a, b, discriminant]: [&Atom; 3],
+    scale: &Atom,
+    shifted_b: &Atom,
+    shifted_c: &Atom,
+) -> [Atom; 2] {
+    let (first, second) = ordered_root_offsets(a, b, discriminant, shifted_b, shifted_c);
+    [-first * scale, -second * scale]
+}
+
 pub(crate) fn box_finite_one_mass(p: [&Atom; 6], mass: &Atom) -> Atom {
     let sm = physical_sqrt(mass);
     let sr = square_root_magnitude(mass);
@@ -344,7 +380,7 @@ pub(crate) fn box_finite_one_mass(p: [&Atom; 6], mass: &Atom) -> Atom {
     let a = &r34 * &r24;
     let b = &r13 * &r24 + &r12 * &r34 - &r14 * &r23;
     let c = &r12 * &r13 - &r23;
-    let (x1, x2) = negative_quadratic_roots(&a, &b, &c);
+    let (x1, x2, discriminant) = solabc_roots(&a, &b, &c);
     // Real roots inherit their lips from OneLOop's p -> p(1 + i eps).
     let massive = &sr * &sm;
     let massless = &sr * &sr;
@@ -362,9 +398,25 @@ pub(crate) fn box_finite_one_mass(p: [&Atom; 6], mass: &Atom) -> Atom {
     let root_log = qx1.log() + qx2.log();
     let both_zero = &lr * (&root_log + q34.log() + q24.log() - q23.log()) / &x2;
     let r13_zero = &lr * (&root_log / 2 + q34.log() + q12.log() - q23.log()) / &x2;
-    let r13_nonzero = dd(&(&qx1 * &(&q34 / &q13)), &(&qx2 * &(&q34 / &q13))) * &r34 / &r13;
+    // At u = r13/r34 and r12/r24 the quadratic is r23 (r14 u - 1).
+    let quadratic = [&a, &b, &discriminant];
+    let [w1, w2] = root_complements(
+        quadratic,
+        &(&r34 / &r13),
+        &(&r12 * &r34 - &r13 * &r24 - &r14 * &r23),
+        &(&r23 * (&r13 * &r14 / &r34 - 1)),
+    );
+    let [y1, y2] = [&qx1, &qx2].map(|x| x * &(&q34 / &q13));
+    let r13_nonzero = complement_difference(&y1, &w1, &y2, &w2) * &r34 / &r13;
     let r12_zero = &lr * (&root_log / 2 + q24.log() + q13.log() - q23.log()) / &x2;
-    let r12_nonzero = dd(&(&qx1 * &(&q24 / &q12)), &(&qx2 * &(&q24 / &q12))) * &r24 / &r12;
+    let [w1, w2] = root_complements(
+        quadratic,
+        &(&r24 / &r12),
+        &(&r13 * &r24 - &r12 * &r34 - &r14 * &r23),
+        &(&r23 * (&r12 * &r14 / &r24 - 1)),
+    );
+    let [y1, y2] = [&qx1, &qx2].map(|x| x * &(&q24 / &q12));
+    let r12_nonzero = complement_difference(&y1, &w1, &y2, &w2) * &r24 / &r12;
     // As in OneLOop's boxf1, a single vanishing r12 or r13 replaces only its
     // own dilogarithm term by the logarithmic limit; the other term remains.
     let term_13 = if_nonzero_else(&r13, r13_nonzero, r13_zero);
@@ -421,7 +473,7 @@ pub(crate) fn box_finite_three_masses_zero_third(
     let a = &r34 / &r24 - &r23;
     let b = -&r13 * &d24 + &k12 * &r34 - &k14 * &r23;
     let c = &k12 * &r13 + &r24 * &r34 - &k14 * &r24 * &r13 - &r23;
-    let (x1, x2) = negative_quadratic_roots(&a, &b, &c);
+    let (x1, x2, _) = solabc_roots(&a, &b, &c);
     // Real roots inherit their lips from OneLOop's p -> p(1 + i eps).
     let dk24 = -p[5] / (&sm2 * &sm4);
     let [dr24, dd24, weight] = r_function_velocity(&k24, &r24, &d24, &dk24);
@@ -481,7 +533,7 @@ pub(crate) fn box_finite_two_adjacent(p: [&Atom; 6], mass_3: &Atom, mass_4: &Ato
     let a = &r34 * &r24 - &r23;
     let b = &r13 * &r24 + &r12 * &r34 - &k14 * &r23;
     let c = &r12 * &r13 - &r23;
-    let (x1, x2) = negative_quadratic_roots(&a, &b, &c);
+    let (x1, x2, discriminant) = solabc_roots(&a, &b, &c);
     // Real roots inherit their lips from OneLOop's p -> p(1 + i eps).
     let [d12, d13] = [p[3], p[5]].map(|v| -v / (&sr * &sm4));
     let dk14 = -p[2] / (&sm3 * &sm4);
@@ -519,14 +571,23 @@ pub(crate) fn box_finite_two_adjacent(p: [&Atom; 6], mass_3: &Atom, mass_4: &Ato
     let limit_13 = &lr * (&root_log / 2 + q34.log() + q12.log() - q23.log()) / &x2;
     let limit_12 = &lr * (&root_log / 2 + q24.log() + q13.log() - q23.log()) / &x2;
     let both_zero = &lr * (root_log + q34.log() + q24.log() - q23.log()) / &x2;
+    // At u = r13/r34 and r12/r24 the quadratic is r23 (k14 u - u² - 1).
+    let quadratic = [&a, &b, &discriminant];
+    let complements = |u: Atom, shifted_b: Atom| {
+        let shifted_b = shifted_b - &k14 * &r23 + Atom::num(2) * &r23 * &u;
+        let shifted_c = &r23 * (&k14 * &u - &u * &u - 1);
+        root_complements(quadratic, &(Atom::num(1) / &u), &shifted_b, &shifted_c)
+    };
+    let [w1, w2] = complements(&r13 / &r34, &r12 * &r34 - &r13 * &r24);
     let term_13 = if_nonzero_else(
         &r13,
-        if_nonzero(&r34, exact_sheet_difference(&x1_13, &x2_13) * &r34 / &r13),
+        if_nonzero(&r34, complement_difference(&x1_13, &w1, &x2_13, &w2) * &r34 / &r13),
         limit_13,
     );
+    let [w1, w2] = complements(&r12 / &r24, &r13 * &r24 - &r12 * &r34);
     let term_12 = if_nonzero_else(
         &r12,
-        if_nonzero(&r24, exact_sheet_difference(&x1_12, &x2_12) * &r24 / &r12),
+        if_nonzero(&r24, complement_difference(&x1_12, &w1, &x2_12, &w2) * &r24 / &r12),
         limit_12,
     );
     let ordinary = term_13 + term_12 + if_nonzero(&(&r12 * &r13), &lr * log_scale.log() / &x2);

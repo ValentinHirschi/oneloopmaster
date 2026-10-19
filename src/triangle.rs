@@ -73,6 +73,60 @@ fn ordered_negative_quadratic_roots_body(
     (first, second)
 }
 
+/// Offsets `X1 - u, X2 - u` of the roots of [ordered_negative_quadratic_roots]
+/// from a point `u`, given `shifted_b = b - 2 a u` and `shifted_c = a u² -
+/// b u + c` (the quadratic at `u`) in a form exact for the caller.
+///
+/// The offsets are the roots `(shifted_b ± d)/(2a)` of `a δ² - shifted_b δ +
+/// shifted_c`, with the labels of `X = (b ± d)/(2a)`; the larger is
+/// evaluated directly and the other from Vieta's product `shifted_c/a`. An
+/// offset from a nearby root keeps the digits of `shifted_c` that `X - u`,
+/// formed from the rounded root, loses. At `d = 0` both are the first.
+pub(crate) fn ordered_root_offsets(
+    a: &Atom,
+    b: &Atom,
+    discriminant: &Atom,
+    shifted_b: &Atom,
+    shifted_c: &Atom,
+) -> (Atom, Atom) {
+    let args = [a, b, discriminant, shifted_b, shifted_c];
+    (
+        helper_call("ordered_root_offset_1", &args),
+        helper_call("ordered_root_offset_2", &args),
+    )
+}
+
+fn ordered_root_offsets_body(
+    a: &Atom,
+    b: &Atom,
+    discriminant: &Atom,
+    shifted_b: &Atom,
+    shifted_c: &Atom,
+) -> (Atom, Atom) {
+    // Nonzero when the root or offset with -d is the larger in magnitude, as
+    // in ordered_negative_quadratic_roots_body.
+    let minus_larger = |b: &Atom| {
+        let size = |v: Atom| Symbol::ABS.call((&v,));
+        let size_difference = grouped(&(size(b + discriminant) - size(b - discriminant)));
+        let minus = &size_difference - Symbol::ABS.call((&size_difference,));
+        if_nonzero_else(&minus, Atom::num(1), Atom::num(0))
+    };
+    let shifted_minus = minus_larger(shifted_b);
+    let larger = if_nonzero_else(
+        &shifted_minus,
+        shifted_b - discriminant,
+        shifted_b + discriminant,
+    );
+    let far = &larger / (Atom::num(2) * a);
+    let near = if_nonzero(&larger, Atom::num(2) * shifted_c / &larger);
+    // The far offset belongs to X1 when both larger forms take the same sign.
+    let swapped = minus_larger(b) - shifted_minus;
+    let first = if_nonzero_else(&swapped, near.clone(), far.clone());
+    let second = if_nonzero_else(&swapped, far, near);
+    let second = if_nonzero_else(discriminant, second, first.clone());
+    (first, second)
+}
+
 /// Sign selecting the real-axis lip of a root `x` of `a x² - b x + c`.
 ///
 /// OneLOop shifts external invariants as `p -> p (1 + i eps)` and lets the
@@ -1000,6 +1054,7 @@ pub(crate) fn register_helpers(map: &mut FunctionMap) {
     let x = symbols.map(Symbol::to_atom);
     let (of_root, of_difference) = r_function_of_body(&x[0], &x[1], &x[2], &x[3], &x[4]);
     let (root_1, root_2) = ordered_negative_quadratic_roots_body(&x[0], &x[1], &x[2], &x[3]);
+    let (offset_1, offset_2) = ordered_root_offsets_body(&x[0], &x[1], &x[2], &x[3], &x[4]);
     let definitions = [
         ("rfun_of_root", 5, of_root),
         ("rfun_of_difference", 5, of_difference),
@@ -1015,6 +1070,8 @@ pub(crate) fn register_helpers(map: &mut FunctionMap) {
         ),
         ("ordered_root_1", 4, root_1),
         ("ordered_root_2", 4, root_2),
+        ("ordered_root_offset_1", 5, offset_1),
+        ("ordered_root_offset_2", 5, offset_2),
         (
             "root_lip",
             7,

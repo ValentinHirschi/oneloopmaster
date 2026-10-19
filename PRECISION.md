@@ -95,6 +95,21 @@ explicit resource limits; see [expression inspection](README.md#combining-integr
   the chart's `b beta² + c beta + a` next to 1, where `d + beta e` and the
   like cancel; nearer 1 than 0 the chart coefficients use `beta - 1` from the
   product of the roots (`box_complex::beta_data`).
+- The finite one-mass and two-adjacent-mass boxes (OneLOop's `boxf1` and
+  `boxf2`) take dilogarithms of `X r34/r13` and `X r24/r12` for the roots `X`
+  of a quadratic that tends to `(r34 X - r13)(r24 X - r12)` as the invariant
+  `r23` between their two massless lines vanishes. Next to such a collinear
+  limit one argument of each pair is next to one, on sheets whose dilogarithm
+  carries `i pi n log(1 - x)`; formed from the rounded argument, `1 - x` lost
+  `|1 - x|` relative digits (2.9e-7 at an invariant of 7e-9 and O(1) at
+  1e-14, as in OneLOop's double precision). The roots follow `solabc` (the
+  larger directly, the other from Vieta's product), and `1 - x` comes from the
+  roots' offsets from `r13/r34` and `r12/r24` (`ordered_root_offsets`), where
+  the quadratic is `r23` times a closed form. The dilogarithms take it for
+  `log(1 - x)`, `Li2(1 - x)` and the side of the unit circle, which sheets
+  with two or more windings jump across (`sheet_exact::complement_difference`).
+  Binary64 keeps 2e-13 down to invariants of 1e-14
+  (`tests/d0_collinear_limits.rs`).
 - `Float` tracks a difference with the bits left after its cancellation and
   computes later operations at that precision, even when the difference is
   exact. Coefficients that are invariants (`m2 - m3 - p2` for equal masses, or

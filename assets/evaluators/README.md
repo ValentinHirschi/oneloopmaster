@@ -21,7 +21,10 @@ sums and charts expanded about beta = 1 (`tests/d0_contour_thresholds.rs`,
 likewise), and again with the far-root form of `r1` (same test).
 C0 and D0 were rebuilt on 2026-10-18 with the continued dilogarithm's
 unit-circle test on a real part, and D0 with the Denner-Dittmaier four-mass
-chart (`tests/d0_four_mass_orderings.rs`, which checks SymJIT too).
+chart (`tests/d0_four_mass_orderings.rs`, which checks SymJIT too). D0 was
+rebuilt on 2026-10-19 with the one- and two-adjacent-mass boxes' `solabc`
+roots and dilogarithm complements next to collinear limits
+(`tests/d0_collinear_limits.rs`, likewise).
 
 Previous generations: 2026-09-29 with released Symbolica and Numerica 3.0.1 and
 SymJIT 2.26.0, and the C0 asset of 2026-09-22 (zero-root ordering of the finite
@@ -50,7 +53,7 @@ exhaustive analytic-region coverage.
 | B0 | 15,375 | `0730c8a390d31c508fbece0760186627dc851b8ccf2da787072f8c2788f50354` |
 | dB0 | 61,566 | `5f145ba984ffe2bdffb9355557a9272c3006d0a601e845cd48877d5d19ea4d77` |
 | C0 | 101,453 | `c9ead5acc13ae9847347885772fa2eb212ed6c3cf974de66ce1a00b5eca73456` |
-| D0 | 1,931,722 | `178feecf6054b4887e29ef30218662ebc6f9e1e291399b3652d12bbdb706ef6d` |
+| D0 | 1,958,435 | `518bafc0f4c56385d8ad964a1db99c13cd232b227a5987060a04ebd8a47077b1` |
 
 The embedded files use the `oneloop-evaluator-v3` discriminator, which binds
 the Symbolica IR schema and strict compilation policy without claiming backend

@@ -58,23 +58,49 @@ fn log_body(value: &Atom, phase: &Atom, odd: &Atom) -> Atom {
     choose(&real_axis, real, complex)
 }
 
-fn dilog_body(value: &Atom, phase: &Atom, odd: &Atom, at_one: Atom, at_zero: Atom) -> Atom {
+/// The continued `Li2(1-x)` on the sheet `(value, phase, odd)`.
+///
+/// With `complement`, the given `w = 1 - x` replaces `1 - x` in `log(1-x)` and
+/// `Li2(1-x)` (`-w/x` in the inverted form), and decides the inversion: next
+/// to `x = 1` on a sheet with windings the dilogarithm carries
+/// `i pi n log(1-x)`, and `1 - x` formed from a rounded `x` loses `|1 - x|`
+/// relative digits ([complement_difference]).
+fn dilog_body(
+    value: &Atom,
+    phase: &Atom,
+    odd: &Atom,
+    complement: Option<&Atom>,
+    at_one: Atom,
+    at_zero: Atom,
+) -> Atom {
     let i_pi = i() * Symbol::PI.to_atom();
     let pi_squared = Symbol::PI.to_atom() * Symbol::PI.to_atom();
     let even = phase - odd;
     let argument = physical(value, odd);
-    let nonunit = &argument - 1;
-    let inverted = negative(&re(&(Atom::num(1) - value * value.conj())));
+    let (nonunit, inverted) = match complement {
+        None => (
+            &argument - 1,
+            negative(&re(&(Atom::num(1) - value * value.conj()))),
+        ),
+        // 1 - |1 - w|²: the side of the unit circle, which sheets with two or
+        // more windings jump across, decided by w itself next to x = 1.
+        Some(w) => (
+            w.clone(),
+            negative(&(Atom::num(2) * re(w) - re(&(w * w.conj())))),
+        ),
+    };
+    let one_minus = complement.map(|w| choose(&inverted, -w / &argument, w.clone()));
     let normalized = choose(&inverted, Atom::num(1) / &argument, argument);
+    let one_minus = one_minus.unwrap_or_else(|| Atom::num(1) - &normalized);
     let logarithm = choose(&inverted, -value.log(), value.log());
     let even = choose(&inverted, -&even, even);
     let odd = choose(&inverted, -odd, odd.clone());
     let sheet_logarithm = &logarithm + &i_pi * (&even + &odd);
-    let log_one_minus = (Atom::num(1) - &normalized).log();
+    let log_one_minus = one_minus.log();
     let below_half = negative(&(Atom::num(2) * re(&normalized) - 1));
     let below =
         &pi_squared / 6 - crate::dilog_atom(&normalized) - &log_one_minus * &sheet_logarithm;
-    let above = crate::dilog_atom(Atom::num(1) - &normalized) - &log_one_minus * &i_pi * even;
+    let above = crate::dilog_atom(&one_minus) - &log_one_minus * &i_pi * even;
     let base = choose(&below_half, below, above);
     let ordinary = choose(
         &inverted,
@@ -98,6 +124,18 @@ fn log_ratio_symbol() -> Symbol {
 
 fn difference_symbol() -> Symbol {
     symbolica::symbol!("__olo_sheet_dilog_difference")
+}
+
+fn complement_dilog_symbol() -> Symbol {
+    symbolica::symbol!("__olo_sheet_dilog_complement")
+}
+
+fn complement_difference_symbol() -> Symbol {
+    symbolica::symbol!("__olo_sheet_dilog_difference_complement")
+}
+
+fn complement_parameters() -> [Symbol; 2] {
+    ["__olo_dd_w1", "__olo_dd_w2"].map(|s| symbolica::symbol!(s))
 }
 
 fn sheet_parameters() -> [Symbol; 3] {
@@ -181,11 +219,32 @@ fn difference_sheets(arguments: &[Atom; 6]) -> [SheetAtom; 2] {
 /// `near` selects [near_difference] where the direct difference cancels. The
 /// Dual neighborhoods keep the direct difference: [log_one_plus_body] forms
 /// real parts, which carry no holomorphic derivative.
-fn difference_body(first: &SheetAtom, second: &SheetAtom, coincident: Atom, near: bool) -> Atom {
+///
+/// With `complements` (`1 - x` of both arguments, [complement_difference]) the
+/// dilogarithms take them, and the gap is `w2 - w1` where the complements are
+/// the smaller ones.
+fn difference_body(
+    first: &SheetAtom,
+    second: &SheetAtom,
+    complements: Option<[&Atom; 2]>,
+    coincident: Atom,
+    near: bool,
+) -> Atom {
     let difference = first.value() - second.value();
-    let [upper, lower] = [first.dilog(), second.dilog()];
+    let ([upper, lower], gap) = match complements {
+        None => ([first.dilog(), second.dilog()], difference.clone()),
+        Some([w1, w2]) => {
+            let norm = |z: &Atom| re(&(z * z.conj()));
+            let values = norm(&first.value) + norm(&second.value);
+            let near_one = negative(&(norm(w1) + norm(w2) - values));
+            (
+                [first.dilog_complement(w1), second.dilog_complement(w2)],
+                choose(&near_one, w2 - w1, difference.clone()),
+            )
+        }
+    };
     let numerator = &upper - &lower;
-    let direct = &numerator / &difference;
+    let direct = &numerator / &gap;
     let noncoincident = if near {
         // The values cancel by more than 16: the direct difference loses more
         // than four bits. Only then are the other forms considered.
@@ -452,6 +511,7 @@ fn with_dilog_neighborhoods(mut map: FunctionMap, order: usize) -> Result<Functi
             &arguments[0],
             &arguments[1],
             &arguments[2],
+            None,
             unit,
             crate::dilog_atom(Atom::num(1) - &value),
         ),
@@ -493,9 +553,15 @@ fn with_dilog_neighborhoods(mut map: FunctionMap, order: usize) -> Result<Functi
             ),
         ),
     );
-    map.with_replaced_body(
+    map = map.with_replaced_body(
         difference_symbol(),
-        difference_body(&first, &second, coincident, false),
+        difference_body(&first, &second, None, coincident, false),
+    )?;
+    // The complements only restore digits of 1 - x: the neighborhoods take
+    // the plain difference, whose derivatives they define.
+    map.with_replaced_body(
+        complement_difference_symbol(),
+        divided_difference(&first, &second),
     )
 }
 
@@ -649,12 +715,29 @@ fn register_impl(function_map: &mut FunctionMap, grouped_predicates: bool) {
                 &atoms[0],
                 &atoms[1],
                 &atoms[2],
+                None,
                 Atom::num(0),
                 Symbol::PI.to_atom().pow(2) / 6,
             ),
             super::native_function_options(),
         )
         .expect("unique sheet dilogarithm");
+    let complement = symbolica::symbol!("__olo_sheet_complement");
+    function_map
+        .add_function_with_options(
+            complement_dilog_symbol(),
+            [variables.as_slice(), &[complement]].concat(),
+            dilog_body(
+                &atoms[0],
+                &atoms[1],
+                &atoms[2],
+                Some(&complement.to_atom()),
+                Atom::num(0),
+                Symbol::PI.to_atom().pow(2) / 6,
+            ),
+            super::native_function_options(),
+        )
+        .expect("unique sheet dilogarithm of a complement");
     let [q, w] = [
         symbolica::symbol!("__olo_log_one_plus_value"),
         symbolica::symbol!("__olo_log_one_plus_offset"),
@@ -683,25 +766,37 @@ fn register_impl(function_map: &mut FunctionMap, grouped_predicates: bool) {
     }
     let variables = difference_parameters();
     let [first, second] = difference_sheets(&variables.map(Symbol::to_atom));
+    // At coincidence the plain log(x)/(1-x), the primal of the Dual
+    // neighborhoods' limit (`with_dilog_neighborhoods`).
+    let coincident = log_ratio_body(
+        &[first.value.clone(), first.phase.clone(), first.odd.clone()],
+        Atom::num(-1),
+        false,
+    );
     function_map
         .add_function_with_options(
             difference_symbol(),
             variables.to_vec(),
-            // At coincidence the plain log(x)/(1-x), the primal of the Dual
-            // neighborhoods' limit (`with_dilog_neighborhoods`).
             difference_body(
                 &first,
                 &second,
-                log_ratio_body(
-                    &[first.value.clone(), first.phase.clone(), first.odd.clone()],
-                    Atom::num(-1),
-                    false,
-                ),
+                None,
+                coincident.clone(),
                 std::env::var("ZZ_GEN_DD").is_err(),
             ),
             super::native_function_options(),
         )
         .expect("unique sheet dilogarithm difference");
+    let complements = complement_parameters();
+    let [w1, w2] = complements.map(Symbol::to_atom);
+    function_map
+        .add_function_with_options(
+            complement_difference_symbol(),
+            [variables.as_slice(), complements.as_slice()].concat(),
+            difference_body(&first, &second, Some([&w1, &w2]), coincident, true),
+            super::native_function_options(),
+        )
+        .expect("unique sheet dilogarithm difference of complements");
 }
 
 #[derive(Clone)]
@@ -778,6 +873,10 @@ impl SheetAtom {
     pub(crate) fn dilog(&self) -> Atom {
         dilog_symbol().call((&self.value, &self.phase, &self.odd))
     }
+
+    fn dilog_complement(&self, complement: &Atom) -> Atom {
+        complement_dilog_symbol().call((&self.value, &self.phase, &self.odd, complement))
+    }
 }
 
 impl Mul for &SheetAtom {
@@ -826,6 +925,36 @@ pub(crate) fn divided_difference(first: &SheetAtom, second: &SheetAtom) -> Atom 
         &second.value,
         &second.phase,
         &second.odd,
+    ))
+}
+
+/// [divided_difference] given the complements `w1 = 1 - x1` and
+/// `w2 = 1 - x2` of the two arguments, for arguments that can lie next to one.
+///
+/// On a sheet with `n` windings the dilogarithm carries `-i pi n log(1-x)`,
+/// which next to `x = 1` is the logarithm of a small quantity: of an invariant
+/// between two massless lines, for the box arguments of a collinear limit.
+/// Taken from a rounded `x`, `1 - x` loses `|1 - x|` relative digits and the
+/// dilogarithm `eps/|1 - x|` absolute ones (a one-mass box with p1² = -1e-10
+/// kept 2e-5 in binary64). The caller forms the complements from the
+/// kinematics; the dilogarithms take them ([dilog_body]), and the gap is
+/// `w2 - w1` where it is the smaller form. Cancelling differences take
+/// [near_difference] from the values, as [divided_difference] does.
+pub(crate) fn complement_difference(
+    first: &SheetAtom,
+    first_complement: &Atom,
+    second: &SheetAtom,
+    second_complement: &Atom,
+) -> Atom {
+    complement_difference_symbol().call((
+        &first.value,
+        &first.phase,
+        &first.odd,
+        &second.value,
+        &second.phase,
+        &second.odd,
+        first_complement,
+        second_complement,
     ))
 }
 
@@ -962,6 +1091,112 @@ mod tests {
         eprintln!("worst binary64 {worst:e}, worst 256 bits {worst_256:e}");
         assert!(failures.is_empty(), "{}", failures[..failures.len().min(10)].join("\n"));
     }
+
+    /// [complement_difference] next to one: `x1 = 1 - w1` with `|w1|` from
+    /// 1e-14 to 1e-2 on sheets with windings (phases -4..4, even), `x2 = 1 - w2`
+    /// anywhere else, both rounded to binary64 and passed with their exact
+    /// complements. Binary64 must be within 1e-14 of the plain difference of
+    /// `1 - w1` and `1 - w2` at 400 bits (it is within 1e-15; the plain
+    /// difference of the rounded arguments was off by up to 3e-4).
+    #[test]
+    fn complement_differences_next_to_one() {
+        let s = ["cd_v1", "cd_p1", "cd_o1", "cd_v2", "cd_p2", "cd_o2", "cd_w1", "cd_w2"]
+            .map(|name| symbolica::symbol!(name).to_atom());
+        let first = SheetAtom::raw(s[0].clone(), s[1].clone(), s[2].clone());
+        let second = SheetAtom::raw(s[3].clone(), s[4].clone(), s[5].clone());
+        let expressions = [
+            complement_difference(&first, &s[6], &second, &s[7]),
+            divided_difference(&first, &second),
+        ];
+        let mut map = FunctionMap::new();
+        register(&mut map);
+        let exact = Atom::evaluator_multiple(
+            &expressions.iter().map(Atom::as_view).collect::<Vec<_>>(),
+            &s,
+        )
+        .function_map(map.into())
+        .build()
+        .unwrap();
+        let mut binary64 = exact
+            .clone()
+            .map_coeff(&|v| Complex::new(v.re.to_f64(), v.im.to_f64()));
+        let mut p400 = exact.map_coeff_with_prec(
+            &|v| Complex::new(v.re.to_multi_prec_float(400), v.im.to_multi_prec_float(400)),
+            400,
+        );
+        let mut state = 0x9e37_79b9_7f4a_7c15_u64;
+        let mut uniform = move || {
+            state ^= state << 13;
+            state ^= state >> 7;
+            state ^= state << 17;
+            (state >> 11) as f64 / (1u64 << 53) as f64
+        };
+        let one = Complex::new(1.0, 0.0);
+        // (stored value, parity) of x on a sheet with the given phase parity.
+        let stored = |x: Complex<f64>| if x.re < 0.0 { (-x, 1.0) } else { (x, 0.0) };
+        let (mut worst, mut worst_plain) = (0f64, 0f64);
+        let mut failures = Vec::new();
+        for _ in 0..2000 {
+            let phase = 2.0 * ((uniform() * 5.0) as i64 - 2) as f64;
+            let angle = 2.0 * std::f64::consts::PI * uniform();
+            let modulus = 10f64.powf(-14.0 + 12.0 * uniform());
+            let w1 = Complex::new(modulus * angle.cos(), modulus * angle.sin());
+            let angle = 2.0 * std::f64::consts::PI * uniform();
+            let modulus = 10f64.powf(-0.5 + 1.2 * uniform());
+            let w2 = Complex::new(modulus * angle.cos(), modulus * angle.sin());
+            let (v1, o1) = stored(one - w1);
+            let (v2, o2) = stored(one - w2);
+            let p2 = phase + o2;
+            let input = [
+                v1,
+                Complex::new(phase, 0.0),
+                Complex::new(o1, 0.0),
+                v2,
+                Complex::new(p2, 0.0),
+                Complex::new(o2, 0.0),
+                w1,
+                w2,
+            ];
+            let mut out = [Complex::new(0.0, 0.0); 2];
+            binary64.evaluate(&input, &mut out);
+            // The reference takes the exact arguments 1 - w.
+            let float = |z: Complex<f64>| {
+                Complex::new(Float::with_val(400, z.re), Float::with_val(400, z.im))
+            };
+            let exact_value = |w: Complex<f64>, odd: f64| {
+                let x = Complex::new(Float::with_val(400, 1.0), Float::with_val(400, 0.0))
+                    - float(w);
+                if odd == 0.0 { x } else { -x }
+            };
+            let high = [
+                exact_value(w1, o1),
+                float(input[1]),
+                float(input[2]),
+                exact_value(w2, o2),
+                float(input[4]),
+                float(input[5]),
+                float(w1),
+                float(w2),
+            ];
+            let mut o400 = core::array::from_fn::<_, 2, _>(|_| {
+                Complex::new(Float::new(400), Float::new(400))
+            });
+            p400.evaluate(&high, &mut o400);
+            let reference = Complex::new(o400[1].re.to_f64(), o400[1].im.to_f64());
+            let error = |value: Complex<f64>| {
+                (value.re - reference.re).hypot(value.im - reference.im)
+                    / reference.re.hypot(reference.im)
+            };
+            worst = worst.max(error(out[0]));
+            worst_plain = worst_plain.max(error(out[1]));
+            if !(error(out[0]) <= 1e-14) {
+                failures.push(format!("{input:?}: {:e}", error(out[0])));
+            }
+        }
+        eprintln!("worst binary64 {worst:e} (plain difference {worst_plain:e})");
+        assert!(failures.is_empty(), "{}", failures[..failures.len().min(10)].join("\n"));
+    }
+
     #[test]
     fn sheet_product_and_quotient_reference_values() {
         let args = ["sheet_pair_a", "sheet_pair_b", "sheet_pair_s"]
@@ -1058,6 +1293,7 @@ mod tests {
             &x,
             &phase,
             &odd,
+            None,
             Atom::num(0),
             Symbol::PI.to_atom().pow(2) / 6,
         )

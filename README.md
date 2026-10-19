@@ -30,6 +30,10 @@ evaluated term by term, as OneLOop's `dilog2_c` (a two-mass C0 with nearly
 coincident roots was off by 2.4e-13 in binary64, now 2e-15 to 9e-15 on every
 route: `tests/c0_coincident_roots.rs`), and the contour box no longer loses a
 tiny invariant to cancellation in `Float` (`tests/d0_tiny_invariant.rs`).
+One- and two-adjacent-mass boxes next to a collinear limit (a small invariant
+between two massless lines) take `1 - x` of their dilogarithm arguments next
+to one from the kinematics: binary64 keeps 2e-13 down to invariants of 1e-14,
+where it lost up to O(1) as OneLOop does (`tests/d0_collinear_limits.rs`).
 Real-mass three-mass boxes use the contour representation wherever it
 supports the kinematics: OneLOop's real-mass `boxf33` chart, which it takes
 outside timelike configurations, depends on the labelling, with a wrong real
