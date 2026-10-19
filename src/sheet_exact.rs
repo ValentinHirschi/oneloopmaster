@@ -31,8 +31,8 @@ fn zero(x: &Atom) -> Atom {
 }
 
 pub(crate) fn sign_nonnegative(x: &Atom) -> Atom {
-    // Evaluate x once: expanding a composite x in x-|x| can leave a rounding
-    // residual, which native if interprets as nonzero.
+    // Bind the real argument once so the sign predicate uses the same value
+    // and precision in its cancelling pair.
     symbolica::symbol!("__olo_sign_nonnegative").call((x,))
 }
 
@@ -724,23 +724,26 @@ fn register_impl(function_map: &mut FunctionMap, grouped_predicates: bool) {
             (&component - component.conj()) / (Atom::num(2) * i()),
         )
         .unwrap();
-    // In a FunctionMap, x is a bound parameter evaluated once. In an inlined
-    // expression, preserve that arithmetic grouping so x-|x| cannot acquire a
-    // nonzero rounding residue from differently flattened copies of x.
+    // This helper is used on real components or inside real-axis branches.
+    // Bind x once, and test x+|x|: x-|x| multiplies |x| by a prepared -1
+    // coefficient, which can round a stronger tracked Float input and leave
+    // a nonzero residue even for positive x. The sum cancels a negative x
+    // against its own norm without that multiplication. Zero keeps sign +1.
     let sign_value = if grouped_predicates {
         super::grouped(&x)
     } else {
         x.clone()
     };
     function_map
-        .add_function(
+        .add_function_with_options(
             symbolica::symbol!("__olo_sign_nonnegative"),
             vec![sign_arg],
             choose(
-                &(&sign_value - Symbol::ABS.call((&sign_value,))),
-                Atom::num(-1),
+                &(&sign_value + Symbol::ABS.call((&sign_value,))),
                 Atom::num(1),
+                choose(&sign_value, Atom::num(-1), Atom::num(1)),
             ),
+            super::native_function_options(),
         )
         .unwrap();
     let args = product_parameters();
