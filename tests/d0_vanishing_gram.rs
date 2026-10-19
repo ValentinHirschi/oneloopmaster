@@ -191,8 +191,9 @@ fn box_near_a_vanishing_gram_determinant_matches_oneloop_on_every_route() {
 /// and p4² equal to 2e-16, s12 and s23 2e-6 apart), where the default contour
 /// of the first `tfun` has `K = b (g + beta' h) = 0` exactly: its chart
 /// divides by K. Native binary64 code (hand-written and generated) returned
-/// NaN; the second contour is now taken there. OneLOop 3.6 in quadruple
-/// precision; its double precision keeps 6e-14.
+/// NaN here, and every binary64 route (interpreted and SymJIT too) in 28% to
+/// 40% of its 1-ulp perturbations; the second contour is now taken there.
+/// OneLOop 3.6 in quadruple precision; its double precision keeps 6e-14.
 #[test]
 fn box_with_a_vanishing_contour_coefficient_is_finite_on_every_route() {
     on_stack(|| {
@@ -270,8 +271,8 @@ const NEAR_THRESHOLD: f64 = 5e-12;
 
 /// Line 73 (three masses and a massless line, the pair's Källén function
 /// 1.5e-11 of the largest invariant squared) keeps
-/// 1.1e-10 to 3.2e-10, as before this fix (OneLOop's double precision
-/// 5.5e-11). There the canonical relabelling's first `tfun` has a nearly
+/// 1.3e-11 (interpreted) to 3.2e-10 (hand-written), as before this fix
+/// (OneLOop's double precision 5.5e-11). There the canonical relabelling's first `tfun` has a nearly
 /// double contour direction `beta` and the other two `tfun` nearly
 /// coincident poles next to the end x = 0 of an edge, whose quadratic `s3`
 /// terms (5e3 each, before the division by K = 5e13) cancel to 3e2 and take

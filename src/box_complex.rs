@@ -6,7 +6,8 @@
 #![allow(clippy::too_many_arguments)] // Match the source's named polynomial coefficients.
 use super::*;
 use sheet_exact::{
-    SheetAtom as Q, divided_difference as dd, i, im, negative, re, sign_nonnegative,
+    SheetAtom as Q, complement_difference, divided_difference as dd, i, im, negative, re,
+    sign_nonnegative,
 };
 
 fn function(name: &str) -> Symbol {
@@ -420,7 +421,8 @@ fn r1(x: [&Atom; 10]) -> Atom {
 /// edge, and `y - z` formed from the rounded values lost those digits in every
 /// quotient and logarithm of the offset. Where the nearer pole's `y - z`
 /// cancels by more than 64 (`4096 |y - z|² < |z|²`), its offset is the product
-/// over the farther pole's; elsewhere both are `y - z`, as in [r1].
+/// over the farther pole's; elsewhere, and where the product vanishes (it is
+/// not given, [tfun_selected]), both are `y - z`, as in [r1].
 fn r1_line(x: [&Atom; 11]) -> Atom {
     r1_with(core::array::from_fn(|index| x[index]), Some(x[10]))
 }
@@ -438,7 +440,8 @@ fn r1_with(x: [&Atom; 10], product: Option<&Atom>) -> Atom {
             let [n1, n2] = [norm(&direct1), norm(&direct2)];
             let nearer_first = less(&n1, &n2);
             let nearer = if_nonzero_else(&nearer_first, n1, n2);
-            let cancels = less(&(Atom::num(4096) * nearer), &norm(z));
+            let cancels =
+                less(&(Atom::num(4096) * nearer), &norm(z)) * if_nonzero(product, Atom::num(1));
             let flags = [&nearer_first * &cancels, (1 - nearer_first) * cancels];
             // An exactly real `y - z` (real pole and root) stays real: the
             // lip then follows the infinitesimal directions, not the rounded
@@ -504,16 +507,43 @@ fn r1_with(x: [&Atom; 10], product: Option<&Atom>) -> Atom {
     // At z=0 the source subtracts two identical Li2(1) values. The divided
     // difference has a logarithmic derivative there, so take the exact zero
     // prefactor limit before evaluating that derivative (likewise for 1-z).
+    //
+    // A pole next to an end of the interval puts the dilogarithms' arguments
+    // `(y - z)/(-z)`, `-z/(y - z)` (and with 1 - z, 1 - y) next to one, where
+    // their sheets' `i pi n log(1 - x)` takes the logarithm of the small
+    // `1 - x`: `y/z`, `y/(y - z)`, `(1 - y)/(1 - z)` and `(y - 1)/(y - z)`,
+    // formed from the poles ([complement_difference]). From the rounded
+    // quotient a pole 7e-16 from x = 0 lost 8% of `log(1 - x)`, and a box
+    // with an invariant one ulp from a squared mass was off by 1.2 times its
+    // value (tests/d0_contour_regressions.rs).
     let dilog_z = if_nonzero_else(
         &zsmall,
-        if_nonzero(z, dd(&(&qz / &q1), &(&qz / &q2)) * z / (&yz1 * &yz2)),
-        dd(&(&q1 / &qz), &(&q2 / &qz)) / z,
+        if_nonzero(
+            z,
+            complement_difference(&(&qz / &q1), &(y1 / &yz1), &(&qz / &q2), &(y2 / &yz2)) * z
+                / (&yz1 * &yz2),
+        ),
+        complement_difference(&(&q1 / &qz), &(y1 / z), &(&q2 / &qz), &(y2 / z)) / z,
     );
     // The first matching branch in r1fun determines which inversion is used.
     let dilog_o = if_nonzero_else(
         &((1 - &zsmall) * &osmall),
-        if_nonzero(&oz, dd(&(&qo / &q1), &(&qo / &q2)) * &oz / (&yz1 * &yz2)),
-        dd(&(&q1 / &qo), &(&q2 / &qo)) / oz,
+        if_nonzero(
+            &oz,
+            complement_difference(
+                &(&qo / &q1),
+                &((y1 - 1) / &yz1),
+                &(&qo / &q2),
+                &((y2 - 1) / &yz2),
+            ) * &oz
+                / (&yz1 * &yz2),
+        ),
+        complement_difference(
+            &(&q1 / &qo),
+            &((1 - y1) / &oz),
+            &(&q2 / &qo),
+            &((1 - y2) / &oz),
+        ) / &oz,
     );
     if_nonzero_else(
         &far_root(y1, y2, &hzz),
@@ -1069,20 +1099,34 @@ fn beta_data(
 /// pole and root lost those digits, and each edge lost them differently: the
 /// edges' terms then failed to cancel by 1e-12 of themselves (D0 3.6e-11 in
 /// binary64). [r1_line] takes the nearer pole's offset from this product and
-/// the farther pole's direct offset, with the poles' own `a1` and `K`, so that
-/// every edge sees the offsets from the line the rounded `a1` describes.
+/// the farther pole's direct offset, with the poles' own `a1` (passed as `a1`,
+/// see [tfun_selected]) and `K`, so that every edge sees the offsets from the
+/// line the rounded `a1` describes.
+///
+/// `Q(u) - ratio B(u)` is the conic at the line's intersection with the edge.
+/// Where that intersection lies on the conic to within the square root of
+/// the rounding (`2^52 |Q - ratio B|²` below `conic_norm`, the sum of the
+/// conic coefficients' norms), the conic's own root on the edge lies next to
+/// the line's and to the pole, and the line's and the conic's terms on the
+/// edge cancel with the errors of their common pole: both keep `y - z`
+/// (the product is zero, and `r1_line` keeps `y - z`). With the product there,
+/// a box with a massless line next to an on-shell corner lost 1e-5 at 128
+/// bits where `y - z` kept 4e-11.
 fn line_product(
     data: &BetaData,
+    a1: &Atom,
+    conic_norm: &Atom,
     [d, e, b, c, far]: [&Atom; 5],
     ratio: &Atom,
     [qb, qe, qf]: [&Atom; 3],
 ) -> Atom {
     let u = if_nonzero_else(far, -(e * c + d * b) / b, e - d);
     let quadratic = (qb * &u + qe) * &u + qf;
-    let linear = &data.b * &u + &data.c;
+    let value = quadratic - ratio * (&data.b * &u + &data.c);
+    let off_conic = less(conic_norm, &(Atom::num(1u64 << 52) * norm(&value)));
     if_nonzero(
         e,
-        &data.a * (quadratic - ratio * linear) / (&data.k * e * e),
+        if_nonzero_else(&off_conic, a1 * value / (&data.k * e * e), Atom::num(0)),
     )
 }
 
@@ -1163,7 +1207,42 @@ fn tfun_selected(
     };
     // The line edges x = 1, y = x and y = 0 as the `[d, e, b, c, far]` of
     // their s3 terms, and h u + j over a1 at their roots' preimages u.
-    let product = |line: [&Atom; 5], ratio: Atom| line_product(&data, line, &ratio, [b, e, f]);
+    //
+    // The products replace the poles' offsets from the roots only for a line
+    // nearly parallel to the contour direction (1, beta), where a1 = g + beta h
+    // cancels by more than 64: there a pole lies next to every edge's root
+    // because a1 is small (the vanishing Gram determinant). A pole also lies
+    // next to an edge's root where the conic nearly vanishes at the line's
+    // intersection with the edge, with an `a1` of the size of its terms;
+    // there the product's polynomial cancels at least as much as `y - z` (by
+    // 4e5 against 1e4 in a three-mass box), and the line's term cancels
+    // against the conic's term on the same edge, whose root lies next to the
+    // same pole: both keep `y - z` from the same rounded pole (with the
+    // product, three-mass boxes lost 9e-12 to 3.9e-10 where `y - z` kept
+    // 2.9e-12). Nor is the product taken on an edge whose intersection with
+    // the line lies on the conic ([line_product]). A zero product keeps
+    // `y - z` ([r1_line]).
+    //
+    // An `a1` that rounds to zero (the Gram determinant at the rounding
+    // level) is taken at its rounding level, `2^-52 g`: the poles' offsets
+    // are proportional to it, and the logarithms of their common factor
+    // cancel between the edges, where exact zero offsets left `log 0` in
+    // each edge's term (O(1) errors on single routes in a few such boxes).
+    let conic_norm = [a, b, c, d, e, f]
+        .into_iter()
+        .fold(Atom::num(0), |sum, coefficient| sum + norm(coefficient));
+    let parallel = less(
+        &(Atom::num(4096) * norm(&data.a)),
+        &(norm(g) + norm(&(beta * h))),
+    );
+    let a1 = if_nonzero_else(&data.a, data.a.clone(), g / Atom::num(1u64 << 52));
+    let product = |line: [&Atom; 5], ratio: Atom| {
+        if_nonzero_else(
+            &parallel,
+            line_product(&data, &a1, &conic_norm, line, &ratio, [b, e, f]),
+            Atom::num(0),
+        )
+    };
     let product_x1 = product([beta, &one, h, gj, ghj], Atom::num(-1));
     let product_diagonal = product([&zero, &(-w), gh, j, ghj], if_nonzero(gh, j / gh));
     let product_y0 = product([&zero, &(-beta), g, j, gj], if_nonzero(g, j / g));
@@ -1257,18 +1336,19 @@ fn tfun(
     );
     // The contour opposite the pole nearest a boundary is used. If the first
     // contour encloses no pole, the first (smaller-magnitude) beta is
-    // selected, unless its K vanishes: tfun_selected divides by K, and K of
-    // one beta is b (g + beta' h) with the other beta', which vanishes with
-    // the Gram determinant (the chart is singular there, 0/0; at a box with
-    // Gram/(p1² p2² p3²) at rounding level the native binary64 code returned
-    // NaN). The second contour, whose own g + beta' h vanishes instead,
-    // takes the poles' offsets from the line edges' roots ([line_product]).
-    let first_by_default = if_nonzero_else(
+    // selected. Either way not a first contour whose K vanishes where the
+    // second's does not: tfun_selected divides by K, and K of one beta is
+    // b (g + beta' h) with the other beta', which vanishes with the Gram
+    // determinant (the chart is singular there, 0/0; at a box with
+    // Gram/(p1² p2² p3²) at rounding level every binary64 route returned NaN).
+    // The second contour, whose own g + beta' h vanishes instead, takes the
+    // poles' offsets from the line edges' roots ([line_product]).
+    let first_allowed = if_nonzero_else(
         &data1.k,
         Atom::num(1),
         if_nonzero_else(&data2.k, Atom::num(0), Atom::num(1)),
     );
-    let use_first = if_nonzero_else(&(&d1 - 1), less(&d2, &d1), first_by_default);
+    let use_first = if_nonzero_else(&(&d1 - 1), less(&d2, &d1), Atom::num(1)) * first_allowed;
     let beta = if_nonzero_else(&use_first, beta1, beta2);
     let w = if_nonzero_else(&use_first, w1, w2);
     let general = call(
@@ -1419,7 +1499,41 @@ fn no_opposite_externals(p: [&Atom; 6], m: [&Atom; 4]) -> Atom {
     call("opposite_chart", selected.each_ref())
 }
 
+/// [zero_external_chart] in the orientation that puts a massless line's
+/// corner of the Feynman-parameter triangle at its origin when the line
+/// passes next to it.
+///
+/// The reflection `(p1, p4, p3, p2, s23, s12; m1, m0, m3, m2)` keeps the
+/// vanishing `p1²` first and exchanges the corners (0, 0) and (1, 0): the
+/// conic's values there (`f = m3`, `q10 = m2`) and the line's (`k` and
+/// `h + k`). With a massless `m2` and the line nearer (1, 0) than (0, 0), a
+/// pole lies next to that corner, at an `x` next to 1 whose offset binary64
+/// resolves only to eps; reflected, it lies next to x = 0 with its relative
+/// precision. The box `4 1.0 A 2.25 -0.3298 0 A A' (A - 1.3458e-4 i) 0 2.25
+/// (A - 1.3458e-4 i)`, `A = 0.0154585...` and `A'` one ulp below, was wrong by
+/// 44 to 128 times its value (and NaN with the line products), and with `A'`
+/// 1e-8 or 1e-4 below `A` by 0.4 and 6e-6; reflected, it keeps 2e-12.
 fn zero_external(p: [&Atom; 6], m: [&Atom; 4]) -> Atom {
+    let at_10 = in_order(&[m[0] - m[1], p[1].clone(), -p[4]]);
+    let at_00 = in_order(&[m[0] - m[1], p[5].clone(), -p[3]]);
+    let reflect = if_nonzero_else(
+        m[2],
+        Atom::num(0),
+        if_nonzero_else(
+            m[3],
+            if_nonzero_else(p[1], less(&norm(&at_10), &norm(&at_00)), Atom::num(0)),
+            Atom::num(0),
+        ),
+    );
+    let reflected = [p[0], p[3], p[2], p[1], p[5], p[4], m[1], m[0], m[3], m[2]];
+    let original = [p[0], p[1], p[2], p[3], p[4], p[5], m[0], m[1], m[2], m[3]];
+    let selected: [Atom; 10] = core::array::from_fn(|index| {
+        if_nonzero_else(&reflect, reflected[index].clone(), original[index].clone())
+    });
+    call("zero_external_chart", selected.each_ref())
+}
+
+fn zero_external_chart(p: [&Atom; 6], m: [&Atom; 4]) -> Atom {
     let dm = mass_directions(m);
     let a = p[2];
     let b = p[1];
@@ -1901,6 +2015,7 @@ pub(crate) fn register(map: &mut FunctionMap) {
         ("opposite_chart", no_opposite_chart),
         ("opposite", no_opposite_externals),
         ("zero_external", zero_external),
+        ("zero_external_chart", zero_external_chart),
         ("ordered", ordered),
         ("general", general),
         ("box", body),
