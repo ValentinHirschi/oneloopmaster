@@ -187,6 +187,55 @@ fn box_near_a_vanishing_gram_determinant_matches_oneloop_on_every_route() {
     });
 }
 
+/// A box next to an exactly vanishing Gram determinant in binary64 (p1², p2²
+/// and p4² equal to 2e-16, s12 and s23 2e-6 apart), where the default contour
+/// of the first `tfun` has `K = b (g + beta' h) = 0` exactly: its chart
+/// divides by K. Native binary64 code (hand-written and generated) returned
+/// NaN; the second contour is now taken there. OneLOop 3.6 in quadruple
+/// precision; its double precision keeps 6e-14.
+#[test]
+fn box_with_a_vanishing_contour_coefficient_is_finite_on_every_route() {
+    on_stack(|| {
+        let input = [
+            2.430909632840068,
+            2.4309096328400637,
+            144.9999453227875,
+            2.4309096328400654,
+            71.2844473512537,
+            71.2845883386827,
+        ]
+        .map(|x| C::new(x, 0.0))
+        .into_iter()
+        .chain([
+            C::new(3.2296223697605373, 0.0),
+            C::new(3.5171272384943344, -0.007868476275933284),
+            C::new(2.436298702662891, -0.00013942610297326737),
+            C::new(1.5947319955211854, 0.0),
+            C::new(1.0, 0.0),
+        ])
+        .collect::<Vec<_>>();
+        let expected = [
+            C::new(-6.78208635248455749e-4, -2.92577907244204226e-3),
+            C::new(0.0, 0.0),
+            C::new(0.0, 0.0),
+        ];
+        let mut failures = Vec::new();
+        for (route, value) in Binary64::new().evaluate(&input) {
+            let error = error(&value, &expected);
+            if !(error <= 1e-13) {
+                failures.push(format!("{route}: {value:?} ({error:e})"));
+            }
+        }
+        for (route, value) in Precise::new(256).evaluate(&input) {
+            let error = error(&value, &expected);
+            if !(error <= PRECISE) {
+                failures.push(format!("{route}: {value:?} ({error:e})"));
+            }
+        }
+        assert!(failures.is_empty(), "{}", failures.join("\n"));
+    });
+}
+
 /// `kind mu² p.. (re im)..` fixture rows with references, as evaluator inputs
 /// (mu² last) and the three reference coefficients.
 fn near_threshold_rows() -> Vec<(usize, Vec<C>, [C; 3])> {

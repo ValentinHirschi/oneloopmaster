@@ -882,7 +882,8 @@ fn tfun(
             let min = |x: f64, y: f64| if negative(x - y) { x } else { y };
             let d1 = min(distance(beta1, &data1.y[0]), distance(beta1, &data1.y[1]));
             let d2 = min(distance(beta2, &data2.y[0]), distance(beta2, &data2.y[1]));
-            let use_first = if d1 - 1.0 != 0.0 { negative(d2 - d1) } else { true };
+            // By default the first, unless its K vanishes (`tfun`).
+            let use_first = if d1 - 1.0 != 0.0 { negative(d2 - d1) } else { nz(data1.k) || !nz(data2.k) };
             let (beta, w, data) = if use_first { (beta1, w1, data1) } else { (beta2, w2, data2) };
             tfun_selected(a, b, c, g, h, d, e, f, j, dpe, dpf, beta, w, &data, dd_, de, df, dj, ddpe, ddpf, abc, edges, [gh, gj, ghj], k)
         } else {

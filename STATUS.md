@@ -18,6 +18,10 @@ SymJIT) and 7.5e-12 interpreted; it is now within 1.9e-14 to 4.1e-14 on every ro
   `s3` term rounded `y - z` differently. The offset now comes from Vieta's
   product with the poles' own `a1 = g + beta h` where it cancels by more than
   64 ([PRECISION.md](PRECISION.md)).
+- **NaN at an exactly vanishing Gram determinant in binary64.** `K` of one
+  contour is `b (g + beta' h)` of the other; where it rounded to zero the
+  native binary64 code (hand-written and generated) returned NaN. The second
+  contour is used then.
 - **Scan.** `tests/data/near_threshold_boxes.txt` (200 random physical boxes,
   `tests/generate_near_threshold_rows.py`, OneLOop 3.6 quadruple-precision
   references): every binary64 route within 5e-12 on 199 rows (3.2e-12 at

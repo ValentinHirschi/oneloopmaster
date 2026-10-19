@@ -64,8 +64,9 @@ contour representation for every real-mass three-mass box it supports, of
 `tests/d0_real_mass_orderings.rs`; and the contour box's Källén
 discriminants, massless-end roots, exact line sums, expansion about
 beta = 1 and far-root `r1` of `tests/d0_contour_thresholds.rs`; and the line
-edges' pole offsets from Vieta's product of `tests/d0_vanishing_gram.rs`, the
-product formed only where an offset cancels).
+edges' pole offsets from Vieta's product and the second contour where the
+first one's `K` vanishes of `tests/d0_vanishing_gram.rs`, the product formed
+only where an offset cancels).
 `tests/native_handwritten.rs` checks them
 against the generated expressions at 256 bits on randomized kinematics and on
 every distinct C0/D0 call of the recorded Ninja benchmark streams
