@@ -64,7 +64,8 @@ Next to a vanishing Gram determinant (two external momenta nearly parallel,
 their invariant next to its threshold, as for two Higgs bosons nearly at rest
 relative to each other in gg → HHH) the contour box's line edges take the
 offset of a pole from their root from Vieta's product with the poles' own
-`g + beta h`: the NinjaRS gg → HHH box is now within 4.1e-14 on every binary64 route (3.6e-11
+`g + beta h`, and a contour whose `K` vanishes exactly gives way to the other:
+the NinjaRS gg → HHH box is now within 4.1e-14 on every binary64 route (3.6e-11
 before), and of 200 random such boxes all but one are within 3.2e-12, where 34
 were beyond 5e-12 and 22 beyond 1e-9 (`tests/d0_vanishing_gram.rs`).
 

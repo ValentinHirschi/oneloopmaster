@@ -1255,9 +1255,20 @@ fn tfun(
         &distance_y(&beta2, &data2.y[0]),
         &distance_y(&beta2, &data2.y[1]),
     );
-    // The contour opposite the pole nearest a boundary is used. If neither
-    // contour encloses a pole, the first (smaller-magnitude) beta is selected.
-    let use_first = if_nonzero_else(&(&d1 - 1), less(&d2, &d1), Atom::num(1));
+    // The contour opposite the pole nearest a boundary is used. If the first
+    // contour encloses no pole, the first (smaller-magnitude) beta is
+    // selected, unless its K vanishes: tfun_selected divides by K, and K of
+    // one beta is b (g + beta' h) with the other beta', which vanishes with
+    // the Gram determinant (the chart is singular there, 0/0; at a box with
+    // Gram/(p1² p2² p3²) at rounding level the native binary64 code returned
+    // NaN). The second contour, whose own g + beta' h vanishes instead,
+    // takes the poles' offsets from the line edges' roots ([line_product]).
+    let first_by_default = if_nonzero_else(
+        &data1.k,
+        Atom::num(1),
+        if_nonzero_else(&data2.k, Atom::num(0), Atom::num(1)),
+    );
+    let use_first = if_nonzero_else(&(&d1 - 1), less(&d2, &d1), first_by_default);
     let beta = if_nonzero_else(&use_first, beta1, beta2);
     let w = if_nonzero_else(&use_first, w1, w2);
     let general = call(

@@ -119,7 +119,10 @@ explicit resource limits; see [expression inspection](README.md#combining-integr
   threshold of 16 also fired on the recorded NinjaRS gg → HH stream, without
   an accuracy gain on the scans, for 0.56% more retired instructions per D0
   call there (0.47% with 64).
-  The box keeps 1.9e-14 to 4.1e-14 on the binary64 routes,
+  `K` of one beta is `b a1'` of the other, so the default (first) contour is
+  singular where `a1'` vanishes in binary64 (0/0; native code returned NaN at
+  a box with `Gram/(p1² p2² p3²)` at rounding level): the second contour is
+  taken then (`tfun`). The box keeps 1.9e-14 to 4.1e-14 on the binary64 routes,
   and 199 of 200 random boxes next to a vanishing Gram determinant keep 3.2e-12
   (`tests/d0_vanishing_gram.rs`, references OneLOop 3.6 in quadruple
   precision); OneLOop's double precision loses more than 1e-9 on 16 of them.
