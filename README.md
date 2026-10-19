@@ -135,9 +135,12 @@ of the finite-order evaluators documented below.
 The direct Symbolica dependency remains versioned, but the Rust and both Python
 build roots pin Symbolica, Numerica and Graphica to one tested integration through
 `[patch.crates-io]`. The current integration is `9cdc2949` from
-[`ValentinHirschi/symbolica`](https://github.com/ValentinHirschi/symbolica), on
-`claude/oneloopmaster-integration-float-products`. It is the previous
-integration `e679e8c1` (`claude/oneloopmaster-integration-dilog`) plus
+[`alphal00p/symbolica`](https://github.com/alphal00p/symbolica), on
+`ninjars-pin`, the branch NinjaRS pins its Symbolica from (the same commit is
+`claude/oneloopmaster-integration-float-products` of
+[`ValentinHirschi/symbolica`](https://github.com/ValentinHirschi/symbolica)).
+It is the previous integration `e679e8c1`
+(`claude/oneloopmaster-integration-dilog`) plus
 single-rounded `Float` products and exact factors of ±1 from
 [PR97](https://github.com/symbolica-dev/symbolica/pull/97). Without them,
 exact branch tests in arbitrary precision took wrong branches (STATUS.md).

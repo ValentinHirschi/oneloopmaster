@@ -22,6 +22,6 @@ symbolica = { version = "3.0.1", default-features = false, features = ["python_e
 [patch.crates-io]
 # Temporary, tested integration of upstream Symbolica PRs #82, #83, #84, #87, #88, #89 and #97.
 # Keep all three packages on one source; embedding hosts supply their own patch.
-symbolica = { git = "https://github.com/ValentinHirschi/symbolica", rev = "9cdc2949cdb153478c1eca0d40690dc0abfc616e" }
-numerica = { git = "https://github.com/ValentinHirschi/symbolica", rev = "9cdc2949cdb153478c1eca0d40690dc0abfc616e" }
-graphica = { git = "https://github.com/ValentinHirschi/symbolica", rev = "9cdc2949cdb153478c1eca0d40690dc0abfc616e" }
+symbolica = { git = "https://github.com/alphal00p/symbolica", rev = "9cdc2949cdb153478c1eca0d40690dc0abfc616e" }
+numerica = { git = "https://github.com/alphal00p/symbolica", rev = "9cdc2949cdb153478c1eca0d40690dc0abfc616e" }
+graphica = { git = "https://github.com/alphal00p/symbolica", rev = "9cdc2949cdb153478c1eca0d40690dc0abfc616e" }
