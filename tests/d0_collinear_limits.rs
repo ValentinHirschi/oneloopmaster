@@ -212,7 +212,12 @@ fn next_to_a_vanishing_discriminant_in_binary64() {
 /// expression interpreter agree to 1e-15 at every precision. Native code was
 /// O(1) wrong at 256 bits in all three and at 512 bits in two while the
 /// unit-circle test signed a complex `1 - x conj(x)` (before 95f8107); the
-/// complements' own test of the side must keep them right.
+/// complements' own test of the side must keep them right. The second box
+/// (complex m2², real m3²) is one where OneLOop's two-mass box is wrong
+/// (0.0338 + 0.1177i in quadruple precision, which these expressions
+/// followed): its reference is Denner and Dittmaier's two-mass formula at 40
+/// digits, which COLLIER's COLI and DD branches in quadruple precision
+/// reproduce to 1e-19 (tests/d0_two_mass_width.rs).
 #[test]
 fn collinear_limits_at_every_precision() {
     on_stack(|| {
@@ -227,7 +232,7 @@ fn collinear_limits_at_every_precision() {
                 "4 1.0 -16.009634082627393 8.876629941904643 13.631357011185429 \
                  -0.0009822783830535126 3.455457549607029 -12.274987566569111 \
                  0 0 2.11121522382484 -0.0021112152238248402 2.7738362015154285 0 0 0",
-                C::new(3.37725175274771264e-2, 1.17683610566627961e-1),
+                C::new(-1.77404138237007902e-1, 1.17659338364871247e-1),
             ),
             (
                 "4 1.0 -9.305228475118043e-10 18.653938132067623 -16.47442840986097 \

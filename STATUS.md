@@ -22,7 +22,7 @@ dependency setup and validation.
   width (arXiv:1005.2076, eqs. (3.82)-(3.83), stated there for any real
   momenta and complex masses): the unnormalized roots `u = X sqrt(m²)/|sqrt(m²)|`
   and the ratios `Y23/Y02`, `Y13/Y01`, `Y03/m²` each with its principal
-  logarithm (`box_integral::one_mass_complex_sheets`); real masses keep
+  logarithm (`box_integral::complex_mass_sheets`); real masses keep
   OneLOop's sheets and their bits. Where the two roots lie on opposite lips
   of the negative real axis (next to each other near a collinear limit),
   their principal sheets differ and the dilogarithm pairs cancel as
@@ -42,10 +42,86 @@ dependency setup and validation.
   (`tests/data/one_mass_width.txt`, references from the formula at 40
   digits) in every relabelling. Real-mass one-mass boxes and every other
   mass pattern are bitwise unchanged on every route.
-- **Open: two-mass boxes with complex masses** (`boxf2`, `boxf5`) follow
-  OneLOop, which is wrong in 8 to 13 of 1000 random boxes per mass pattern,
-  at any width (also with the widths divided by 1e6), and right with real
-  masses. Denner and Dittmaier's eqs. (3.78)-(3.80) cover them.
+- Two-mass boxes with complex masses: see the next section.
+
+## Two-mass boxes with complex masses (2026-10-19)
+
+- **OneLOop's `boxf2` (and `boxf5`, which relabels opposite masses into it)
+  is wrong for complex masses**, in the same way as `boxf1`: its roots `X`
+  are normalized by the complex `sqrt(m3²)` and `sqrt(m4²)`, which turns them
+  against Denner and Dittmaier's `u = X sqrt(m4²)/sqrt(m3²)` across the
+  negative real axis. On that sheet the continued dilogarithm of an argument
+  next to one (`X r24/r12` = 1.0005 in the reproducer) takes the wrong side
+  of its branch point, and the terms are off by `4 pi²`. In
+  `4 1.0 0.0462 -4.297 12.27 10.74 -31.21 -13.06 0 0 0 0 0.2161 -0.00173
+  1.556 -0.00161` OneLOop 3.6 (both precisions) and these expressions gave
+  0.0782 + 0.0831i for -7.16e-4 + 0.0831i (COLLIER quad, Denner and
+  Dittmaier's formula in mpmath, and a direct Feynman-parameter integral to
+  2e-8). Random sweeps, against COLLIER 1.2.9 in quadruple precision: per
+  mass pattern (00MM, 0MM0, MM00, M00M, 0M0M, M0M0) 8 to 18 of 2000 boxes with
+  widths of 1e-3 to 0.5 of the masses wrong by 0.6 to 17 of the value; 2 to
+  10 of 500 per pattern with one real mass; 3 to 11 of 1000 with the widths
+  divided by 1e6; 4 to 10 of 500 next to a collinear limit and to
+  `Y02 Y13 = Y01 Y23` (by up to 9e4, and 2 to 10 more lost 1e-8 to 0.1 in
+  binary64); 2 of 200 boxes with a real mass on shell (all relabellings).
+  OneLOop is wrong in the same rows.
+- **The expressions take Denner and Dittmaier's two-mass sheets** whenever a
+  mass has a width (eqs. (3.78)-(3.80), stated for general momenta and
+  complex masses): `u`, the ratios `Y23/Y02` and `Y13/Y01` and the roots
+  `r031 = r14/rotation`, `r032 = 1/(r14 rotation)` of `m4² + Y03 x + m3² x²`,
+  each with its principal logarithm, through the same
+  `box_integral::complex_mass_sheets` as the one-mass box (including its
+  winding correction for roots on opposite lips). Those terms are one
+  registered function of the roots, ratios and complements
+  (`__olo_box_two_mass_sheets`, `box_integral::two_mass_sheets`), called
+  from every two-mass sector: inlined, every occurrence of a root carried
+  its whole expression, and the definitions grew from 97 MB to 209 MB (sector
+  5 alone 98 MB), past the bounds of `tests/expression_construction.rs`;
+  they are now 97.7 MB (+0.4%). With a real `m4²` the
+  logarithms of `Y01/Y12` and `Y02/m4²` are differences of those of the
+  `-i0` invariants. A real `m4²` on shell with a massless line (`Y01` or
+  `Y02` zero) takes the formula with lines 0 and 3 exchanged, as Denner and
+  Dittmaier prescribe (the same roots inverted); a real `m3²` on shell
+  (`Y13` or `Y23` zero) drops that dilogarithm pair. Real masses keep
+  OneLOop's sheets and their bits.
+- **Validation** against COLLIER in quadruple precision (COLI and DD
+  branches, fed the exact binary64 inputs; where they agree to 1e-10) and
+  the formula at 40 digits: after the change no row of any of these sweeps
+  is wrong. Binary64 worst cases on the native, generated, interpreted and
+  SymJIT routes: 4e-13 for random and one-real-mass boxes, 1e-12 with
+  narrow widths, 6e-9 to 1e-8 next to collinear limits (where the old
+  expressions lost up to 6e-7 in rows they got right: the new ones are more
+  accurate by more than 10 in 140 of those rows and less accurate by more
+  than 10 in 5, all below 3e-11); at 256 bits all rows agree with the
+  formula to the 18 printed digits. The 24 relabellings of all 255 formerly
+  wrong rows agree within 4e-14 (collinear rows 1e-8).
+  `tests/d0_two_mass_width.rs` checks 17 rows (`tests/data/two_mass_width.txt`)
+  in every relabelling on every binary64 route, in DoubleFloat and at 128
+  bits. One-mass, three-mass and four-mass boxes and all real-mass boxes are
+  bitwise unchanged on every route (2400 boxes of all 16 patterns, 2000 real
+  one-mass, 4800 real two-mass including collinear ones, 2400 real on-shell
+  relabellings, the D0 calls of the recorded NinjaRS master streams, and
+  9000 complex one-, three- and four-mass boxes), and the native code of the
+  other families is byte-identical. D0 oracle sweeps (`tests/oracle_sweep.py`,
+  seeds 1-4, native, generated and expression routes) give the same failure
+  lists as before. Retired instructions per binary64 D0 call (perf stat,
+  difference of 2001 and 1 repetitions) against 09b2c74: the 22 recorded
+  NinjaRS master streams within 0.002%; real two-mass boxes +0.4% (23,673 to
+  23,763); complex two-mass boxes -1.2% (00MM) and -0.1% (0M0M), with one
+  real mass -2.3%; the on-shell boxes with one real mass, in all
+  relabellings, +14% (19,938 to 22,810).
+- **A reference corrected**: the second box of
+  `tests/d0_collinear_limits.rs::collinear_limits_at_every_precision`
+  (complex `m2²`, real `m3²`, next to a collinear limit) had OneLOop's
+  quadruple-precision value, 0.0338 + 0.1177i, which is wrong: COLLIER's two
+  branches and the formula give -0.1774 + 0.1177i (to 1e-19), and so do
+  these expressions now. Its reference is the formula's value; the
+  tolerance is unchanged.
+- **NinjaRS**: D0 values of complex two-mass boxes change in their last bits
+  (where they were right). Six cases of the rank <= n+1 bitwise fixture
+  (`edge-low-rank-n5-r0` to `-r3`, `edge-many-n7-r6`, `-r7`: their `mixed`
+  lanes) contain such boxes (44 in all; right before and after, within
+  2e-14 of COLLIER), so their bits change once NinjaRS uses this revision.
 
 ## Rank-four bubble tensors (2026-10-18)
 

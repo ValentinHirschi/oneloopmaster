@@ -1,7 +1,7 @@
 # kind mu_squared momenta... squared_mass_real_imag... finite_real_imag pole1_real_imag pole2_real_imag
 # One-mass D0 (OneLOop's boxf1, m1 = m2 = m3 = 0) with a complex mass, where OneLOop 3.6 is
 # wrong in double and quadruple precision alike, and so was this crate before it took Denner
-# and Dittmaier's sheets for a width (box_integral::one_mass_complex_sheets). OneLOop's value
+# and Dittmaier's sheets for a width (box_integral::complex_mass_sheets). OneLOop's value
 # is in the comment before each row. The first rows are NinjaRS's reproducer
 # 4 1.0 P 14.78 12.26 -18.32 15.39 -17.48 0 0 0 0 0 0 3.018 -0.302: OneLOop (and this crate
 # before) jumps between P = -0.06 (right, -0.0250 - 3.2e-4i) and P = -0.05 to 0.0254 + 1.87i;
