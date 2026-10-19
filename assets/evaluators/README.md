@@ -35,7 +35,15 @@ vanishes (`tests/d0_vanishing_gram.rs`, which checks SymJIT too), and with
 Denner and Dittmaier's sheets for one-mass boxes with a complex mass
 (`tests/d0_one_mass_width.rs`, likewise) and for two-mass boxes with complex
 masses, whose terms are one registered function (`tests/d0_two_mass_width.rs`,
-likewise).
+likewise). D0 was rebuilt again on 2026-10-19 with Symbolica `9cdc2949`
+(alphal00p/symbolica `ninjars-pin`: `e679e8c1` plus single-rounded `Float`
+products, symbolica-dev/symbolica#97) for the contour-box regression fixes
+(line products only for a line nearly parallel to the contour direction, the
+zero-external labelling that puts a massless corner at the origin and the
+contour box's dilogarithm complements from the poles;
+`tests/d0_contour_regressions.rs`, likewise) and the two-mass terms'
+mass-pair complements taken from the channels' complements next to the
+shells (`tests/d0_two_mass_width.rs`, `tests/data/two_mass_shell.txt`).
 
 Previous generations: 2026-09-29 with released Symbolica and Numerica 3.0.1 and
 SymJIT 2.26.0, and the C0 asset of 2026-09-22 (zero-root ordering of the finite
@@ -64,7 +72,7 @@ exhaustive analytic-region coverage.
 | B0 | 15,375 | `0730c8a390d31c508fbece0760186627dc851b8ccf2da787072f8c2788f50354` |
 | dB0 | 61,566 | `5f145ba984ffe2bdffb9355557a9272c3006d0a601e845cd48877d5d19ea4d77` |
 | C0 | 102,902 | `f8c7109ac1cb09158e53cd128f83c655577fd60edb91b2b645d7f4e2d453072d` |
-| D0 | 2,040,088 | `e0696d394224dfbae318b51bdb59ef6fa42a6b9388564199e3312f974072d900` |
+| D0 | 2,044,124 | `2a3edfc4ce3408088c02e8977a9d0e2e36bcd568f819a45f266427804ff3d940` |
 
 The embedded files use the `oneloop-evaluator-v3` discriminator, which binds
 the Symbolica IR schema and strict compilation policy without claiming backend
