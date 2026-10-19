@@ -33,6 +33,49 @@ SymJIT) and 7.5e-12 interpreted; it is now within 1.9e-14 to 4.1e-14 on every ro
   nearly coincident poles next to an edge's end in the others, whose
   quadratic `s3` terms cancel.
 
+## One-mass boxes with a complex mass (2026-10-19)
+
+- **OneLOop's `boxf1` is wrong for a complex mass.** It normalizes the
+  roots `X` of its quadratic by the complex `sqrt(m²)` and takes the
+  logarithm of a dilogarithm argument `X r34/r13` as `log X + log r34 -
+  log r13`. The normalization turns `X` by half the mass's phase, across the
+  negative real axis for a root next to it, while the integral is analytic
+  there. In `4 1.0 P 14.78 12.26 -18.32 15.39 -17.48 0 0 0 0 0 0 3.018
+  -0.302` OneLOop 3.6 (double and quadruple precision) jumps between
+  P = -0.06 and -0.05 from -0.0250 - 3.2e-4i to 0.0254 + 1.87i, and gives
+  6.11 + 383i at P = -1e-6 for -0.0599 - 8.2e-4i. Of 3000 random one-mass
+  boxes (widths 1e-3 to 0.5 of the mass) 131 are wrong by 0.3 to 7 of the
+  value, and the same 131 with the widths divided by 1e6: OneLOop's D0 does
+  not tend to its real-mass value there.
+- **The expressions take Denner and Dittmaier's sheets** for a mass with a
+  width (arXiv:1005.2076, eqs. (3.82)-(3.83), stated there for any real
+  momenta and complex masses): the unnormalized roots `u = X sqrt(m²)/|sqrt(m²)|`
+  and the ratios `Y23/Y02`, `Y13/Y01`, `Y03/m²` each with its principal
+  logarithm (`box_integral::one_mass_complex_sheets`); real masses keep
+  OneLOop's sheets and their bits. Where the two roots lie on opposite lips
+  of the negative real axis (next to each other near a collinear limit),
+  their principal sheets differ and the dilogarithm pairs cancel as
+  `1/(X1 - X2)` (1e-16 became 6e-8 in binary64): the second root then takes
+  the first one's lip, and the change of its terms, a multiple of `4 pi²`,
+  is rounded and added back.
+- **Validation** against COLLIER 1.2.9 in quadruple precision (its COLI and
+  DD branches agree to 1e-15): all 3000 random boxes and the 24 relabellings
+  of the 131 within 8e-13 in binary64 on every route (native, generated,
+  interpreted, SymJIT) and 2.5e-15 at 256 bits; 1000 boxes next to a
+  collinear limit and to `r13 r24 = r12 r34` at once within 5e-12 (before:
+  41 wrong, the others up to 2.4e-7); with widths of 1e-11 of the mass,
+  2000 boxes within 3e-9 of the real-mass expressions. A direct
+  Feynman-parameter integral (primary sectors, contour deformation, nested
+  tanh-sinh) reproduces the reproducer at P = -1e-3 to 2e-11 and at
+  P = -1e-6 to 1e-9. `tests/d0_one_mass_width.rs` checks 15 rows
+  (`tests/data/one_mass_width.txt`, references from the formula at 40
+  digits) in every relabelling. Real-mass one-mass boxes and every other
+  mass pattern are bitwise unchanged on every route.
+- **Open: two-mass boxes with complex masses** (`boxf2`, `boxf5`) follow
+  OneLOop, which is wrong in 8 to 13 of 1000 random boxes per mass pattern,
+  at any width (also with the widths divided by 1e6), and right with real
+  masses. Denner and Dittmaier's eqs. (3.78)-(3.80) cover them.
+
 ## Rank-four bubble tensors (2026-10-18)
 
 `NativeTensorEvaluator` has a fourth family, `TensorIntegral::B1111`

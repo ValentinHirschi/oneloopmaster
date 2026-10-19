@@ -25,6 +25,15 @@ defects found by a OneLOop sweep (`tests/oracle_sweep.py`,
 sign of its zero-momentum `B1111` when the second mass is the heavier one, and
 real-mass contour boxes whose value differs from OneLOop's vanishing-width
 limit (`tests/data/real_mass_limits.txt`); the expressions follow the limit.
+OneLOop's one-mass box with a complex mass (`boxf1`) is wrong too, at any
+width, in 131 of 3000 random such boxes (by 0.3 to 7 of the value; one row
+of the regression data by a factor of 6400): it takes the logarithms of
+roots normalized by the complex `sqrt(m²)`, which can turn them across the
+cut. The expressions take Denner and Dittmaier's sheets there (arXiv:1005.2076,
+eq. (3.82)), checked against COLLIER in quadruple precision and a direct
+Feynman-parameter integral (`tests/d0_one_mass_width.rs`,
+`tests/data/one_mass_width.txt`). Two-mass boxes with complex masses
+(`boxf2`, `boxf5`) still follow OneLOop, which is wrong in about 1% of them.
 Dilogarithm divided differences of nearly coincident or small arguments are
 evaluated term by term, as OneLOop's `dilog2_c` (a two-mass C0 with nearly
 coincident roots was off by 2.4e-13 in binary64, now 2e-15 to 9e-15 on every
