@@ -4,7 +4,7 @@
 # it took Denner and Dittmaier's sheets for a width (box_integral::two_mass_sheets).
 # OneLOop's value is in the comment before each row. Rows: NinjaRS's reproducer, then rows of
 # random sweeps that OneLOop and this crate got wrong in the same rows: per mass pattern
-# 8 to 18 of 2000 boxes with widths from 1e-3 to 0.5 of the masses (by 0.6 to 17 relative to
+# 8 to 18 of 2000 boxes with |Im m^2| from 1e-3 to 0.5 of Re m^2 (by 0.6 to 17 relative to
 # the value), 2 to 10 of 500 with one real mass, 3 to 11 of 1000 with the widths divided by
 # 1e6, 4 to 10 of 500 next to a collinear limit (an invariant between the massless lines of
 # 1e-12 to 1e-3) and to Y02 Y13 = Y01 Y23 (by up to 9e4), and 2 of 200 boxes with a real mass
@@ -36,9 +36,9 @@
 4 1.0 -14.468102561551783 0.6394089737487378 0.3095639636880386 9.929944862142644 -11.965057645676852 3.7787752339986977 0.0 0.0 0.0 0.0 0.7326940927753693 -0.0012512373717791902 0.43619963057829997 0.0 -0.18826189518218436 0.10515384559337951 0.0 0.0 0.0 0.0
 # 00RM: real m3^2, complex m4^2. OneLOop 3.6 (quadruple precision): 3.840044e-01 +1.692726e-01i; this crate before: the same; COLLIER quad within 1.0e-16
 4 1.0 -3.1896650103690756 1.6782641418335649 -18.292015721932128 -25.30999629132508 6.671920100749765 -0.8129384760281083 0.0 0.0 0.0 0.0 0.6524105905010281 0.0 0.23654873397702597 -0.014948838626971807 -0.047924832184397075 0.16867943735317123 0.0 0.0 0.0 0.0
-# M00M, widths of 2e-9 to 3e-7 of the masses. OneLOop 3.6 (quadruple precision): 1.349656e+00 +1.275143e-01i; this crate before: the same; COLLIER quad within 2.0e-16
+# M00M, |Im m^2| of 2e-9 to 3e-7 of Re m^2. OneLOop 3.6 (quadruple precision): 1.349656e+00 +1.275143e-01i; this crate before: the same; COLLIER quad within 2.0e-16
 4 1.0 -20.59138253554991 -0.2781909512084873 1.3257425617706782 -4.098517526436463 -5.3749857371991085 7.955290411920934 0.13117107114287174 -1.5153387463868065e-08 0.0 0.0 0.0 0.0 0.3361986903998656 -6.718291996205809e-10 -0.18242066178611632 0.12751432017698222 0.0 0.0 0.0 0.0
-# M0M0, widths of 2e-9 to 3e-7 of the masses. OneLOop 3.6 (quadruple precision): 7.486026e+00 +8.023990e-01i; this crate before: the same; COLLIER quad within 1.0e-16
+# M0M0, |Im m^2| of 2e-9 to 3e-7 of Re m^2. OneLOop 3.6 (quadruple precision): 7.486026e+00 +8.023990e-01i; this crate before: the same; COLLIER quad within 1.0e-16
 4 1.0 4.354228630344371 -4.598944194926149 -1.530332452168284 0.8857631352278514 0.2819128638606214 -0.10373974876004959 0.21294549495198653 -4.615882336171865e-10 0.0 0.0 0.27394145813811804 -7.025717429738048e-08 0.0 0.0 -1.5392320542262408 0.8023984272055891 0.0 0.0 0.0 0.0
 # 00MM next to a collinear limit (p1^2 = -2.7e-5) and to Y02 Y13 = Y01 Y23. OneLOop 3.6 (quadruple precision): 1.918489e+03 +1.282301e+00i; this crate before: the same; COLLIER quad within 3.0e-20
 4 1.0 -2.6776531190236605e-05 -22.51917952665962 0.45212383180067234 0.31459371462501434 -0.7491407145815832 3.900611208475351 0.0 0.0 0.0 0.0 0.41000607499830355 -9.72476954946018e-06 0.12365603366131167 -5.371960862596863e-08 -3.4866887722466866 1.2623915874796359 0.0 0.0 0.0 0.0

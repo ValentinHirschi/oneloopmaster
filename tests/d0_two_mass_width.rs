@@ -8,8 +8,8 @@
 //! branch point (by `4 pi²` in the terms). In `4 1.0 0.0462 -4.297 12.27
 //! 10.74 -31.21 -13.06 0 0 0 0 0.2161 -0.00173 1.556 -0.00161` OneLOop (both
 //! precisions) and this crate gave 0.0782 + 0.0831i for -7.16e-4 + 0.0831i;
-//! about 0.7% of random two-mass boxes with widths from 1e-3 to 0.5 of the
-//! masses were wrong by 0.6 to 17 of the value, in every mass pattern, with
+//! about 0.7% of random two-mass boxes with |Im m²| from 1e-3 to 0.5 of
+//! Re m² were wrong by 0.6 to 17 of the value, in every mass pattern, with
 //! one real mass, with the widths divided by 1e6, and next to collinear limits
 //! (by up to 9e4).
 //! References (tests/data/two_mass_width.txt): Denner and Dittmaier's

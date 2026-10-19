@@ -35,8 +35,8 @@ Feynman-parameter integral (`tests/d0_one_mass_width.rs`,
 `tests/data/one_mass_width.txt`). Its two-mass boxes with complex masses
 (`boxf2`, and `boxf5` for opposite masses) are wrong in the same way, in
 about 0.7% of random such boxes (by 0.6 to 17 of the value; next to a
-collinear limit by up to 9e4), also with one real mass and with widths of
-1e-9 of the mass; the expressions take Denner and Dittmaier's two-mass sheets
+collinear limit by up to 9e4), also with one real mass and with |Im m²| down to
+1e-9 of Re m²; the expressions take Denner and Dittmaier's two-mass sheets
 there (eqs. (3.78)-(3.80), `tests/d0_two_mass_width.rs`,
 `tests/data/two_mass_width.txt`).
 Dilogarithm divided differences of nearly coincident or small arguments are

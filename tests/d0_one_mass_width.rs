@@ -7,8 +7,8 @@
 //! `4 1.0 P 14.78 12.26 -18.32 15.39 -17.48 0 0 0 0 0 0 3.018 -0.302` OneLOop
 //! (both precisions) and this crate jumped at P = -0.055 from -0.0250 to
 //! 0.0254 + 1.87i, and at P = -1e-6 gave 6.11 + 383i and 3.03 + 192i for
-//! -0.0599 - 8.2e-4i; 131 of 3000 random one-mass boxes with widths from 1e-3
-//! to 0.5 of the mass were wrong by 0.3 to 7 of the value.
+//! -0.0599 - 8.2e-4i; 131 of 3000 random one-mass boxes with |Im m²| from 1e-3
+//! to 0.5 of Re m² were wrong by 0.3 to 7 of the value.
 //! References (tests/data/one_mass_width.txt): Denner and Dittmaier's formula
 //! at 40 digits, which COLLIER's two branches in quadruple precision and a
 //! direct Feynman-parameter integral reproduce, independently of OneLOop.
@@ -30,10 +30,14 @@ const IMAGE_AGREEMENT: f64 = 1e-30;
 /// Rows 2 and 3 (P = -1e-6 and -2.3e-10) are next to a collinear limit and
 /// to `r13 r24 = r12 r34` at once. In the labelling of the data they keep
 /// 4e-16 in binary64; relabelled, the small invariant becomes `p2²` or
-/// `s12` of the one-mass formula, which kept 2e-10 (the same box with a real
-/// mass loses 4e-6 there, and with a width of 0.003 1e-7 here, 8e-5 before
-/// these sheets), and the 128-bit relabellings spread by 2e-29 (the
-/// invariant's 1e-10 of the scale times 2^-128).
+/// `s12` of the one-mass formula, which kept 2e-10. The loss predates these
+/// sheets: the same box with a real mass loses 4e-6 there, and with
+/// Im m² = -0.003 these expressions lose 1.3e-7 (native and interpreted)
+/// and 2.9e-7 (SymJIT), where 09b2c74, still on the right sheet at that
+/// Im m², lost 2.3e-7 (native), 3.8e-6 (interpreted) and 3.0e-7 (SymJIT).
+/// The bound 1e-9 is empirical, 5 times the 2e-10 observed. The 128-bit
+/// relabellings spread by 2e-29 (the invariant's 1e-10 of the scale times
+/// 2^-128).
 const COLLINEAR_ROWS: [usize; 2] = [2, 3];
 const COLLINEAR_RELABELLED: f64 = 1e-9;
 const COLLINEAR_IMAGE_AGREEMENT: f64 = 1e-27;
