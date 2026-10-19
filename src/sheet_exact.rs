@@ -921,11 +921,21 @@ impl SheetAtom {
         )
     }
 
+    /// This value `turns` sheets further: `log(self) + 2 pi i turns`.
+    pub(crate) fn wound(&self, turns: &Atom) -> Self {
+        Self {
+            value: self.value.clone(),
+            phase: &self.phase + Atom::num(2) * turns,
+            odd: self.odd.clone(),
+        }
+    }
+
     pub(crate) fn dilog(&self) -> Atom {
         dilog_symbol().call((&self.value, &self.phase, &self.odd))
     }
 
-    fn dilog_complement(&self, complement: &Atom) -> Atom {
+    /// [SheetAtom::dilog] given the complement `1 - x` of the value.
+    pub(crate) fn dilog_complement(&self, complement: &Atom) -> Atom {
         complement_dilog_symbol().call((&self.value, &self.phase, &self.odd, complement))
     }
 }

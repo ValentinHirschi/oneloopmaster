@@ -457,23 +457,23 @@ pub(crate) fn box_finite_one_mass(p: [&Atom; 6], mass: &Atom) -> Atom {
     let r13_zero = &lr * (&root_log / 2 + q34.log() + q12.log() - q23.log()) / &x2;
     // At u = r13/r34 and r12/r24 the quadratic is r23 (r14 u - 1).
     let quadratic = [&a, &b, &discriminant];
-    let [w1, w2] = root_complements(
+    let w13 = root_complements(
         quadratic,
         &(&r34 / &r13),
         &(-&gap - &r14 * &r23),
         &(&r23 * (&r13 * &r14 / &r34 - 1)),
     );
     let [y1, y2] = [&qx1, &qx2].map(|x| x * &(&q34 / &q13));
-    let r13_nonzero = complement_difference(&y1, &w1, &y2, &w2) * &r34 / &r13;
+    let r13_nonzero = complement_difference(&y1, &w13[0], &y2, &w13[1]) * &r34 / &r13;
     let r12_zero = &lr * (&root_log / 2 + q24.log() + q13.log() - q23.log()) / &x2;
-    let [w1, w2] = root_complements(
+    let w12 = root_complements(
         quadratic,
         &(&r24 / &r12),
         &(&gap - &r14 * &r23),
         &(&r23 * (&r12 * &r14 / &r24 - 1)),
     );
     let [y1, y2] = [&qx1, &qx2].map(|x| x * &(&q24 / &q12));
-    let r12_nonzero = complement_difference(&y1, &w1, &y2, &w2) * &r24 / &r12;
+    let r12_nonzero = complement_difference(&y1, &w12[0], &y2, &w12[1]) * &r24 / &r12;
     // As in OneLOop's boxf1, a single vanishing r12 or r13 replaces only its
     // own dilogarithm term by the logarithmic limit; the other term remains.
     let term_13 = if_nonzero_else(&r13, r13_nonzero, r13_zero);
@@ -486,7 +486,108 @@ pub(crate) fn box_finite_one_mass(p: [&Atom; 6], mass: &Atom) -> Atom {
         if_nonzero_else(&r13, ordinary, both_zero),
     );
     let r14_term = if_nonzero(&r14, dd(&(&qx1 * &q14), &(&qx2 * &q14)) * &r14);
-    if_nonzero(&a, -(neither_both - r14_term) / (&a * &sr * &sr * &sr * sm))
+    let complex_mass = one_mass_complex_sheets(
+        p,
+        mass,
+        [&x1, &x2],
+        &(&sm / &sr),
+        [&w13, &w12],
+        [&r34 / &r13, &r24 / &r12, r14],
+    );
+    let scale = &a * &sr * &sr * &sr * sm;
+    // Each branch is scaled on its own: real masses keep their arithmetic.
+    let finite = if_nonzero_else(
+        &im(mass),
+        -complex_mass / &scale,
+        -(neither_both - r14_term) / scale,
+    );
+    if_nonzero(&a, finite)
+}
+
+/// The terms of [box_finite_one_mass] for a mass with a nonzero width, on
+/// the sheets of Denner and Dittmaier's one-mass box (arXiv:1005.2076,
+/// eqs. (3.82) and (3.83); their line 0 is the massive line 4 here), which
+/// hold for any real momenta and complex mass.
+///
+/// Their variables are the roots `u = X sqrt(m²)/|sqrt(m²)|` of the
+/// unnormalized quadratic and the ratios `Y23/Y02 = -p2/(m² - p23)`,
+/// `Y13/Y01 = -p12/(m² - p4)` and `Y03/m² = (m² - p3)/m²`, each with its
+/// principal logarithm: `log(X r34/r13)` is `log u + log(Y23/Y02)`.
+/// OneLOop's boxf1 takes `log X + log r34 - log r13` instead: equal for real
+/// masses, but the normalization by the complex `sqrt(m²)` turns `X` against
+/// `u`, across the negative real axis for a root next to it. In `4 1.0 P
+/// 14.78 12.26 -18.32 15.39 -17.48 0 0 0 0 0 0 3.018 -0.302`
+/// (tests/d0_one_mass_width.rs) that happened at P = -0.055: OneLOop (both
+/// precisions) and these expressions jumped there from -0.0250 to 0.0254 +
+/// 1.87i, and at P = -1e-6 gave 6.11 + 383i and 3.03 + 192i for the -0.0599 -
+/// 8.2e-4i of COLLIER and of a direct Feynman-parameter integral. A root
+/// exactly on the axis takes its lower lip, the limit of the side that keeps
+/// the formula.
+///
+/// The terms are `(F(u1) - F(u2))/(X1 - X2)` with `F(u) = Li2(u, Y23/Y02) +
+/// Li2(u, Y13/Y01) - Li2(u, Y03/m²) - log(u) log(Y01 Y02/(Y12 m²))`. When
+/// the roots lie on opposite lips of the negative real axis (next to each
+/// other near a collinear limit, where the dilogarithm pairs cancel), their
+/// principal sheets differ by a winding and the terms grow as `1/(X1 - X2)`
+/// and cancel each other (in binary64 a box next to a collinear limit went
+/// from 1e-16 to 6e-8 on these sheets).
+/// `u2` then takes `u1`'s lip (`F'`), which keeps each pair on one sheet,
+/// and the change `F'(u2) - F(u2)` is added back. It is a multiple of `4 pi²`
+/// (the dilogarithms' windings cancel against the logarithm's, since
+/// `(1 - u v13) (1 - u v12)/(1 - u v14)` is `Y12 m²/(Y01 Y02)` at a root),
+/// exact once rounded; its rounding residue would otherwise grow as
+/// `1/(X1 - X2)` too.
+///
+/// With a width, `r12`, `r13` and `r14` cannot vanish, so only the ordinary
+/// terms remain. The ratios are `r34/r13`, `r24/r12` and `r14` (the
+/// coefficients of the three dilogarithm pairs), the complements the pairs'
+/// `1 - X r34/r13` and `1 - X r24/r12`.
+fn one_mass_complex_sheets(
+    p: [&Atom; 6],
+    mass: &Atom,
+    [x1, x2]: [&Atom; 2],
+    rotation: &Atom,
+    [w13, w12]: [&[Atom; 2]; 2],
+    [r34_over_r13, r24_over_r12, r14]: [Atom; 3],
+) -> Atom {
+    let [u1, u2] = [x1, x2].map(|x| x * rotation);
+    let upper = |u: &Atom| negative(&-im(u));
+    let turns = (upper(&u1) - upper(&u2)) * negative(&re(&u1)) * negative(&re(&u2));
+    let first = Q::lower(u1);
+    let principal = Q::lower(u2);
+    let second = principal.wound(&turns);
+    let [v13, v12, v14] = [
+        -p[1] / (mass - p[5]),
+        -p[4] / (mass - p[3]),
+        (mass - p[2]) / mass,
+    ]
+    .map(Q::lower);
+    let pair = |v: &Q| [&first * v, &second * v];
+    let [y1, y2] = pair(&v13);
+    let channel_13 = complement_difference(&y1, &w13[0], &y2, &w13[1]) * r34_over_r13;
+    let [y1, y2] = pair(&v12);
+    let channel_12 = complement_difference(&y1, &w12[0], &y2, &w12[1]) * r24_over_r12;
+    let invariants = Q::lower((mass - p[3]) / -p[0]).log() + Q::lower((mass - p[5]) / mass).log();
+    let logarithm = (&first / &second).log_over_one_minus() * &invariants / x2;
+    let [y1, y2] = pair(&v14);
+    let one_sheet = channel_13 + channel_12 + logarithm - dd(&y1, &y2) * r14;
+    let change =
+        |v: &Q, w: &Atom| (&second * v).dilog_complement(w) - (&principal * v).dilog_complement(w);
+    let one_minus_14 = 1 - (&principal * &v14).value();
+    let windings = change(&v13, &w13[1]) + change(&v12, &w12[1])
+        - change(&v14, &one_minus_14)
+        - Atom::num(2) * sheet_exact::i() * Symbol::PI.to_atom() * &turns * invariants;
+    let four_pi_squared = Atom::num(4) * Symbol::PI.to_atom().pow(2);
+    let correction = nearest_integer(&(re(&windings) / &four_pi_squared)) * four_pi_squared;
+    one_sheet + if_nonzero(&turns, correction / (x1 - x2))
+}
+
+/// The integer nearest to a real `x` with `|x| < 8.5`, from sign tests.
+fn nearest_integer(x: &Atom) -> Atom {
+    (1..=8).fold(Atom::num(0), |count, j| {
+        let half = Atom::num(2 * j - 1) / 2;
+        count + (1 - negative(&(x - &half))) - negative(&(x + half))
+    })
 }
 
 /// The leading coefficient `r34/r24 - r23` of [box_finite_three_masses_zero_third];
