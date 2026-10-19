@@ -95,6 +95,23 @@ impl<T: NativeFloat> Sheet<T> {
         }
     }
 
+    /// The sheet logarithm given the offset `w = x - 1` of the physical
+    /// value, formed by the caller without rounding `x` (`log_given_body`):
+    /// next to one an unreflected value's logarithm comes from `w` through
+    /// [`log_one_plus`].
+    #[inline]
+    pub(crate) fn log_given(&self, w: &C<T>, c: &Constants<T>) -> C<T> {
+        if !self.odd && negative(&(c.four.clone() * &norm(w) - &c.one)) {
+            let mut l = log_one_plus(&self.v, w, c);
+            if self.phase != 0 {
+                l.im += c.pi.clone() * &c.from_int(self.phase);
+            }
+            l
+        } else {
+            self.log(c)
+        }
+    }
+
     /// `log(x)/(1-x)` with the plain logarithm (the divided difference's
     /// coincident limit, as `log_ratio_body` without `near`).
     #[inline]

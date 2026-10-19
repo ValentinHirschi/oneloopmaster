@@ -245,6 +245,21 @@ fn lom(q: &Sheet<f64>, k: &Constants<f64>) -> Z {
 }
 
 fn r0(y1: &Cont, y2: &Cont, k: &Constants<f64>) -> Z {
+    let (q0, n0, q1, n1) = r0_quotients(y1, y2);
+    let value = dv(lom(&q0, k), y1.v) + dv(lom(&q1, k), ONE - y1.v);
+    let winding = n0 - n1;
+    if winding != 0 {
+        let pi_n = k.pi * winding as f64;
+        value + dv(Z { re: 0.0, im: pi_n }, y1.v - y2.v)
+    } else {
+        value
+    }
+}
+
+/// The unwound quotients `y2/y1` and `(1 - y2)/(1 - y1)` of `r0` and their
+/// windings.
+#[inline(always)]
+fn r0_quotients(y1: &Cont, y2: &Cont) -> (Sheet<f64>, i32, Sheet<f64>, i32) {
     // `r0`: the windings of the two quotients are taken out and added as
     // i pi (n0 - n1)/(y1 - y2), with the exact pole difference.
     let split = |q: Sheet<f64>| {
@@ -259,14 +274,23 @@ fn r0(y1: &Cont, y2: &Cont, k: &Constants<f64>) -> Z {
     };
     let (q0, n0) = split(y2.complement(0.0).sheet().div(&y1.complement(0.0).sheet()));
     let (q1, n1) = split(y2.complement(1.0).sheet().div(&y1.complement(1.0).sheet()));
-    let value = dv(lom(&q0, k), y1.v) + dv(lom(&q1, k), ONE - y1.v);
-    let winding = n0 - n1;
-    if winding != 0 {
-        let pi_n = k.pi * winding as f64;
-        value + dv(Z { re: 0.0, im: pi_n }, y1.v - y2.v)
-    } else {
-        value
+    (q0, n0, q1, n1)
+}
+
+/// `r0_line`: `r0` given `delta = y1 - y2`, as `(log(q0) - log(q1) + i pi
+/// (n0 - n1))/delta` with the logarithms from the offsets `-delta/y1` and
+/// `delta/(1 - y1)`; `r0` itself at `delta = 0`.
+fn r0_line(y1: &Cont, y2: &Cont, delta: Z, k: &Constants<f64>) -> Z {
+    if !nz(delta) {
+        return r0(y1, y2, k);
     }
+    let (q0, n0, q1, n1) = r0_quotients(y1, y2);
+    // -delta/y1 and delta/(1 - y1) from one reciprocal.
+    let oy1 = ONE - y1.v;
+    let scaled = delta * inverse(&(y1.v * oy1));
+    let mut logarithms = q0.log_given(&-(scaled * oy1), k) - q1.log_given(&(scaled * y1.v), k);
+    logarithms.im += k.pi * (n0 - n1) as f64;
+    dv(logarithms, delta)
 }
 
 /// `far_root_series`: `r1` for a far root, fy log(-z) - sum_{n<=8} M_n/(n zⁿ).
@@ -289,18 +313,50 @@ fn far_root_series(zz: &Cont, yy1: &Cont, yy2: &Cont, fy: Z, k: &Constants<f64>)
 }
 
 fn r1(zz: &Cont, yy1: &Cont, yy2: &Cont, fy: Z, k: &Constants<f64>) -> Z {
+    r1_with(zz, yy1, yy2, fy, None, k)
+}
+
+/// `r1` (no line) or `r1_line`: where the nearer pole's `y - z` cancels by
+/// more than 64 (`4096 |y - z|² < |z|²`), its offset is the line's product
+/// `(y1 - z)(y2 - z)` (`LineProduct`) over the farther pole's.
+#[inline(always)]
+fn r1_with(zz: &Cont, yy1: &Cont, yy2: &Cont, fy: Z, line: Option<&LineProduct>, k: &Constants<f64>) -> Z {
     let (z, y1, y2) = (zz.v, yy1.v, yy2.v);
     let oz = ONE - z;
-    let yz1 = y1 - z;
-    let yz2 = y2 - z;
-    let q1 = yy1.minus(zz).sheet();
-    let q2 = yy2.minus(zz).sheet();
+    let (mut yz1, mut yz2) = (y1 - z, y2 - z);
+    let (mut hz1, mut hz2) = (norm(yz1), norm(yz2));
+    let hzz = norm(z);
+    let mut given = [false; 2];
+    if let Some(line) = line {
+        let nearer_first = negative(hz1 - hz2);
+        let nearer = if nearer_first { hz1 } else { hz2 };
+        if negative(4096.0 * nearer - hzz) {
+            // An exactly real `y - z` stays real (its lip follows the
+            // directions).
+            let over = |near: Z, far: Z| {
+                let offset = line.over(far);
+                if near.im != 0.0 { offset } else { r(offset.re) }
+            };
+            if nearer_first {
+                yz1 = over(yz1, yz2);
+                hz1 = norm(yz1);
+                given[0] = true;
+            } else {
+                yz2 = over(yz2, yz1);
+                hz2 = norm(yz2);
+                given[1] = true;
+            }
+        }
+    }
+    let q1 = Cont { v: yz1, ..yy1.minus(zz) }.sheet();
+    let q2 = Cont { v: yz2, ..yy2.minus(zz) }.sheet();
+    let offsets = [yz1, yz2];
+    let r0 = |y: &Cont, z: &Cont, index: usize, k: &Constants<f64>| {
+        if given[index] { r0_line(y, z, offsets[index], k) } else { r0(y, z, k) }
+    };
     let qz = zz.complement(0.0).sheet();
     let qo = zz.complement(1.0).sheet();
     let h12 = norm(y1 - y2);
-    let hz1 = norm(yz1);
-    let hz2 = norm(yz2);
-    let hzz = norm(z);
     let hoz = norm(oz);
     // `far_root`; below |z|² = 2^14 its bound is at least 2^-52.
     if hzz >= 16384.0 {
@@ -334,17 +390,17 @@ fn r1(zz: &Cont, yy1: &Cont, yy2: &Cont, fy: Z, k: &Constants<f64>) -> Z {
         };
         fy * q1.log(k) - dv(bracket * ratio, yz2)
     } else if !negative(hz2 - h12) && !negative(hz1 - hz2) {
-        fy * q1.log(k) - r0(yy2, zz, k) * lom(&q1.div(&q2), k)
+        fy * q1.log(k) - r0(yy2, zz, 1, k) * lom(&q1.div(&q2), k)
     } else if !negative(hz1 - h12) && !negative(hz2 - hz1) {
-        fy * q2.log(k) - r0(yy1, zz, k) * lom(&q2.div(&q1), k)
+        fy * q2.log(k) - r0(yy1, zz, 0, k) * lom(&q2.div(&q1), k)
     } else {
         let first = if nz(yz1) {
-            yz1 * q1.log(k) * r0(yy1, zz, k)
+            yz1 * q1.log(k) * r0(yy1, zz, 0, k)
         } else {
             ZERO
         };
         let second = if nz(yz2) {
-            yz2 * q2.log(k) * r0(yy2, zz, k)
+            yz2 * q2.log(k) * r0(yy2, zz, 1, k)
         } else {
             ZERO
         };
@@ -403,7 +459,18 @@ fn outside_closed_interval(y: Z) -> bool {
 /// its two-point subgraph `[lambda, p, near, far]` (`Edge`), and a linear
 /// b x + c passes `far` = b + c.
 fn s3(
+    y1: &Cont, y2: &Cont, d: Z, e: Z, a: Z, b: Z, c: Z, db: Z, dc: Z, edge: [Z; 4],
+    k: &Constants<f64>,
+) -> Z {
+    s3_with(y1, y2, d, e, a, b, c, db, dc, edge, None, k)
+}
+
+/// `s3` (no line) or, for `a = db = 0`, `s3_line`: the linear term with the
+/// line's product of the mapped poles' offsets from its root.
+#[inline(always)]
+fn s3_with(
     y1: &Cont, y2: &Cont, d: Z, e: Z, a: Z, b: Z, c: Z, db: Z, dc: Z, [lambda, p, near, far]: [Z; 4],
+    line: Option<&LineProduct>,
     k: &Constants<f64>,
 ) -> Z {
     if !nz(e) {
@@ -518,7 +585,7 @@ fn s3(
         let sz = z.sign();
         let sb = isign(db, simc);
         fy * (Sheet::with_sign(b, sb).log(k) + eta(b, sb, -z.v, -sz, c, simc, k))
-            + r1(&z, &y1, &y2, fy, k)
+            + r1_with(&z, &y1, &y2, fy, line, k)
     } else if nz(c) {
         Sheet::with_sign(c, simc).log(k) * fy
     } else {
@@ -567,6 +634,44 @@ fn planar(y1: &Cont, y2: &Cont, p1: bool, p2: bool, a: Z, b: Z, c: Z, dc: Z, rea
 #[inline]
 fn s3_linear(y1: &Cont, y2: &Cont, d: Z, e: Z, b: Z, c: Z, dc: Z, far: Z, k: &Constants<f64>) -> Z {
     s3(y1, y2, d, e, ZERO, b, c, ZERO, dc, [ZERO, ZERO, c, far], k)
+}
+
+/// `s3_line`: a line edge of `tfun_selected` (its `[d, e, b, c, far]` in
+/// the `LineProduct`).
+fn s3_line(y1: &Cont, y2: &Cont, dc: Z, line: &LineProduct, k: &Constants<f64>) -> Z {
+    let [d, e, b, c, far] = line.line;
+    s3_with(y1, y2, d, e, ZERO, b, c, ZERO, dc, [ZERO, ZERO, c, far], Some(line), k)
+}
+
+/// `line_product`: the product `(Y1 - z)(Y2 - z)` of the mapped poles'
+/// offsets from the root `z` of a line edge `b x + c` with `[d, e, b, c,
+/// far]`, `a1 (Q(u) - ratio B(u))/(K e²)` at the preimage `u = e z - d`,
+/// formed by `r1_with` only where an offset cancels. With the scale `s = b`
+/// (1 for `far = 0`), `U = s u` and `ratio = num/den`, the nearer offset is
+/// `a1 (den (Q_b U² + Q_e U s + Q_f s²) - num s (b1 U + c1 s))/(K s² den e²)`
+/// over the farther one, with one division.
+struct LineProduct<'a> {
+    line: [Z; 5],
+    ratio: [Z; 2],
+    conic: &'a [Z; 3],
+    data: &'a BetaData,
+}
+
+impl LineProduct<'_> {
+    /// The product over the farther pole's offset `far` (zero for `far = 0`).
+    fn over(&self, far_offset: Z) -> Z {
+        let [d, e, b, c, far] = self.line;
+        let [qb, qe, qf] = *self.conic;
+        let BetaData { a: a1, b: b1, c: c1, k: kk, .. } = *self.data;
+        let (scale, scaled_u) = if nz(far) { (b, -(e * c + d * b)) } else { (ONE, e - d) };
+        // ratio = 0 for a vanishing denominator, as the expression's if_nonzero.
+        let [num, den] = if nz(self.ratio[1]) { self.ratio } else { [ZERO, ONE] };
+        let quadratic = (qb * scaled_u + qe * scale) * scaled_u + qf * scale * scale;
+        let linear = b1 * scaled_u + c1 * scale;
+        let numerator = a1 * (den * quadratic - num * scale * linear);
+        let denominator = kk * scale * scale * den * e * e * far_offset;
+        if nz(far_offset) && nz(e) { dv(numerator, denominator) } else { ZERO }
+    }
 }
 
 /// `t1`; `gh`, `gj`, `ghj` are the line's g + h, g + j, g + h + j.
@@ -730,9 +835,13 @@ fn tfun_selected(
     let p1 = inside(beta, y1);
     let p2 = inside(beta, y2);
     let sum = coefficient_sum(&[a, b, c], abc);
-    let integral = s3_linear(y1, y2, beta, ONE, h, gj, dj, ghj, k)
-        - s3_linear(y1, y2, ZERO, -w, gh, j, dj, ghj, k)
-        + s3_linear(y1, y2, ZERO, -beta, g, j, dj, gj, k)
+    // The line edges x = 1, y = x and y = 0 as the `[d, e, b, c, far]` of
+    // their s3 terms, and h u + j over a1 at their roots' preimages u.
+    let conic = [b, e, f];
+    let line = |line: [Z; 5], ratio: [Z; 2]| LineProduct { line, ratio, conic: &conic, data };
+    let integral = s3_line(y1, y2, dj, &line([beta, ONE, h, gj, ghj], [r(-1.0), ONE]), k)
+        - s3_line(y1, y2, dj, &line([ZERO, -w, gh, j, ghj], [j, gh]), k)
+        + s3_line(y1, y2, dj, &line([ZERO, -beta, g, j, gj], [j, g]), k)
         - s3(y1, y2, beta, ONE, b, c + e, a + dpf, de, ddpf, [lambda_bc, b, q10, q11], k)
         + s3(y1, y2, ZERO, -w, sum, dpe, f, ddpe, df, [lambda_abc, abc, f, q11], k)
         - s3(y1, y2, ZERO, -beta, a, d, f, dd_, df, [lambda_a, a, f, q10], k);
@@ -1458,6 +1567,66 @@ mod expression_tests {
             compare("root_2", 3, 3000, 0, |x| roots(x[0], x[1], x[2])[1], &any(3));
             compare("r0", 6, 3000, 0, |x| r0(&cont(&x[0..3]), &cont(&x[3..6]), &c), &any(6));
             compare("r1", 10, 3000, 0, |x| r1(&cont(&x[0..3]), &cont(&x[3..6]), &cont(&x[6..9]), x[9], &c), &any(10));
+            // `r0` given `delta = y1 - y2`.
+            compare("r0_line", 7, 3000, 0, |x| r0_line(&cont(&x[0..3]), &cont(&x[3..6]), x[6], &c), &|rng: &mut Rng| {
+                let mut x = any(6)(rng);
+                x.push(x[0] - x[3]);
+                x
+            });
+            // The line variants take the product (y1 - z)(y2 - z) of the
+            // poles' offsets; a third of the samples put a pole within 1e-6
+            // of the root, where the product replaces its offset.
+            let conic = [ZERO, ZERO, ONE];
+            let data = |product: Z| BetaData { a: product, b: ZERO, c: ZERO, dc: ZERO, k: ONE, y: [Cont { v: ZERO, f: ZERO, s: ZERO }; 2] };
+            fn given<'a>(data: &'a BetaData, conic: &'a [Z; 3]) -> LineProduct<'a> {
+                LineProduct { line: [ZERO, ONE, ONE, ZERO, ONE], ratio: [ZERO, ONE], conic, data }
+            }
+            let near = |rng: &mut Rng, root: Z| root + Z { re: 1e-6 * rng.real(), im: 1e-6 * rng.real() };
+            compare(
+                "r1_line",
+                11,
+                3000,
+                0,
+                |x| r1_with(&cont(&x[0..3]), &cont(&x[3..6]), &cont(&x[6..9]), x[9], Some(&given(&data(x[10]), &conic)), &c),
+                &|rng: &mut Rng| {
+                    let mut x = any(10)(rng);
+                    if rng.below(3) == 0 {
+                        x[3] = near(rng, x[0]);
+                    }
+                    x.push((x[3] - x[0]) * (x[6] - x[0]));
+                    x
+                },
+            );
+            compare(
+                "s3_line",
+                13,
+                3000,
+                0,
+                |x| {
+                    // `over` maps the product by 1/e², the expression takes it mapped.
+                    let data = data(x[12] * x[7] * x[7]);
+                    let line = LineProduct { line: [x[6], x[7], x[8], x[9], x[11]], ..given(&data, &conic) };
+                    s3_line(&cont(&x[0..3]), &cont(&x[3..6]), x[10], &line, &c)
+                },
+                &|rng: &mut Rng| {
+                    let mut x = any(11)(rng);
+                    let (d, e, b) = (x[6], x[7], x[8]);
+                    // far = b + c, or a massless end (c = -b, root 1).
+                    let massless = rng.below(4) == 0;
+                    if massless {
+                        x[9] = -b;
+                    }
+                    let far = if massless { ZERO } else { b + x[9] };
+                    let root = if nz(far) { -dv(x[9], b) } else { ONE };
+                    if rng.below(3) == 0 {
+                        // A pole whose image (d + y)/e lies next to the root.
+                        x[0] = near(rng, e * root - d);
+                    }
+                    let mapped = |y: Z| dv(d + y, e) - root;
+                    x.extend([far, mapped(x[0]) * mapped(x[3])]);
+                    x
+                },
+            );
             compare("kallen", 3, 3000, 0, |x| kallen(x[0], x[1], x[2]), &any(3));
             // A quadratic's two-point subgraph [lambda, p, near, far]; often a
             // massless end. `s3` takes the roots of re(a) x² + b x + c (a is real

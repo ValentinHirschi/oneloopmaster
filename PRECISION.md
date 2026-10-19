@@ -95,6 +95,37 @@ explicit resource limits; see [expression inspection](README.md#combining-integr
   the chart's `b beta² + c beta + a` next to 1, where `d + beta e` and the
   like cancel; nearer 1 than 0 the chart coefficients use `beta - 1` from the
   product of the roots (`box_complex::beta_data`).
+- The contour box's poles `y1, y2` (`beta_data`) are where the line
+  `g x + h y + j` meets the conic along the contour direction `(1, beta)`:
+  the roots of `K y² + L y + N = a1 Q(y) - (h y + j) B(y)` with
+  `a1 = g + beta h`. At the root `u` of the line on an edge of the triangle,
+  `h u + j` is a multiple of `a1` (`-a1`, `j a1/(g + h)`, `j a1/g` on the three
+  edges), so the quadratic there is `a1 (Q(u) - ratio B(u))`. Next to a
+  vanishing Gram determinant `a1` is small (`a1 a1' = (b g² - c g h + a h²)/b`
+  over the two betas vanishes with it): the line is nearly parallel to the
+  contour direction and one pole lies next to the root of every line edge
+  (within 5e-6 to 7e-5 at the NinjaRS gg → HHH box, `a1/g = 1.4e-5`). The
+  `s3` terms of those edges took `y - z` from the rounded pole and root, each
+  edge rounding it differently, and their sum lost 1e-12 of itself (3.6e-11
+  in the box). Where the nearer pole's `y - z` cancels by more than 64
+  (`4096 |y - z|² < |z|²`), `r1` now takes it as Vieta's product
+  `(y1 - z)(y2 - z) = a1 (Q(u) - ratio B(u))/(K e²)` over the farther pole's
+  offset (`box_complex::line_product`, `r1_line`, `r0_line`), with the poles'
+  own rounded `a1` and `K`: the edges then see the line the rounded `a1`
+  describes, and a consistent `a1` costs nothing (in a scan box, moving
+  `beta` by 1.9e-12 with everything derived from it moves the six terms of a
+  256-bit `tfun` by up to 7e-18 and their sum, 8.6e-11, by 5e-24). An exactly
+  real `y - z` stays real, so its lip follows the infinitesimal directions. A
+  threshold of 16 also fired on the recorded NinjaRS gg → HH stream, without
+  an accuracy gain on the scans, for 0.56% more retired instructions per D0
+  call there (0.47% with 64).
+  The box keeps 1.9e-14 to 4.1e-14 on the binary64 routes,
+  and 199 of 200 random boxes next to a vanishing Gram determinant keep 3.2e-12
+  (`tests/d0_vanishing_gram.rs`, references OneLOop 3.6 in quadruple
+  precision); OneLOop's double precision loses more than 1e-9 on 16 of them.
+  The remaining one (1.1e-10 to 3.2e-10, OneLOop 5.5e-11) has a nearly double
+  `beta` in one `tfun` and nearly coincident poles next to an edge's end in
+  the others, whose quadratic `s3` terms cancel by 20.
 - The finite massless, one-mass and two-adjacent-mass boxes (OneLOop's
   `boxf0`, `boxf1` and `boxf2`) take dilogarithms of `X r34/r13` and
   `X r24/r12` for the roots `X` of a quadratic that tends to
