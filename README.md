@@ -34,11 +34,16 @@ eq. (3.82)), checked against COLLIER in quadruple precision and a direct
 Feynman-parameter integral (`tests/d0_one_mass_width.rs`,
 `tests/data/one_mass_width.txt`). Its two-mass boxes with complex masses
 (`boxf2`, and `boxf5` for opposite masses) are wrong in the same way, in
-about 0.7% of random such boxes (by 0.6 to 17 of the value; next to a
+0.4% to 2.8% of random such boxes depending on how they are sampled
+(STATUS.md; by 0.6 to 17 of the value; next to a
 collinear limit by up to 9e4), also with one real mass and with |Im m²| down to
 1e-9 of Re m²; the expressions take Denner and Dittmaier's two-mass sheets
 there (eqs. (3.78)-(3.80), `tests/d0_two_mass_width.rs`,
-`tests/data/two_mass_width.txt`).
+`tests/data/two_mass_width.txt`). Where both massive lines sit at or next to
+their shells, two of those dilogarithm arguments approach one; their
+complements come from the channels' complements, since formed from the
+rounded arguments they lost up to 0.16 of the value in binary64
+(`tests/data/two_mass_shell.txt`).
 Dilogarithm divided differences of nearly coincident or small arguments are
 evaluated term by term, as OneLOop's `dilog2_c` (a two-mass C0 with nearly
 coincident roots was off by 2.4e-13 in binary64, now 2e-15 to 9e-15 on every

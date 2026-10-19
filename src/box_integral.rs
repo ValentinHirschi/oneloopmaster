@@ -496,7 +496,7 @@ pub(crate) fn box_finite_one_mass(p: [&Atom; 6], mass: &Atom) -> Atom {
         [&x1, &x2],
         &(&sm / &sr),
         [(v13, &w13, &r34 / &r13), (v12, &w12, &r24 / &r12)],
-        [(v14, r14)],
+        [(v14, r14, None)],
         Q::lower((mass - p[3]) / -p[0]).log() + Q::lower((mass - p[5]) / mass).log(),
         false,
     );
@@ -551,14 +551,16 @@ pub(crate) fn box_finite_one_mass(p: [&Atom; 6], mass: &Atom) -> Atom {
 /// `channels` are the pairs with the ratios `Y23/Y02` and `Y13/Y01`, their
 /// complements `1 - X r34/r13` and `1 - X r24/r12`, and their coefficients
 /// `(y1 - y2)/(X1 - X2)`; `masses` the pairs of the `r03k` with their
-/// coefficients; `invariants` is `log(Y01/Y12) + log(Y02/m4²)`. With
+/// coefficients and, where given, their complements `1 - u r03k` at the two
+/// roots (otherwise formed from the rounded arguments);
+/// `invariants` is `log(Y01/Y12) + log(Y02/m4²)`. With
 /// `vanishing_channels` a channel pair whose coefficient vanishes (its ratio
 /// is zero: a real mass on shell with a massless line) is dropped.
 fn complex_mass_sheets<const N: usize>(
     [x1, x2]: [&Atom; 2],
     rotation: &Atom,
     channels: [(Q, &[Atom; 2], Atom); 2],
-    masses: [(Q, Atom); N],
+    masses: [(Q, Atom, Option<[Atom; 2]>); N],
     invariants: Atom,
     vanishing_channels: bool,
 ) -> Atom {
@@ -586,10 +588,18 @@ fn complex_mass_sheets<const N: usize>(
             windings += winding;
         }
     }
-    for (v, coefficient) in &masses {
+    for (v, coefficient, complements) in &masses {
         let [y1, y2] = pair(v);
-        one_sheet -= dd(&y1, &y2) * coefficient;
-        windings -= change(v, &(1 - (&principal * v).value()));
+        match complements {
+            Some(w) => {
+                one_sheet -= complement_difference(&y1, &w[0], &y2, &w[1]) * coefficient;
+                windings -= change(v, &w[1]);
+            }
+            None => {
+                one_sheet -= dd(&y1, &y2) * coefficient;
+                windings -= change(v, &(1 - (&principal * v).value()));
+            }
+        }
     }
     let four_pi_squared = Atom::num(4) * Symbol::PI.to_atom().pow(2);
     let correction = nearest_integer(&(re(&windings) / &four_pi_squared)) * four_pi_squared;
@@ -605,12 +615,43 @@ fn two_mass_sheets_symbol() -> Symbol {
 /// the `rotation` (`u = X rotation`), the channel ratios `Y23/Y02` and
 /// `Y13/Y01` with the complements `1 - X r34/r13` and `1 - X r24/r12`, `r14`
 /// (the pairs `r031 = r14/rotation` and `r032 = 1/(r14 rotation)`, with
-/// coefficients `r14` and `1/r14`) and the invariants' logarithm. Inlined,
-/// every occurrence of a root or ratio carried its whole expression: the
-/// terms took 22 MB per copy of the finite box (four in sector 5's body), and
-/// the definitions grew from 97 MB to 209 MB (tests/expression_construction.rs).
-/// Like the four-mass chart it binds the sector parameters, so that no new
-/// parameter symbols renumber later ones.
+/// coefficients `r14` and `1/r14`), the invariants' logarithm and their
+/// `product = r12 r13/r23` (`Y01 Y02/(Y12 m4²)`, the logarithm's argument).
+/// Inlined, every occurrence of a root or ratio carried its whole expression:
+/// the terms took 22 MB per copy of the finite box (four in sector 5's body),
+/// and the definitions grew from 97 MB to 209 MB
+/// (tests/expression_construction.rs). Like the four-mass chart it binds the
+/// sector parameters (and one parameter of box_complex's definitions), so
+/// that no new parameter symbols renumber later ones.
+///
+/// The mass pairs' arguments `u r031 = X r14` and `u r032 = X/r14` reach one
+/// where a root of the box's quadratic meets a root `-1/r03k` of
+/// `m4² + Y03 x + m3² x²`: in Denner and Dittmaier's variables the quadratic
+/// is `(Y01 - Y13/r03k)(Y02 - Y23/r03k)` there, small when a real mass is
+/// next to its shell (`Y01` or `Y02` small) and its partner's `Y13` or `Y23`
+/// is small too (a complex mass whose real part is next to its shell, with a
+/// narrow width, or another invariant next to the real mass). Formed from the
+/// rounded argument, `1 - X r14` kept only `|1 - X r14|` relative digits,
+/// and the dilogarithms on wound sheets (which carry `log(1 - x)`) and their
+/// divided differences lost the rest: binary64 lost 3.3e-11 in
+/// tests/data/two_mass_shell.txt's first row (a real mass on shell to 2e-16
+/// and a complex one whose real part is), 4.8e-9 with a real mass next to its
+/// shell in two invariants (1e-6 and 4e-8), and up to 0.16 of the value with
+/// both masses on or next to their shells. At a root the product of the two
+/// complements, `X² - k14 X + 1`, is `(1 - X r34/r13)(1 - X r24/r12)
+/// r12 r13/r23` (the quadratic is `(r34 X - r13)(r24 X - r12) - r23 (X² -
+/// k14 X + 1)`): the channels' complements, which the caller forms from the
+/// kinematics, times `product`. A complement below 1/16 is that product over
+/// the other where the other is above 1/4 (the direct difference would keep
+/// fewer digits below 1/16 than the product's few roundings); otherwise both
+/// are taken directly. Both are small next to `r14 = 1`, the threshold
+/// `Y03² = 4 m3² m4²` (equal masses and a vanishing invariant between them),
+/// where `r14` itself is known only to the square root of its rounding: the
+/// direct forms share that error and it cancels between the two pairs, which
+/// the product, formed without `r14`, would not (two such sweep boxes lost
+/// 1e-9 that way, where the direct forms keep 5e-16 and 1.6e-12). A channel
+/// with a vanishing ratio (a real mass on shell) contributes the complement
+/// one; its given complement is not finite then.
 fn two_mass_sheets(
     [
         x1,
@@ -624,10 +665,28 @@ fn two_mass_sheets(
         w12b,
         r14,
         invariants,
-    ]: [&Atom; 11],
+        product,
+    ]: [&Atom; 12],
 ) -> Atom {
     let w13 = [w13a.clone(), w13b.clone()];
     let w12 = [w12a.clone(), w12b.clone()];
+    let abs = |z: &Atom| Symbol::ABS.call((z,));
+    // 1 when `d` is below 1/16 and `other` above 1/4.
+    let small = |d: &Atom, other: &Atom| {
+        negative(&(Atom::num(16) * abs(d) - 1)) * negative(&(1 - Atom::num(4) * abs(other)))
+    };
+    let [[c1a, c2a], [c1b, c2b]] =
+        [(x1, &w13[0], &w12[0]), (x2, &w13[1], &w12[1])].map(|(x, w13, w12)| {
+            let d1 = 1 - x * r14;
+            let d2 = 1 - x / r14;
+            let both = if_nonzero_else(v13, w13.clone(), Atom::num(1))
+                * if_nonzero_else(v12, w12.clone(), Atom::num(1))
+                * product;
+            [
+                if_nonzero_else(&small(&d1, &d2), &both / &d2, d1.clone()),
+                if_nonzero_else(&small(&d2, &d1), &both / &d1, d2.clone()),
+            ]
+        });
     complex_mass_sheets(
         [x1, x2],
         rotation,
@@ -636,10 +695,11 @@ fn two_mass_sheets(
             (Q::lower(v12.clone()), &w12, rotation * v12),
         ],
         [
-            (Q::lower(r14 / rotation), r14.clone()),
+            (Q::lower(r14 / rotation), r14.clone(), Some([c1a, c1b])),
             (
                 Q::lower(Atom::num(1) / (r14 * rotation)),
                 Atom::num(1) / r14,
+                Some([c2a, c2b]),
             ),
         ],
         invariants.clone(),
@@ -841,7 +901,7 @@ pub(crate) fn box_finite_two_adjacent(p: [&Atom; 6], mass_3: &Atom, mass_4: &Ato
     let rotation = &sm4 / &sm3;
     let [y01, y02, y13, y23] = [mass_4 - p[3], mass_4 - p[5], mass_3 - p[4], mass_3 - p[1]];
     let log = |y: &Atom| Q::lower(y.clone()).log();
-    let sheets = |arguments: [Atom; 11]| two_mass_sheets_symbol().call(arguments.as_slice());
+    let sheets = |arguments: [Atom; 12]| two_mass_sheets_symbol().call(arguments.as_slice());
     let [w13a, w13b] = w13.clone();
     let [w12a, w12b] = w12.clone();
     let direct = sheets([
@@ -856,15 +916,18 @@ pub(crate) fn box_finite_two_adjacent(p: [&Atom; 6], mass_3: &Atom, mass_4: &Ato
         w12b,
         r14.clone(),
         log(&y01) - log(&-p[0]) + log(&y02) - log(mass_4),
+        &r12 * &r13 / &r23,
     ]);
     // A real m4² on shell with a massless line (Y01 or Y02 zero) takes the
     // formula with lines 0 and 3 exchanged, as Denner and Dittmaier state: its
     // quadratic has a and c exchanged, so its roots are 1/u (1/X here), its
     // rotation, ratios Y02/Y23 and Y01/Y13 and r03k the inverses, and the
     // terms above are its terms divided by X1 X2. A real m3² on shell (Y13 or
-    // Y23 zero) drops that pair, there or in the exchanged formula.
-    let [w13a, w13b] = w13.each_ref().map(|w| -w / (1 - w));
-    let [w12a, w12b] = w12.each_ref().map(|w| -w / (1 - w));
+    // Y23 zero) drops that pair, there or in the exchanged formula. The
+    // complements of the inverse arguments 1/y are -w/y, with y = X r34/r13 or
+    // X r24/r12 itself: as -w/(1 - w) they lost y's digits for a small y.
+    let [w13a, w13b] = [(&x1, &w13[0]), (&x2, &w13[1])].map(|(x, w)| -w / (x * (&r34 / &r13)));
+    let [w12a, w12b] = [(&x1, &w12[0]), (&x2, &w12[1])].map(|(x, w)| -w / (x * (&r24 / &r12)));
     let exchanged = sheets([
         Atom::num(1) / &x1,
         Atom::num(1) / &x2,
@@ -877,6 +940,7 @@ pub(crate) fn box_finite_two_adjacent(p: [&Atom; 6], mass_3: &Atom, mass_4: &Ato
         w12b,
         r14.clone(),
         log(&y13) - log(&-p[0]) + log(&y23) - log(mass_3),
+        &r24 * &r34 / &r23,
     ]) / (&x1 * &x2);
     let complex_masses = if_nonzero_else(
         &if_nonzero(&r12, if_nonzero(&r13, Atom::num(1))),
@@ -1638,11 +1702,20 @@ pub(crate) fn register_boxes(map: &mut FunctionMap) {
         native_function_options(),
     )
     .expect("unique four-mass chart");
-    // Likewise one definition of the two-mass terms with widths.
+    // Likewise one definition of the two-mass terms with widths. Its twelfth
+    // parameter is box_complex's (registered before), so that no symbol is
+    // created here either.
+    let sheet_symbols: [Symbol; 12] = core::array::from_fn(|i| {
+        if i < 11 {
+            symbols[i]
+        } else {
+            symbolica::symbol!("__olo_boxc_arg_11")
+        }
+    });
     map.add_function_with_options(
         two_mass_sheets_symbol(),
-        symbols.to_vec(),
-        two_mass_sheets(x.each_ref()),
+        sheet_symbols.to_vec(),
+        two_mass_sheets(sheet_symbols.map(Symbol::to_atom).each_ref()),
         native_function_options(),
     )
     .expect("unique two-mass sheets");

@@ -94,7 +94,12 @@ SymJIT) and 7.5e-12 interpreted; it is now within 1.9e-14 to 4.1e-14 on every ro
   Dittmaier's formula in mpmath, and a direct Feynman-parameter integral to
   2e-8). Random sweeps, against COLLIER 1.2.9 in quadruple precision: per
   mass pattern (00MM, 0MM0, MM00, M00M, 0M0M, M0M0) 8 to 18 of 2000 boxes with
-  |Im m²| from 1e-3 to 0.5 of Re m² wrong by 0.6 to 17 of the value; 2 to
+  |Im m²| from 1e-3 to 0.5 of Re m² wrong by 0.6 to 17 of the value (0.4% to
+  0.9%; masses 0.1 to 20 and invariants of either sign from 0.03 to 30,
+  log-uniform; the two-mass verifier's sampling, masses 0.03 to 10 and
+  invariants uniform up to 30 or log-uniform from 1e-6 to 50, gave 63 to 83
+  of 3000 per pattern, 2.1% to 2.8%, with OneLOop's double and quadruple
+  precision wrong in the same rows: the rate depends on the sample); 2 to
   10 of 500 per pattern with one real mass; 3 to 11 of 1000 with the widths
   divided by 1e6; 4 to 10 of 500 next to a collinear limit and to
   `Y02 Y13 = Y01 Y23` (by up to 9e4, and 2 to 10 more lost 1e-8 to 0.1 in
@@ -141,10 +146,15 @@ SymJIT) and 7.5e-12 interpreted; it is now within 1.9e-14 to 4.1e-14 on every ro
   seeds 1-4, native, generated and expression routes) give the same failure
   lists as before. Retired instructions per binary64 D0 call (perf stat,
   difference of 2001 and 1 repetitions) against 09b2c74: the 22 recorded
-  NinjaRS master streams within 0.002%; real two-mass boxes +0.4% (23,673 to
-  23,763); complex two-mass boxes -1.2% (00MM) and -0.1% (0M0M), with one
-  real mass -2.3%; the on-shell boxes with one real mass, in all
-  relabellings, +14% (19,938 to 22,810).
+  NinjaRS master streams within 0.002%; the other figures depend on the
+  sample. Real two-mass boxes +0.4% (23,673 to 23,763; 500 random boxes);
+  complex two-mass boxes -2.5% to +4.4%: on this stream's 500 random boxes
+  per sample -1.2% to -1.5% (00MM), -0.1% to -0.3% (0M0M) and -2.3% to -2.5%
+  (00MM with one real mass), on the two-mass verifier's random samples +4.4%
+  (00MM, 28,403 to 29,649), +2.7% (0M0M) and +0.3% (one real mass); the
+  on-shell boxes with one real mass, in all relabellings, +14% to +24%
+  (19,938 to 22,810 on this stream's 500 rows, 17,852 to 22,156 on the
+  verifier's).
 - **A reference corrected**: the second box of
   `tests/d0_collinear_limits.rs::collinear_limits_at_every_precision`
   (complex `m2²`, real `m3²`, next to a collinear limit) had OneLOop's
@@ -240,6 +250,129 @@ precision fed the exact binary64 inputs):
     streams against 09b2c74: geometric mean -0.12%, at most +0.29%
     (syn-n4-r5), at least -0.63% (9a898ee: +0.21%, +0.47%, -0.06%).
   - Definitions: 100,424,043 bytes (gate 100,663,296).
+- **The sweep rows.** At 9a898ee seeds 1 to 4 of `tests/oracle_sweep.py`
+  gave the same failure lists as 09b2c74 on every route, but comparing every
+  evaluated row (all 24 relabellings) with its 256-bit value, four boxes had
+  lost accuracy against 09b2c74: the three contour boxes of the table above
+  (rows 1 to 3 of `tests/data/contour_regressions.txt`) and a two-mass box,
+  fixed in the next section. At 9a898ee:
+  - `4 1.0 0.0 596.6380017856613 -14.719542747253795 1.0 9.0
+    -0.41134991169772017 0 0 0.17229848844808035 -0.0042830249130855775 9.0
+    -0.48397362776576125 1.0 -0.00011332140135807317` (three complex masses,
+    contour box). It lost up to 2.3e-10 hand-written, 1.1e-10 generated,
+    3.9e-10 interpreted and 2.4e-10 SymJIT, where 09b2c74 kept 2.9e-12.
+    OneLOop is unstable here (its two precisions differ by 1e-10).
+  - `4 1.0 0.013477197248422343 0.014331576181943157 50.495439982011966
+    -0.4886017458582275 0.014331576181943155 4.0 0 0 1.1039110268637602 0
+    0.014331576181943157 0 4.0 0` (three real masses, contour box). It lost
+    up to 9.1e-12 hand-written, 1.7e-11 generated and interpreted, and
+    5.4e-12 SymJIT, where 09b2c74 kept 5.8e-13.
+  - `4 1.0 0.01545852083001525 2.25 -0.32983766127195113 0.0
+    0.01545852083001525 0.015458520830015247 0.01545852083001525
+    -0.00013458303781508371 0 0 2.25 0 0.01545852083001525
+    -0.00013458303781508371` (contour box, several on-shell coincidences). It
+    was NaN on every binary64 route, where 09b2c74 was finite but wrong by 44
+    to 128 times the value. OneLOop's double precision is off by 55 times.
+
+## Two-mass boxes with both masses at or next to their shells (2026-10-19)
+
+- **The previous section's sheets lost binary64 accuracy where both massive
+  lines sit at or next to their shells**: a real mass with an invariant
+  (with a massless line) equal to m² or within about 1e-6 of it, and a
+  complex mass whose real part is at or next to its shell, or two complex
+  such masses. Denner and Dittmaier's mass pairs take the arguments
+  `u r031 = X r14` and `u r032 = X/r14`, and their quadratic at a root
+  `-1/r03k` of `m4² + Y03 x + m3² x²` is `(Y01 - Y13/r03k)(Y02 - Y23/r03k)`:
+  small there, so one argument is next to one. `1 - X r14`, formed from the
+  rounded argument, kept only `|1 - X r14|` relative digits, and the
+  dilogarithms on wound sheets (which carry `log(1 - x)`) and their divided
+  differences lost the rest. The combined candidate's sweep regression
+  `4 1.0 -4.400608205605747 3.4425584296359024 0.3420655554270402
+  77.52023396188905 0.16951572574727045 0.06566799954955663 0 0
+  0.06566799954955661 -0.0002531972626742262 0.34206555542704026 0 0 0`
+  (`p3² = m3²` to 1.6e-16, `s23 = Re m2²` to 2e-16) lost 3.3e-11 native,
+  6.8e-12 interpreted and 2.8e-11 SymJIT (09b2c74: 1.2e-15); the two-mass
+  verifier's row with a real mass next to its shell in two invariants (1e-6
+  and 4e-8) 4.8e-9; boxes exactly on shell 4.9e-11. On 4000 random boxes of
+  this class (masses 0.1 to 10, adjacent or opposite, one real or none,
+  |Im m²|/Re m² from 1e-7 to 0.3, one or two invariants per mass at
+  Re m² (1 + d) with d = 0 or 1e-16 to 1e-4) 9a898ee lost more than 1e-8
+  in 56 (up to 0.16 of the value), and in 60 of the 3600 relabellings of 150
+  more; 09b2c74's sheets (OneLOop's, right on these rows) lost at most
+  2e-10.
+- **The mass pairs' complements now come from the channels'.** At a root,
+  `(1 - X r14)(1 - X/r14) = X² - k14 X + 1` equals
+  `(1 - X r34/r13)(1 - X r24/r12) r12 r13/r23` (the quadratic is
+  `(r34 X - r13)(r24 X - r12) - r23 (X² - k14 X + 1)`). The caller forms the
+  channel complements from the kinematics, as before, and passes
+  `r12 r13/r23` (`Y01 Y02/(Y12 m4²)`) as a twelfth argument of
+  `__olo_box_two_mass_sheets` (bound to an existing symbol of box_complex's
+  definitions, so no symbol is created). A complement below 1/16 is that
+  product over the other complement where the other is above 1/4; otherwise
+  both are formed directly, as before. Next to `r14 = 1` (the threshold
+  `Y03² = 4 m3² m4²`: equal masses with a vanishing invariant between them)
+  both complements are small and `r14` is known only to the square root of
+  its rounding; the direct forms share that error and it cancels between the
+  pairs, which the product does not (two sweep boxes there lost 1e-9 with the
+  product; the direct forms keep 5e-16 and 1.6e-12, as before). The mass
+  pairs then take `complement_difference` with these complements, as the
+  channels do. The
+  exchanged formula (a real `m4²` exactly on shell) takes the complements of
+  the inverse arguments as `-w/y` with `y = X r34/r13` itself rather than
+  `-w/(1 - w)`, which lost `y`'s digits for a small `y`. The one-mass box is
+  unchanged.
+- **Denner and Dittmaier's two formulas are still chosen on exact zeros.**
+  With the complements fixed, choosing the line-exchanged formula by
+  conditioning (`|Y01 Y02| m3²` against `|Y13 Y23| m4²`, as the two-mass
+  verifier suggested, or without the masses) left the near-shell rows within
+  4e-14 either way, but moved 38 rows of the other scans by more than ten
+  times (collinear rows up to 7.5e-11 from 2.1e-12; the worst collinear row
+  went from 9.6e-9 to 2.8e-9). It is not used.
+- **Validation** against COLLIER 1.2.9 in quadruple precision (COLI and DD
+  branches with the exact binary64 inputs, taken where they agree to 1e-10)
+  on 128,349 rows: the two-mass stream's and the two-mass verifier's scans
+  (every complex two-mass pattern, one real mass, narrow widths, shells,
+  near shells, collinear limits, equal masses, the 24 relabellings of
+  on-shell boxes, and the 3-, 4- and one-mass patterns) and the 7,624
+  near-shell rows above. No row is less accurate by more than ten times
+  (and 1e-13) on any route (native hand-written and generated, interpreted,
+  SymJIT, native and interpreted 256 bits); 1216 rows are more accurate
+  (native). No row is off by more than 1e-8 (9a898ee: 116), and the
+  near-shell rows are within 1.3e-13 (9a898ee: 0.16). The remaining rows
+  beyond 1e-10 are the collinear ones of the open limitations below.
+  `tests/d0_two_mass_width.rs` now also checks the 9 boxes of
+  `tests/data/two_mass_shell.txt` (the sweep regression, the verifier's row,
+  an exactly on-shell box and the worst random boxes by pattern; references
+  from the formula in mpmath at 90 digits, which COLLIER's COLI branch
+  reproduces to 1e-17) in all 24 relabellings: binary64 routes within 1e-12
+  (measured 6.8e-16), DoubleFloat within 1e-15, and native and interpreted
+  `Float` at 128 and 256 bits within their tracked precision (they keep at
+  least 80 and 208 bits there; see the open limitations). 9a898ee fails both
+  tests (876 failures). Every real-mass and one-mass row, the three- and
+  four-mass rows and the NinjaRS master rows are bitwise unchanged on every
+  route, including 256 bits: 0-, 1- and 2-mass real rows against 09b2c74,
+  complex one-mass rows against bd619ca, all of them against 9a898ee
+  (37,642 captured sweep rows and 29,366 curated ones, their complex
+  two-mass rows aside). The D0 oracle sweeps
+  (`tests/oracle_sweep.py`, seeds 1-4, native, generated and expression
+  routes) give the summaries and failure lists of 9a898ee; against its
+  captured rows, no row regresses and the 12 relabellings of the sweep
+  regression above are back to 4.5e-16. Retired instructions per binary64
+  D0 call (perf stat, difference of 2001 and 1 repetitions): the 22 recorded
+  NinjaRS master streams within 0.0006% of 9a898ee (against 09b2c74 still
+  +0.21% geometric mean, at most +0.471%); complex two-mass boxes +4.5% to
+  +4.7% against 9a898ee on the samples of this section (1000 random 00MM and
+  0M0M boxes each, 1000 each of 00MR and 0R0M with one real mass, the 4,000
+  random near-shell boxes and the 3,600 relabelled on-shell rows above;
+  29,535 to 30,858 for 00MM), real two-mass boxes (1000 random) unchanged.
+  The
+  definitions take 100,349,287 bytes (9a898ee: 100,402,551; the gate of
+  `tests/expression_construction.rs` is 100,663,296).
+- **NinjaRS**: of the 44 complex two-mass sub-boxes of the six V0 edge cases
+  (`edge-low-rank-n5-r0` to `-r3`, `edge-many-n7-r6`, `-r7`), 10 change in
+  their last bits on the native route (6 generated, 4 interpreted); they are
+  within 7e-15 of COLLIER (1.9e-14 before). The re-bless that 9a898ee needs
+  covers them.
 
 ## Open D0 limitations after these changes (2026-10-19)
 
@@ -326,38 +459,23 @@ bullet says otherwise.
   3e-16 below `s12`), which the reflection now also takes for 8 of the
   relabellings that kept 1e-15 at 128 bits at 09b2c74 (and gave O(1) errors
   in binary64). 256 bits keep 1e-15 (and agree to 1e-30).
-- **Regressions against 09b2c74 in the D0 oracle sweeps.** Seeds 1 to 4 of
-  `tests/oracle_sweep.py` give the same failure lists as 09b2c74 on every
-  route. Comparing every evaluated row (all 24 relabellings) with the 256-bit
-  value, four boxes lost accuracy; the three contour boxes are fixed (section
-  above):
-  - `4 1.0 0.0 596.6380017856613 -14.719542747253795 1.0 9.0
-    -0.41134991169772017 0 0 0.17229848844808035 -0.0042830249130855775 9.0
-    -0.48397362776576125 1.0 -0.00011332140135807317` (three complex masses,
-    contour box). It loses up to 2.3e-10 hand-written, 1.1e-10 generated,
-    3.9e-10 interpreted and 2.4e-10 SymJIT, where 09b2c74 kept 2.9e-12.
-    OneLOop is unstable here (its two precisions differ by 1e-10).
-  - `4 1.0 0.013477197248422343 0.014331576181943157 50.495439982011966
-    -0.4886017458582275 0.014331576181943155 4.0 0 0 1.1039110268637602 0
-    0.014331576181943157 0 4.0 0` (three real masses, contour box). It loses
-    up to 9.1e-12 hand-written, 1.7e-11 generated and interpreted, and
-    5.4e-12 SymJIT, where 09b2c74 kept 5.8e-13.
-  - `4 1.0 0.01545852083001525 2.25 -0.32983766127195113 0.0
-    0.01545852083001525 0.015458520830015247 0.01545852083001525
-    -0.00013458303781508371 0 0 2.25 0 0.01545852083001525
-    -0.00013458303781508371` (contour box, several on-shell coincidences). It
-    is NaN on every binary64 route, where 09b2c74 was finite but wrong by 44
-    to 128 times the value. OneLOop's double precision is off by 55 times.
-  - `4 1.0 -4.400608205605747 3.4425584296359024 0.3420655554270402
-    77.52023396188905 0.16951572574727045 0.06566799954955663 0 0
-    0.06566799954955661 -0.0002531972626742262 0.34206555542704026 0 0 0`
-    (two adjacent masses, one complex, both next to on shell). It loses
-    3.3e-11 on the native routes, 2.8e-11 on SymJIT and 6.8e-12 interpreted,
-    where 09b2c74 kept 1.2e-15.
-
-  The first three came from the contour box's line offsets and second
-  contour and are fixed (section above). The last comes from the two-mass
-  sheets.
+- **Native `Float` at the two-mass threshold `r14 = 1`.** In `4 1.0
+  -7.158359142869336 -0.006328911565103391 0 0 0 0.01281606414601131 0.25
+  -4.478335170728946e-05 0 0 0.25 -4.478335170728946e-05 0 0` (equal complex
+  masses on opposite lines, a vanishing invariant between them, two more
+  vanishing invariants) the native 256-bit route gives 3.072e4 + 19i,
+  9.728e3 - 2.307e7i or 1.9456e4 - 4.614e7i, numbers of a few bits, for
+  8.6969 + 5.8296i in 12 of the 24 relabellings, as at 9a898ee (09b2c74:
+  2.8672e4 + 19i and the like). Binary64 on every route and the interpreted
+  256-bit expressions are right (5e-16 and 7e-17 against COLLIER's COLI
+  branch, whose DD branch stops with error -10, and the formula in mpmath).
+- **`Float` keeps the precision it tracks.** Symbolica's `Float` rounds the
+  difference of nearly equal operands to the bits it considers significant
+  (as in `tests/permutation_regressions.rs`). Next to a shell an invariant
+  and a mass differ in their last binary64 bits: in
+  `tests/data/two_mass_shell.txt` the native and interpreted results keep 80
+  of 128 bits and 208 of 256 (errors 1.5e-23 and 1e-61), within that tracked
+  precision.
 
 ## Rank-four bubble tensors (2026-10-18)
 
