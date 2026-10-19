@@ -71,6 +71,21 @@ explicit resource limits; see [expression inspection](README.md#combining-integr
   negative. Small arguments were then inverted (a `4 pi²` jump on windings
   beyond `-1, 0, 1`), at 128 to 256 bits in four-mass boxes whose invariants
   all exceed their pseudo-thresholds; the test now signs the real part.
+- Exact tests rely on identities that binary64 keeps: `x - x = 0`, `(-1) x
+  = -x` and `a b = b a`. Each `Float` carries its own precision, and a
+  square root has one bit more than its argument. Symbolica's numerica
+  used to round the more precise factor of a product to the other's
+  precision first. Evaluators form `a - b` as `a + (-1) b` with a `-1` at
+  the working precision. So `x - |x|` (the sign test) and `x - conj(x)` (the
+  imaginary part) came out as one-bit residues for about half of all square
+  roots, and `z conj(z)` kept an imaginary residue. On these residues, 62
+  native and 44 interpreted rows of the 256-bit D0 sweeps took wrong
+  branches (by up to 4e6) where binary64 was right. The pinned Symbolica
+  (symbolica-dev/symbolica#97) rounds products and quotients once and
+  keeps factors of exactly ±1 exact (`tests/float_exact_products.rs`,
+  STATUS.md). Values equal only analytically, formed by different
+  expressions, can still leave residues: STATUS.md lists the rows where
+  they still branch.
 - Each quadratic of the contour box's `s3` is the Feynman polynomial of a
   two-point subgraph, `p x² + (mi - mj - p) x + mj`: its discriminant is the
   Källén function `λ(p, mi, mj)` and its values at the ends of the

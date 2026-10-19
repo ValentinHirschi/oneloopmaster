@@ -374,6 +374,104 @@ precision fed the exact binary64 inputs):
   within 7e-15 of COLLIER (1.9e-14 before). The re-bless that 9a898ee needs
   covers them.
 
+## Float products and factors of ±1 (2026-10-19)
+
+The `Float` routes (native code and interpreted expressions, as NinjaRS's
+arbitrary-precision masters use them) were wrong on rows where binary64 was
+right. In the D0 oracle sweeps (`tests/oracle_sweep.py`, seeds 1 to 4, all 24
+relabellings: 37,642 rows, 25,645 of them with OneLOop's two precisions within
+1e-9), the following numbers of rows were more than 1e-8 off OneLOop's
+quadruple precision while binary64 was within 1e-8:
+
+| Route | 128 bits | 256 bits | 512 bits | 1024 bits |
+|---|---|---|---|---|
+| native, before | 82 | 62 | 56 | 59 |
+| native, now | 12 | 0 | 0 | 5 |
+| interpreted, before | 96 | 44 | 68 | 46 |
+| interpreted, now | 12 | 0 | 4 | 4 |
+
+The errors ranged from 5e-2 to 4e6 of the value, for example 3.07e4 + 19i
+for 8.70 + 5.83i at 256 bits. At 256 bits 09b2c74 and the combined branch
+(9a898ee) fail on the same rows.
+
+In the C0 sweeps (A0, B0, dB0 and C0, seeds 1 to 4: 17,555 rows, 17,198
+stable) the counts were:
+
+| Route | 128 bits | 256 bits | 512 bits | 1024 bits |
+|---|---|---|---|---|
+| native, before | 62 | 46 | 33 | 52 |
+| native, now | 23 | 7 | 6 | 12 |
+| interpreted, before | 62 | 33 | 33 | 39 |
+| interpreted, now | 20 | 12 | 8 | 5 |
+
+A0, B0 and dB0 had none before or after.
+
+- **Cause.** Symbolica's numerica gives a `Float` its own precision, and
+  values carry different ones: a square root has one bit more than its
+  argument, and additions track cancellations. Two of its operations then
+  broke identities that binary64 keeps exactly.
+  - A product by reference first rounded the more precise factor to the
+    other's precision. So `a b` and `b a` could differ in the last bit, and
+    `z conj(z)` kept an imaginary residue.
+  - Evaluators form `a - b` as `a + (-1) b`, with the `-1` at the working
+    precision. The product therefore rounded a `b` that carried more bits.
+    For about half of all square roots, `x - |x|` (the sign test of
+    `sheet_exact::sign_nonnegative`) and `x - conj(x)` (the imaginary part)
+    were then one-bit residues instead of zero.
+
+  Exact sign and zero tests branched on these residues. For example, a tie
+  of `|b + d|` and `|b - d|` in `ordered_negative_quadratic_roots` came out
+  `-2.8e-76` at 256 bits and swapped the roots of the two-mass box above. In
+  other rows they flipped the lip of a logarithm or the sheet of a
+  dilogarithm, or let a few-bit value dominate the result.
+- **Fix, in Symbolica.** Products and quotients are rounded once, to the
+  smaller precision, and a factor of exactly ±1 keeps the other factor
+  exact. This is symbolica-dev/symbolica#97. The pin is now `9cdc2949`
+  (`e679e8c1` plus that commit), taken from branch `ninjars-pin` of
+  alphal00p/symbolica, where NinjaRS takes its Symbolica from too (also
+  branch `claude/oneloopmaster-integration-float-products` of
+  ValentinHirschi/symbolica). Binary64 is bitwise unchanged on every route
+  (hand-written, generated, interpreted, SymJIT): on the 37,642 D0 and
+  17,555 A0 to C0 sweep rows. DoubleFloat evaluates its dilogarithm in
+  `Float` at 160 bits. It is bitwise unchanged on those rows and on the
+  7,645 NinjaRS calls below (62,842 rows in all).
+- **Regression test.** `tests/float_exact_products.rs` (`tests/data/float_exact_products.txt`)
+  covers 7 D0 and 4 C0 rows from the sweeps in all their relabellings.
+  - References: Denner and Dittmaier's two-mass box, or the C0
+    Feynman-parameter integral, in mpmath at 40 digits; otherwise COLLIER
+    1.2.9 in quadruple precision, fed the exact decimal expansions of the
+    inputs.
+  - Routes: binary64 (hand-written and generated native, interpreted,
+    SymJIT) and DoubleFloat, plus native and interpreted `Float` at 128,
+    192, 256, 320 and 512 bits.
+  - It fails with the previous pin in 605 checks on every row, and passes
+    with the new one.
+- **The two-mass threshold `r14 = 1`** is the example above. In `4 1.0
+  -7.158359142869336 -0.006328911565103391 0 0 0 0.01281606414601131 0.25
+  -4.478335170728946e-05 0 0 0.25 -4.478335170728946e-05 0 0` (equal complex
+  masses on opposite lines, a vanishing invariant between them, two more
+  vanishing invariants) the native 256-bit route gave 3.072e4 + 19i,
+  9.728e3 - 2.307e7i or 1.9456e4 - 4.614e7i, numbers of a few bits, for
+  8.6969 + 5.8296i in 12 of the 24 relabellings, with the two-mass sheets
+  and before them (09b2c74: 2.8672e4 + 19i and the like), while binary64 on
+  every route and the interpreted 256-bit expressions were right (5e-16 and
+  7e-17 against COLLIER's COLI branch, whose DD branch stops with error -10,
+  and the formula in mpmath). With the pin the native route is right too
+  (its 12 relabellings are among the 62 native rows of the 256-bit column
+  above).
+- **NinjaRS.** Take all 3- and 4-propagator subsets of every lane of the
+  rank n+2 suite (cases, controls, identity, scan) and of the final review
+  (cases, cases8, cases-eucl, cases-scan, dotcases). That gives 7,645
+  distinct C0/D0 calls.
+  - With the previous pin, all 8 `Float` lanes (native and interpreted, 128
+    to 1024 bits) agree with each other to 1e-8 on every call. None of these
+    calls is affected.
+  - The fix moves their values by at most 2.9e-32 at 128 bits and 4.7e-71 at
+    256 bits relative.
+  - NinjaRS pins Symbolica separately (`alphal00p/symbolica`, `e679e8c1`
+    when this was written). Its own `Float` masters change only after its pin
+    moves to a commit with #97, such as `9cdc2949`.
+
 ## Open D0 limitations after these changes (2026-10-19)
 
 Found while validating the sections above together. Unless a bullet
@@ -459,16 +557,6 @@ bullet says otherwise.
   3e-16 below `s12`), which the reflection now also takes for 8 of the
   relabellings that kept 1e-15 at 128 bits at 09b2c74 (and gave O(1) errors
   in binary64). 256 bits keep 1e-15 (and agree to 1e-30).
-- **Native `Float` at the two-mass threshold `r14 = 1`.** In `4 1.0
-  -7.158359142869336 -0.006328911565103391 0 0 0 0.01281606414601131 0.25
-  -4.478335170728946e-05 0 0 0.25 -4.478335170728946e-05 0 0` (equal complex
-  masses on opposite lines, a vanishing invariant between them, two more
-  vanishing invariants) the native 256-bit route gives 3.072e4 + 19i,
-  9.728e3 - 2.307e7i or 1.9456e4 - 4.614e7i, numbers of a few bits, for
-  8.6969 + 5.8296i in 12 of the 24 relabellings, as at 9a898ee (09b2c74:
-  2.8672e4 + 19i and the like). Binary64 on every route and the interpreted
-  256-bit expressions are right (5e-16 and 7e-17 against COLLIER's COLI
-  branch, whose DD branch stops with error -10, and the formula in mpmath).
 - **`Float` keeps the precision it tracks.** Symbolica's `Float` rounds the
   difference of nearly equal operands to the bits it considers significant
   (as in `tests/permutation_regressions.rs`). Next to a shell an invariant
@@ -476,6 +564,76 @@ bullet says otherwise.
   `tests/data/two_mass_shell.txt` the native and interpreted results keep 80
   of 128 bits and 208 of 256 (errors 1.5e-23 and 1e-61), within that tracked
   precision.
+- **`Float` rows that the numerica fix leaves wrong** (Float products and
+  factors of ±1, above). These are D0 sweep rows where OneLOop is stable and
+  binary64 is right. Most other sign and zero tests on cancelled values
+  still branch on rounding residues. The difference is that these residues
+  come from expressions that are equal only analytically.
+  - `4 1.0 0.0 12.25 12.25 -0.04070524207988602 -0.6390609176495762 0 0 0
+    2.25 -0.0003109069463992361 4.0 0 2.25 -0.0003109069463992361`: in 12
+    of its 24 relabellings, both `Float` routes at 128 bits give 8.0 + 8.5i
+    (4 tracked bits) for 8.238 + 8.283i. From 192 bits up the routes are
+    right. Binary64 loses 7.8e-12 here.
+  - `4 1.0 0.01230693334712481 0 0 0 0 2.5453032460105445 0 0 0.06371291035718132
+    0 0.06371291035718132 0 4.0 0`, in 4 relabellings: off by 1.0 relative
+    (interpreted, 512 bits) and by 5.6e4 and 1.1e5 (native and interpreted,
+    1024 bits).
+  - `4 1.0 -1.3135178794812885 4.616075471676815 1.939351244333556 0.0
+    -0.37504160373662826 0.04613395493643435 0.011533488734108588 0
+    0.011533488734108588 0 2.25 0 0.011533488734108588 0`, one relabelling:
+    native 1024 bits off by 6.4.
+  - Unrelated to precision: 96 OneLOop-unstable D0 sweep rows have high-precision
+    routes that disagree with each other. These are degenerate (on-shell, IR or
+    threshold) boxes where binary64 and OneLOop fail too, and some grow with the
+    precision. For example, `4 1.0 0.0 5.1835752237236346 2.314559146961827
+    0.054988940641060316 3.083060962167901 -7.793554644603385 0 0
+    3.083060962167901 0 3.083060962167901 0 0.054988940641060316 0` gives
+    -1.6e9 at 128 bits and 4.0e13 at 4096 bits.
+
+## Open C0 limitations (2026-10-19)
+
+The C0 oracle sweeps cover A0, B0, dB0 and C0, seeds 1 to 4, 17,555 rows.
+- **Equal masses with on-shell invariants and one vanishing invariant.** Of
+  the eight route and precision pairs (native and interpreted, 128 to 1024
+  bits), three triangles are wrong on all eight and a fourth on four, by
+  0.07 to 1.5 relative. Binary64 is right to 1.5e-15, and so is OneLOop.
+  The four triangles are:
+  - `3 1.0 4.0 4.0 0.0 4.0 0 4.0 0 4.0 0`: -0.1406 + 0.0039i at 256 bits
+    (4 tracked bits) for -0.15115;
+  - `3 1.0 0.0 3.2461522396961473 3.2461522396961473` with three masses
+    3.2461522396961473;
+  - `3 1.0 2.25 2.25 0.0 0.19617369498967158 0 2.25 0 0.19617369498967158 0`;
+  - `3 1.0 28.40228792397598 28.40228792397598 0.0` with three masses
+    28.40228792397598 - 0.10470706900097601i.
+
+  The roots of the quadratic are analytically real but formed in complex
+  arithmetic. For example, the product of `0.25 + 0.433i` and `0.5 - 0.866i`
+  keeps an imaginary residue of 2e-78 at 256 bits, and sign tests branch
+  on it.
+- **Two-mass rows at single precisions.** Five more triangles are wrong on
+  one to three of the eight pairs, by 1e-7 to 0.19 relative.
+- **Interpreted `Float`, C0 at vanishing invariants.** At 112, 128 and 224
+  bits, `3 1.0 0 0 0 9.0 -0.1667104301703281 21.592408834323358 0 0 0` and its
+  rotations keep 14 to 19 tracked bits and are wrong by 5.3e-3 to 1.2e-2.
+  The native route is right. The ignored reproducer is
+  `open_interpreted_float_defect` in `tests/float_exact_products.rs`.
+- **Every route, binary64 included, with the masses reflected.** The same
+  triangle with the massless line between the complex and the real mass is
+  wrong even though, with vanishing invariants, the value cannot depend on
+  the order of the masses. For `3 1.0 0 0 0 9.0 -0.1667104301703281 0 0
+  21.592408834323358 0`:
+
+  | Evaluator | Value |
+  |---|---|
+  | hand-written and generated native | -2.94e-5 + 1.49e-3i |
+  | interpreted | 0.0191 - 2.2e-6i |
+  | SymJIT | -0.0239 + 2.5e-4i |
+  | DoubleFloat | -0.234 - 0.512i |
+  | OneLOop quadruple precision | -0.2859 - 0.1114i |
+  | correct (mpmath Feynman-parameter integral, 40 digits) | -0.069489 - 5.509e-4i |
+
+  OneLOop's two precisions disagree on this row, so the sweep counts it
+  as unstable.
 
 ## Rank-four bubble tensors (2026-10-18)
 

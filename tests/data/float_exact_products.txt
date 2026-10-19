@@ -1,0 +1,45 @@
+# kind mu_squared momenta... squared_mass_real_imag... finite_real finite_imag reference_tolerance relabellings
+# C0 and D0 rows of tests/oracle_sweep.py (seeds 1-4) whose Float values were wrong at some
+# precision on the native or interpreted route (by 5e-2 to 4e6 relative) while binary64 was
+# right: numerica rounded the more precise factor of a Float product to the other's precision
+# before multiplying (so a b and b a differed in the last bit, and z conj(z) kept an imaginary
+# residue), and a factor -1, with which evaluators form a - b, rounded b to the working
+# precision although square roots carry one more bit, so x - |x| and z - conj(z) kept one-bit
+# residues on which exact sign and zero tests branched. Fixed in Symbolica (numerica) by rounding
+# products once and keeping factors of exactly +-1 exact (tests/float_exact_products.rs).
+# The finite parts are the references (the poles vanish); the tolerance is relative to |finite|.
+# The last column selects all relabellings or only the cyclic ones, and marks rows whose
+# interpreted Float route is an open defect (checked by an ignored test).
+#
+# D0, two adjacent complex masses with three vanishing invariants (256-bit native gave 3.07e4 +
+# 19i). Reference: Denner and Dittmaier's two-mass box (arXiv:1005.2076, eqs. (3.78)-(3.80)) in
+# mpmath at 40 digits in all four of its labellings, which COLLIER 1.2.9 (COLI, quadruple
+# precision, exact decimal inputs) reproduces to 1e-33.
+4 1.0 0.01281606414601131 0.0 0.0 -7.158359142869336 -0.006328911565103391 0.0 0.0 0.0 0.0 0.0 0.25 -4.478335170728946e-05 0.25 -4.478335170728946e-05 8.6969305400406462121178128535455313 5.8296250944210769920509028408260834 1e-32 all
+# D0, two adjacent masses, one complex. Reference: as above (COLLIER COLI agrees to 4e-33).
+4 1.0 0.0 0.0 0.0 -0.014776036831875757 0.0 1.0281130128733815 0.0 0.0 2.25 -0.014843747671989276 2.25 0.0 0.0 0.0 1.2570770332246703539622477452000026 9.8000717973641758997703045257913547e-3 1e-32 all
+# D0, two adjacent real masses on shell with massless lines. Reference: the two-mass formula at
+# 40 digits (COLLIER COLI differs by 2.7e-16).
+4 1.0 0.0 0.0 0.3303835768535201 -1.414179016804511 0.0 1.6845758073416606 0.0 0.0 1.6845758073416603 0.0 1.6845758073416603 0.0 0.0 0.0 7.0227500281991722353618754792426492e-1 2.1622944420935857254391056764775407e-16 1e-32 all
+# D0, three masses, one complex (256-bit native -2.6e5 + 1.7e6i and interpreted 1.2e6 + 162i
+# for -193 + 162i). Reference: COLLIER COLI in quadruple precision, which differs from OneLOop
+# 3.6's quadruple precision by 3e-15 (OneLOop's two precisions differ by 1.7e-12 here).
+4 1.0 0.016331494514297464 0.0 0.0674665054074793 1.2427594791881535 -0.009369418347037214 0.0674665054074793 0.0 0.0 0.016331494514297464 0.0 0.016331494514297464 0.0 0.0674665054074793 -2.9167147207446123e-05 -1.9332249650812646099514780562695318e2 1.6177052641877316649136050338158958e2 1e-14 all
+# D0, three equal complex masses. Reference: COLLIER COLI in quadruple precision.
+4 1.0 -0.15165015113335273 -13.78004499646524 0.0 2.25 2.25 -3.551314040633379 2.25 -0.0013194593783312641 0.0 0.0 2.25 -0.0013194593783312641 2.25 -0.0013194593783312641 3.8606411732697618387697883552677991e-2 3.6251611503101618273025078794848483e-5 1e-14 all
+# D0, three real masses. Reference: COLLIER COLI in quadruple precision.
+4 1.0 1.0414109077468257 2.25 2.25 9.835933025323984 1.5813040437743557 0.0 0.0 0.0 0.27455990838724675 0.0 2.25 0.0 0.27455990838724675 0.0 -5.7398851333939706331246332388910797e-1 1.1700568811239142265068983174802464e-1 1e-14 all
+# D0, four masses, two complex. Reference: COLLIER COLI in quadruple precision.
+4 1.0 0.0 11.31863000879466 0.0 6.25 6.25 11.275086832704746 0.25 0.0 0.25 0.0 9.0 -0.45859675145785195 9.0 -0.45859675145785195 2.3743065689561961478062691473085172e-1 1.1146604536508044983394685679938989e-1 1e-14 all
+# C0 with vanishing invariants (256-bit -0.0625 - 6.1e-4i for -0.0695 - 5.5e-4i). Reference:
+# the Feynman-parameter integral in mpmath at 40 digits (COLLIER COLI agrees to 1e-33). Only its
+# rotations: with the massless line between the complex and the real mass (the reflections) every
+# route and OneLOop are wrong in binary64 already (STATUS.md, open limitations).
+# Its interpreted Float route keeps only 14 to 19 bits at 112, 128 and 224 bits (open, STATUS.md).
+3 1.0 0.0 0.0 0.0 9.0 -0.1667104301703281 21.592408834323358 0.0 0.0 0.0 -6.948928915874376110838886563721738137e-2 -5.508615401135076901094822810610469224e-4 1e-32 rotations,open-interpreted
+# C0 with real masses, one invariant on shell with a massless line, one vanishing (256-bit
+# -0.625 - 0.0625i for -0.797). Reference: the Feynman-parameter integral in mpmath at 40
+# digits (COLLIER returns NaN).
+3 1.0 0.0 1.0 1.0 0.0 0.0 3.2922912599802374 0.0 1.0 0.0 -7.970736380766457804748517030603952214e-1 0.0 1e-32 all
+3 1.0 0.0 9.0 9.0 0.0 0.0 9.0 0.0 9.0 0.0 -2.015332626926908722882309175157950814e-1 0.0 1e-32 all
+3 1.0 0.0 0.015943822010621937 0.015943822010621937 0.0 0.0 0.015943822010621937 0.0 0.015943822010621937 0.0 -1.137618924136161437419403526971420562e2 0.0 1e-32 all
