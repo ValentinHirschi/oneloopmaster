@@ -456,9 +456,10 @@ A0, B0 and dB0 had none before or after.
   and before them (09b2c74: 2.8672e4 + 19i and the like), while binary64 on
   every route and the interpreted 256-bit expressions were right (5e-16 and
   7e-17 against COLLIER's COLI branch, whose DD branch stops with error -10,
-  and the formula in mpmath). With the pin the native route is right too
-  (its 12 relabellings are among the 62 native rows of the 256-bit column
-  above).
+  and the formula in mpmath). With the pin the native route is right too:
+  in all 24 relabellings, at 128, 256 and 512 bits, the native and
+  interpreted values agree with COLLIER's COLI branch to the binary64
+  rounding of the output.
 - **NinjaRS.** Take all 3- and 4-propagator subsets of every lane of the
   rank n+2 suite (cases, controls, identity, scan) and of the final review
   (cases, cases8, cases-eucl, cases-scan, dotcases). That gives 7,645
@@ -471,6 +472,62 @@ A0, B0 and dB0 had none before or after.
   - NinjaRS pins Symbolica separately (`alphal00p/symbolica`, `e679e8c1`
     when this was written). Its own `Float` masters change only after its pin
     moves to a commit with #97, such as `9cdc2949`.
+
+## The combined candidate (2026-10-20)
+
+The sections above together, with one regeneration: `generated_d0.rs` is
+2,794,680 bytes and the D0 asset 2,044,124 bytes (each 9a898ee's size plus
+both branches' growth; the other families are unchanged), and the definitions
+take 100,370,779 bytes (gate 100,663,296). Against 09b2c74 and against the
+heads of the three branches (contour-box regressions, two-mass complements,
+Symbolica pin):
+
+- **No interaction.** On the D0 and A0 to C0 sweep rows (seeds 1 to 4), the
+  NinjaRS calls (843 distinct master calls and 7,644 calls of the rank n+2
+  suite and its review), the contour branch's 3,387 scan rows and the
+  two-mass branch's 128,462 rows, every binary64 route (hand-written,
+  generated, interpreted, SymJIT) and DoubleFloat give the bits of the
+  contour branch wherever the two-mass branch leaves a row unchanged and
+  those of the two-mass branch wherever the contour branch does; no row is
+  changed by both, and the pin changes no binary64 or DoubleFloat bit.
+- **Real 0-, 1- and 2-mass boxes** (18,270 sweep rows and 362 NinjaRS
+  calls) are bitwise those of 09b2c74 on every binary64 route and in
+  DoubleFloat. Their 256-bit values move only with the pin: 784 (native) and
+  816 (interpreted) by at most 1e-30 relative, 16 towards OneLOop's
+  quadruple precision, and 24 OneLOop-singular boxes stay non-finite.
+- **`Float` routes.** The counts of the pin's section hold on this build:
+  of the 25,645 stable D0 sweep rows, 12, 0, 0 and 5 (native) and 12, 0, 4
+  and 4 (interpreted) at 128, 256, 512 and 1024 bits; of the 17,198 stable
+  A0 to C0 rows, 23, 7, 6 and 12, and 20, 12, 8 and 5.
+- **Oracle sweeps** (`tests/oracle_sweep.py`, D0 and A0 to C0, seeds 1 to 4,
+  native, generated and expression routes, the high-precision line at 128,
+  256 and 512 bits): all 72 failure lists are those of 09b2c74 and of the
+  three branches. Seed 2's largest stable binary64 error is 1.09e-9, as at
+  09b2c74 (9a898ee: 9.7e-10 native, 8.3e-10 generated and interpreted), on
+  a row of that list. Row by row, against OneLOop's quadruple precision or
+  the 256-bit value, 112 to 132 D0 rows per binary64 route are more
+  accurate than at 09b2c74 by more than ten times, and 8 less: the
+  relabellings of the conic singular at a massless corner (below).
+- **Retired instructions per binary64 D0 call** (perf stat, difference of
+  2001 and 1 repetitions) on the 22 NinjaRS master streams against 09b2c74:
+  geometric mean -0.12%, at most +0.29% (syn-n4-r5), at least -0.63%. On
+  the samples of the two-mass sections and of the two-mass verifier (200 to
+  4,000 boxes each): complex two-mass boxes +2.5% to +9.8%, boxes with a
+  real mass at or next to its shell +16% to +31%, complex one-mass boxes
+  -14% to -15%, real two-mass boxes +0.4%.
+- **NinjaRS master calls.** Of the 309 distinct D0 calls, 107 (hand-written),
+  206 (generated), 217 (interpreted) and 215 (SymJIT) change their binary64
+  bits against 09b2c74, 221 their DoubleFloat bits (by at most 1.4e-31) and
+  72 (native) and 63 (interpreted) their 256-bit values (by at most 1.1e-74);
+  the worst errors against OneLOop's quadruple precision (COLLIER's
+  quadruple precision agrees with it to 4.6e-15) are 1.9e-12, 1.7e-12,
+  1.8e-12 and 5.2e-12 (09b2c74: 3.6e-11, 3.6e-11, 8.9e-12, 3.4e-11). The 534 distinct C0 calls
+  keep their binary64 and DoubleFloat bits; their 256-bit values move with
+  the pin by at most 2.3e-73.
+- **Tests.** `cargo test --release --locked --features generated-evaluators
+  --no-fail-fast -- --test-threads=1`: 242 passed, 9 ignored and one
+  failure, the 256-bit check of the near-shell two-mass boxes (`Float`
+  keeps the precision it tracks, below).
 
 ## Open D0 limitations after these changes (2026-10-19)
 
@@ -563,21 +620,35 @@ bullet says otherwise.
   and a mass differ in their last binary64 bits: in
   `tests/data/two_mass_shell.txt` the native and interpreted results keep 80
   of 128 bits and 208 of 256 (errors 1.5e-23 and 1e-61), within that tracked
-  precision.
+  precision. With the Symbolica pin (products rounded once) six
+  relabellings of the first row (the sweep regression) track 216 of 256 bits
+  but are accurate to 207.7 (3.0e-63), 8.3 bits below what they track, where
+  `complex_two_mass_boxes_next_to_their_shells_match_the_references_at_128_and_256_bits`
+  allows 8: that test fails in 12 checks (both routes). With the previous pin
+  the same relabellings tracked 216 bits and kept 208.3. The other
+  relabellings track 208 or 209 bits and keep 204 to 205. At 192 bits the
+  same six fall 8.4 bits short of what they track (previous pin: at most
+  6.5); at 128 and 320 bits every relabelling stays within 5.2 and 7.1 bits
+  on both pins. numerica's estimate does not follow the amplification of
+  rounding errors after these cancellations; the test's 8 bits of slack are
+  empirical and were not widened.
 - **`Float` rows that the numerica fix leaves wrong** (Float products and
   factors of ±1, above). These are D0 sweep rows where OneLOop is stable and
   binary64 is right. Most other sign and zero tests on cancelled values
   still branch on rounding residues. The difference is that these residues
   come from expressions that are equal only analytically.
   - `4 1.0 0.0 12.25 12.25 -0.04070524207988602 -0.6390609176495762 0 0 0
-    2.25 -0.0003109069463992361 4.0 0 2.25 -0.0003109069463992361`: in 12
-    of its 24 relabellings, both `Float` routes at 128 bits give 8.0 + 8.5i
-    (4 tracked bits) for 8.238 + 8.283i. From 192 bits up the routes are
-    right. Binary64 loses 7.8e-12 here.
+    2.25 -0.0003109069463992361 4.0 0 2.25 -0.0003109069463992361`: in the 12
+    of its 24 relabellings where OneLOop's two precisions agree, both
+    `Float` routes give 8.0 + 8.5i at 128 bits (4 tracked bits) and
+    8.0 + 8.25i at 192 bits for 8.238 + 8.283i; in the other 12 (OneLOop's
+    precisions differ by 6.6e-9) they are off by 6 to 19 times the value
+    at both precisions. From 256 bits up all 24 are right. Binary64 loses
+    7.8e-12 in the first 12 and 3.5e-9 in the others, as at 09b2c74.
   - `4 1.0 0.01230693334712481 0 0 0 0 2.5453032460105445 0 0 0.06371291035718132
-    0 0.06371291035718132 0 4.0 0`, in 4 relabellings: off by 1.0 relative
-    (interpreted, 512 bits) and by 5.6e4 and 1.1e5 (native and interpreted,
-    1024 bits).
+    0 0.06371291035718132 0 4.0 0`, in 4 relabellings: off by 7.0e3
+    (interpreted, 192 bits), by 1.0 relative (interpreted, 512 bits) and by
+    5.6e4 and 1.1e5 (native and interpreted, 1024 bits).
   - `4 1.0 -1.3135178794812885 4.616075471676815 1.939351244333556 0.0
     -0.37504160373662826 0.04613395493643435 0.011533488734108588 0
     0.011533488734108588 0 2.25 0 0.011533488734108588 0`, one relabelling:
