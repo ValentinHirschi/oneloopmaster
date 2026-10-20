@@ -83,16 +83,29 @@ Next to a vanishing Gram determinant (two external momenta nearly parallel,
 their invariant next to its threshold, as for two Higgs bosons nearly at rest
 relative to each other in gg → HHH) the contour box's line edges take the
 offset of a pole from their root from Vieta's product with the poles' own
-`g + beta h`, and a contour whose `K` vanishes exactly gives way to the other:
-the NinjaRS gg → HHH box is now within 4.1e-14 on every binary64 route (3.6e-11
-before), and of 200 random such boxes all but one are within 3.2e-12, where 34
-were beyond 5e-12 and 22 beyond 1e-9 (`tests/d0_vanishing_gram.rs`). The
+`g + beta h`: the NinjaRS gg → HHH box is now within 4.1e-14 on every binary64
+route (3.6e-11 before), and of 200 random such boxes all but one are within
+3.2e-12, where 34 were beyond 5e-12 and 22 beyond 1e-9
+(`tests/d0_vanishing_gram.rs`). With the Gram determinant at the rounding
+level, a contour whose `K` rounds to zero takes its far pole 2^52 beyond the
+near one, and where the selected contour's `g + beta h` keeps fewer than 24
+bits the other contour's chart is evaluated too and taken unless the two agree
+to 2^-26: nine such boxes, wrong by up to 140 times their value or non-finite
+at 09b2c74, keep 1.5e-11 (4.9e-9 one of them) in every relabelling
+(`tests/d0_contour_regressions.rs`). Where no chart is regular, binary64
+returns NaN unless the chart it uses keeps 10 bits when the line moves by one
+rounding unit (a flat chart) or 13 bits with its `K` at the rounding level (a
+`K` that rounds to zero), so that such a box is non-finite, as at 09b2c74,
+rather than silently wrong (f2adce4: up to 1.9;
+`tests/data/contour_unresolved.txt`); `DoubleFloat` takes binary64's charts
+and `Float` the selected one, untested. The
 product is taken only where `g + beta h` itself cancels: where the conic
 nearly vanishes at the line's intersection with an edge, the line's and the
 conic's terms keep `y - z` from the same pole (three-mass boxes lost up to
 3.9e-10 otherwise). Next to a corner of the Feynman-parameter triangle, a box
 with a zero external invariant and a massless line takes the labelling that
-puts the corner at the origin, and the contour box's dilogarithms take their
+puts the corner at the origin (unless that labelling's chart has a double
+contour direction), and the contour box's dilogarithms take their
 complements `1 - x` from the poles: a box with an invariant one ulp from a
 squared mass, wrong by up to 130 times its value, is within 7.7e-12 in every
 relabelling (`tests/d0_contour_regressions.rs`).

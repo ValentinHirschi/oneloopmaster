@@ -1,0 +1,21 @@
+# kind mu_squared momenta... squared_mass_real_imag... finite_real_imag pole1_real_imag pole2_real_imag
+# Contour-box D0 with the Gram determinant at the rounding level of binary64 (box_complex::tfun_chart).
+# Rows 1 and 2: the chart binary64 uses has a K that rounds to zero and does not keep 13 bits when
+# K is moved to its rounding level. 09b2c74 was non-finite on every binary64 route in all 24
+# relabellings (its chart divided 0 by 0); f2adce4 was finite and wrong on every route and
+# relabelling, by up to 6.5e-4 (row 1) and 1.9 (row 2). They must be non-finite (or right) on every
+# binary64 route; DoubleFloat resolves them.
+# Rows 3 and 4: the selected chart is flat (a1 at the rounding level) without a regular alternative
+# and keeps its value when the line's g moves by one rounding unit; with a tolerance of 2^-16 for
+# that move instead of 2^-10, the line coefficients the expressions form (rounded differently from
+# the hand-written kernel's) made them NaN on the interpreted route (both rows) and the generated
+# and SymJIT routes (row 3), where 09b2c74 is within 2.3e-12 in every relabelling. They must stay
+# finite and right on every route.
+# All four are from the verifier's 32,600-row sweep of f2adce4 (seed 777013; rows 5457, 7952, 12548
+# and 15294). References: COLLIER 1.2.9 in quadruple precision (COLI branch; its DD branch agrees on
+# rows 1, 2 and 4, and the native 256-bit value of this crate on row 3), fed the exact decimal
+# expansions of the binary64 inputs.
+4 1.0 -4.367260891589419e-09 -1.534071139776544e-12 0.05387650270175392 2.0162105387376563e-07 -16.052361694690376 16.106238393593845 0.0 0.0 0.014003904656070649 -3.9798903525724905e-06 0.014003904656070649 -3.9798903525724905e-06 0.05387650269888167 -4.7319930575039006e-15 -0.371412632214045907991318732591344419 0.241139066475171101657283999906286092 0.0 0.0 0.0 0.0
+4 1.0 0.9652643703134774 7.791887357153015e-13 0.0 0.012162608852606147 4.304386347099257e-11 -272748121.29178613 0.0 0.0 0.9652643169794506 -0.001125373353313678 0.012162608852606147 -7.034115997591551e-07 0.012162608852606147 -7.034115997591551e-07 0.000156652563265683522842191147048021517 0.0000204120929477106012026027410579337890 0.0 0.0 0.0 0.0
+4 1.0 -7.09447373755485e-12 1.8572253272279007e-13 -9.236264998935171 -3.020885753481063e-09 -0.032748216800521875 -5.03255101454929e-09 4.344343701244138 0.0 0.08979373566136742 0.0 0.7025584608406613 0.0 3.2928735462983107 -0.00012679762856667015 0.0526100350116096549376724135498557701 0.00000105670038786217921333635328299432935 0.0 0.0 0.0 0.0
+4 1.0 1.9843689317539044 -2.259705508655606e-08 3.466172886509544e-12 3.6965809298372287e-11 1.8290435556177285e-08 0.00037679170768751 1.9843689317539044 0.0 1.9843689317539044 0.0 1.8640343746348385 -7.498734278564526e-13 0.0 0.0 0.145095785967708024994118808472442703 3.81265434205083161288443332826584694e-14 0.0 0.0 0.0 0.0

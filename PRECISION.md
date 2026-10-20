@@ -146,17 +146,56 @@ explicit resource limits; see [expression inspection](README.md#combining-integr
   lies on the conic to within the square root of the rounding; an `a1` that
   rounds to zero is taken as `2^-52 g`, whose logarithm cancels between the
   edges (exactly zero offsets gave `log 0` on each edge).
-  `K` of one beta is `b a1'` of the other, so a contour is singular where
-  `a1'` of the other vanishes in binary64 (0/0; every binary64 route returned
+  `K` of one beta is `b a1'` of the other: as `a1'` vanishes, one pole of
+  this contour goes to infinity and its terms vanish with `K`, by which they
+  are divided. A `K` that rounds to zero (0/0: every binary64 route returned
   NaN in 28% to 40% of the 1-ulp perturbations of a box with
-  `Gram/(p1² p2² p3²)` at rounding level): such a first contour is not taken
-  where the second's `K` does not vanish (`tfun`). The box keeps 1.9e-14 to 4.1e-14 on the binary64 routes,
-  and 199 of 200 random boxes next to a vanishing Gram determinant keep 3.2e-12
+  `Gram/(p1² p2² p3²)` at rounding level) is replaced by `-L/(2^52 (1 +
+  |N/L|²))`, which puts the far pole 2^52 beyond the near pole `-N/L` and the
+  triangle (`box_complex::chart_k`); the terms are then their limit to
+  O(2^-52). The other contour, whose own `a1'` is then at the rounding level,
+  is singular there: its poles sit at the line edges' roots with lips decided
+  by the rounding, and from the same rounded arguments its 256-bit value
+  differs from the first contour's by O(1). Where the selected contour's
+  `a1` keeps fewer than 24 bits (`2^56 |a1|² < |g|² + |beta h|²`), the
+  other's does not and the other has a pole within 2^7 of the triangle,
+  `tfun_chart` evaluates both and keeps the selected chart only if the two
+  agree to 2^-26; with both poles far (`K` and `L` vanish together) the other
+  chart's terms cancel and the selected one is kept. Switching to the other
+  contour unconditionally lost accuracy on more rows than it gained (the line
+  products keep the selected chart's digits down to a small `a1`). The
+  thresholds are fixed powers of two on every binary64 route and in
+  `DoubleFloat`, so that all of them take the same chart on binary64 inputs:
+  the earlier test that followed the working precision, `1 + x` rounding to
+  1, took other charts on the generated, interpreted and SymJIT routes, where
+  the norm `z conj(z)` of a composite `z` kept an imaginary residue (35% of
+  random vanishing-`a1` samples; v1 rows of the verifier's sweep lost up to
+  7e-9), and is never true in `DoubleFloat`, which keeps `1 + x` exactly.
+  `Float` takes the selected chart: at 128 bits the other chart lost two boxes
+  with exactly vanishing invariant combinations to 4.2e-7 and 1.7e-6 (28 and
+  22 tracked bits; 09b2c74 4.5e-9 and 1.1e-16). Where no chart is regular,
+  binary64 tests the chart it uses: a flat selected chart must keep 10 bits
+  when the line's `g` moves to `g (1 + 2^-52)` (its sums by the same exact
+  amount), and a chart whose `K` rounds to zero (or the other chart taken,
+  whose `K` is `b a1` of the flat one) 13 bits when `K` is set to its rounding
+  level `2^-52 (|b a1| + |h b1|)`; otherwise it returns NaN, which the caller
+  detects. Of the 26 boxes of the verifier's 32,600-row sweep that 09b2c74
+  returned as NaN and f2adce4 as finite wrong values (up to 2.8e2), 11 are
+  NaN again, 14 right and one within 10 times its input conditioning; 7
+  boxes that 09b2c74 already got wrong by more than 1e-6 are NaN, none that
+  it got right, and 23 boxes that f2adce4 got right (NaN or wrong at
+  09b2c74) are NaN again (`tests/data/contour_unresolved.txt`). Nine
+  boxes with the Gram determinant at the rounding level, wrong by 1.4e-2 to
+  140 times their value or non-finite at 09b2c74 and f2adce4, keep 1.5e-11
+  (4.9e-9 one of them; `tests/data/contour_gram_rounding.txt`). The
+  NinjaRS box keeps 1.9e-14 to 4.1e-14 on the binary64 routes, and 199 of 200
+  random boxes next to a vanishing Gram determinant keep 3.2e-12
   (`tests/d0_vanishing_gram.rs`, references OneLOop 3.6 in quadruple
   precision); OneLOop's double precision loses more than 1e-9 on 16 of them.
-  The remaining one (1.1e-10 to 3.2e-10, OneLOop 5.5e-11) has a nearly double
-  `beta` in one `tfun` and nearly coincident poles next to an edge's end in
-  the others, whose quadratic `s3` terms cancel by 20.
+  The remaining one (1.3e-11 interpreted to 3.2e-10 hand-written, OneLOop
+  5.5e-11) has a nearly double `beta` in one `tfun` and nearly coincident
+  poles next to an edge's end in the others, whose quadratic `s3` terms
+  cancel by 20.
 - A pole next to an end of a contour-box edge puts the arguments of `r1`'s
   dilogarithms (`(y - z)/(-z)` and the like) next to one, where a sheet with
   windings carries `i pi n log(1 - x)`; from the rounded quotient `1 - x` keeps
@@ -169,7 +208,12 @@ explicit resource limits; see [expression inspection](README.md#combining-integr
   of a squared mass), a pole lay 4e-31 from that corner and the box was wrong
   by up to 130 times its value. `zero_external` then takes the reflected
   labelling, which moves that corner to the origin
-  (`tests/d0_contour_regressions.rs`: every relabelling within 7.7e-12).
+  (`tests/d0_contour_regressions.rs`: every relabelling within 7.7e-12),
+  unless one of the reflected chart's conics has a double contour direction
+  (its discriminant `c² - 4 a b`, a Källén function of three invariants,
+  within 2^-26 of its terms): there the two contours nearly coincide, and a
+  box with the Gram determinant at the rounding level kept 2.4e-6 reflected
+  where it keeps 2.3e-9 unreflected.
 - The finite massless, one-mass and two-adjacent-mass boxes (OneLOop's
   `boxf0`, `boxf1` and `boxf2`) take dilogarithms of `X r34/r13` and
   `X r24/r12` for the roots `X` of a quadratic that tends to
