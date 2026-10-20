@@ -343,7 +343,8 @@ fn r1(zz: &Cont, yy1: &Cont, yy2: &Cont, fy: Z, k: &Constants<f64>) -> Z {
 
 /// `r1` (no line) or `r1_line`: where the nearer pole's `y - z` cancels by
 /// more than 64 (`4096 |y - z|² < |z|²`), its offset is the line's product
-/// `(y1 - z)(y2 - z)` (`LineProduct`) over the farther pole's.
+/// `(y1 - z)(y2 - z)` (`LineProduct`) over the farther pole's, except at
+/// coincident poles (the product's two factors are then one offset).
 #[inline(always)]
 fn r1_with(zz: &Cont, yy1: &Cont, yy2: &Cont, fy: Z, line: Option<&LineProduct>, k: &Constants<f64>) -> Z {
     let (z, y1, y2) = (zz.v, yy1.v, yy2.v);
@@ -355,7 +356,7 @@ fn r1_with(zz: &Cont, yy1: &Cont, yy2: &Cont, fy: Z, line: Option<&LineProduct>,
     if let Some(line) = line {
         let nearer_first = negative(hz1 - hz2);
         let nearer = if nearer_first { hz1 } else { hz2 };
-        if negative(4096.0 * nearer - hzz) {
+        if negative(4096.0 * nearer - hzz) && nz(y1 - y2) {
             // An exactly real `y - z` stays real (its lip follows the
             // directions); a vanishing product keeps `y - z`.
             let over = |near: Z, far: Z| {

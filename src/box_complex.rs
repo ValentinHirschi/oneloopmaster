@@ -499,8 +499,12 @@ fn r1(x: [&Atom; 10]) -> Atom {
 /// edge, and `y - z` formed from the rounded values lost those digits in every
 /// quotient and logarithm of the offset. Where the nearer pole's `y - z`
 /// cancels by more than 64 (`4096 |y - z|² < |z|²`), its offset is the product
-/// over the farther pole's; elsewhere, and where the product vanishes (it is
-/// not given, [tfun_selected]), both are `y - z`, as in [r1].
+/// over the farther pole's; elsewhere, where the product vanishes (it is
+/// not given, [tfun_selected]) and at coincident poles, both are `y - z`, as
+/// in [r1]. At an exactly double real pole (`y1 = y2`, the product the square
+/// of one offset) the interpreted route (f2adce4) and the generated code
+/// (82c87d1) returned 7.6e18 times the value of four relabellings of a box of
+/// the streams' sweep, where 09b2c74 and the other routes were non-finite.
 fn r1_line(x: [&Atom; 11]) -> Atom {
     r1_with(core::array::from_fn(|index| x[index]), Some(x[10]))
 }
@@ -518,8 +522,9 @@ fn r1_with(x: [&Atom; 10], product: Option<&Atom>) -> Atom {
             let [n1, n2] = [norm(&direct1), norm(&direct2)];
             let nearer_first = less(&n1, &n2);
             let nearer = if_nonzero_else(&nearer_first, n1, n2);
-            let cancels =
-                less(&(Atom::num(4096) * nearer), &norm(z)) * if_nonzero(product, Atom::num(1));
+            let cancels = less(&(Atom::num(4096) * nearer), &norm(z))
+                * if_nonzero(product, Atom::num(1))
+                * if_nonzero(&(y1 - y2), Atom::num(1));
             let flags = [&nearer_first * &cancels, (1 - nearer_first) * cancels];
             // An exactly real `y - z` (real pole and root) stays real: the
             // lip then follows the infinitesimal directions, not the rounded

@@ -25,6 +25,8 @@
 //!   10 bits under a move of its line by one rounding unit (a flat chart) or
 //!   13 bits with its K at the rounding level (a K that rounds to zero),
 //!   instead of a silently wrong value (tests/data/contour_unresolved.txt).
+//! - At an exactly double real pole of a line edge no line product is taken
+//!   (`box_complex::r1_line`).
 //!
 //! References (tests/data/contour_regressions.txt,
 //! tests/data/contour_gram_rounding.txt, tests/data/contour_unresolved.txt):
@@ -374,6 +376,70 @@ fn check_precise(data: &str, bounds: impl Fn(u32, usize) -> (f64, f64)) {
         failures.len(),
         failures.join("\n")
     );
+}
+
+/// A box of the NinjaRS streams' oracle sweep (reference: COLLIER 1.2.9 in
+/// quadruple precision, COLI branch, which this crate's native 256-bit value
+/// matches) whose contour chart has an exactly double real pole on a line
+/// edge in the relabellings below (`y1 = y2 = -6.131598e-3`, `a1` cancelling by
+/// 2.6e-3, `K` nonzero). There the line product, the square of one offset, over
+/// the other offset gave 7.6e18 times the value on the interpreted route at
+/// f2adce4 and on the generated route at 82c87d1, where 09b2c74 and the
+/// other routes were non-finite; they must stay non-finite or right on the
+/// hand-written, generated and interpreted routes. Not tested, and as at
+/// 09b2c74: SymJIT is wrong by 3.4e2 to 3.7e2 in these four relabellings,
+/// and every binary64 route by 1 to 20 times the value in 12 of the other 20.
+const DOUBLE_REAL_POLE: &str = "\
+4 1.0 0.0 -0.8946129797968647 -24.09653762111702 0.08938220565009944 0.1941275888116677 0.08938220565009944 0.6383507753193867 0.0 0.6383507753193867 0.0 0.0 0.0 0.25 0.0 0.186223741107587548155091032027640752 0.0 0.0 0.0 0.0 0.0
+";
+
+#[test]
+fn contour_box_with_a_double_real_pole_is_not_silently_wrong() {
+    on_stack(|| {
+        let (args, expected, _) = rows(DOUBLE_REAL_POLE).remove(0);
+        let images = images(&args);
+        let mut native: Vec<_> = [true, false]
+            .map(|handwritten| {
+                let mut evaluator = NativeEvaluator::<f64>::new(ScalarIntegral::D0).unwrap();
+                evaluator.set_handwritten(handwritten);
+                (handwritten, evaluator)
+            })
+            .into();
+        let mut failures = Vec::new();
+        for number in [0, 9, 16, 18] {
+            let image = &images[number];
+            let mut values = Vec::new();
+            for (handwritten, evaluator) in &mut native {
+                let mut output = [C::new(f64::NAN, f64::NAN); 3];
+                evaluator.evaluate(image, &mut output).unwrap();
+                values.push((format!("native (hand-written: {handwritten})"), output[0]));
+            }
+            let mut output = [C::new(f64::NAN, f64::NAN); 3];
+            evaluate_with_backend(
+                ScalarIntegral::D0,
+                image,
+                &mut output,
+                EvaluationBackend::Expression,
+            )
+            .unwrap();
+            values.push((EvaluationBackend::Expression.name().to_string(), output[0]));
+            for (route, value) in values {
+                let finite = value.re.is_finite() && value.im.is_finite();
+                let error = relative(value, expected);
+                if finite && !(error <= BINARY64) {
+                    failures.push(format!(
+                        "image {number} {route}: {value:?} vs {expected:?} ({error:e})"
+                    ));
+                }
+            }
+        }
+        assert!(
+            failures.is_empty(),
+            "{} failures:\n{}",
+            failures.len(),
+            failures.join("\n")
+        );
+    });
 }
 
 /// A box binary64 still gets wrong (reference: COLLIER 1.2.9 in quadruple
