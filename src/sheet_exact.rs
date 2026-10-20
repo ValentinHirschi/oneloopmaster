@@ -984,6 +984,14 @@ impl SheetAtom {
     pub(crate) fn dilog_complement(&self, complement: &Atom) -> Atom {
         complement_dilog_symbol().call((&self.value, &self.phase, &self.odd, complement))
     }
+
+    /// `numerical`, which chooses between algebraically identical variants of
+    /// `plain` by their rounding (the contour box's line-product probe,
+    /// `box_complex::tfun_selected`). The inspection form
+    /// (inspection_sheet.rs) takes `plain`, as it takes no complements.
+    pub(crate) fn rounding_choice(numerical: Atom, _plain: Atom) -> Atom {
+        numerical
+    }
 }
 
 impl Mul for &SheetAtom {

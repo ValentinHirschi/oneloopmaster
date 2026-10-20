@@ -52,6 +52,11 @@ impl SheetAtom {
     pub(crate) fn dilog_complement(&self, _: &Atom) -> Atom {
         self.dilog()
     }
+    /// The plain form of a value that the numerical maps choose between
+    /// algebraically identical variants by their rounding (`numerical`).
+    pub(crate) fn rounding_choice(_numerical: Atom, plain: Atom) -> Atom {
+        plain
+    }
     pub(crate) fn wound(&self, turns: &Atom) -> Self {
         Self {
             argument: self.argument.clone(),
