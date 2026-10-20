@@ -8,9 +8,12 @@
 //! reflections of a cyclic one put one such neighbour pair on a channel (s12
 //! or s23) instead, and the finite formulas were taken: binary64 returned a
 //! finite value without the pole, DoubleFloat and Float a wrong finite value
-//! or NaN (e+ e- -> t t~ h, pyAmpliCol). box_series now exchanges the channel
-//! pair for these labellings too, like for a vanishing channel, and prefers
-//! that exchange to its vanishing-channel choice when both apply.
+//! or NaN (e+ e- -> t t~ h, pyAmpliCol). Every numerical D0 entry point now
+//! evaluates these points in the labelling of the same box with both pairs on
+//! the legs, also instead of the vanishing-channel choice when both apply.
+//! The symbolic expressions do not relabel: their numerical users apply
+//! `oneloop::regular_d0_labelling` first, as the transparent-expression routes
+//! below do.
 //!
 //! Cases: the e+ e- -> t t~ h box (m, m, 0, m) of pyAmpliCol (its exact
 //! rational invariants rounded to binary64), three massive lines with
@@ -18,9 +21,10 @@
 //! lines (8 labellings with a vanishing channel), two opposite massless lines
 //! with both or one of them soft, and two adjacent massless lines with a
 //! collinear leg and both soft (its double pole; PR #10 covered its
-//! labellings, now exchanged up front). Every route: hand-written, generated
+//! labellings, now relabelled up front). Every route: hand-written, generated
 //! and interpreted binary64, SymJIT, DoubleFloat (generated and interpreted)
-//! and Float at 128 and 256 bits (generated and interpreted). References:
+//! and Float at 128 and 256 bits (generated and interpreted), and the public
+//! D0 master's numeric callbacks in binary64, DoubleFloat and Float. References:
 //! OneLOop 3.6 in quadruple precision for the identical binary64 inputs in
 //! the cyclic labelling 0123, with all three Laurent coefficients [finite,
 //! 1/eps, 1/eps^2]. COLLIER 1.2.9 in quadruple precision (COLI and DD,
@@ -33,9 +37,10 @@ use oneloop::{
     ScalarIntegral, evaluate_with_backend,
 };
 use symbolica::{
+    atom::{Atom, AtomCore},
     domains::float::{Complex, DoubleFloat, Float, Real, SingleFloat},
     domains::rational::Rational,
-    evaluate::EvaluationDomain,
+    evaluate::{EvaluationDomain, ExpressionEvaluator},
 };
 
 const BITS: u32 = 256;
@@ -271,6 +276,36 @@ fn widen(values: &[Complex<f64>]) -> [[Float; 2]; 3] {
     })
 }
 
+/// The bare public master `oneloopmaster::D0(tag, ...)`, without a function
+/// map: Symbolica evaluates it through the master's numeric callbacks.
+fn master_callbacks<T: NativeFloat>(prototype: &T, bits: u32) -> ExpressionEvaluator<Complex<T>>
+where
+    Complex<T>: EvaluationDomain,
+{
+    let parameters = (0..11)
+        .map(|i| symbolica::symbol!(format!("d0_infrared_relabelling::bare{i}")).to_atom())
+        .collect::<Vec<_>>();
+    let master = oneloop::D0();
+    let expressions = [0, -1, -2].map(|tag| {
+        let mut arguments = vec![Atom::num(tag)];
+        arguments.extend_from_slice(&parameters);
+        master.call(&arguments)
+    });
+    Atom::evaluator_multiple(&expressions, &parameters)
+        .direct_translation(true)
+        .build()
+        .unwrap()
+        .map_coeff_with_prec(
+            &|value| {
+                Complex::new(
+                    prototype.from_rational(&value.re),
+                    prototype.from_rational(&value.im),
+                )
+            },
+            bits,
+        )
+}
+
 #[test]
 fn binary64_routes_agree_in_every_labelling() {
     std::thread::Builder::new()
@@ -279,12 +314,19 @@ fn binary64_routes_agree_in_every_labelling() {
             let mut handwritten = NativeEvaluator::<f64>::new(ScalarIntegral::D0).unwrap();
             let mut generated = NativeEvaluator::<f64>::new(ScalarIntegral::D0).unwrap();
             generated.set_handwritten(false);
+            let mut callbacks = master_callbacks(&0.0_f64, 53);
             let mut failures = Vec::new();
             for case in &CASES {
                 let expected = reference(case);
                 for order in labellings() {
                     let input = binary64_input(case, order);
-                    for route in ["handwritten", "generated", "expression", "symjit"] {
+                    for route in [
+                        "handwritten",
+                        "generated",
+                        "expression",
+                        "symjit",
+                        "callbacks",
+                    ] {
                         let mut output = [Complex::new(f64::NAN, f64::NAN); 3];
                         match route {
                             "handwritten" => handwritten.evaluate(&input, &mut output).unwrap(),
@@ -296,6 +338,7 @@ fn binary64_routes_agree_in_every_labelling() {
                                 EvaluationBackend::Expression,
                             )
                             .unwrap(),
+                            "callbacks" => callbacks.evaluate(&input, &mut output),
                             _ => evaluate_with_backend(
                                 ScalarIntegral::D0,
                                 &input,
@@ -321,7 +364,8 @@ fn binary64_routes_agree_in_every_labelling() {
         .unwrap();
 }
 
-/// Generated code and the transparent expressions in carrier `T`.
+/// Generated code, the transparent expressions (relabelled by the caller) and
+/// the master's numeric callbacks in carrier `T`.
 fn check_carrier<T: NativeFloat>(
     bits: u32,
     from_f64: impl Fn(f64) -> T,
@@ -354,13 +398,18 @@ fn check_carrier<T: NativeFloat>(
             bits,
         );
     let mut native = NativeEvaluator::<T>::with_binary_precision(ScalarIntegral::D0, bits).unwrap();
-    let mut evaluate = |input: &[Complex<T>], generated: bool| {
+    let mut callbacks = master_callbacks(&prototype, bits);
+    let mut evaluate = |input: &[Complex<T>], route: &str| {
         let mut output =
             core::array::from_fn::<_, 3, _>(|_| Complex::new(prototype.zero(), prototype.zero()));
-        if generated {
-            native.evaluate(input, &mut output).unwrap();
-        } else {
-            expression.evaluate(input, &mut output);
+        match route {
+            "generated" => native.evaluate(input, &mut output).unwrap(),
+            "callbacks" => callbacks.evaluate(input, &mut output),
+            _ => {
+                let mut point = input.to_vec();
+                oneloop::regular_d0_labelling(&mut point);
+                expression.evaluate(&point, &mut output);
+            }
         }
         output.map(|z| [convert(&z.re), convert(&z.im)])
     };
@@ -371,15 +420,12 @@ fn check_carrier<T: NativeFloat>(
                 .into_iter()
                 .map(|z| Complex::new(from_f64(z.re), from_f64(z.im)))
                 .collect::<Vec<_>>();
-            for generated in [false, true] {
+            for route in ["expression", "generated", "callbacks"] {
                 check_values(
-                    &evaluate(&input, generated),
+                    &evaluate(&input, route),
                     &expected,
                     tolerance,
-                    &format!(
-                        "{}, bits {bits}, generated {generated}, labelling {order:?}",
-                        case.name
-                    ),
+                    &format!("{}, bits {bits}, {route}, labelling {order:?}", case.name),
                     failures,
                 );
             }
@@ -396,12 +442,12 @@ fn check_carrier<T: NativeFloat>(
             .chain([from_f64(MU_SQUARED)])
             .map(|v| Complex::new(v, prototype.zero()))
             .collect::<Vec<_>>();
-        for generated in [false, true] {
+        for route in ["expression", "generated", "callbacks"] {
             check_values(
-                &evaluate(&input, generated),
+                &evaluate(&input, route),
                 &reference(&CASES[0]),
                 1e-15,
-                &format!("tth exact, bits {bits}, generated {generated}, labelling {order:?}"),
+                &format!("tth exact, bits {bits}, {route}, labelling {order:?}"),
                 failures,
             );
         }
