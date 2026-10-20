@@ -213,7 +213,14 @@ explicit resource limits; see [expression inspection](README.md#combining-integr
   (its discriminant `c² - 4 a b`, a Källén function of three invariants,
   within 2^-26 of its terms): there the two contours nearly coincide, and a
   box with the Gram determinant at the rounding level kept 2.4e-6 reflected
-  where it keeps 2.3e-9 unreflected.
+  where it keeps 2.3e-9 unreflected. The reflection is also taken only where
+  a `tfun` of the original chart selects a pole next to the corner's vertex
+  `-beta` whose offset `y + beta` the rounding resolves to less than a factor
+  16 of itself, or to less than 2^12 of itself with the pole's own rounding
+  (`box_complex::tfun_vertex_suspicious`). Elsewhere the reflected chart has
+  no such pole to gain and lost up to 1e-11 to its own cancellations (a far
+  pole of a nearly vanishing `p4²`, a line product, a `K` cancelling by 2e3),
+  where the original orientation keeps 1.7e-14 to 8.2e-13.
 - The finite massless, one-mass and two-adjacent-mass boxes (OneLOop's
   `boxf0`, `boxf1` and `boxf2`) take dilogarithms of `X r34/r13` and
   `X r24/r12` for the roots `X` of a quadratic that tends to

@@ -37,6 +37,13 @@
 //!   on an edge whose pole lies within 8 offsets of an end of the edge: there
 //!   `y - z` keeps the rounded pole's cancellations that the products break
 //!   (`box_complex::products_kept`, tests/data/contour_line_products.txt).
+//! - The reflection of `zero_external` needs the line nearer (1, 0) than
+//!   (0, 0) by more than 1/128: where both corners are equally near it moves
+//!   no pole away from a corner, and its chart lost up to 1.2 times the value.
+//!   It is taken only where a `tfun` of the original chart selects a pole that
+//!   the rounding resolves poorly next to the corner's vertex: elsewhere the
+//!   reflected chart has nothing to gain and lost up to 1e-11 to its own
+//!   cancellations.
 //!
 //! References (tests/data/contour_regressions.txt,
 //! tests/data/contour_gram_rounding.txt, tests/data/contour_unresolved.txt,
@@ -487,6 +494,117 @@ fn contour_box_with_a_double_real_pole_is_not_silently_wrong() {
             failures.join("\n")
         );
     });
+}
+
+/// Boxes of the verifier's sweep where `zero_external` may reflect the chart
+/// (a massless `m2` next to the line), in their own labelling (references:
+/// COLLIER 1.2.9 in quadruple precision, COLI and DD agreeing on the first,
+/// COLI and this crate's native 256-bit value on the others). In the first
+/// (v1 15934) the line passes the corners (0, 0) and (1, 0) equally near
+/// within rounding, and the reflected chart was wrong by 0.26 to 1.2 times the
+/// value on every binary64 route (82c87d1 to 5c996fb), where the original
+/// orientation keeps 5.4e-14 (09b2c74: 3.4e-6 to 0.37). In the others the line
+/// is 2 % and 3 % nearer (1, 0) (v1 12400, 12507), and the reflection keeps
+/// 1.3e-13 and 1.2e-15 where the original orientation loses 1.4e-6 and 2.3e-7.
+/// Every binary64 route within 1e-12, DoubleFloat within 1e-14.
+const REFLECTION_MARGIN: &str = "\
+4 1.0 -9.260750350034394 0.01332834072541728 0.01804580527802355 0.0 22.25741310392177 -31.4907142762668 2.652287073296478 -0.00027624146126022564 0.0 0.0 0.643732097409299 -0.0019642405295094835 2.652287073296478 -0.00027624146126022564 -0.00198082435694084673454364950341565646 0.0287927817444659747843837737425150650 0.0 0.0 0.0 0.0
+4 1.0 6.712461550561756 6.71246155001818 6.712461550562316 0.0 -0.019320419936932016 0.0909621142299991 6.712461550562316 0.0 0.0 0.0 6.712461550562316 0.0 6.712461550562316 0.0 0.526261206935409259760819801758524851 0.0 0.0 0.0 0.0 0.0
+4 1.0 0.0 0.5021464029637546 4.701945181048143 4.701945181048143 -177.2091619818234 187.00978766741036 1.322201366963372 0.0 0.5021464029637546 0.0 0.0 0.0 4.701945181048143 -3.130180320024094e-10 -0.00879197763498300466943027664188170128 0.00582470293409468688038602773748266245 0.0 0.0 0.0 0.0
+";
+
+#[test]
+fn zero_external_reflects_only_a_line_nearer_its_corner() {
+    on_stack(|| check_reflection_rows(REFLECTION_MARGIN));
+}
+
+/// Boxes of the verifier's sweeps where the line passes nearer the corner
+/// (1, 0) by more than 1/128 and `zero_external` reflects the chart only where
+/// one of its `tfun` selects a pole next to the corner's vertex that the
+/// rounding resolves poorly (`box_complex::tfun_vertex_suspicious`), in their
+/// own labelling (references: COLLIER 1.2.9 in quadruple precision, COLI and
+/// DD agreeing, or COLI and this crate's native 256-bit value). The first
+/// four have no such pole and keep the original orientation: reflected (at
+/// cb5370d) they lost 4.1e-12 to 1.0e-11 (v1 1804: a far pole of the nearly
+/// vanishing `b = p4²`), 3.3e-13 to 7.2e-12 (v1 7832: a line product), 7.9e-13
+/// to 3.0e-12 (v1 16613) and 8.1e-13 to 1.3e-12 (g1 10856: a `K` cancelling
+/// by 2e3 and 400) on the binary64 routes. The last three are reflected:
+/// unreflected (09b2c74) they lose 1.8e-11 to 2.2e-11 (v1 17278: a pole whose
+/// rounding the offset from the vertex magnifies 1e4 times), 9.4e-12 to
+/// 9.8e-12 (v1 18471: a pole 38 times nearer the vertex than its size) and
+/// 3.2e-12 to 4.1e-12 (SW 29392 of the NinjaRS streams' sweep: 20 times).
+/// Every binary64 route within its row's tolerance (the last field),
+/// DoubleFloat within 1e-14.
+const REFLECTION_POLE: &str = "\
+4 1.0 0.28656384818680486 42.02584986987939 -9.077630159488835e-13 0.0 1.097330042297487e-13 -0.26115558711995274 13.830744098936528 -0.0009531705655522072 0.0 0.0 42.02584986987939 -3.062623934004004e-07 12.466532305719312 -7.942213616841566e-13 0.00306554602027375734616617387437222126 1.52644889366157907794829027880865826E-7 0.0 0.0 0.0 0.0 2e-12
+4 1.0 83.3855670021432 0.0 11.232603227340993 83.38548078042452 -0.9024314250092198 -1.59358277821813 83.3855670020681 0.0 0.03957245932010741 0.0 0.03957245932010741 0.0 0.0 0.0 0.00927510205593330776947712802887193334 0.0845509034072344636972574282900693038 0.0 0.0 0.0 0.0 1e-12
+4 1.0 2.948377372752437e-11 28.31952850318703 0.0 0.015949891160530368 -0.17922683605460168 -229.35946438621744 0.0 0.0 28.31952850318703 -3.1837729083046333e-11 72.0747200576466 0.0 72.0747200576466 0.0 0.000132413763514520412429270062876527252 7.19828033227632298322485743265276321E-17 0.0 0.0 0.0 0.0 1e-12
+4 1.0 188.6865735725467 0.0 0.7175303256548632 -0.12566377922328004 -2.596072948553744 -0.011750231886380956 15.811414894439205 0.0 7.195596015821104 -0.05897417412953987 9.001577285728034 0.0 0.0 0.0 0.000912544938334547156413868319884028920 0.00484161524092646691201311421080879498 0.0 0.0 0.0 0.0 2e-13
+4 1.0 0.0 0.01767368687841736 -3.251557176123042e-13 0.01767368868492391 -0.08618317740844156 260.1220143634163 0.01767368687841736 -1.016157680684762e-06 0.01767368687841736 -1.016157680684762e-06 0.0 0.0 1.9271531991107602 -6.479744509773929e-06 -1.23985213200944342635652881892295716 1.55916141513682332420475476068907249 0.0 0.0 0.0 0.0 1e-12
+4 1.0 1.3104711065925037 1.3104711065930064 0.0 0.013927560143652096 2.745048083797347 0.24764122273995193 0.0 0.0 1.3104711065925037 -0.033826877553513365 2.553002723799046 -8.659481203644983e-06 0.013927560143652096 0.0 -30.7952611290646049686034280959006578 22.1744616936444843648885335846340354 0.0 0.0 0.0 0.0 1e-13
+4 1.0 1467.1852045767862 0.243012274094481 -0.13365167391458466 13.512190149234277 -49.81300097992969 0.0 12.363261727598141 0.0 0.243012274094481 0.0 0.0 0.0 0.243012274094481 0.0 -0.0116948527312188023630420582502082495 0.0396641692032404853740058663027177328 0.0 0.0 0.0 0.0 1e-12
+";
+
+#[test]
+fn zero_external_reflects_only_a_chart_with_a_pole_at_its_corner() {
+    on_stack(|| check_reflection_rows(REFLECTION_POLE));
+}
+
+/// Every binary64 route (hand-written and generated native code, the
+/// interpreted expressions and SymJIT) within the row's tolerance (1e-12 where
+/// none is given) and DoubleFloat within 1e-14, in the rows' own labelling.
+fn check_reflection_rows(data: &'static str) {
+    let mut native: Vec<_> = [true, false]
+        .map(|handwritten| {
+            let mut evaluator = NativeEvaluator::<f64>::new(ScalarIntegral::D0).unwrap();
+            evaluator.set_handwritten(handwritten);
+            (handwritten, evaluator)
+        })
+        .into();
+    let mut double = NativeEvaluator::<DoubleFloat>::new(ScalarIntegral::D0).unwrap();
+    let mut failures = Vec::new();
+    for (line, (args, expected, tolerance)) in rows(data).iter().enumerate() {
+        let binary64 = tolerance.unwrap_or(1e-12);
+        let mut values = Vec::new();
+        for (handwritten, evaluator) in &mut native {
+            let mut output = [C::new(f64::NAN, f64::NAN); 3];
+            evaluator.evaluate(args, &mut output).unwrap();
+            values.push((
+                format!("native (hand-written: {handwritten})"),
+                output[0],
+                binary64,
+            ));
+        }
+        for backend in [EvaluationBackend::Expression, EvaluationBackend::SymJit] {
+            let mut output = [C::new(f64::NAN, f64::NAN); 3];
+            evaluate_with_backend(ScalarIntegral::D0, args, &mut output, backend).unwrap();
+            values.push((backend.name().to_string(), output[0], binary64));
+        }
+        let input: Vec<_> = args
+            .iter()
+            .map(|z| Complex::new(DoubleFloat::from(z.re), DoubleFloat::from(z.im)))
+            .collect();
+        let zero = Complex::new(DoubleFloat::from(0.), DoubleFloat::from(0.));
+        let mut output = [zero; 3];
+        double.evaluate(&input, &mut output).unwrap();
+        let value = C::new(output[0].re.to_f64(), output[0].im.to_f64());
+        values.push(("DoubleFloat".to_string(), value, 1e-14));
+        for (route, value, tolerance) in values {
+            let error = relative(value, *expected);
+            if !(error <= tolerance) {
+                failures.push(format!(
+                    "row {} {route}: {value:?} vs {expected:?} ({error:e})",
+                    line + 1
+                ));
+            }
+        }
+    }
+    assert!(
+        failures.is_empty(),
+        "{} failures:\n{}",
+        failures.len(),
+        failures.join("\n")
+    );
 }
 
 /// A box binary64 still gets wrong (reference: COLLIER 1.2.9 in quadruple
