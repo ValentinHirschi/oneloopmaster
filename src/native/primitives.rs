@@ -113,8 +113,14 @@ impl NativeFloat for f64 {
     fn complex_inverse(a: &C<Self>) -> C<Self> {
         // Off the axes and in the safe range, one division replaces the
         // scaled algorithm's dependent divisions (within about two ulps).
-        // Axes, NaN/Inf (including overflowing intermediates, which must stay
-        // visible) and extreme scales keep the scaled algorithm.
+        // A finite value on an axis takes the scaled algorithm's own exact
+        // shortcut here (the same values), so that the common real inverses
+        // need no call: `scaled_inverse` is generic and not `#[inline]`, and
+        // where rustc's partition of the codegen units leaves it outside the
+        // caller's unit, the opaque call cost the hand-written box kernel 6%
+        // more instructions per D0 call. NaN/Inf (including overflowing
+        // intermediates, which must stay visible) and extreme scales keep the
+        // scaled algorithm.
         let (x, y) = (a.re.abs(), a.im.abs());
         if x > 0.0 && y > 0.0 {
             let largest = x.max(y);
@@ -122,6 +128,12 @@ impl NativeFloat for f64 {
                 let scale = 1.0 / (a.re * a.re + a.im * a.im);
                 return C::new(a.re * scale, -a.im * scale);
             }
+        }
+        if a.im == 0.0 && a.re.is_finite() {
+            return C::new(1.0 / a.re, -a.im);
+        }
+        if a.re == 0.0 && a.im.is_finite() {
+            return C::new(a.re, -(1.0 / a.im));
         }
         scaled_inverse(a)
     }
