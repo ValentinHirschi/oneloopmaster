@@ -42,19 +42,38 @@ const COLLINEAR_ROWS: [usize; 2] = [2, 3];
 const COLLINEAR_RELABELLED: f64 = 1e-9;
 const COLLINEAR_IMAGE_AGREEMENT: f64 = 1e-27;
 
+/// A 0C00 box next to a collinear limit (p2² = 2.4e-10) with the mass next
+/// to its shells in p4² and s23 (m² - p4² = -4.4e-5 - 7.3e-5i, m² - s23 =
+/// 4e-12 - 7.3e-5i): a root X of the one-mass quadratic is within 7e-8 of
+/// 1/r14, and the mass pair's argument X r14 next to one on a wound sheet.
+/// Its complement formed from the rounded root lost 1.2e-10 of the value in
+/// 8 of the 24 relabellings, on every binary64 route (2.8e-10 SymJIT), where
+/// OneLOop's sheets (09b2c74) kept 8e-16; a one-ulp change of any input
+/// moves the value by at most 2.7e-15. Reference: native Float at 256 bits,
+/// on which 09b2c74 and f2adce4 agree to 1e-73, rounded to binary64; COLLIER
+/// 1.2.9 in quadruple precision (COLI and DD agree, fed the exact decimal
+/// expansions of the inputs) agrees within 1.2e-18 in every relabelling.
+const MASS_PAIR_NEXT_TO_ONE: &str = "4 1.0 18.592973581222886 2.3921721013489905e-10 \
+    221.42383370666434 0.04722941995105156 1.1932387948634814e-07 0.04718503480698597 \
+    0.0 0.0 0.0 0.0 0.0 0.0 0.0471850348110201 -7.343284330107032e-05 \
+    0.28392146259104049021502716246973941336 -0.026104059475840481041527149036706690315 \
+    0.0 0.0 0.0 0.0";
+
+fn parse(line: &str) -> (Vec<C>, C) {
+    let v: Vec<f64> = line.split_whitespace().map(|x| x.parse().unwrap()).collect();
+    assert_eq!(v[0], 4.0);
+    assert_eq!(v.len(), 22);
+    let mut args: Vec<C> = v[2..8].iter().map(|&x| C::new(x, 0.)).collect();
+    args.extend(v[8..16].chunks_exact(2).map(|z| C::new(z[0], z[1])));
+    args.push(C::new(v[1], 0.));
+    (args, C::new(v[16], v[17]))
+}
+
 fn rows() -> Vec<(Vec<C>, C)> {
     include_str!("data/one_mass_width.txt")
         .lines()
         .filter(|line| !line.starts_with('#') && !line.trim().is_empty())
-        .map(|line| {
-            let v: Vec<f64> = line.split_whitespace().map(|x| x.parse().unwrap()).collect();
-            assert_eq!(v[0], 4.0);
-            assert_eq!(v.len(), 22);
-            let mut args: Vec<C> = v[2..8].iter().map(|&x| C::new(x, 0.)).collect();
-            args.extend(v[8..16].chunks_exact(2).map(|z| C::new(z[0], z[1])));
-            args.push(C::new(v[1], 0.));
-            (args, C::new(v[16], v[17]))
-        })
+        .map(parse)
         .collect()
 }
 
@@ -115,57 +134,78 @@ fn complex_one_mass_boxes_match_the_references_in_binary64() {
     on_stack(|| {
         let rows = rows();
         assert_eq!(rows.len(), 15);
-        let mut failures = Vec::new();
-        let mut native: Vec<_> = [true, false]
-            .map(|handwritten| {
-                let mut evaluator = NativeEvaluator::<f64>::new(ScalarIntegral::D0).unwrap();
-                evaluator.set_handwritten(handwritten);
-                (handwritten, evaluator)
-            })
-            .into();
-        let mut double = NativeEvaluator::<DoubleFloat>::new(ScalarIntegral::D0).unwrap();
-        for (line, (args, expected)) in rows.iter().enumerate() {
-            for (number, image) in images(args).into_iter().enumerate() {
-                let binary64 = if number > 0 && COLLINEAR_ROWS.contains(&line) {
-                    COLLINEAR_RELABELLED
-                } else {
-                    TOLERANCE
-                };
-                let mut check = |route: String, value: C, tolerance: f64| {
-                    let error = relative(value, *expected);
-                    if !(error <= tolerance) {
-                        failures.push(format!(
-                            "row {line} image {number} {route}: {value:?} vs {expected:?} ({error:e})"
-                        ));
-                    }
-                };
-                for (handwritten, evaluator) in &mut native {
-                    let mut output = [C::new(f64::NAN, f64::NAN); 3];
-                    evaluator.evaluate(&image, &mut output).unwrap();
-                    check(format!("native (hand-written: {handwritten})"), output[0], binary64);
-                }
-                for backend in [EvaluationBackend::Expression, EvaluationBackend::SymJit] {
-                    let mut output = [C::new(f64::NAN, f64::NAN); 3];
-                    evaluate_with_backend(ScalarIntegral::D0, &image, &mut output, backend)
-                        .unwrap();
-                    check(backend.name().to_string(), output[0], binary64);
-                }
-                let input: Vec<_> = image
-                    .iter()
-                    .map(|z| Complex::new(DoubleFloat::from(z.re), DoubleFloat::from(z.im)))
-                    .collect();
-                let zero = Complex::new(DoubleFloat::from(0.), DoubleFloat::from(0.));
-                let mut output = [zero; 3];
-                double.evaluate(&input, &mut output).unwrap();
-                check(
-                    "DoubleFloat".into(),
-                    C::new(output[0].re.to_f64(), output[0].im.to_f64()),
-                    PRECISE,
-                );
+        let failures = binary64_failures(&rows, |line, number| {
+            if number > 0 && COLLINEAR_ROWS.contains(&line) {
+                COLLINEAR_RELABELLED
+            } else {
+                TOLERANCE
             }
-        }
+        });
         assert!(failures.is_empty(), "{} failures:\n{}", failures.len(), failures.join("\n"));
     });
+}
+
+/// The same routes for [MASS_PAIR_NEXT_TO_ONE], in every relabelling.
+#[test]
+fn complex_one_mass_box_with_its_mass_pair_next_to_one_matches_the_reference_in_binary64() {
+    on_stack(|| {
+        let failures = binary64_failures(&[parse(MASS_PAIR_NEXT_TO_ONE)], |_, _| TOLERANCE);
+        assert!(failures.is_empty(), "{} failures:\n{}", failures.len(), failures.join("\n"));
+    });
+}
+
+/// Every relabelling of `rows` on the binary64 routes within `tolerance(row,
+/// relabelling)`, and on DoubleFloat within [PRECISE].
+fn binary64_failures(
+    rows: &[(Vec<C>, C)],
+    tolerance: impl Fn(usize, usize) -> f64,
+) -> Vec<String> {
+    let mut failures = Vec::new();
+    let mut native: Vec<_> = [true, false]
+        .map(|handwritten| {
+            let mut evaluator = NativeEvaluator::<f64>::new(ScalarIntegral::D0).unwrap();
+            evaluator.set_handwritten(handwritten);
+            (handwritten, evaluator)
+        })
+        .into();
+    let mut double = NativeEvaluator::<DoubleFloat>::new(ScalarIntegral::D0).unwrap();
+    for (line, (args, expected)) in rows.iter().enumerate() {
+        for (number, image) in images(args).into_iter().enumerate() {
+            let binary64 = tolerance(line, number);
+            let mut check = |route: String, value: C, bound: f64| {
+                let error = relative(value, *expected);
+                if !(error <= bound) {
+                    failures.push(format!(
+                        "row {line} image {number} {route}: {value:?} vs {expected:?} ({error:e})"
+                    ));
+                }
+            };
+            for (handwritten, evaluator) in &mut native {
+                let mut output = [C::new(f64::NAN, f64::NAN); 3];
+                evaluator.evaluate(&image, &mut output).unwrap();
+                check(format!("native (hand-written: {handwritten})"), output[0], binary64);
+            }
+            for backend in [EvaluationBackend::Expression, EvaluationBackend::SymJit] {
+                let mut output = [C::new(f64::NAN, f64::NAN); 3];
+                evaluate_with_backend(ScalarIntegral::D0, &image, &mut output, backend)
+                    .unwrap();
+                check(backend.name().to_string(), output[0], binary64);
+            }
+            let input: Vec<_> = image
+                .iter()
+                .map(|z| Complex::new(DoubleFloat::from(z.re), DoubleFloat::from(z.im)))
+                .collect();
+            let zero = Complex::new(DoubleFloat::from(0.), DoubleFloat::from(0.));
+            let mut output = [zero; 3];
+            double.evaluate(&input, &mut output).unwrap();
+            check(
+                "DoubleFloat".into(),
+                C::new(output[0].re.to_f64(), output[0].im.to_f64()),
+                PRECISE,
+            );
+        }
+    }
+    failures
 }
 
 /// Native code and interpreted expressions at 128 bits: every relabelling

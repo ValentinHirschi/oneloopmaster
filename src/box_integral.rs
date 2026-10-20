@@ -492,11 +492,24 @@ pub(crate) fn box_finite_one_mass(p: [&Atom; 6], mass: &Atom) -> Atom {
         (mass - p[2]) / mass,
     ]
     .map(Q::lower);
+    // The mass pair's arguments `u v14 = X r14` reach one where a root meets
+    // `1/r14`, at which the quadratic is `(r24 - r12 r14)(r34 - r13 r14)/r14²`:
+    // next to a collinear limit (`a` small) with a mass next to its shell,
+    // `X2 r14 - 1 = 7e-8` in a 0C00 box, and `1 - X2 r14` formed from the
+    // rounded root lost 1.2e-10 of the value on the wound sheet's
+    // `log(1 - x)`, where OneLOop's sheets kept 8e-16. The offsets of the
+    // roots from `1/r14` keep it, as the channels' complements do.
+    let w14 = root_complements(
+        quadratic,
+        &r14,
+        &(&b - Atom::num(2) * &a / &r14),
+        &((&r24 - &r12 * &r14) * (&r34 - &r13 * &r14) / (&r14 * &r14)),
+    );
     let complex_mass = complex_mass_sheets(
         [&x1, &x2],
         &(&sm / &sr),
         [(v13, &w13, &r34 / &r13), (v12, &w12, &r24 / &r12)],
-        [(v14, r14, None)],
+        [(v14, r14, w14)],
         Q::lower((mass - p[3]) / -p[0]).log() + Q::lower((mass - p[5]) / mass).log(),
         false,
     );
@@ -551,8 +564,7 @@ pub(crate) fn box_finite_one_mass(p: [&Atom; 6], mass: &Atom) -> Atom {
 /// `channels` are the pairs with the ratios `Y23/Y02` and `Y13/Y01`, their
 /// complements `1 - X r34/r13` and `1 - X r24/r12`, and their coefficients
 /// `(y1 - y2)/(X1 - X2)`; `masses` the pairs of the `r03k` with their
-/// coefficients and, where given, their complements `1 - u r03k` at the two
-/// roots (otherwise formed from the rounded arguments);
+/// coefficients and their complements `1 - u r03k` at the two roots;
 /// `invariants` is `log(Y01/Y12) + log(Y02/m4²)`. With
 /// `vanishing_channels` a channel pair whose coefficient vanishes (its ratio
 /// is zero: a real mass on shell with a massless line) is dropped.
@@ -560,7 +572,7 @@ fn complex_mass_sheets<const N: usize>(
     [x1, x2]: [&Atom; 2],
     rotation: &Atom,
     channels: [(Q, &[Atom; 2], Atom); 2],
-    masses: [(Q, Atom, Option<[Atom; 2]>); N],
+    masses: [(Q, Atom, [Atom; 2]); N],
     invariants: Atom,
     vanishing_channels: bool,
 ) -> Atom {
@@ -588,18 +600,10 @@ fn complex_mass_sheets<const N: usize>(
             windings += winding;
         }
     }
-    for (v, coefficient, complements) in &masses {
+    for (v, coefficient, w) in &masses {
         let [y1, y2] = pair(v);
-        match complements {
-            Some(w) => {
-                one_sheet -= complement_difference(&y1, &w[0], &y2, &w[1]) * coefficient;
-                windings -= change(v, &w[1]);
-            }
-            None => {
-                one_sheet -= dd(&y1, &y2) * coefficient;
-                windings -= change(v, &(1 - (&principal * v).value()));
-            }
-        }
+        one_sheet -= complement_difference(&y1, &w[0], &y2, &w[1]) * coefficient;
+        windings -= change(v, &w[1]);
     }
     let four_pi_squared = Atom::num(4) * Symbol::PI.to_atom().pow(2);
     let correction = nearest_integer(&(re(&windings) / &four_pi_squared)) * four_pi_squared;
@@ -695,11 +699,11 @@ fn two_mass_sheets(
             (Q::lower(v12.clone()), &w12, rotation * v12),
         ],
         [
-            (Q::lower(r14 / rotation), r14.clone(), Some([c1a, c1b])),
+            (Q::lower(r14 / rotation), r14.clone(), [c1a, c1b]),
             (
                 Q::lower(Atom::num(1) / (r14 * rotation)),
                 Atom::num(1) / r14,
-                Some([c2a, c2b]),
+                [c2a, c2b],
             ),
         ],
         invariants.clone(),
