@@ -1,11 +1,16 @@
 # kind mu_squared momenta... squared_mass_real_imag... finite_real_imag pole1_real_imag pole2_real_imag
 # Two-mass D0 (OneLOop's boxf2, and boxf5 for opposite masses) with complex masses where Denner
 # and Dittmaier's terms (box_integral::two_mass_sheets) cancelled although the box is well
-# conditioned: a one-ulp change of any input moves the value by at most 1e-13, and OneLOop's
-# sheets (09b2c74), right on these boxes, kept 1e-13 in binary64 in every relabelling.
+# conditioned: a one-ulp change of any input moves the value by at most 1e-13 (rows 0 and 1) and
+# 1.1e-16 (rows 2 and 3), and OneLOop's sheets (09b2c74), right on these boxes, kept 1e-13 and
+# 6e-16 in binary64 in every relabelling.
 # Rows 0 and 1: a mass pair's argument X/r14 within 9e-7 to 2e-5 of one while the other pair's
 # complement |1 - X r14| is 0.13 to 0.19, between the 1/16 and 1/4 of the former product rule,
 # so that 1 - X/r14 was formed from the rounded root.
+# Rows 2 and 3: the roots u = X sqrt(m4^2)/sqrt(m3^2) lie on opposite lips of the negative real
+# axis, 7e-4 and 5e-3 apart (relative to |X|), and the root taken across the axis was the one
+# farther from it: the correction 4 pi^2 k/(X1 - X2) was 8e5 and 1.2e6 times the value and
+# cancelled against the windings of the pairs.
 # The comment before each row gives the worst error over its 24 relabellings and the binary64
 # routes (native with and without the hand-written kernels, interpreted, SymJIT) before
 # (c06d9fb, the same as f2adce4) and at 09b2c74.
@@ -19,3 +24,9 @@
 # Verifier sweep row v1 16236 (C0C0, both masses next to their shells, s-threshold): before
 # 1.2e-11, 09b2c74 5.5e-14; COLLIER within 1e-33.
 4 1.0 0.08918141507710385 0.8901269535167415 0.8901206972038539 0.02020569021039676 1.178546469120028 127.81442124620015 0.02020569021039676 -0.00010127718220976517 0.0 0.0 0.8901206972038539 -0.00022876428781505633 0.0 0.0 -12.466559487764983350481131622062912488 -13.248592476570630593275511503707852375 0.0 0.0 0.0 0.0
+# Two-mass stream row TM 66556 (CR00, p3^2 = 9.4e-6 between the massless lines):
+# before 1.6e-9, 09b2c74 4.6e-16; COLLIER within 4e-25.
+4 1.0 4.148047251929987 -0.9183590822962824 9.356217362101369e-06 26.026053498258726 5.25085510091492 -10.988085630388868 0.3803530439785327 -0.0003084190889860055 1.44237078811105 0.0 0.0 0.0 0.0 0.0 -0.25649378311374007072617514167201424400 -0.062089032795619943878286147148411706994 0.0 0.0 0.0 0.0
+# Two-mass stream row TM 63221 (00CC, p4^2 = 1.7e-5): before
+# 3.8e-11, 09b2c74 5.8e-16; COLLIER within 4e-27.
+4 1.0 129.39454730228354 -0.19558576239620867 -0.14357406336859893 1.6768631658392014e-05 -1.5866080255666482 21.957745810728575 0.0 0.0 0.2178649677168377 -0.0492134771282813 0.1484237341807726 -0.00019680473323734803 0.0 0.0 -0.38116305856769653496866061911802040078 -0.078602208283853262905028016897226036307 0.0 0.0 0.0 0.0

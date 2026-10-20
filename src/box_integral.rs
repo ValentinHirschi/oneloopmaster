@@ -559,7 +559,8 @@ pub(crate) fn box_finite_one_mass(p: [&Atom; 6], mass: &Atom) -> Atom {
 /// (the dilogarithms' windings cancel against the logarithm's, since
 /// `(1 - u Y23/Y02) (1 - u Y13/Y01)/prod_k (1 - u r03k)` is
 /// `Y12 m4²/(Y01 Y02)` at a root), exact once rounded; its rounding residue
-/// would otherwise grow as `1/(X1 - X2)` too.
+/// would otherwise grow as `1/(X1 - X2)` too. The two-mass terms label the
+/// roots so that `u2` is the one nearer the axis ([two_mass_sheets]).
 ///
 /// `channels` are the pairs with the ratios `Y23/Y02` and `Y13/Y01`, their
 /// complements `1 - X r34/r13` and `1 - X r24/r12`, and their coefficients
@@ -612,6 +613,82 @@ fn complex_mass_sheets<const N: usize>(
 
 fn two_mass_sheets_symbol() -> Symbol {
     symbolica::symbol!("__olo_box_two_mass_sheets")
+}
+
+fn two_mass_sheets_ordered_symbol() -> Symbol {
+    symbolica::symbol!("__olo_box_two_mass_sheets_ordered")
+}
+
+/// [two_mass_sheets_ordered] with the roots labelled so that `u2 = X2
+/// rotation` is the one nearer the negative real axis (in angle) when they
+/// lie on its opposite lips next to each other; the terms are symmetric in
+/// the labels, with each root's complements. [complex_mass_sheets] takes `u2`
+/// across the axis to `u1`'s lip and adds back the change of `F` there. Taken
+/// from the farther root, the change spread over the pairs as
+/// `2 pi i log(1 - y)`-sized windings, up to 1e6 times the result next to a
+/// collinear limit (channel arguments `y` next to one), which cancelled
+/// against the correction `4 pi² k/(X1 - X2)`: with `u2` taken across
+/// whatever its angle (a5da789), two-mass boxes there lost 1e-12 to 1.6e-9,
+/// where OneLOop's sheets kept 1e-16 (TM 66556 and 63221 of
+/// tests/data/two_mass_conditioning.txt). Taken from the nearer root it keeps
+/// 4e-16; of 376 relabellings of the two-mass sweeps where the choice changed
+/// the binary64 error tenfold, the nearer root was the better one in 368 (the
+/// other 8 by at most 1.6e-12), and in all of them the roots were within 0.08
+/// of their size. Farther apart than an eighth of `|X1| + |X2|` the
+/// correction is not much larger than the value, and the labels are kept:
+/// relabelled there, 128-bit `Float` lost up to 13 more bits (numerica rounds
+/// the near-shell differences in the channels' complements to their tracked
+/// precision) without a binary64 gain. A registered function of its own, so
+/// that the swapped arguments are not repeated in the terms.
+fn two_mass_sheets(
+    [
+        x1,
+        x2,
+        rotation,
+        v13,
+        w13a,
+        w13b,
+        v12,
+        w12a,
+        w12b,
+        r14,
+        invariants,
+        product,
+    ]: [&Atom; 12],
+) -> Atom {
+    let [u1, u2] = [x1, x2].map(|x| x * rotation);
+    let upper = |u: &Atom| negative(&-im(u));
+    let turns = (upper(&u1) - upper(&u2)) * negative(&re(&u1)) * negative(&re(&u2));
+    let abs = |z: &Atom| Symbol::ABS.call((z,));
+    let close = negative(&(Atom::num(8) * abs(&(x1 - x2)) - abs(x1) - abs(x2)));
+    let nearer_first = negative(&(abs(&im(&u1)) * abs(&u2) - abs(&im(&u2)) * abs(&u1)));
+    let swap = if_nonzero(&turns, close * nearer_first);
+    let pick = |a: &Atom, b: &Atom| {
+        [
+            if_nonzero_else(&swap, b.clone(), a.clone()),
+            if_nonzero_else(&swap, a.clone(), b.clone()),
+        ]
+    };
+    let [x1, x2] = pick(x1, x2);
+    let [w13a, w13b] = pick(w13a, w13b);
+    let [w12a, w12b] = pick(w12a, w12b);
+    two_mass_sheets_ordered_symbol().call(
+        [
+            x1,
+            x2,
+            rotation.clone(),
+            v13.clone(),
+            w13a,
+            w13b,
+            v12.clone(),
+            w12a,
+            w12b,
+            r14.clone(),
+            invariants.clone(),
+            product.clone(),
+        ]
+        .as_slice(),
+    )
 }
 
 /// The terms of [box_finite_two_adjacent] for masses with a width
@@ -671,7 +748,7 @@ fn two_mass_sheets_symbol() -> Symbol {
 /// up to 30 bits there (a real mass within 1e-15 of its shell, 123 to 93
 /// tracked bits). A channel with a vanishing ratio (a real mass on shell)
 /// contributes the complement one; its given complement is not finite then.
-fn two_mass_sheets(
+fn two_mass_sheets_ordered(
     [
         x1,
         x2,
@@ -1766,6 +1843,13 @@ pub(crate) fn register_boxes(map: &mut FunctionMap) {
             symbolica::symbol!("__olo_boxc_arg_11")
         }
     });
+    map.add_function_with_options(
+        two_mass_sheets_ordered_symbol(),
+        sheet_symbols.to_vec(),
+        two_mass_sheets_ordered(sheet_symbols.map(Symbol::to_atom).each_ref()),
+        native_function_options(),
+    )
+    .expect("unique two-mass sheets with ordered roots");
     map.add_function_with_options(
         two_mass_sheets_symbol(),
         sheet_symbols.to_vec(),

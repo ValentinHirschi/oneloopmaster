@@ -145,12 +145,14 @@ fn complex_two_mass_boxes_next_to_their_shells_match_the_references_in_binary64(
 
 /// The same routes for well-conditioned boxes whose Denner-Dittmaier terms
 /// cancelled (tests/data/two_mass_conditioning.txt): a mass pair's argument
-/// next to one with the other pair's complement between 1/16 and 1/4.
+/// next to one with the other pair's complement between 1/16 and 1/4, and
+/// roots on opposite lips of the negative real axis taken across it from the
+/// farther one.
 #[test]
 fn complex_two_mass_boxes_with_cancelling_sheet_terms_match_the_references_in_binary64() {
     on_stack(|| {
         let rows = rows(CONDITIONING_ROWS);
-        assert_eq!(rows.len(), 2);
+        assert_eq!(rows.len(), 4);
         check_binary64(&rows);
     });
 }
