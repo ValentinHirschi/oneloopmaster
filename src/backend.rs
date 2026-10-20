@@ -71,7 +71,8 @@ pub(crate) fn expression_coefficient(family: ScalarIntegral, tag: usize, input: 
         .expect("expression evaluator cache poisoned");
     let ExpressionBackend { evaluator, group } = &mut *value;
     group.evaluate(input, tag, |output| {
-        evaluator.evaluate(input, output);
+        let mut relabelled = Vec::new();
+        evaluator.evaluate(crate::labelling::regular_point(input, &mut relabelled), output);
     })
 }
 
@@ -166,10 +167,12 @@ pub fn evaluate_batch_with_backend(
                 .lock()
                 .map_err(|_| "expression evaluator cache poisoned")?;
             value.group.invalidate();
+            let mut relabelled = Vec::new();
             for (point, values) in input
                 .chunks_exact(family.arity())
                 .zip(output.chunks_exact_mut(3))
             {
+                let point = crate::labelling::regular_point(point, &mut relabelled);
                 value.evaluator.evaluate(point, values);
             }
             Ok(())

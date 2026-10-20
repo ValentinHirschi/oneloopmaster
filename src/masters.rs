@@ -308,6 +308,12 @@ fn scalar_double_float(
     let result = evaluator.evaluate(args, &mut output);
     #[cfg(not(feature = "generated-evaluators"))]
     let result: Result<(), String> = {
+        let mut relabelled = Vec::new();
+        let args = if family == Family::D0 {
+            crate::labelling::regular_point(args, &mut relabelled)
+        } else {
+            args
+        };
         evaluator.evaluate(args, &mut output);
         Ok(())
     };

@@ -218,6 +218,9 @@ impl PrecisionEvaluator {
                         working.im.set_prec(self.binary_precision);
                     }
                 }
+                if self.family == ScalarIntegral::D0 {
+                    crate::labelling::regular_d0_labelling(&mut self.arguments);
+                }
                 evaluator.evaluate(&self.arguments, output);
             }
             // NativeEvaluator already maintains its own rounded-input workspace.

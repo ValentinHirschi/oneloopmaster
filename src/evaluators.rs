@@ -303,6 +303,12 @@ impl ScalarEvaluator {
     /// Evaluate a single point into `[finite, simple pole, double pole]`.
     pub fn evaluate(&mut self, args: &[C], output: &mut [C]) -> Result<(), String> {
         crate::record_usage();
+        let mut relabelled = Vec::new();
+        let args = if self.family == ScalarIntegral::D0 {
+            crate::labelling::regular_point(args, &mut relabelled)
+        } else {
+            args
+        };
         self.evaluator.evaluate(args, output)
     }
 
@@ -314,6 +320,12 @@ impl ScalarEvaluator {
         rows: usize,
     ) -> Result<(), String> {
         crate::record_usage();
+        let mut relabelled = Vec::new();
+        let args = if self.family == ScalarIntegral::D0 {
+            crate::labelling::regular_rows(args, &mut relabelled)
+        } else {
+            args
+        };
         self.evaluator.evaluate_batch(args, output, rows)
     }
 

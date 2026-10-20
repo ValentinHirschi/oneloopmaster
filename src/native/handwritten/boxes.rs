@@ -435,8 +435,14 @@ pub(super) fn d0(a: &[Z], k: &Constants<f64>) -> Option<Z> {
             let p = ORDER[shift].map(|i| p[i]);
             let m: [Z; 4] = core::array::from_fn(|i| m[(i + shift) % 4]);
             // The infrared sector (both massless-adjacent legs on shell) and
-            // the non-contour finite formula use the generated code.
-            let finite = nz(p[0] - m[1]) || nz(p[3] - m[3]);
+            // the non-contour finite formula use the generated code, as does
+            // a soft line with one leg and the channel s12 on shell, which
+            // the generated code evaluates in another labelling.
+            let finite = if nz(p[0] - m[1]) {
+                nz(p[3] - m[3]) || nz(p[4] - m[2])
+            } else {
+                nz(p[3] - m[3]) && nz(p[4] - m[2])
+            };
             // `finite_three_mass_representation`: the contour wherever it
             // supports the kinematics.
             (finite && supported_kinematics(p)).then(|| boxc(p, m, k))

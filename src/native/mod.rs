@@ -202,13 +202,21 @@ impl<T: NativeFloat> NativeEvaluator<T> {
                         .flatten()
                 })
                 .unwrap_or_else(|| generated_c0::evaluate(input, &self.context)),
+            // The hand-written sectors leave a soft line's on-shell pair on
+            // a channel to the generated code, which evaluates the labelling
+            // with both on the legs (crate::labelling).
             ScalarIntegral::D0 => simple::massless_onshell_box(input, &self.context.simple)
                 .or_else(|| {
                     self.handwritten
                         .then(|| handwritten::d0(input, &self.context.hand))
                         .flatten()
                 })
-                .unwrap_or_else(|| generated_d0::evaluate(input, &self.context)),
+                .unwrap_or_else(|| {
+                    let relabelled: Option<[C<T>; 11]> = crate::labelling::soft_order(input)
+                        .map(|order| core::array::from_fn(|k| input[order[k]].clone()));
+                    let input = relabelled.as_ref().map_or(input, |point| &point[..]);
+                    generated_d0::evaluate(input, &self.context)
+                }),
         };
         for (out, value) in output.iter_mut().zip(values) {
             *out = value;

@@ -15,6 +15,8 @@ mod expressions;
 mod initialization;
 mod inspection;
 mod inspection_formulas;
+mod labelling;
+pub use labelling::regular_d0_labelling;
 mod native;
 mod precision;
 #[cfg(feature = "rust-codegen")]
