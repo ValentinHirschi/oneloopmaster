@@ -1287,14 +1287,30 @@ pub(crate) fn box_two_adjacent_13(
     let li2b = dd(&(&y1 / &q34), &(&y2 / &q34)) / (&r34 * &r14 * &r24);
     let li2e = dd(&(&q14 / &q24), &(&q13 / &q23)) / (&r23 * &r24);
     let denominator = &mu * &mu * sqrt_3 * sqrt_4;
-    with_box_normalization(LaurentSeries::new(
+    let general = with_box_normalization(LaurentSeries::new(
         (li2f + li2b + Atom::num(2) * li2e
             - Atom::num(2) * li2d
             - Atom::num(2) * &logd * q13.log())
             / &denominator,
         logd / denominator,
         Atom::num(0),
-    ))
+    ));
+    // The chart exchange can reach one or both exact mass shells even when
+    // the original chart selected box13. Reclassify before its zero ratios
+    // are evaluated, using the already-normalized infrared limits.
+    if_series(
+        &(&p2 - mass_3),
+        if_series(
+            &(&p4 - mass_4),
+            general,
+            box_two_adjacent_12(p3, &p2, &p23, &p12, mass_4, mass_3, mu_squared),
+        ),
+        if_series(
+            &(&p4 - mass_4),
+            box_two_adjacent_12(p3, &p4, &p12, &p23, mass_3, mass_4, mu_squared),
+            box_two_adjacent_11(p3, &p12, &p23, mass_3, mass_4, mu_squared),
+        ),
+    )
 }
 
 pub(crate) fn box_two_adjacent_ir(
