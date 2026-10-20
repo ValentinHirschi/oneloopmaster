@@ -1130,11 +1130,20 @@ pub(crate) fn box_one_mass_10(
     let z0 = if_nonzero(&r34, extra) - dd(&x1, &x2) / &r14
         + dd(&xx, &Q::lower(Atom::num(1))) / &r24
         + &z1 * ((&qm / &q24).log() - qm.scale_positive(&(Atom::num(1) / mu_squared)).log() / 2);
-    with_box_normalization(LaurentSeries::new(
+    let general = with_box_normalization(LaurentSeries::new(
         -Atom::num(2) * z0 / &r13,
         -z1 / r13,
         Atom::num(0),
-    ))
+    ));
+    // The chart exchange can put p4 exactly on the massive shell even when
+    // the original labelling selected box10. Reclassify that infrared limit:
+    // box10 divides by m-p4 and has no double pole, whereas the existing
+    // box09 expression supplies the finite limit and both poles.
+    if_series(
+        &(&p4 - mass),
+        general,
+        box_one_mass_09(&p2, p3, &p12, &p23, mass, mu_squared),
+    )
 }
 
 pub(crate) fn box_one_mass_ir(p: [&Atom; 6], mass: &Atom, mu_squared: &Atom) -> LaurentSeries {
