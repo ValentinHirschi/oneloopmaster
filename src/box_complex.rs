@@ -19,7 +19,14 @@ fn call<const N: usize>(name: &str, args: [&Atom; N]) -> Atom {
 }
 
 fn norm(z: &Atom) -> Atom {
-    z * z.conj()
+    // Use the real norm-squared operation, re(z)^2 + im(z)^2. Crossed
+    // products in z*conj(z) need not cancel when the two components carry
+    // different tracked precisions. Group both the operand and its real
+    // components so conjugation/expansion cannot restore those products.
+    let z = grouped(z);
+    let real = grouped(&re(&z));
+    let imaginary = grouped(&im(&z));
+    &real * &real + &imaginary * &imaginary
 }
 
 fn less(a: &Atom, b: &Atom) -> Atom {
@@ -2056,6 +2063,101 @@ pub(crate) fn supported_kinematics(p: [&Atom; 6]) -> Atom {
 mod tests {
     use super::*;
     use symbolica::prelude::{Complex, Float, RealLike};
+
+    #[test]
+    fn composite_norms_keep_real_comparisons() {
+        use symbolica::domains::float::{FloatLike, SingleFloat};
+        use symbolica::domains::rational::Rational;
+
+        let x = ["boxc_norm_z", "boxc_norm_w"].map(|name| symbolica::symbol!(name).to_atom());
+        // These are the composite distances compared by the contour/root
+        // choices. Each is real for arbitrary complex inputs, before any
+        // model parameter or numerical tolerance is considered.
+        let first = norm(&(Atom::num(1) - &x[0]));
+        let second = norm(&(&x[1] - &x[0]));
+        let difference = &first - &second;
+        let outputs = [
+            grouped(&re(&grouped(&x[0]))),
+            grouped(&im(&grouped(&x[0]))),
+            norm(&x[0]),
+            first,
+            second,
+            difference.clone(),
+            sign_nonnegative(&difference),
+            sign_nonnegative(&(-&difference)),
+            sign_nonnegative(&Atom::num(0)),
+        ];
+        let mut map = FunctionMap::new();
+        sheet_exact::register(&mut map);
+        let exact = Atom::evaluator_multiple(&outputs.each_ref().map(Atom::as_view), &x)
+            .function_map(map.into())
+            .direct_translation(true)
+            .build()
+            .unwrap();
+        for bits in [128, 266] {
+            let prototype = Float::new(bits);
+            let mut evaluator = exact.clone().map_coeff_with_prec(
+                &|value| {
+                    Complex::new(
+                        prototype.from_rational(&value.re),
+                        prototype.from_rational(&value.im),
+                    )
+                },
+                bits,
+            );
+            let mut cases = Vec::new();
+            for n in 1..=40 {
+                let ratio = |n, d| prototype.from_rational(&Rational::from((n, d)));
+                let z = Complex::new(ratio(n, 123), ratio(41 - n, 287));
+                let w = Complex::new(ratio(n + 3, 11), -ratio(n, 13));
+                let mut mixed_z = z.clone();
+                mixed_z.re.set_precision(bits - 3);
+                let mut mixed_w = w.clone();
+                mixed_w.im.set_precision(bits - 2);
+                cases.extend([
+                    [z.clone(), w],
+                    [z.clone(), z],
+                    [mixed_z.clone(), mixed_w],
+                    [mixed_z.clone(), mixed_z],
+                ]);
+            }
+            // Actual bound operand from complex parity row233: 128/126 bits.
+            // The second run also checks the same norm at 266/264 bits.
+            let captured = Complex::new(
+                Float::parse("1.0292061724814945285656539261050293211619088743365883613260552074468938284134112", Some(bits)).unwrap(),
+                Float::parse("-4.4458254896654443057813999812257865754273155939406320738943731102215691718465756e-4", Some(bits - 2)).unwrap(),
+            );
+            cases.push([captured.clone(), captured]);
+            for (case, inputs) in cases.into_iter().enumerate() {
+                let mut values = core::array::from_fn::<_, 9, _>(|_| {
+                    Complex::new(prototype.zero(), prototype.zero())
+                });
+                evaluator.evaluate(&inputs, &mut values);
+                for value in &values[..6] {
+                    assert!(value.im.is_zero(), "bits={bits} case={case}: {value:?}");
+                }
+                assert_eq!(values[0].re, inputs[0].re);
+                assert_eq!(values[1].re, inputs[0].im);
+                assert_eq!(values[2].re, inputs[0].norm_squared());
+                let forward = if values[5].re < prototype.zero() {
+                    -1
+                } else {
+                    1
+                };
+                let backward = if values[5].re > prototype.zero() {
+                    -1
+                } else {
+                    1
+                };
+                for (value, expected) in values[6..].iter().zip([forward, backward, 1]) {
+                    assert_eq!(
+                        *value,
+                        Complex::new(prototype.from_i64(expected), prototype.zero())
+                    );
+                }
+            }
+        }
+    }
 
     #[test]
     fn principal_sqrt_complex_axis_derivatives() {

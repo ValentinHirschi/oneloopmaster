@@ -508,3 +508,100 @@ fn check_thresholds() {
         failures.join("\n")
     );
 }
+
+/// PR9 exposed expanded conjugate norms in these existing complex-mass rows.
+/// Keep the original binary64 oracle accuracy while exercising actual carrier
+/// arithmetic in both expression and generated paths.
+#[cfg(feature = "generated-evaluators")]
+#[test]
+fn complex_contour_norms_preserve_sheets_in_all_carriers() {
+    use oneloop::{NativeEvaluator, NativeFloat, ScalarIntegral};
+    use symbolica::domains::float::DoubleFloat;
+    use symbolica::evaluate::EvaluationDomain;
+
+    fn check<T: NativeFloat>(bits: u32, from_f64: impl Fn(f64) -> T)
+    where
+        Complex<T>: EvaluationDomain,
+    {
+        let x: [Atom; 11] =
+            core::array::from_fn(|index| symbol!(format!("box_norm_regression_{index}")).to_atom());
+        let context = OneLoopExpressions::new();
+        let integral = context.d0(
+            core::array::from_fn(|i| &x[i]),
+            core::array::from_fn(|i| &x[i + 6]),
+            &x[10],
+        );
+        let prototype = T::zero_at(bits);
+        let mut expression = context
+            .evaluator(integral.coefficients(), &x)
+            .unwrap()
+            .map_coeff_with_prec(
+                &|value| {
+                    Complex::new(
+                        prototype.from_rational(&value.re),
+                        prototype.from_rational(&value.im),
+                    )
+                },
+                bits,
+            );
+        let mut generated =
+            NativeEvaluator::<T>::with_binary_precision(ScalarIntegral::D0, bits).unwrap();
+        generated.set_handwritten(false);
+        let names =
+            [217, 221, 223, 224, 232, 233].map(|line| format!("three_mass_parity_line_{line}"));
+        let selected = cases()
+            .into_iter()
+            .filter(|case| names.contains(&case.name))
+            .collect::<Vec<_>>();
+        assert_eq!(selected.len(), names.len());
+        let mut failures = Vec::new();
+        for case in &selected {
+            let imaginary = case
+                .imaginary_masses
+                .expect("explicit complex-mass fixture");
+            let input: [Complex<T>; 11] = core::array::from_fn(|index| {
+                let (re, im) = if index < 6 {
+                    (case.p[index], 0.)
+                } else if index < 10 {
+                    (case.m[index - 6], imaginary[index - 6])
+                } else {
+                    (case.mu, 0.)
+                };
+                Complex::new(from_f64(re), from_f64(im))
+            });
+            for native in [false, true] {
+                let mut values = core::array::from_fn::<_, 3, _>(|_| {
+                    Complex::new(prototype.zero(), prototype.zero())
+                });
+                if native {
+                    generated.evaluate(&input, &mut values).unwrap();
+                } else {
+                    expression.evaluate(&input, &mut values);
+                }
+                let start = failures.len();
+                record_failures(
+                    case,
+                    &values.map(|value| Complex::new(value.re.to_f64(), value.im.to_f64())),
+                    bits,
+                    0.,
+                    &mut failures,
+                );
+                for failure in &mut failures[start..] {
+                    *failure = format!("generated={native}: {failure}");
+                }
+            }
+        }
+        assert!(failures.is_empty(), "{}", failures.join("\n"));
+    }
+    std::thread::Builder::new()
+        .stack_size(128 * 1024 * 1024)
+        .spawn(|| {
+            check(53, |value| value);
+            check(106, DoubleFloat::from);
+            check(128, |value| Float::with_val(128, value));
+            check(266, |value| Float::with_val(266, value));
+        })
+        .unwrap()
+        .join()
+        .unwrap();
+}
