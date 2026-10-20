@@ -1,0 +1,21 @@
+# kind mu_squared momenta... squared_mass_real_imag... finite_real_imag pole1_real_imag pole2_real_imag
+# Two-mass D0 (OneLOop's boxf2, and boxf5 for opposite masses) with complex masses where Denner
+# and Dittmaier's terms (box_integral::two_mass_sheets) cancelled although the box is well
+# conditioned: a one-ulp change of any input moves the value by at most 1e-13, and OneLOop's
+# sheets (09b2c74), right on these boxes, kept 1e-13 in binary64 in every relabelling.
+# Rows 0 and 1: a mass pair's argument X/r14 within 9e-7 to 2e-5 of one while the other pair's
+# complement |1 - X r14| is 0.13 to 0.19, between the 1/16 and 1/4 of the former product rule,
+# so that 1 - X/r14 was formed from the rounded root.
+# The comment before each row gives the worst error over its 24 relabellings and the binary64
+# routes (native with and without the hand-written kernels, interpreted, SymJIT) before
+# (c06d9fb, the same as f2adce4) and at 09b2c74.
+# References: native Float at 256 bits, on which 09b2c74 and f2adce4 agree to 1e-70 (their sheets
+# differ: OneLOop's and Denner and Dittmaier's), rounded to binary64. COLLIER 1.2.9 in quadruple
+# precision (its COLI and DD branches agree, fed the exact decimal expansions of the inputs)
+# agrees within the bound in the comment.
+# Verifier sweep row v1 3509 (0C0C, both masses next to their shells, t-threshold): before
+# 7.4e-11, 09b2c74 9.1e-14; COLLIER within 2.4e-17.
+4 1.0 0.6513394199453916 0.6513394199446534 0.6513394205342501 0.6513394199447025 -27.32416831830652 2.605357679778614 0.0 0.0 0.6513394199446534 -0.0007166946438936212 0.0 0.0 0.6513394199446534 -0.0007166946438936212 18.411869981184408488434167519613896636 25.232917965570738823942637327275753275 0.0 0.0 0.0 0.0
+# Verifier sweep row v1 16236 (C0C0, both masses next to their shells, s-threshold): before
+# 1.2e-11, 09b2c74 5.5e-14; COLLIER within 1e-33.
+4 1.0 0.08918141507710385 0.8901269535167415 0.8901206972038539 0.02020569021039676 1.178546469120028 127.81442124620015 0.02020569021039676 -0.00010127718220976517 0.0 0.0 0.8901206972038539 -0.00022876428781505633 0.0 0.0 -12.466559487764983350481131622062912488 -13.248592476570630593275511503707852375 0.0 0.0 0.0 0.0

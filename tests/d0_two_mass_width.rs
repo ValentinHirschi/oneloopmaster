@@ -41,6 +41,7 @@ const IMAGE_AGREEMENT: f64 = 1e-30;
 
 const WIDTH_ROWS: &str = include_str!("data/two_mass_width.txt");
 const SHELL_ROWS: &str = include_str!("data/two_mass_shell.txt");
+const CONDITIONING_ROWS: &str = include_str!("data/two_mass_conditioning.txt");
 
 /// A data row: the inputs, the finite part rounded to binary64 and, where
 /// given, its real and imaginary parts to 90 digits.
@@ -138,6 +139,18 @@ fn complex_two_mass_boxes_next_to_their_shells_match_the_references_in_binary64(
     on_stack(|| {
         let rows = rows(SHELL_ROWS);
         assert_eq!(rows.len(), 9);
+        check_binary64(&rows);
+    });
+}
+
+/// The same routes for well-conditioned boxes whose Denner-Dittmaier terms
+/// cancelled (tests/data/two_mass_conditioning.txt): a mass pair's argument
+/// next to one with the other pair's complement between 1/16 and 1/4.
+#[test]
+fn complex_two_mass_boxes_with_cancelling_sheet_terms_match_the_references_in_binary64() {
+    on_stack(|| {
+        let rows = rows(CONDITIONING_ROWS);
+        assert_eq!(rows.len(), 2);
         check_binary64(&rows);
     });
 }

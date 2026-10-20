@@ -645,17 +645,32 @@ fn two_mass_sheets_symbol() -> Symbol {
 /// complements, `X² - k14 X + 1`, is `(1 - X r34/r13)(1 - X r24/r12)
 /// r12 r13/r23` (the quadratic is `(r34 X - r13)(r24 X - r12) - r23 (X² -
 /// k14 X + 1)`): the channels' complements, which the caller forms from the
-/// kinematics, times `product`. A complement below 1/16 is that product over
-/// the other where the other is above 1/4 (the direct difference would keep
-/// fewer digits below 1/16 than the product's few roundings); otherwise both
-/// are taken directly. Both are small next to `r14 = 1`, the threshold
-/// `Y03² = 4 m3² m4²` (equal masses and a vanishing invariant between them),
-/// where `r14` itself is known only to the square root of its rounding: the
-/// direct forms share that error and it cancels between the two pairs, which
-/// the product, formed without `r14`, would not (two such sweep boxes lost
-/// 1e-9 that way, where the direct forms keep 5e-16 and 1.6e-12). A channel
-/// with a vanishing ratio (a real mass on shell) contributes the complement
-/// one; its given complement is not finite then.
+/// kinematics, times `product`. Both are small next to `r14 = 1`, the
+/// threshold `Y03² = 4 m3² m4²` (equal masses and a vanishing invariant
+/// between them), where `r14` itself is known only to the square root of its
+/// rounding: the direct forms share that error and it cancels between the two
+/// pairs, which the product, formed without `r14`, would not (two such sweep
+/// boxes lost 1e-9 that way, where the direct forms keep 5e-16 and 1.6e-12).
+/// With `d1 = 1 - X r14` small, `X` is next to `1/r14` and the other
+/// complement `d2` next to `1 - 1/r14²`: `r14`'s relative error is about
+/// `2 eps/|d2|`, the product over `d2` keeps `d1` to about `2 eps/|d2|²`, and
+/// the direct difference (whose `r14` error cancels) to `eps/|d1|`. A
+/// complement below 1/16 is that product over the other where the other is
+/// above 1/4 (the direct difference would keep fewer digits below 1/16 than
+/// the product's few roundings), and also where the complement is below half
+/// the other's square and the direct difference loses binary64 digits: the
+/// complement below 2^-13 (`2^-40 d` negligible against one at the working
+/// precision, which `DoubleFloat` and `Float` never reach there). Otherwise
+/// both are taken directly. With the other above 1/4 alone, complements
+/// `1 - X/r14` of 9e-7 to 3e-5 (the other 0.01 to 0.19) were formed from the
+/// rounded root, and boxes with both masses next to their shells lost 5e-12
+/// to 2.8e-10 in binary64 where OneLOop's sheets kept 6e-14 to 7e-12
+/// (tests/data/two_mass_conditioning.txt). At 128 bits the direct
+/// difference keeps them, while numerica rounds the product's near-shell
+/// differences to their tracked precision: without the bound the product lost
+/// up to 30 bits there (a real mass within 1e-15 of its shell, 123 to 93
+/// tracked bits). A channel with a vanishing ratio (a real mass on shell)
+/// contributes the complement one; its given complement is not finite then.
 fn two_mass_sheets(
     [
         x1,
@@ -675,9 +690,19 @@ fn two_mass_sheets(
     let w13 = [w13a.clone(), w13b.clone()];
     let w12 = [w12a.clone(), w12b.clone()];
     let abs = |z: &Atom| Symbol::ABS.call((z,));
-    // 1 when `d` is below 1/16 and `other` above 1/4.
+    // 1 when `x >= 0` is at most half an ulp of 1 at the working precision.
+    let negligible =
+        |x: Atom| if_nonzero_else(&(grouped(&(1 + x)) - 1), Atom::num(0), Atom::num(1));
+    // 1 when `d` is below 1/16 and `other` above 1/4, or `d` below half the
+    // square of `other` and below 2^-13 in binary64 (2^-40 d negligible).
     let small = |d: &Atom, other: &Atom| {
-        negative(&(Atom::num(16) * abs(d) - 1)) * negative(&(1 - Atom::num(4) * abs(other)))
+        negative(&(Atom::num(16) * abs(d) - 1))
+            * if_nonzero_else(
+                &negative(&(1 - Atom::num(4) * abs(other))),
+                Atom::num(1),
+                negative(&(Atom::num(2) * abs(d) - abs(other).pow(2)))
+                    * negligible(abs(d) / Atom::num(2).pow(40)),
+            )
     };
     let [[c1a, c2a], [c1b, c2b]] =
         [(x1, &w13[0], &w12[0]), (x2, &w13[1], &w12[1])].map(|(x, w13, w12)| {
