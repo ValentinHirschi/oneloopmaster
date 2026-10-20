@@ -59,6 +59,29 @@ const MASS_PAIR_NEXT_TO_ONE: &str = "4 1.0 18.592973581222886 2.3921721013489905
     0.28392146259104049021502716246973941336 -0.026104059475840481041527149036706690315 \
     0.0 0.0 0.0 0.0";
 
+/// A 000C box next to a collinear limit (p1² = 7.4e-9) and to `r13 r24 =
+/// r12 r34` (a row of 9f663c5's sweep next to both): the roots of the
+/// one-mass quadratic are within 1.1e-4 of each other, with the width on
+/// opposite lips of the negative real axis. Taken across from the root
+/// farther from the axis, each channel pair was 1.5e4 times the terms and
+/// they cancelled: the 8 relabellings in [OPPOSITE_LIPS_CHART] lost 5e-12 on
+/// every binary64 route, where OneLOop's sheets (09b2c74) kept 2e-16 and a
+/// one-ulp change of an input moves the value by 1e-16. In the other 16 the
+/// small invariant becomes `p2²` or `s12` of the one-mass formula, which
+/// loses 5e-11 to 1.6e-9 there, on these sheets and on OneLOop's alike (as in
+/// [COLLINEAR_ROWS]): they are checked on DoubleFloat only. Reference: native
+/// Float at 256 bits, on which 09b2c74 and f2adce4 agree to 1e-70, rounded to
+/// binary64; COLLIER 1.2.9 in quadruple precision (COLI and DD agree to 1e-19)
+/// is within 1.5e-20 of it.
+const ROOTS_ON_OPPOSITE_LIPS: &str = "4 1.0 7.430861122147798e-09 -1.5416659590791426 \
+    -1.9541991147752251 3.8693098753083777 -0.32971820268033486 16.92743372646953 \
+    0.0 0.0 0.0 0.0 0.0 0.0 0.31685647565555974 -5.41361576897603e-05 \
+    -3.9537025143185200608081653804875776832913981279629 \
+    0.0073647645908222872394066319339080923320791543534027 0.0 0.0 0.0 0.0";
+/// The relabellings ([images]) of [ROOTS_ON_OPPOSITE_LIPS] in which p1² is
+/// the small invariant of the one-mass formula.
+const OPPOSITE_LIPS_CHART: [usize; 8] = [0, 3, 6, 9, 16, 17, 18, 20];
+
 fn parse(line: &str) -> (Vec<C>, C) {
     let v: Vec<f64> = line.split_whitespace().map(|x| x.parse().unwrap()).collect();
     assert_eq!(v[0], 4.0);
@@ -150,6 +173,23 @@ fn complex_one_mass_boxes_match_the_references_in_binary64() {
 fn complex_one_mass_box_with_its_mass_pair_next_to_one_matches_the_reference_in_binary64() {
     on_stack(|| {
         let failures = binary64_failures(&[parse(MASS_PAIR_NEXT_TO_ONE)], |_, _| TOLERANCE);
+        assert!(failures.is_empty(), "{} failures:\n{}", failures.len(), failures.join("\n"));
+    });
+}
+
+/// The same routes for [ROOTS_ON_OPPOSITE_LIPS]: within [TOLERANCE] in the
+/// relabellings of [OPPOSITE_LIPS_CHART], finite in the others, and
+/// DoubleFloat within [PRECISE] in all 24.
+#[test]
+fn complex_one_mass_box_with_its_roots_on_opposite_lips_matches_the_reference_in_binary64() {
+    on_stack(|| {
+        let failures = binary64_failures(&[parse(ROOTS_ON_OPPOSITE_LIPS)], |_, number| {
+            if OPPOSITE_LIPS_CHART.contains(&number) {
+                TOLERANCE
+            } else {
+                f64::INFINITY
+            }
+        });
         assert!(failures.is_empty(), "{} failures:\n{}", failures.len(), failures.join("\n"));
     });
 }

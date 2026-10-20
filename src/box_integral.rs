@@ -486,12 +486,6 @@ pub(crate) fn box_finite_one_mass(p: [&Atom; 6], mass: &Atom) -> Atom {
         if_nonzero_else(&r13, ordinary, both_zero),
     );
     let r14_term = if_nonzero(&r14, dd(&(&qx1 * &q14), &(&qx2 * &q14)) * &r14);
-    let [v13, v12, v14] = [
-        -p[1] / (mass - p[5]),
-        -p[4] / (mass - p[3]),
-        (mass - p[2]) / mass,
-    ]
-    .map(Q::lower);
     // The mass pair's arguments `u v14 = X r14` reach one where a root meets
     // `1/r14`, at which the quadratic is `(r24 - r12 r14)(r34 - r13 r14)/r14²`:
     // next to a collinear limit (`a` small) with a mass next to its shell,
@@ -505,13 +499,27 @@ pub(crate) fn box_finite_one_mass(p: [&Atom; 6], mass: &Atom) -> Atom {
         &(&b - Atom::num(2) * &a / &r14),
         &((&r24 - &r12 * &r14) * (&r34 - &r13 * &r14) / (&r14 * &r14)),
     );
-    let complex_mass = complex_mass_sheets(
-        [&x1, &x2],
-        &(&sm / &sr),
-        [(v13, &w13, &r34 / &r13), (v12, &w12, &r24 / &r12)],
-        [(v14, r14, w14)],
-        Q::lower((mass - p[3]) / -p[0]).log() + Q::lower((mass - p[5]) / mass).log(),
-        false,
+    // Denner and Dittmaier's one-mass box on its own sheets ([one_mass_sheets]).
+    let [w13a, w13b] = w13;
+    let [w12a, w12b] = w12;
+    let [w14a, w14b] = w14;
+    let complex_mass = one_mass_sheets_symbol().call(
+        [
+            x1.clone(),
+            x2.clone(),
+            &sm / &sr,
+            -p[1] / (mass - p[5]),
+            w13a,
+            w13b,
+            -p[4] / (mass - p[3]),
+            w12a,
+            w12b,
+            (mass - p[2]) / mass,
+            w14a,
+            w14b,
+            Q::lower((mass - p[3]) / -p[0]).log() + Q::lower((mass - p[5]) / mass).log(),
+        ]
+        .as_slice(),
     );
     let scale = &a * &sr * &sr * &sr * sm;
     // Each branch is scaled on its own: real masses keep their arithmetic.
@@ -559,8 +567,9 @@ pub(crate) fn box_finite_one_mass(p: [&Atom; 6], mass: &Atom) -> Atom {
 /// (the dilogarithms' windings cancel against the logarithm's, since
 /// `(1 - u Y23/Y02) (1 - u Y13/Y01)/prod_k (1 - u r03k)` is
 /// `Y12 m4²/(Y01 Y02)` at a root), exact once rounded; its rounding residue
-/// would otherwise grow as `1/(X1 - X2)` too. The two-mass terms label the
-/// roots so that `u2` is the one nearer the axis ([two_mass_sheets]).
+/// would otherwise grow as `1/(X1 - X2)` too. The one- and two-mass terms
+/// label the roots so that `u2` is the one nearer the axis
+/// ([one_mass_sheets], [two_mass_sheets]).
 ///
 /// `channels` are the pairs with the ratios `Y23/Y02` and `Y13/Y01`, their
 /// complements `1 - X r34/r13` and `1 - X r24/r12`, and their coefficients
@@ -611,6 +620,139 @@ fn complex_mass_sheets<const N: usize>(
     one_sheet + if_nonzero(&turns, correction / (x1 - x2))
 }
 
+/// 1 where [complex_mass_sheets] should take the roots `X1, X2` in the other
+/// order, so that `u2 = X2 rotation` is the one nearer the negative real axis
+/// (in angle): where `u1, u2` lie on its opposite lips within an eighth of
+/// `|X1| + |X2|` of each other and `u1` is the nearer ([two_mass_sheets],
+/// [one_mass_sheets]); 0 otherwise.
+fn nearer_root_first(x1: &Atom, x2: &Atom, rotation: &Atom) -> Atom {
+    let [u1, u2] = [x1, x2].map(|x| x * rotation);
+    let upper = |u: &Atom| negative(&-im(u));
+    let turns = (upper(&u1) - upper(&u2)) * negative(&re(&u1)) * negative(&re(&u2));
+    let abs = |z: &Atom| Symbol::ABS.call((z,));
+    let close = negative(&(Atom::num(8) * abs(&(x1 - x2)) - abs(x1) - abs(x2)));
+    let nearer_first = negative(&(abs(&im(&u1)) * abs(&u2) - abs(&im(&u2)) * abs(&u1)));
+    if_nonzero(&turns, close * nearer_first)
+}
+
+/// `[a, b]`, or `[b, a]` where `swap` is nonzero.
+fn swapped(swap: &Atom, a: &Atom, b: &Atom) -> [Atom; 2] {
+    [
+        if_nonzero_else(swap, b.clone(), a.clone()),
+        if_nonzero_else(swap, a.clone(), b.clone()),
+    ]
+}
+
+fn one_mass_sheets_symbol() -> Symbol {
+    symbolica::symbol!("__olo_box_one_mass_sheets")
+}
+
+fn one_mass_sheets_ordered_symbol() -> Symbol {
+    symbolica::symbol!("__olo_box_one_mass_sheets_ordered")
+}
+
+/// [one_mass_sheets_ordered] with the roots labelled so that `u2` is the one
+/// nearer the negative real axis ([nearer_root_first]), as [two_mass_sheets]
+/// does for two masses; the terms are symmetric in the labels, with each
+/// root's complements. Next to a collinear limit with `r13 r24` next to
+/// `r12 r34` the roots of the one-mass quadratic are next to each other
+/// (`X1 - X2` from 1e-4 to 1e-2 of `X`) and, with a width, on opposite lips:
+/// taken across from the farther root, the channel pairs carried windings
+/// 2e2 to 7e3 times the terms, which cancelled between the two channels. Of
+/// the relabellings of 9f663c5's 1000 boxes next to a collinear limit and to
+/// `r13 r24 = r12 r34`, 16 lost 1.7e-12 to 6.4e-12 in binary64 that way,
+/// where OneLOop's sheets (09b2c74) kept 8e-16 and a one-ulp change of an
+/// input moves the value by 1.2e-16 (tests/d0_one_mass_width.rs); from the
+/// nearer root they keep 4.5e-16. Traced through the binary64 expressions,
+/// 162 of 75,996 labellings of complex one-mass boxes (the verifier's and the
+/// streams' sweep rows, 9f663c5's sweeps) take the other order: 21 become
+/// more than ten times more accurate (1.3e-13 to 5e-12 before, at most 1e-14
+/// after), none less. A registered function of its own, so that the swapped
+/// arguments are not repeated in the terms (the one-mass sector shrinks from
+/// 4.1 MB to 1.6 MB); it binds the sector parameters and two of
+/// box_complex's, so that no parameter symbol is created.
+fn one_mass_sheets(
+    [
+        x1,
+        x2,
+        rotation,
+        v13,
+        w13a,
+        w13b,
+        v12,
+        w12a,
+        w12b,
+        v14,
+        w14a,
+        w14b,
+        invariants,
+    ]: [&Atom; 13],
+) -> Atom {
+    let swap = nearer_root_first(x1, x2, rotation);
+    let pick = |a: &Atom, b: &Atom| swapped(&swap, a, b);
+    let [x1, x2] = pick(x1, x2);
+    let [w13a, w13b] = pick(w13a, w13b);
+    let [w12a, w12b] = pick(w12a, w12b);
+    let [w14a, w14b] = pick(w14a, w14b);
+    one_mass_sheets_ordered_symbol().call(
+        [
+            x1,
+            x2,
+            rotation.clone(),
+            v13.clone(),
+            w13a,
+            w13b,
+            v12.clone(),
+            w12a,
+            w12b,
+            v14.clone(),
+            w14a,
+            w14b,
+            invariants.clone(),
+        ]
+        .as_slice(),
+    )
+}
+
+/// The terms of [box_finite_one_mass] for a mass with a width
+/// ([complex_mass_sheets]), as a registered function of the roots `X1, X2`,
+/// the `rotation` (`u = X rotation`), the channel ratios `Y23/Y02` and
+/// `Y13/Y01` with the complements `1 - X r34/r13` and `1 - X r24/r12`, the
+/// mass pair's ratio `Y03/m4²` with the complements `1 - X r14`, and the
+/// invariants' logarithm. The coefficients `r34/r13`, `r24/r12` and `r14` are
+/// the ratios times `rotation`.
+fn one_mass_sheets_ordered(
+    [
+        x1,
+        x2,
+        rotation,
+        v13,
+        w13a,
+        w13b,
+        v12,
+        w12a,
+        w12b,
+        v14,
+        w14a,
+        w14b,
+        invariants,
+    ]: [&Atom; 13],
+) -> Atom {
+    let w13 = [w13a.clone(), w13b.clone()];
+    let w12 = [w12a.clone(), w12b.clone()];
+    complex_mass_sheets(
+        [x1, x2],
+        rotation,
+        [
+            (Q::lower(v13.clone()), &w13, rotation * v13),
+            (Q::lower(v12.clone()), &w12, rotation * v12),
+        ],
+        [(Q::lower(v14.clone()), rotation * v14, [w14a.clone(), w14b.clone()])],
+        invariants.clone(),
+        false,
+    )
+}
+
 fn two_mass_sheets_symbol() -> Symbol {
     symbolica::symbol!("__olo_box_two_mass_sheets")
 }
@@ -656,19 +798,8 @@ fn two_mass_sheets(
         product,
     ]: [&Atom; 12],
 ) -> Atom {
-    let [u1, u2] = [x1, x2].map(|x| x * rotation);
-    let upper = |u: &Atom| negative(&-im(u));
-    let turns = (upper(&u1) - upper(&u2)) * negative(&re(&u1)) * negative(&re(&u2));
-    let abs = |z: &Atom| Symbol::ABS.call((z,));
-    let close = negative(&(Atom::num(8) * abs(&(x1 - x2)) - abs(x1) - abs(x2)));
-    let nearer_first = negative(&(abs(&im(&u1)) * abs(&u2) - abs(&im(&u2)) * abs(&u1)));
-    let swap = if_nonzero(&turns, close * nearer_first);
-    let pick = |a: &Atom, b: &Atom| {
-        [
-            if_nonzero_else(&swap, b.clone(), a.clone()),
-            if_nonzero_else(&swap, a.clone(), b.clone()),
-        ]
-    };
+    let swap = nearer_root_first(x1, x2, rotation);
+    let pick = |a: &Atom, b: &Atom| swapped(&swap, a, b);
     let [x1, x2] = pick(x1, x2);
     let [w13a, w13b] = pick(w13a, w13b);
     let [w12a, w12b] = pick(w12a, w12b);
@@ -1857,6 +1988,29 @@ pub(crate) fn register_boxes(map: &mut FunctionMap) {
         native_function_options(),
     )
     .expect("unique two-mass sheets");
+    // And of the one-mass terms with a width, with two of box_complex's
+    // parameters.
+    let one_mass_symbols: [Symbol; 13] = core::array::from_fn(|i| {
+        if i < 11 {
+            symbols[i]
+        } else {
+            symbolica::symbol!(format!("__olo_boxc_arg_{i}"))
+        }
+    });
+    map.add_function_with_options(
+        one_mass_sheets_ordered_symbol(),
+        one_mass_symbols.to_vec(),
+        one_mass_sheets_ordered(one_mass_symbols.map(Symbol::to_atom).each_ref()),
+        native_function_options(),
+    )
+    .expect("unique one-mass sheets with ordered roots");
+    map.add_function_with_options(
+        one_mass_sheets_symbol(),
+        one_mass_symbols.to_vec(),
+        one_mass_sheets(one_mass_symbols.map(Symbol::to_atom).each_ref()),
+        native_function_options(),
+    )
+    .expect("unique one-mass sheets");
     let p = [&x[0], &x[1], &x[2], &x[3], &x[4], &x[5]];
     let m = [&x[6], &x[7], &x[8], &x[9]];
     let definitions = [
