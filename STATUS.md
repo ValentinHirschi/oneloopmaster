@@ -4,6 +4,323 @@ This page preserves the September 8 development snapshot. See the
 [Symbolica main migration report](SYMBOLICA_3_MIGRATION.md) for the current
 dependency setup and validation.
 
+## The final candidate (2026-10-20)
+
+`claude/olm-final-2`, on 09b2c74: the combined candidate of the section
+below (f2adce4) and the following changes, with one regeneration
+(`generated_d0.rs` 2,474,110 bytes, the D0 asset 1,459,142 bytes; the
+definitions take 93,730,882 bytes against the gate's 100,663,296, f2adce4
+100,370,779). References are COLLIER 1.2.9 in quadruple precision (COLI and
+DD branches, exact decimal inputs), "worse" means more than ten times worse
+and above 1e-12, and the routes are hand-written, generated, interpreted,
+SymJIT and DoubleFloat (hw/gen/expr/jit/dd).
+
+- **PR #9 and PR #10** of alphal00p/oneloopmaster are folded in with their
+  tests: exactly real contour squared norms and real sheet signs at mixed
+  `Float` precision (`tests/box_limits.rs`, `tests/mixed_precision_sheet.rs`,
+  `box_complex::tests::composite_norms_keep_real_comparisons`), and the
+  reclassification of exact infrared box limits after on-shell chart
+  exchanges (`tests/d0_one_mass_chart.rs`). PR #9's norm keeps its body as
+  an inlined registered function, so that each use holds one copy of its
+  operand; written out, it moved 15 ill-conditioned rows of the verifier's
+  sweep on the generated and interpreted routes by up to 1.1.
+- **Contour charts with the Gram determinant at the rounding level** (the
+  regression of f2adce4's zero-external reflection, below): a `K` that rounds
+  to zero puts its far pole 2^52 beyond the near one; where the selected
+  contour is flat (`2^56 |a1|² < |g|² + |beta h|²`) the other contour's chart
+  is evaluated too and taken unless the two agree to 2^-26; the reflection is
+  skipped where a reflected conic has a double contour direction; and in
+  binary64, where no chart is regular, a chart that does not keep 10 bits
+  under a one-unit move of its line (or 13 bits with its `K` at the rounding
+  level) returns NaN, which NinjaRS detects and rescues
+  ([PRECISION.md](PRECISION.md)). The thresholds are fixed powers of two, so
+  hw, gen, expr, jit and dd take the same chart on binary64 inputs; `Float`
+  takes the selected chart.
+- **One- and two-mass sheets** (Denner and Dittmaier's, with a width): the
+  one-mass mass-pair complement from the roots' offsets, a small two-mass
+  complement from the product in binary64, and in both the root nearer the
+  branch cut taken across it, in registered functions
+  (`tests/d0_one_mass_width.rs`, `tests/d0_two_mass_width.rs` with
+  `tests/data/two_mass_conditioning.txt`).
+- **Contour line edges**: no line product at an exactly double real pole
+  (four relabellings of a box of the streams' sweep returned 7.6e18 times the
+  value); in binary64 a line product that disagrees with its pole's rounded
+  offset is probed, and the products are kept only where the poles' offsets
+  scale with `a1` and not for a pole within 8 offsets of an end of its edge
+  (`tests/data/contour_pole_errors.txt`,
+  `tests/data/contour_line_products.txt`).
+- **Zero-external reflection** only for a line nearer the corner by more
+  than 1/128 and a pole that one of the original chart's `tfun` selects with
+  an offset from the corner's vertex that the rounding resolves poorly
+  (`zero_external_reflects_only_*` in `tests/d0_contour_regressions.rs`).
+- **Soft boxes in every labelling.** The D0 expressions, like OneLOop's d0,
+  find soft limits on the four external invariants only. Of the 24
+  labellings of a soft-divergent box with a massless line whose leg partners
+  are on their mass shells, the 16 that put such an on-shell pair on a
+  channel (`s12` or `s23`) took the finite formulas: no pole in binary64, a
+  wrong value or NaN in DoubleFloat and `Float` (pyAmpliCol's
+  e+ e- -> t t~ h box with lines (m, m, 0, m), m = 173). The numerical D0
+  entry points now evaluate such a point in the labelling of the same box,
+  of the two that exchange the channel pair, whose channels are nonzero and
+  hold no such pair (`labelling::soft_order`, with the expressions' own
+  exact zero tests); every other point keeps its labelling. Covered:
+  `NativeEvaluator` in every carrier (binary64 after its hand-written
+  sectors, whose three-mass sector leaves these points to the generated
+  code), `ScalarEvaluator` (SymJIT), the Expression backend,
+  `PrecisionEvaluator`'s interpreted `Float` and the public masters' numeric
+  callbacks. Symbolic uses do not pass an entry point:
+  `OneLoopExpressions::d0`, `crate::d0`, `d0_mapped` and evaluators built
+  from them, the transparent master definitions inlined through the function
+  map, and inspection. **Callers that evaluate the D0 expressions themselves
+  must relabel the point with `oneloop::regular_d0_labelling` first**
+  (NinjaRS's arbitrary-precision `SymbolicaMasters` does). Six such boxes in
+  all 24 labellings on every route (`tests/d0_infrared_relabelling.rs`,
+  OneLOop 3.6 quadruple-precision references; COLLIER agrees in all 24) now
+  pass everywhere, where 09b2c74 failed 16 (or 8) labellings; on the
+  verifier's sweep 32 rows are better on every binary64 route and at `Float`
+  128 and 256 bits, on the streams' sweep 344, and none is worse anywhere.
+- **Test model** of `d0_two_mass_width`'s 256-bit shell check: it asserts the
+  input-cancellation floor (at least `bits - 56` tracked and accurate bits)
+  instead of accuracy within 8 bits of the tracked precision, which
+  numerica's estimate does not give (09b2c74 itself falls 16.1 bits short at
+  320 bits; "`Float` keeps the precision it tracks" below).
+  `tests/float_exact_products.rs` makes the same 8-bit claim; on its rows the
+  claim holds wherever it binds (at most 4.2 bits short), and it is
+  unchanged.
+
+### Results
+
+Rows worse / better / silent / new NaN against 09b2c74 (silent: finite and
+wrong by more than 1e-6 where 09b2c74 was non-finite or right). v1 is the
+verifier's fresh sweep (32,600 rows, seed 777013: every mass pattern, widths
+1e-14 to 0.7, corners and vanishing Gram determinants, 400 corner boxes in
+all 24 relabellings, 3,000 C0), CT the contour stream's 3,387 scan rows, MS
+the 843 distinct NinjaRS master calls, NR the 7,644 calls of NinjaRS's rank
+n+2 suite with their mu², g1 12,000 generic rows (seed 424242), TM the
+128,462 two-mass rows, SW the 37,642 rows of the oracle sweeps (seeds 1 to
+4, all 24 relabellings), TD the tests' rows in their 24 relabellings:
+
+| set | hw | gen | expr | jit | dd |
+|---|---|---|---|---|---|
+| v1 | 5/566/1/5 | 3/586/2/3 | 5/573/1/4 | 11/597/2/6 | 0/105/0/0 |
+| CT | 9/673/0/9 | 11/678/0/9 | 11/677/0/9 | 13/676/0/9 | 1/42/0/1 |
+| MS | 0/1/0/0 | 0/1/0/0 | 0/3/0/0 | 0/1/0/0 | 0/0/0/0 |
+| NR | 0/0/0/0 | 0/0/0/0 | 0/2/0/0 | 0/1/0/0 | 0/0/0/0 |
+| g1 | 0/133/0/0 | 1/142/0/0 | 1/150/0/0 | 0/148/0/0 | 0/61/0/0 |
+| TM | 2/2122/0/0 | 2/2122/0/0 | 1/2121/0/0 | 1/2106/0/0 | 0/1844/0/0 |
+| SW | 8/1420/0/8 | 8/1436/0/8 | 8/1400/0/8 | 8/1400/0/8 | 0/1300/0/0 |
+| TD | 0/1096/0/0 | 0/1120/0/0 | 0/1088/0/0 | 0/1084/0/0 | 0/12/0/0 |
+
+Every one of these 114 worse or silent route entries is an accepted
+exception listed below. Against f2adce4: v1 27/33/31/41/0 rows worse, of
+which 15/26/26/24 are new NaN (the chart tests return to NaN boxes that
+f2adce4 got right but that were NaN or wrong at 09b2c74; the others are
+f2adce4's gains given back to 09b2c74's level); CT 0/1/1/0/0; SW 4 on the
+interpreted route (the double real pole, now NaN as at 09b2c74); TD 48 per
+route (`tests/data/contour_unresolved.txt`, NaN by design); MS, NR, g1 and
+TM none.
+
+- **Vanishing Gram determinants** (the verifier's finding on f2adce4). Box A
+  (`4 1.0 7.83411141296995 0.0 0.05539849041093991 1.2025720308924596e-10
+  0.44413758479240445 0.9771700504003817 0.18581901508118223 0.0
+  0.05539865304260027 -6.430669304543917e-07 0.05539865304260027
+  -6.430669304543917e-07 0.0 0.0`, -25.40966982844103 + 0.884429096461921i):
+  f2adce4 O(30) wrong on every binary64 route in all 24 relabellings, now
+  within 3.3e-14/3.6e-14/5.1e-14/6.4e-14 (hw/gen/expr/jit) in all 24
+  (09b2c74: 12 within 1.3e-13, 12 non-finite). Box B (`4 1.0 0.0
+  3.598382043529174 24.453495802712766 24.453495802712766
+  -1.255476097339391e-09 502241.0517849417 0.6808521119960873
+  -0.02266926845550123 0.02844863278465547 0.0 0.0 0.0 24.453495802712766
+  0.0`): f2adce4 4.7e-3 in all 24, now 2.2e-9 (SymJIT 4.9e-9) in all 24
+  (09b2c74: 2.2e-9 in 12, non-finite in 12). Both are rows 1 and 2 of
+  `tests/data/contour_gram_rounding.txt`. Of the 26 boxes of v1 that 09b2c74
+  returned as NaN and f2adce4 as finite values wrong by up to 2.8e2, 11 are
+  NaN again, 14 right and one (v1 5151, 4.1e-6) within 10 kappa_1ulp
+  (below); 7 boxes that 09b2c74 already got wrong by more than 1e-6 are NaN,
+  none that it got right; 23 boxes that f2adce4 got right (NaN or wrong at
+  09b2c74) are NaN again. On the 1,649 referenced v1 rows with
+  `|Gram|/s³ < 1e-15` (hw/gen/expr/jit): beyond 1e-6 at 09b2c74
+  55/56/57/57, f2adce4 61/59/62/64, now 40/40/39/41, every one of them also
+  beyond 1e-6 at 09b2c74; non-finite 141/142/138/141, 11/11/11/9, now
+  16/18/19/17. The largest errors there are 4.3 (hw), 1.6 (gen) and 9.0
+  (expr, jit), on rows 09b2c74 gets as wrong (5.5e2 at 09b2c74 and
+  f2adce4).
+- **The tests' rows, worst of the 24 relabellings** (hw/gen/expr/jit): the
+  vanishing-Gram box of `tests/d0_vanishing_gram.rs` 2.6e-14/1.9e-14/
+  3.4e-14/3.0e-14 (09b2c74 3.6e-11); the seven boxes of
+  `tests/data/contour_regressions.txt` at most 7.7e-12 (09b2c74 up to 1.3e2);
+  the nine of `tests/data/contour_gram_rounding.txt` at most 1.6e-11 but row
+  2 (box B); `tests/data/two_mass_conditioning.txt` at most 5.7e-14; 199 of
+  the 200 boxes of `tests/data/near_threshold_boxes.txt` within 3.92e-12 and
+  line 73 at 3.2e-10/5.6e-11/1.35e-11/2.4e-10.
+- **NinjaRS master calls.** Of the 309 distinct D0 calls (MS), 99 (hw), 191
+  (gen), 191 (expr), 219 (jit) and 200 (dd) change their bits against
+  09b2c74 (f2adce4: 107, 206, 217, 215, 221); the worst errors against
+  COLLIER are 1.43e-12, 1.42e-12, 1.29e-12, 5.17e-12 and 4.6e-15 (f2adce4
+  1.85e-12, 1.72e-12, 1.83e-12, 5.17e-12; 09b2c74 3.60e-11, 3.59e-11,
+  8.89e-12, 3.41e-11). The 534 C0 calls keep their binary64 and DoubleFloat
+  bits (worst 8.3e-14, 9.1e-14, 6.9e-14, 6.2e-14). On NR, D0 (3,510 calls)
+  worst 7.53e-11, 7.48e-11, 7.51e-11, 2.58e-11 (f2adce4 the same, SymJIT
+  2.43e-11; 09b2c74 SymJIT 1.66e-11) and C0 (4,134) unchanged. No call of MS
+  or NR is worse than f2adce4 or 09b2c74 on any route. At `Float` 256 bits
+  (native/interpreted; errors against the 512-bit value): MS D0 moves on
+  308/303 of 309 calls against 09b2c74, by at most 4.5e-71/1.3e-70, and on
+  157/160 against f2adce4, by at most 5.3e-72/8.4e-72; the C0 calls equal
+  f2adce4's; NR D0 moves on 3,331/3,361 of 3,510 against 09b2c74 (at most
+  2.0e-66/1.7e-67, where 09b2c74 was that far off) and 2,552/2,603 against
+  f2adce4 (at most 5.3e-69/1.1e-69). No MS or NR call is more than ten times
+  worse than f2adce4 at 256 bits (above 1e-70).
+- **`Float`, rows worse than 09b2c74 against COLLIER** (native/interpreted):
+  v1 3/27 at 128 bits and 0/0 at 256; CT 9/9 at 128 (eight relabellings of an
+  on-shell scan point within 10 kappa_1ulp through an on-shell-breaking move,
+  and CT 337) and 1/1 at 256 (CT 337); MS none. None is worse than f2adce4.
+  The rows are listed below.
+
+### Gates
+
+- **Full suite** (`cargo test --release --locked --features
+  generated-evaluators --no-fail-fast -- --test-threads=1`): 264 passed, 0
+  failed, 9 ignored in 62 test binaries (f2adce4: 242 passed and one
+  failure, the shell check whose model is corrected above).
+- **Oracle sweeps** (`tests/oracle_sweep.py`, seeds 1 to 4, C0 and D0, native,
+  `--generated` and `--expression`, the high-precision line at 128, 256 and
+  512 bits): the 36 failure lists are 09b2c74's, but for two documented boxes.
+  On seed 2, in all nine configurations, 8 relabellings of the complex
+  one-mass box `4 1.0 -0.7698139610464303 -1.0396864914415214
+  -29.998775868631494 81.22865927661125 8.756308210934074 0.25 0 0 0.25
+  -0.018035862285877242 0 0 0 0` fail as `analytic`: OneLOop, the sweep's
+  oracle, is wrong there (one-mass boxes with a complex mass, above) and
+  COLLIER agrees with the candidate to 6e-16. On seed 3 at 128 bits, 16
+  relabellings of `4 1.0 0.25 0.25 1.0 4.653123451185273 2.2370332401120216
+  2.25 2.2370332401120216 -0.0013515238817967694 0.25 -0.0010321989957060157 0
+  0 1.0 0` move from `analytic` to `binary64` on the three routes: their
+  binary64 values keep 8.4e-9 against OneLOop, as at 09b2c74, and their
+  128-bit values, off by 1.6e-3 at 09b2c74, are now right. Every other list is
+  identical.
+- **Instructions per binary64 D0 call** (perf stat instructions:u,
+  difference of 2001 and 1 repetitions) on the 22 NinjaRS master streams
+  against 09b2c74: geometric mean -0.305%, at most +0.443% (syn-n6-r7;
+  syn-n6-r5 +0.336%, syn-n6-r6 +0.329%, the other 19 streams -0.007% to
+  -0.770%), within the 0.5% gate on every stream.
+- **Definitions** 93,730,882 bytes (gate 100,663,296; headroom 6,932,414);
+  the complete D0 expansion fits `tests/full_expansion.rs`'s 10M budget.
+- **Regeneration**: a second `generate_native` and `rebuild_evaluators D0`
+  from the committed sources gives identical SHA-256 for every asset and
+  generated file; `cargo metadata --locked` passes in the three build roots.
+
+### Accepted regressions against 09b2c74 (decision of 2026-10-20)
+
+The user accepted the following route entries as documented exceptions. No
+other binary64 route entry is more than ten times worse than 09b2c74 and
+above 1e-12, and no other finite value is wrong by more than 1e-6 where
+09b2c74 was right or non-finite, on the sets above. kappa_1ulp is the
+largest relative change of D0 when one of the ten real binary64 inputs (the
+six invariants and the real and imaginary parts of the four masses; not
+mu²) moves by one ulp in either direction, evaluated at 256 bits where
+09b2c74 and the candidate agree: a row within 10 kappa_1ulp is justified
+(class J), as no algorithm that rounds its inputs once can promise better;
+J* rows are within 10 kappa_1ulp only through a move that breaks an exact
+input equality (an on-shell or equal-mass relation).
+
+- **Route rounding of the contour chart's arguments (R3)**, the same at
+  f2adce4 (errors now / 09b2c74 / f2adce4):
+  - v1 19098, SymJIT, 2.89e-12 / 1.38e-13 / 2.89e-12 (kappa 1.6e-15):
+    `4 1.0 0.028456754273287505 28.53500714956581 11.340618430715825
+    -0.2108511787556433 96.16211930117166 -59.84315524140586
+    19.930972340236043 -6.579379864209245e-05 19.930972340236043
+    -6.579379864209245e-05 28.53500714956581 -0.42841797262874637
+    3.8975973963186417 -8.175209021663547e-12`.
+  - v1 19320, interpreted, 1.18e-11 / 1.06e-12 / 1.18e-11 (kappa 4.4e-15):
+    `4 1.0 -0.011597221745223632 25.285481364080724 6.585614318476484
+    0.030754490595793042 242.05052338832093 -210.8487715706494
+    25.285481364080724 -3.4401499278722525e-11 25.285481364080724
+    -3.4401499278722525e-11 0.0 0.0 0.030754490595793042 0.0`. The line
+    products also lose on the hand-written route here (5.2e-13 against
+    4.4e-14 with `y - z`), but no product rule separates this box from the
+    vanishing-Gram boxes that need them.
+  - CT 2168, SymJIT, 4.54e-12 / 2.55e-13 / 5.32e-12 (kappa 3.8e-16):
+    `4 0.01 0.0027763524551391383 0.0013364056189293424 0.05120181816720371
+    0.0008105366415512052 0.03220975168078065 0.006587112684859578
+    0.027065858857493085 0.0 0.01994971052861607 0.0 0.0035726174395936216
+    0.0 0.030735674662001472 0.0`.
+  Each loss is reproduced by the route's own rounding of the chart's
+  arguments (`ordered` on the hand-written route's chart inputs); a fix
+  needs those arguments evaluated identically on every route. The
+  candidate's worst binary64 route over 09b2c74's worst route is 4.50
+  (v1 19098), 11.05 (v1 19320) and 0.99 (CT 2168); on the R6 rows below
+  3.25, 1.00, 1.00 and 1.52 (CT 38, 43, 48, 55) and 1.25 (g1 9239).
+- **The CT 31-70 scan around a vanishing Gram determinant (R6)**, the same at
+  f2adce4: `4 1.0 6.329201971579061 102.98802777639872 3.3205818912242475
+  3.320581891224248 13.28232756492699 51.33798400005867 3.343448813357665 0.0
+  3.343448813357665 0.0 3.343448813357665 0.0 0.0 0.0` (CT 38) and its
+  neighbours in the last digits: CT 38 generated 5.56e-12 / 6.15e-14 /
+  5.48e-12 and interpreted 5.83e-12 / 2.71e-13 / 5.81e-12; CT 43 generated
+  1.26e-11 / 1.15e-12 / 1.26e-11; CT 48 SymJIT 2.58e-11 / 3.02e-13 /
+  2.58e-11; CT 55 SymJIT 1.97e-11 / 1.03e-12 / 1.96e-11 (kappa 5.6e-15).
+  On the 40 rows of this scan the geometric mean of the error per binary64
+  route is 1.1e-11 to 1.3e-11 at 09b2c74 and 9.7e-12 to 1.3e-11 at f2adce4
+  and now (also without the `r1` complements), single rows 6e-14 to 6.5e-11:
+  09b2c74 had one lucky route on these rows. The error comes from the
+  rounding of the three `tfun`'s arguments in `general`, not from `alpha`.
+- **g1 9239 (R6)**, generated 2.58e-11 / 1.26e-12 / 2.58e-11 and interpreted
+  2.57e-11 / 1.48e-12 / 2.57e-11 (kappa 1.0e-16): `4 1.0 0.0
+  -121.2552217479067 -138.88837706189003 -0.2362666283315987
+  0.1454848278533424 -0.04327231551251378 0.0 0.0 0.6217945335910897 0.0
+  4.0386278704465886 0.0 0.1414204746299639 -9.099246028823919e-07`. In one
+  `r1` call, the complements `1 - x` of 14dd171 break an error cancellation
+  between the logarithms and the dilogarithm (2.4e-8 with them, 3.5e-12
+  without); taking them only where the hand-written kernel does fixes this
+  row but makes v1 6738 (to 9.7e-10), 13553 (to 5.7e-8), NR 5532 (to
+  1.2e-11) and 8 g1 boxes worse.
+- **NaN beats wrong.** NinjaRS detects a non-finite master and rescues it in
+  higher precision, but cannot detect a silently wrong one. So a NaN where
+  09b2c74 returned a finite value already wrong by more than 1e-6 is
+  accepted:
+  - N-bbad, 9 entries, where 09b2c74 was wrong by 9.8e-6 to 0.77 (now NaN):
+    v1 2057 SymJIT (09b2c74 9.3e-4), v1 3794 hw and SymJIT (1.2e-4,
+    3.4e-4), v1 9649 interpreted and SymJIT (0.77, 9.8e-6), v1 18033 on
+    all four routes (5.6e-4, 1.4e-3, 6.7e-4, 6.6e-4); the chart tests cannot
+    resolve these charts in binary64.
+  - R8, 78 binary64 entries where 09b2c74 was wrong by 0.25 to 3.5e2: v1
+    10082 (all four routes, 3.5e2), 14736 (hw, 1.1) and 17188 (all four,
+    0.92 to 5.8); CT 337 (all five routes; open limitations below) and eight
+    relabellings each in CT (rows 344 to 363) and SW (rows 4062 to 4082) of
+    the conic singular at a massless corner (0.25 on every binary64 route;
+    open limitations below); and at
+    `Float` 128 and 256 bits CT 337 (4 entries; 09b2c74 wrong by 81 to
+    3.4e2).
+- **Within 10 kappa_1ulp (J)**, now / 09b2c74 / kappa_1ulp: v1 333 SymJIT
+  1.79e-12 / 1.01e-13 / 7.4e-13; v1 5151 on all four routes 4.14e-6 /
+  non-finite / 8.4e-3 (the only finite value wrong by more than 1e-6 where
+  09b2c74 was non-finite); v1 16427 SymJIT 2.14e-11 / 1.28e-13 / 7.9e-11;
+  v1 18577 SymJIT 1.14e-11 / 2.23e-13 / 1.7e-10; TM 65774 hw and gen
+  2.66e-12 / 1.58e-13 / 2.4e-12; TM 103232 hw, gen and expr 5.85e-12 /
+  2.92e-13 / 7.7e-12; TM 103983 SymJIT 1.42e-12 / 1.06e-13 / 1.9e-12; and at
+  128 bits v1 16793 native 8.75e-11 / 2.31e-12 / 5.1e-7.
+- **Within 10 kappa_1ulp only through an on-shell-breaking move (J*)**, now /
+  09b2c74 / kappa_1ulp (without such moves): v1 395 generated 5.72e-6 /
+  6.04e-7 / 1.1e-6 (7.8e-8) and SymJIT 3.65e-6 / 3.18e-7 (silent: finite
+  and wrong by more than 1e-6 where 09b2c74 was within 1e-6); CT 778
+  interpreted 1.11e-12 / 9.58e-14 and SymJIT 1.13e-12 / 6.40e-14 / 1.8e-11
+  (6.4e-15); at 128 bits the eight relabellings CT 76, 78, 79, 80, 85, 87, 95
+  and 96 of an on-shell scan point, native and interpreted, 3.43e-12 /
+  3.4e-15 / 1.8e-11 (6.4e-15), 43 tracked bits.
+- **`Float` at 128 bits next to a vanishing Gram determinant (F-R1)**, from
+  14dd171's expression changes (now / 09b2c74 / f2adce4, tracked bits now):
+  v1 7952 native 2.13e-11 / 3.3e-18 / 1.03e-11 and interpreted 1.85e-11 /
+  3.3e-18 / 1.85e-11 (40 bits; 09b2c74 76); v1 12595 interpreted 1.89e-10 /
+  1.40e-11 / 2.06e-10 (25 to 39 bits, as at 09b2c74); v1 15453 native
+  5.24e-12 / 4.3e-16 / 5.18e-12 and interpreted 2.21e-11 / 4.3e-16 /
+  2.19e-11 (38 to 41 bits; 09b2c74 55 to 57). 256 bits are right.
+- **The 0RRC collinear box at 128 bits from the Symbolica pin (F1)**: `4 1.0
+  50.261921198182165 0.15614357216746133 82.77728497126748
+  1.6038370763317959e-13 0.2547782935219607 -12.782604724181319 0.0 0.0
+  16.407592918401335 0.0 82.77728497126748 0.0 15.201391682789128
+  -0.00022669601519667755` in all 24 relabellings, interpreted, 8.34e-9 /
+  2.75e-10 / 8.00e-9 at 30 tracked bits (the old pin e679e8c1 gives
+  2.9e-10); the native route is within ten times of 09b2c74 and 256 bits
+  are right.
+
 ## Contour box near a vanishing Gram determinant (2026-10-19)
 
 Boxes with two nearly parallel external momenta (their invariant next to its
@@ -30,12 +347,14 @@ SymJIT) and 7.5e-12 interpreted; it is now within 1.9e-14 to 4.1e-14 on every ro
 - **Scan.** `tests/data/near_threshold_boxes.txt` (200 random physical boxes,
   `tests/generate_near_threshold_rows.py`, OneLOop 3.6 quadruple-precision
   references): every binary64 route within 5e-12 on 199 rows (3.2e-12 at
-  most), where 34 were beyond it and 22 beyond 1e-9 before (OneLOop's double
+  most; 3.92e-12 in the final candidate, SymJIT), where 34 were beyond it and
+  22 beyond 1e-9 before (OneLOop's double
   precision: 32 and 16). On 1,000 more such boxes (seeds 2 to 6) 4 to 6 per
   route remain beyond 1e-11 (at most 3.2e-11), against 110 to 117 before; on
   fresh seeds (101 to 105) up to about 8e-11.
-- **Remaining.** Line 73 of the scan keeps 1.1e-10 to 3.2e-10, as before
-  (OneLOop 5.5e-11): a nearly double contour direction in one `tfun` and
+- **Remaining.** Line 73 of the scan keeps 1.3e-11 (interpreted) to
+  3.2e-10 (hand-written), as before (OneLOop 5.5e-11; the final candidate
+  1.35e-11 to 3.2e-10): a nearly double contour direction in one `tfun` and
   nearly coincident poles next to an edge's end in the others, whose
   quadratic `s3` terms cancel.
 
@@ -222,7 +541,8 @@ precision fed the exact binary64 inputs):
   boxes with the Gram determinant at the rounding level (seeds 201, 202 of
   `tests/generate_near_threshold_rows.py`), 112 were beyond 1e-6 on some
   route at 09b2c74 and 5 at 9a898ee (four of them O(1) on one or two
-  routes); now 3, at most 5.1e-3 (below).
+  routes); now 3, at most 5.1e-3 (below; the final candidate's chart tests
+  keep that box within 4.8e-13).
 - **`K` guard.** A first contour whose `K` vanishes where the second's does
   not is no longer selected when it encloses a pole either (the switch above
   applied only when it encloses none); no such box was observed.
@@ -347,7 +667,8 @@ precision fed the exact binary64 inputs):
   reproduces to 1e-17) in all 24 relabellings: binary64 routes within 1e-12
   (measured 6.8e-16), DoubleFloat within 1e-15, and native and interpreted
   `Float` at 128 and 256 bits within their tracked precision (they keep at
-  least 80 and 208 bits there; see the open limitations). 9a898ee fails both
+  least 80 and 208 bits there; the 256-bit check now asserts at least
+  `bits - 56` accurate bits, see the open limitations). 9a898ee fails both
   tests (876 failures). Every real-mass and one-mass row, the three- and
   four-mass rows and the NinjaRS master rows are bitwise unchanged on every
   route, including 256 bits: 0-, 1- and 2-mass real rows against 09b2c74,
@@ -507,7 +828,14 @@ Symbolica pin):
   a row of that list. Row by row, against OneLOop's quadruple precision or
   the 256-bit value, 112 to 132 D0 rows per binary64 route are more
   accurate than at 09b2c74 by more than ten times, and 8 less: the
-  relabellings of the conic singular at a massless corner (below).
+  relabellings of the conic singular at a massless corner (below). This
+  holds on the oracle-sweep rows only. On the verifier's fresh sweep (32,600
+  rows, seed 777013, COLLIER quad references) this candidate had 27 to 33
+  rows per binary64 route more than ten times worse than 09b2c74 and above
+  1e-12 (47 distinct rows, 14 of them beyond 1e-6), against 519 to 549
+  better, and 26 boxes at vanishing Gram determinants where 09b2c74's NaN
+  became a finite value wrong by up to 2.8e2; the final candidate (above)
+  repairs them.
 - **Retired instructions per binary64 D0 call** (perf stat, difference of
   2001 and 1 repetitions) on the 22 NinjaRS master streams against 09b2c74:
   geometric mean -0.12%, at most +0.29% (syn-n4-r5), at least -0.63%. On
@@ -518,16 +846,19 @@ Symbolica pin):
 - **NinjaRS master calls.** Of the 309 distinct D0 calls, 107 (hand-written),
   206 (generated), 217 (interpreted) and 215 (SymJIT) change their binary64
   bits against 09b2c74, 221 their DoubleFloat bits (by at most 1.4e-31) and
-  72 (native) and 63 (interpreted) their 256-bit values (by at most 1.1e-74);
+  almost all their 256-bit values (309 native and 303 interpreted, by at most
+  3.9e-71 and 1.0e-70, in the verifier's full-precision comparison);
   the worst errors against OneLOop's quadruple precision (COLLIER's
   quadruple precision agrees with it to 4.6e-15) are 1.9e-12, 1.7e-12,
   1.8e-12 and 5.2e-12 (09b2c74: 3.6e-11, 3.6e-11, 8.9e-12, 3.4e-11). The 534 distinct C0 calls
-  keep their binary64 and DoubleFloat bits; their 256-bit values move with
-  the pin by at most 2.3e-73.
+  keep their binary64 and DoubleFloat bits; 510 (native) and 496
+  (interpreted) of their 256-bit values move with the pin, by at most 4.5e-72
+  and 6.1e-73.
 - **Tests.** `cargo test --release --locked --features generated-evaluators
   --no-fail-fast -- --test-threads=1`: 242 passed, 9 ignored and one
   failure, the 256-bit check of the near-shell two-mass boxes (`Float`
-  keeps the precision it tracks, below).
+  keeps the precision it tracks, below), whose model the final candidate
+  corrects.
 
 ## Open D0 limitations after these changes (2026-10-19)
 
@@ -594,7 +925,11 @@ bullet says otherwise.
   four times keeps 5.1e-3 on the hand-written and interpreted routes in every
   relabelling (the generated code and SymJIT 8e-14; 0.34 at 09b2c74).
   Two more of those 400 boxes keep 9.7e-4 and 4.0e-3 on one route. The box is
-  the known-failure fixture of `tests/d0_contour_regressions.rs`.
+  the known-failure fixture of `tests/d0_contour_regressions.rs`. **Fixed in
+  the final candidate:** the box is row 3 of
+  `tests/data/contour_gram_rounding.txt`, within 4.8e-13 (hand-written),
+  8.7e-14 (generated), 4.1e-13 (interpreted) and 4.3e-14 (SymJIT) in all 24
+  relabellings.
 - **A conic singular at a massless corner.** `4 1.0 0.1113435943976259
   108.23851883958666 0.11134359439762591 -0.012515862621692797 9.0 0.0 0 0
   0.11134359439762591 0 9.0 0 0.11134359439762591 0` (`p1²` one ulp below
@@ -602,8 +937,19 @@ bullet says otherwise.
   conic's value and gradient vanish at the massless corner to within
   rounding. Every binary64 route is wrong in every relabelling, as at
   09b2c74 (then NaN in 8, by 1.4e-2 in 4 and by 0.3 in 12; now NaN in 16 and
-  1.4e-2 in 8, so 8 relabellings of the seed-1 sweep went from 0.3 to NaN).
-  Known-failure fixture of `tests/d0_contour_regressions.rs`.
+  1.4e-2 in 8, so 8 relabellings of the seed-1 sweep went from 0.3 to NaN;
+  the same in the final candidate). Known-failure fixture of
+  `tests/d0_contour_regressions.rs`. A second box of this kind, CT row 337 of
+  the contour stream's scans, `4 1.0 0.01545852083001525 2.25
+  -0.32983766127195113 0.0 0.01545852083001525 0.01545852083001525
+  0.01545852083001525 -0.00013458303781508371 0 0 2.25 0 0.01545852083001525
+  -0.00013458303781508371` (several on-shell coincidences; -26.2653 +
+  15893.75i), is NaN
+  in 16 of its 24 relabellings, its own included, on every route including
+  DoubleFloat and `Float` at 128, 256 and 512 bits, and right in the other 8
+  (binary64 within 8.1e-15, DoubleFloat and `Float` exact), the same since
+  f2adce4. 09b2c74 was NaN in 8, right in 8 and wrong in 8 (by 21 to 46 in
+  binary64, 31 in DoubleFloat and up to 4e2 at 256 bits).
 - **128 bits next to a corner.** At 128 bits the boxes of
   `tests/d0_contour_regressions.rs` with a pole within `t²` of a corner keep
   `2^-128/t²` of its offset: the relabellings agree only to 1e-16 to 1e-29,
@@ -613,7 +959,17 @@ bullet says otherwise.
   corner at the origin up to 2.5e-7 at 128 bits (2.4e-7 at 09b2c74; `p3²`
   3e-16 below `s12`), which the reflection now also takes for 8 of the
   relabellings that kept 1e-15 at 128 bits at 09b2c74 (and gave O(1) errors
-  in binary64). 256 bits keep 1e-15 (and agree to 1e-30).
+  in binary64). 256 bits keep 1e-15 (and agree to 1e-30). In the final
+  candidate, boxes next to a vanishing Gram determinant lose more at 128 bits
+  than at 09b2c74 (14dd171's expressions): v1 7952, 12595 and 15453 of the
+  verifier's sweep keep 5.2e-12 to 1.9e-10 at 25 to 41 tracked bits (09b2c74
+  3.3e-18 to 1.4e-11); and the 0RRC collinear box `4 1.0 50.261921198182165
+  0.15614357216746133 82.77728497126748 1.6038370763317959e-13
+  0.2547782935219607 -12.782604724181319 0 0 16.407592918401335 0
+  82.77728497126748 0 15.201391682789128 -0.00022669601519667755` keeps
+  8.3e-9 on the interpreted route at 128 bits in all 24 relabellings, at 30
+  tracked bits, where 09b2c74 kept 2.7e-10 (the Symbolica pin: the old pin
+  gives 2.9e-10). 256 bits are right on all of them.
 - **`Float` keeps the precision it tracks.** Symbolica's `Float` rounds the
   difference of nearly equal operands to the bits it considers significant
   (as in `tests/permutation_regressions.rs`). Next to a shell an invariant
@@ -624,14 +980,21 @@ bullet says otherwise.
   relabellings of the first row (the sweep regression) track 216 of 256 bits
   but are accurate to 207.7 (3.0e-63), 8.3 bits below what they track, where
   `complex_two_mass_boxes_next_to_their_shells_match_the_references_at_128_and_256_bits`
-  allows 8: that test fails in 12 checks (both routes). With the previous pin
+  allowed 8: that test failed in 12 checks (both routes; the final candidate
+  asserts at least `bits - 56` accurate bits instead, the input-cancellation
+  floor that it already used for the tracked precision: the tracked
+  precision is not a bound, and 09b2c74 itself falls 16.1 bits short of it
+  at 320 bits on the same row). With the previous pin
   the same relabellings tracked 216 bits and kept 208.3. The other
   relabellings track 208 or 209 bits and keep 204 to 205. At 192 bits the
   same six fall 8.4 bits short of what they track (previous pin: at most
   6.5); at 128 and 320 bits every relabelling stays within 5.2 and 7.1 bits
   on both pins. numerica's estimate does not follow the amplification of
-  rounding errors after these cancellations; the test's 8 bits of slack are
-  empirical and were not widened.
+  rounding errors after these cancellations. The accuracy did not regress:
+  at least 202.5 bits at 256 (202.3 at 09b2c74) and 267.0 at 320 (266.9).
+  `tests/float_exact_products.rs` keeps its 8-bit claim: it binds on two of
+  its rows (128 and 192 bits) and holds there with at most 4.2 bits between
+  tracked and accurate bits; elsewhere its tolerances govern.
 - **`Float` rows that the numerica fix leaves wrong** (Float products and
   factors of ±1, above). These are D0 sweep rows where OneLOop is stable and
   binary64 is right. Most other sign and zero tests on cancelled values

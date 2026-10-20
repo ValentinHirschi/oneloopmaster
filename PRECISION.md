@@ -186,13 +186,14 @@ explicit resource limits; see [expression inspection](README.md#combining-integr
   it got right, and 23 boxes that f2adce4 got right (NaN or wrong at
   09b2c74) are NaN again (`tests/data/contour_unresolved.txt`). Nine
   boxes with the Gram determinant at the rounding level, wrong by 1.4e-2 to
-  140 times their value or non-finite at 09b2c74 and f2adce4, keep 1.5e-11
-  (4.9e-9 one of them; `tests/data/contour_gram_rounding.txt`). The
-  NinjaRS box keeps 1.9e-14 to 4.1e-14 on the binary64 routes, and 199 of 200
-  random boxes next to a vanishing Gram determinant keep 3.2e-12
+  140 times their value or non-finite at 09b2c74 and f2adce4, keep 1.6e-11
+  in all 24 relabellings, one of them 2.2e-9 (SymJIT 4.9e-9;
+  `tests/data/contour_gram_rounding.txt`). The NinjaRS box keeps 1.9e-14 to
+  3.4e-14 on the binary64 routes, and 199 of 200 random boxes next to a
+  vanishing Gram determinant keep 3.9e-12
   (`tests/d0_vanishing_gram.rs`, references OneLOop 3.6 in quadruple
   precision); OneLOop's double precision loses more than 1e-9 on 16 of them.
-  The remaining one (1.3e-11 interpreted to 3.2e-10 hand-written, OneLOop
+  The remaining one (1.35e-11 interpreted to 3.2e-10 hand-written, OneLOop
   5.5e-11) has a nearly double `beta` in one `tfun` and nearly coincident
   poles next to an edge's end in the others, whose quadratic `s3` terms
   cancel by 20.

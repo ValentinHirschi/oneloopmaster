@@ -43,7 +43,13 @@ there (eqs. (3.78)-(3.80), `tests/d0_two_mass_width.rs`,
 their shells, two of those dilogarithm arguments approach one; their
 complements come from the channels' complements, since formed from the
 rounded arguments they lost up to 0.16 of the value in binary64
-(`tests/data/two_mass_shell.txt`).
+(`tests/data/two_mass_shell.txt`). Next to a collinear limit the one- and
+two-mass terms take the root nearer the branch cut across it, and a small
+mass-pair complement from the roots' offsets (one mass) or, in binary64,
+from the product (two masses): the boxes of
+`tests/data/two_mass_conditioning.txt`, which lost 1.2e-11 to 1.6e-9 in
+binary64, keep at most 5.7e-14 in every relabelling, and the one-mass boxes
+of `tests/d0_one_mass_width.rs` 1e-12.
 Dilogarithm divided differences of nearly coincident or small arguments are
 evaluated term by term, as OneLOop's `dilog2_c` (a two-mass C0 with nearly
 coincident roots was off by 2.4e-13 in binary64, now 2e-15 to 9e-15 on every
@@ -83,20 +89,20 @@ Next to a vanishing Gram determinant (two external momenta nearly parallel,
 their invariant next to its threshold, as for two Higgs bosons nearly at rest
 relative to each other in gg → HHH) the contour box's line edges take the
 offset of a pole from their root from Vieta's product with the poles' own
-`g + beta h`: the NinjaRS gg → HHH box is now within 4.1e-14 on every binary64
+`g + beta h`: the NinjaRS gg → HHH box is now within 3.4e-14 on every binary64
 route (3.6e-11 before), and of 200 random such boxes all but one are within
-3.2e-12, where 34 were beyond 5e-12 and 22 beyond 1e-9
+3.9e-12, where 34 were beyond 5e-12 and 22 beyond 1e-9
 (`tests/d0_vanishing_gram.rs`). With the Gram determinant at the rounding
 level, a contour whose `K` rounds to zero takes its far pole 2^52 beyond the
 near one, and where the selected contour's `g + beta h` keeps fewer than 24
 bits the other contour's chart is evaluated too and taken unless the two agree
 to 2^-26: nine such boxes, wrong by up to 140 times their value or non-finite
-at 09b2c74, keep 1.5e-11 (4.9e-9 one of them) in every relabelling
-(`tests/d0_contour_regressions.rs`). Where no chart is regular, binary64
-returns NaN unless the chart it uses keeps 10 bits when the line moves by one
-rounding unit (a flat chart) or 13 bits with its `K` at the rounding level (a
-`K` that rounds to zero), so that such a box is non-finite, as at 09b2c74,
-rather than silently wrong (f2adce4: up to 1.9;
+at 09b2c74, keep 1.6e-11 (one of them 2.2e-9, SymJIT 4.9e-9) in every
+relabelling (`tests/d0_contour_regressions.rs`). Where no chart is regular,
+binary64 returns NaN unless the chart it uses keeps 10 bits when the line moves
+by one rounding unit (a flat chart) or 13 bits with its `K` at the rounding
+level (a `K` that rounds to zero), so that such a box is non-finite, as at
+09b2c74, rather than silently wrong (f2adce4: up to 1.9;
 `tests/data/contour_unresolved.txt`); `DoubleFloat` takes binary64's charts
 and `Float` the selected one, untested. The
 product is taken only where `g + beta h` itself cancels: where the conic
@@ -108,7 +114,22 @@ puts the corner at the origin (unless that labelling's chart has a double
 contour direction), and the contour box's dilogarithms take their
 complements `1 - x` from the poles: a box with an invariant one ulp from a
 squared mass, wrong by up to 130 times its value, is within 7.7e-12 in every
-relabelling (`tests/d0_contour_regressions.rs`).
+relabelling (`tests/d0_contour_regressions.rs`); that labelling is taken only
+where a pole of the original chart lies poorly resolved next to the corner.
+A soft-divergent box with a massless line whose leg partners are on their
+mass shells is found soft only on the external invariants, as in OneLOop:
+the numerical D0 entry points (native code in every carrier, SymJIT, the
+interpreted expressions and the masters' numeric callbacks) evaluate it in
+a labelling of the same box that keeps those on-shell pairs off the
+channels, so that all 24 labellings give the poles and the finite part
+(`tests/d0_infrared_relabelling.rs`; pyAmpliCol's e+ e- → t t̄ h box with
+lines (m, m, 0, m) was finite without its soft pole in 16 of them). Symbolic
+uses of the D0 expressions (`OneLoopExpressions::d0`, `crate::d0`,
+`d0_mapped` and evaluators built from them) must relabel the point with
+`oneloop::regular_d0_labelling` first. [STATUS.md](STATUS.md) lists the
+rows on which this candidate is less accurate than 09b2c74, each accepted
+and explained, and the verification against COLLIER in quadruple
+precision.
 
 This work is based on **Andreas van Hameren's OneLOop package**. The original
 algorithms, analytic continuation conventions and Fortran reference results are
