@@ -1,11 +1,14 @@
-//! Exact one-mass IR boxes whose equivalent denominator chart reaches box09.
+//! Exact IR boxes whose equivalent denominator chart reaches box09/11/12.
 //!
 //! The original second row returned NaN and a zero double pole in eight of
 //! its 24 labellings. The box10 chart exchange made p4=m, but did not repeat
 //! the infrared classification. References are unchanged OneLOop3.6 real128
 //! values from non-error orderings, independently checked by Collier1.2.9
 //! COLI and DD (all flags zero; finite conversion +pi²/6*double). OneLOop's
-//! original order emits an explicit error: its returned zeros are not targets.
+//! original orders emit explicit box10/box13 errors: their zeros are not targets.
+//! The two additional cases have adjacent nonzero masses and reach box12/box11
+//! only after the general box13 chart exchange. All existing one-mass controls
+//! remain in the same transparent/generated, carrier and scale matrix.
 #![cfg(feature = "generated-evaluators")]
 use oneloop::{NativeEvaluator, NativeFloat, OneLoopExpressions, ScalarIntegral};
 use symbolica::{
@@ -14,7 +17,7 @@ use symbolica::{
 };
 
 const BITS: u32 = 256;
-const REFERENCES: [[[&str; 2]; 3]; 2] = [
+const REFERENCES: [[[&str; 2]; 3]; 4] = [
     [
         [
             "-2.60132556713013326849351586964136613E-13",
@@ -43,6 +46,34 @@ const REFERENCES: [[[&str; 2]; 3]; 2] = [
             "-0.00000000000000000000000000000000000E+00",
         ],
     ],
+    [
+        [
+            "4.05880898858092916585249890188060036E-13",
+            "1.25411527558269890434042745358856768E-12",
+        ],
+        [
+            "3.69229694481734773246100366924826798E-13",
+            "-5.04626019964854631558548521486778152E-13",
+        ],
+        [
+            "-8.03137254901960784313725490196078440E-14",
+            "-0.00000000000000000000000000000000000E+00",
+        ],
+    ],
+    [
+        [
+            "-3.61365826930216200780381092370608001E-12",
+            "5.00989182244004393500910452052237608E-14",
+        ],
+        [
+            "-5.62480702822274099128214566244695980E-13",
+            "1.14381897858700383153270998203669712E-12",
+        ],
+        [
+            "1.82044444444444444444444444444444448E-13",
+            "0.00000000000000000000000000000000000E+00",
+        ],
+    ],
 ];
 // The exact pairwise shift invariants and squared masses, independent of any
 // chosen cyclic ordering. All input integers are exactly representable.
@@ -54,6 +85,38 @@ const S: [[i64; 5]; 5] = [
     [-1000000, 250000, 2593750, 250000, 0],
 ];
 const MASSES: [i64; 5] = [0, 0, 0, 0, 250000];
+
+fn input_cases() -> Vec<([[i64; 4]; 4], [i64; 4])> {
+    let mut cases = [[0, 1, 2, 4], [0, 1, 3, 4]]
+        .map(|subset| {
+            (
+                subset.map(|i| subset.map(|j| S[i][j])),
+                subset.map(|i| MASSES[i]),
+            )
+        })
+        .to_vec();
+    cases.extend([
+        (
+            [
+                [0, 0, -1000000, -2406250],
+                [0, 0, 2593750, 250000],
+                [-1000000, 2593750, 0, 0],
+                [-2406250, 250000, 0, 0],
+            ],
+            [0, 0, 250000, 250000],
+        ),
+        (
+            [
+                [0, 0, 250000, 2593750],
+                [0, 0, 2593750, 250000],
+                [250000, 2593750, 0, 6250000],
+                [2593750, 250000, 6250000, 0],
+            ],
+            [0, 0, 250000, 250000],
+        ),
+    ]);
+    cases
+}
 
 fn permutations(subset: [usize; 4]) -> Vec<[usize; 4]> {
     let mut result = Vec::new();
@@ -138,13 +201,22 @@ where
             bits,
         );
     let mut native = NativeEvaluator::<T>::with_binary_precision(ScalarIntegral::D0, bits).unwrap();
-    for (case, subset) in [[0, 1, 2, 4], [0, 1, 3, 4]].into_iter().enumerate() {
-        for order in permutations(subset) {
+    for (case, (matrix, masses)) in input_cases().into_iter().enumerate() {
+        for order in permutations([0, 1, 2, 3]) {
             let [a, b, c, d] = order;
             for scale in [1, 4] {
                 let row = [
-                    S[a][b], S[b][c], S[c][d], S[d][a], S[a][c], S[b][d], MASSES[a], MASSES[b],
-                    MASSES[c], MASSES[d], 1000000,
+                    matrix[a][b],
+                    matrix[b][c],
+                    matrix[c][d],
+                    matrix[d][a],
+                    matrix[a][c],
+                    matrix[b][d],
+                    masses[a],
+                    masses[b],
+                    masses[c],
+                    masses[d],
+                    1000000,
                 ];
                 let input =
                     row.map(|v| Complex::new(prototype.from_i64(v * scale), prototype.zero()));
@@ -163,7 +235,9 @@ where
                         scale,
                         &convert,
                         tolerance,
-                        &format!("bits{bits},native{generated},order{order:?},scale{scale}"),
+                        &format!(
+                            "case{case},bits{bits},native{generated},order{order:?},scale{scale}"
+                        ),
                     );
                 }
             }
