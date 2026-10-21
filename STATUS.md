@@ -108,7 +108,7 @@ section's 2122/2122/2121/2106 used the first verifier's.)
   `Float` 128 and 256 bits. Better on fs 7/7/7/7 (hw/gen/expr/jit), rl
   96/96/120/96 and at 128 bits fs 1/1, rl 12/12 and v1 1/1. One silent
   route entry: fs 16941 interpreted, NaN at 59b96e5 and now 5.87e-6, the
-  value of 09b2c74 (wrong by 5.98e-6 on the other routes there), within 10
+  value of 09b2c74 (4.7e-6 to 6.0e-6 on the other routes there), within 10
   kappa_1ulp (1.36e-6; class J), in all 24 relabellings; the other routes
   stay NaN.
 - **The fresh sweep's findings**: no silent route entry outside class J or
