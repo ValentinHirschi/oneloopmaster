@@ -44,6 +44,32 @@ contour box's dilogarithm complements from the poles;
 `tests/d0_contour_regressions.rs`, likewise) and the two-mass terms'
 mass-pair complements taken from the channels' complements next to the
 shells (`tests/d0_two_mass_width.rs`, `tests/data/two_mass_shell.txt`).
+D0 and C0 were rebuilt on 2026-10-21 for the final candidate. D0 with the
+exactly real contour norms and real sheet signs at mixed precision of
+alphal00p/oneloopmaster#9, the infrared chart reclassification of #10, the
+contour box's chart tests for a Gram determinant at the rounding level (a
+vanishing K's far pole, the other contour where the selected one is flat,
+the selected one kept where the other's K is a rounding residue, and NaN
+where binary64 cannot resolve the chart;
+`tests/data/contour_gram_rounding.txt`, `tests/data/contour_unresolved.txt`,
+`tests/data/contour_fresh_sweep.txt`), the one- and two-mass terms'
+mass-pair complements and their root nearer the branch cut taken across it,
+in registered functions (`tests/d0_one_mass_width.rs`,
+`tests/d0_two_mass_width.rs` with `tests/data/two_mass_conditioning.txt`),
+no line product at an exactly double real pole, the line products probed
+where they disagree with their pole's rounded offset or where `a1` does not
+account for an offset, and kept in binary64 only where every cancelling
+edge has one (`tests/data/contour_pole_errors.txt`,
+`tests/data/contour_line_products.txt`), and the zero-external reflection
+only for a line nearer its corner with a pole that the rounding resolves
+poorly next to the corner's vertex, and not into a chart whose flat contour
+is unresolved (`tests/d0_contour_regressions.rs`, which checks SymJIT too).
+C0 for the first time since PR #9 changed its real sheet signs: the rebuilt
+asset keeps the binary64 SymJIT values of the 10,668 C0 rows of the two
+verifiers' sweeps and the NinjaRS master calls, and of the 9,516 C0 rows of
+the oracle sweeps (seeds 1 to 4), bit for bit but for the sign of one NaN;
+the previous asset (102,902 bytes, `f8c7109a...`) was built from the
+expressions before PR #9.
 
 Previous generations: 2026-09-29 with released Symbolica and Numerica 3.0.1 and
 SymJIT 2.26.0, and the C0 asset of 2026-09-22 (zero-root ordering of the finite
@@ -71,8 +97,8 @@ exhaustive analytic-region coverage.
 | A0 | 1,488 | `b034aa19e48f3f62b7029f2c88ad4f14e19ff6d9580979d43868349c5e651a0d` |
 | B0 | 15,375 | `0730c8a390d31c508fbece0760186627dc851b8ccf2da787072f8c2788f50354` |
 | dB0 | 61,566 | `5f145ba984ffe2bdffb9355557a9272c3006d0a601e845cd48877d5d19ea4d77` |
-| C0 | 102,902 | `f8c7109ac1cb09158e53cd128f83c655577fd60edb91b2b645d7f4e2d453072d` |
-| D0 | 2,044,124 | `2a3edfc4ce3408088c02e8977a9d0e2e36bcd568f819a45f266427804ff3d940` |
+| C0 | 85,547 | `7a7bd44280ba5dcf70d0ad9b54b93cbc29853665799a8288c8d7f1a648ac25d9` |
+| D0 | 1,558,784 | `3dc226c8dccb84ee48b0d1eadcf9dd38770dc90bdcdb5e7ba5a5534d9efb9aaf` |
 
 The embedded files use the `oneloop-evaluator-v3` discriminator, which binds
 the Symbolica IR schema and strict compilation policy without claiming backend
