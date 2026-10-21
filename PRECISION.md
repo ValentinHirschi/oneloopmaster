@@ -205,8 +205,9 @@ explicit resource limits; see [expression inspection](README.md#combining-integr
   made a box that every route resolves (`tests/data/contour_unresolved.txt`
   row 3) NaN on the generated and interpreted routes. On the adversarial
   sweeps of 2026-10-21 (STATUS.md), binary64 is finite and wrong by more
-  than 1e-6 on 21 boxes where 09b2c74 was right or NaN (up to 0.36; 10 of
-  them NaN at 09b2c74, which NinjaRS would have rescued), and some boxes
+  than 1e-6 on 21 boxes outside classes J and J* (28 with them) where
+  09b2c74 was right or NaN (up to 0.36; 10 of the 21, 15 of the 28, NaN at
+  09b2c74, which NinjaRS would have rescued), and some boxes
   decide differently by route (ns 6303: 8.7e-2 hand-written, 4.4e-10
   generated). So a NaN where binary64 cannot resolve the chart, and the
   same chart on every route, are measured properties of these sets, not

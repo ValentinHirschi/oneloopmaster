@@ -130,7 +130,12 @@ ns2 (21,280 rows):
   4.5e-5, as at 09b2c74, against 2e-14 and 3e-8 to 7e-8 at 59b96e5). The
   others are ns 5527 (interpreted 2.3e-10), 8867 (SymJIT 4.0e-8), 20588
   (4.3e-12 to 4.6e-12) and ns2 1613 (SymJIT 1.0e-12), and ns 11857 at 256
-  bits (below). ns 14935 (below) is also silent against 59b96e5.
+  bits (below). 17 binary64 entries are silent against 59b96e5: ns 14935
+  interpreted and SymJIT (below), and ns 8083 (4 routes), 8587 (4), 12164
+  (hand-written, generated), 20189 (interpreted, SymJIT), ns2 6343
+  (interpreted) and 8172 (generated, interpreted), which are no worse than
+  09b2c74; 10 of these were NaN at 59b96e5 (ns 8587, 12164, 20189, ns2
+  8172).
 
 ### The remaining tail
 
@@ -276,7 +281,7 @@ ns2 (21,280 rows):
     281.31618854147325 0.0`.
   - **ns 7106**: 2.7e-7 to 5.3e-7 / 1.4e-13 to 2.2e-12 (14dd171, f2adce4).
   - **ns 4204**: NaN on every route / 1.3e-7 to 2.5e-7.
-  - **ns2 12840 to 12843** (four relabellings of one box): hand-written
+  - **ns2 12820 to 12843** (all 24 relabellings of one box, `|Gram|` 1e-18): hand-written
     2.03e-7 / 1.6e-8, NaN at 59b96e5 (this round).
   - **ns 9891** (BOTHBAD): DoubleFloat -3.6e5, 1.97e11 relative, / 1.99. It
     first appears at f2adce4, after 66d84ec (the pin or fdf587a): `4 1.0
@@ -515,8 +520,9 @@ section's 2122/2122/2121/2106 used the first verifier's.)
   value of 09b2c74 (4.7e-6 to 6.0e-6 on the other routes there), within 10
   kappa_1ulp (1.36e-6; class J), in all 24 relabellings; the other routes
   stay NaN. On the adversarial sweeps ns and ns2, 25 and 4 binary64 route
-  entries are more than ten times worse than 59b96e5, ns 14935 is silent
-  against it and ns 11857 is wrong at 256 bits (section above).
+  entries are more than ten times worse than 59b96e5, 17 entries are silent
+  against it (ns 14935 new; the others no worse than 09b2c74, 10 of them NaN
+  at 59b96e5) and ns 11857 is wrong at 256 bits (section above).
 - **The fresh sweep's findings**: on fs and its relabellings rl, no silent
   route entry outside class J or J* is left. (The adversarial sweeps ns and
   ns2 have 18 and 3 such binary64 boxes and 126 and 69 such `Float` rows;
@@ -769,8 +775,9 @@ SymJIT and DoubleFloat (hw/gen/expr/jit/dd).
   relabellings and 2.8e-2 generated in 4, NaN elsewhere) and boxes whose
   chart is finite and wrong on every route (fs 16695 and 15926, fixed on
   2026-10-21). The adversarial sweeps of 2026-10-21 (first section) found
-  21 boxes that binary64 returns finite and wrong by more than 1e-6 where
-  09b2c74 was right or NaN (10 of them NaN), more boxes where the routes
+  21 boxes outside classes J and J* (28 with them) that binary64 returns
+  finite and wrong by more than 1e-6 where 09b2c74 was right or NaN (10 of
+  the 21, 15 of the 28, NaN), more boxes where the routes
   decide differently (ns 6303), and `Float` rows that are finite and wrong
   where 09b2c74 was NaN (126 and 69 rows).
 - **One- and two-mass sheets** (Denner and Dittmaier's, with a width): the
@@ -936,7 +943,8 @@ value of 09b2c74; its hand-written route is NaN, R8 below).
   f2adce4, and none is finite and wrong by more than 1e-6 where 09b2c74 was
   right or non-finite, on these sets' referenced rows. The rows are listed
   below. The per-row comparison of the oracle sweeps on 2026-10-21 found
-  four `Float` boxes from the Symbolica pin that are (first section).
+  four `Float` boxes, caused by the Symbolica pin, that are finite and wrong
+  by more than 1e-6 where 09b2c74 was right or non-finite (first section).
 - **Still wrong, as at 09b2c74** (not regressions; the largest binary64
   errors of the sets): v1 6671 (`0CCC` collinear: hand-written 4.3,
   interpreted and SymJIT 9.0, generated right), the C0 v1 30180 (SymJIT 40,

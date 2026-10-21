@@ -118,8 +118,9 @@ elsewhere, as wrong at 09b2c74), and 25 binary64 route entries on 12 rows
 are more than ten times worse than 09b2c74 (20 finite entries, none wrong by
 more than 1e-6, and 5 NaN). Two adversarial sweeps of 42,560 and 21,280
 rows have far fewer wrong or non-finite values than 09b2c74 (most of the
-gain is on their soft boxes), but 18 and 3 of their binary64 boxes are
-finite and wrong by more than 1e-6 where 09b2c74 was right or NaN (by up to
+gain is on their soft boxes), but 18 and 3 of their binary64 boxes,
+outside the input-conditioning classes J and J* of STATUS.md (23 and 5
+with them), are finite and wrong by more than 1e-6 where 09b2c74 was right or NaN (by up to
 0.36), and so are 126 and 69 of their `Float` rows, usually at 1 to 4
 tracked bits. STATUS.md lists them, with the counts per route and the
 follow-ups, as open work. The
