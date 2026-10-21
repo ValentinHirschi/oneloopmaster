@@ -1113,6 +1113,11 @@ fn tfun_lines(
 /// by the same exact amount, keeps 10 bits of it) and where its K rounds to
 /// zero or it is the other chart (whose K is `b a1` of the flat selected
 /// one): NaN unless the chart with K at its rounding level keeps 13 bits.
+/// Where the other chart's K is a rounding residue too (below 2^-52 of its
+/// terms), neither chart is regular, and of two that disagree the selected
+/// one is kept where K at its rounding level moves the other more than 2^10
+/// times as much as the selected moves with its line; it must then keep 20
+/// bits under that move (`box_complex::tfun_chart`).
 #[cold]
 #[inline(never)]
 fn tfun_checked(
@@ -1132,28 +1137,31 @@ fn tfun_checked(
         (tfun_lines(coefficients, beta, w, &data, edges, sums, products, probe, k), data)
     };
     let chart = |beta: Z, w: Z, data: &BetaData, products: Products| chart_with(beta, w, data, products, None).0;
+    // The chart with the line's g moved to `g (1 + 2^-52)` (its sums by the
+    // same exact amount), and the chart with K at the rounding level of its
+    // terms, `2^-52 (|b a1| + |h b1|)`, both with every line product.
+    let moved_line = |beta: Z, w: Z| {
+        let shifted = g * r(1.0 + f64::EPSILON);
+        let delta = shifted - g;
+        let moved = beta_data(beta, w, b, c, shifted, h, d, e, f, j, dpe, dd_, de, df, dj, ddpe, true);
+        tfun_lines([a, b, c, shifted, h, d, e, f, j, dpe, dpf, dd_, de, df, dj, ddpe, ddpf, abc], beta, w, &moved, edges, sums.map(|sum| sum + delta), Products::All, None, k)
+    };
+    let rounding_k = |beta: Z, w: Z, data: &BetaData| {
+        let magnitude = |z: Z| z.re.abs() + z.im.abs();
+        let rounding = r((magnitude(b * data.a) + magnitude(h * data.b)) / 4503599627370496.0);
+        let probe = beta_data_with_k(beta, w, b, c, g, h, d, e, f, j, dpe, dd_, de, df, dj, ddpe, rounding);
+        tfun_lines(coefficients, beta, w, &probe, edges, sums, Products::All, None, k)
+    };
     // The tests and the agreement compare the charts with every line product
     // (`used`, `Products::All`); a chart they keep gives `result`, with the
     // products that `products_kept` keeps.
     let tested = |beta: Z, w: Z, data: &BetaData, used: Z, result: Z, flat: bool, zero: bool| {
         let keeps = |moved: Z, bits: i32| finite(moved) && close(bits, used, moved);
-        if flat {
-            let shifted = g * r(1.0 + f64::EPSILON);
-            let delta = shifted - g;
-            let moved = beta_data(beta, w, b, c, shifted, h, d, e, f, j, dpe, dd_, de, df, dj, ddpe, true);
-            let moved = tfun_lines([a, b, c, shifted, h, d, e, f, j, dpe, dpf, dd_, de, df, dj, ddpe, ddpf, abc], beta, w, &moved, edges, sums.map(|sum| sum + delta), Products::All, None, k);
-            if !keeps(moved, 10) {
-                return Z { re: f64::NAN, im: f64::NAN };
-            }
+        if flat && !keeps(moved_line(beta, w), 10) {
+            return Z { re: f64::NAN, im: f64::NAN };
         }
-        if zero {
-            let magnitude = |z: Z| z.re.abs() + z.im.abs();
-            let rounding = r((magnitude(b * data.a) + magnitude(h * data.b)) / 4503599627370496.0);
-            let probe = beta_data_with_k(beta, w, b, c, g, h, d, e, f, j, dpe, dd_, de, df, dj, ddpe, rounding);
-            let moved = tfun_lines(coefficients, beta, w, &probe, edges, sums, Products::All, None, k);
-            if !keeps(moved, 13) {
-                return Z { re: f64::NAN, im: f64::NAN };
-            }
+        if zero && !keeps(rounding_k(beta, w, data), 13) {
+            return Z { re: f64::NAN, im: f64::NAN };
         }
         result
     };
@@ -1172,6 +1180,26 @@ fn tfun_checked(
     if check {
         let regular = chart(other_beta, other_w, other, Products::All);
         if finite(regular) && !(finite(all) && agree(all, regular)) {
+            // The other chart's K is a rounding residue (below 2^-52 of its
+            // terms): the selected chart where K at its rounding level moves
+            // the other (relatively) more than 2^10 times as much as the
+            // selected moves with its line, NaN unless the selected keeps 20
+            // bits under that move (and 13 under K at its rounding level where
+            // its own K rounds to zero).
+            if finite(all) && below(104, norm(other.k), norm(b * other.a) + norm(h * other.b)) {
+                let line = moved_line(beta, w);
+                let at_rounding = rounding_k(other_beta, other_w, other);
+                if finite(line)
+                    && (!finite(at_rounding)
+                        || !negative(
+                            norm(at_rounding - regular) * norm(all) - 1048576.0 * norm(line - all) * norm(regular),
+                        ))
+                {
+                    let keeps = |moved: Z, bits: i32| finite(moved) && close(bits, all, moved);
+                    let kept = keeps(line, 20) && (nz(data.k) || keeps(rounding_k(beta, w, data), 13));
+                    return probed(if kept { value } else { Z { re: f64::NAN, im: f64::NAN } });
+                }
+            }
             let kept = chart(other_beta, other_w, other, Products::Kept);
             return tested(other_beta, other_w, other, regular, kept, false, true);
         }

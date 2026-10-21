@@ -1818,8 +1818,57 @@ fn tfun_chart(x: [&Atom; 31]) -> Atom {
     let other_first = 1 - use_first;
     let other = chart(&other_first, Chart::Plain);
     let kept = chart(&other_first, Chart::Kept);
-    let take_other = finite(&other) * (1 - finite(&value) * agree(&value, &other));
+    let disagree = finite(&other) * (1 - finite(&value) * agree(&value, &other));
     let zero_selected = if_nonzero_else(use_first, zero1.clone(), zero2.clone());
+    // Where the other chart's K is a rounding residue too (binary64; `K = b
+    // a1 - h b1` below 2^-52 of `|b a1|, |h b1|`), neither chart is regular:
+    // of two that disagree, the selected one is kept where K at its rounding
+    // level moves the other (relatively) more than 2^10 times as much as the
+    // selected moves with its line, and it must then keep 20 bits under that
+    // move (13 under K at its rounding level where its own K rounds to zero),
+    // or the chart is NaN. Taking the other there lost fs 16695 of the second
+    // verifier's 36,840-row sweep (exact vanishing Gram determinant; the
+    // other's K rounds to zero and moves it by 2e-6, the selected moves by
+    // 1.3e-9) to 5.3e-6 in all 24 relabellings, where the selected chart
+    // keeps 2.5e-8 to 1.0e-7 (as 09b2c74), and made fs 15250 NaN (6.3e-9 at
+    // 09b2c74 and now). Without the margin, fs 14684 (selected moved by 8e-15
+    // with its line, other by 1.7e-14 with its K) took a selected chart wrong
+    // by 7e-3; with any `K` below 2^-26 of its terms (not only a residue),
+    // SymJIT took a selected chart wrong by 0.13 in v1 11845 (its line
+    // moves it by 1e-15 at most on the other routes). The boxes of
+    // tests/data/contour_gram_rounding.txt move their other chart by 1e-12
+    // or less and the selected by 1e-3 or more, and keep the other.
+    let residue = Atom::num(symbolica::domains::integer::Integer::from(2).pow(104));
+    let weak_k = |data: &BetaData| {
+        &binary64
+            * less(
+                &(&residue * norm(&data.k)),
+                &(norm(&(b * &data.a)) + norm(&(h * &data.b))),
+            )
+    };
+    let weak_other = if_nonzero_else(use_first, weak_k(&data2), weak_k(&data1));
+    let moved_selected = chart(use_first, Chart::MovedLine);
+    let moved_other = chart(&other_first, Chart::RoundingK);
+    let moves_more = less(
+        &(norm(&(&moved_other - &other)) * norm(&value)),
+        &(Atom::num(1u64 << 20) * norm(&(&moved_selected - &value)) * norm(&other)),
+    );
+    let prefer_selected = &disagree
+        * weak_other
+        * finite(&value)
+        * finite(&moved_selected)
+        * (1 - finite(&moved_other) * moves_more);
+    let take_other = &disagree * (1 - &prefer_selected);
+    let selected_kept = {
+        let line = finite(&moved_selected) * close(20, &value, &moved_selected);
+        let rounding_k = chart(use_first, Chart::RoundingK);
+        let k = if_nonzero_else(
+            &zero_selected,
+            finite(&rounding_k) * close(13, &value, &rounding_k),
+            Atom::num(1),
+        );
+        if_nonzero_else(&(line * k), probed.clone(), undetermined(&value))
+    };
     let checked = if_nonzero_else(
         &take_other,
         if_nonzero_else(
@@ -1828,9 +1877,13 @@ fn tfun_chart(x: [&Atom; 31]) -> Atom {
             kept.clone(),
         ),
         if_nonzero_else(
-            &finite(&other),
-            probed.clone(),
-            tested(use_first, &value, &probed, &binary64, &zero_selected),
+            &prefer_selected,
+            selected_kept,
+            if_nonzero_else(
+                &finite(&other),
+                probed.clone(),
+                tested(use_first, &value, &probed, &binary64, &zero_selected),
+            ),
         ),
     );
     // Otherwise a flat selected chart (no regular alternative) and one whose
