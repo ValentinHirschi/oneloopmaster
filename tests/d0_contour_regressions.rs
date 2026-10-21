@@ -25,6 +25,10 @@
 //!   10 bits under a move of its line by one rounding unit (a flat chart) or
 //!   13 bits with its K at the rounding level (a K that rounds to zero),
 //!   instead of a silently wrong value (tests/data/contour_unresolved.txt).
+//!   Where the other chart's K is itself a rounding residue, the selected
+//!   chart is kept where K at its rounding level moves the other more than
+//!   2^10 times as much as the selected one moves with its line, if it keeps
+//!   20 bits under that move (rows 1 and 3 of tests/data/contour_fresh_sweep.txt).
 //! - At an exactly double real pole of a line edge no line product is taken
 //!   (`box_complex::r1_line`).
 //! - Where a line product disagrees with the rounded offset of a pole that
@@ -32,23 +36,29 @@
 //!   error and cancel it with `y - z`, which the product breaks; binary64
 //!   probes such a pole and keeps the variant that moves less
 //!   (`box_complex::tfun_selected`, tests/data/contour_pole_errors.txt).
-//! - The line products are kept only where the poles' offsets scale with
-//!   `a1` (no edge without a product, none more than 2^10 times `a1`), and not
-//!   on an edge whose pole lies within 8 offsets of an end of the edge: there
-//!   `y - z` keeps the rounded pole's cancellations that the products break
-//!   (`box_complex::products_kept`, tests/data/contour_line_products.txt).
+//! - The line products are kept only where every edge whose offset cancels
+//!   has one, and not on an edge whose pole lies within 8 offsets of an end
+//!   of the edge: there `y - z` keeps the rounded pole's cancellations that
+//!   the products break (`box_complex::products_kept`,
+//!   tests/data/contour_line_products.txt). A product more than 2^10 times
+//!   `a1` from its root is probed as one that disagrees with its pole (row 2
+//!   of tests/data/contour_fresh_sweep.txt).
 //! - The reflection of `zero_external` needs the line nearer (1, 0) than
 //!   (0, 0) by more than 1/128: where both corners are equally near it moves
 //!   no pole away from a corner, and its chart lost up to 1.2 times the value.
 //!   It is taken only where a `tfun` of the original chart selects a pole that
 //!   the rounding resolves poorly next to the corner's vertex: elsewhere the
 //!   reflected chart has nothing to gain and lost up to 1e-11 to its own
-//!   cancellations.
+//!   cancellations. Nor is it taken where the reflected chart selects a flat
+//!   contour without a regular alternative (in `Float` any flat contour) and
+//!   the original selects none (rows 4 and 5 of
+//!   tests/data/contour_fresh_sweep.txt).
 //!
 //! References (tests/data/contour_regressions.txt,
 //! tests/data/contour_gram_rounding.txt, tests/data/contour_unresolved.txt,
-//! tests/data/contour_pole_errors.txt, tests/data/contour_line_products.txt):
-//! COLLIER 1.2.9 in quadruple precision, independent of OneLOop and this crate.
+//! tests/data/contour_pole_errors.txt, tests/data/contour_line_products.txt,
+//! tests/data/contour_fresh_sweep.txt): COLLIER 1.2.9 in quadruple precision,
+//! independent of OneLOop and this crate.
 #![cfg(feature = "generated-evaluators")]
 use oneloop::{
     EvaluationBackend, NativeEvaluator, PrecisionEvaluator, ScalarIntegral, evaluate_with_backend,
@@ -170,6 +180,19 @@ fn check_binary64(
     double_tolerance: f64,
     nonfinite: bool,
 ) {
+    let all: Vec<usize> = (0..24).collect();
+    check_binary64_images(data, count, &all, tolerance, double_tolerance, nonfinite)
+}
+
+/// [check_binary64] in the relabellings `selected` of [images] only.
+fn check_binary64_images(
+    data: &str,
+    count: usize,
+    selected: &[usize],
+    tolerance: f64,
+    double_tolerance: f64,
+    nonfinite: bool,
+) {
     let rows = rows(data);
     assert_eq!(rows.len(), count);
     let mut failures = Vec::new();
@@ -184,6 +207,9 @@ fn check_binary64(
     for (line, (args, expected, own)) in rows.iter().enumerate() {
         let tolerance = own.unwrap_or(tolerance);
         for (number, image) in images(args).into_iter().enumerate() {
+            if !selected.contains(&number) {
+                continue;
+            }
             let mut check = |route: String, value: C, tolerance: f64| {
                 let error = relative(value, *expected);
                 let detected = nonfinite && !(value.re.is_finite() && value.im.is_finite());
@@ -328,6 +354,99 @@ fn contour_boxes_with_a_rounding_level_gram_determinant_match_collier_at_high_pr
                 (PRECISE, f64::INFINITY)
             }
         })
+    });
+}
+
+/// Boxes of the second verifier's fresh sweep of 59b96e5 (rows 1 to 3 of
+/// tests/data/contour_fresh_sweep.txt): every binary64 route within the row's
+/// tolerance in all 24 relabellings, DoubleFloat within 1e-14. Row 1 (an exact
+/// vanishing Gram determinant whose other chart's K rounds to zero) was wrong
+/// by 5.3e-6 in all 24 at 59b96e5 and keeps 1.0e-7 hand-written and 2.5e-8 on
+/// the other routes, as 09b2c74; row 2 (one line edge's offset 1.3e4 times
+/// `a1`) was wrong by up to 1.4e-5 and keeps 6.4e-10, 2.4e-14 in the 12
+/// reflected relabellings; row 3 (an exact vanishing Gram determinant whose
+/// other chart's K is a rounding residue) was NaN and keeps 6.8e-9, as 09b2c74.
+#[test]
+fn contour_boxes_of_a_fresh_sweep_match_collier_in_binary64() {
+    on_stack(|| {
+        let data = data_lines(include_str!("data/contour_fresh_sweep.txt"), 0..3);
+        check_binary64(&data, 3, BINARY64, 1e-14, false)
+    });
+}
+
+/// The relabellings of row 4 of tests/data/contour_fresh_sweep.txt that
+/// `zero_external` may reflect (see the data file).
+const REFLECTION_UNRESOLVED_IMAGES: [usize; 12] = [0, 1, 2, 9, 10, 11, 15, 16, 17, 18, 19, 20];
+
+/// A box whose reflected zero-external chart selects a flat contour without a
+/// regular alternative while the original selects none (row 4 of
+/// tests/data/contour_fresh_sweep.txt): in the relabellings that reach the
+/// reflection test, every binary64 route within 1e-9 (now and at 09b2c74
+/// 9.7e-11; reflected, 59b96e5 was wrong by 2.9e-2 or NaN), DoubleFloat within
+/// 1e-14. The other 12 relabellings, which put the box into that orientation
+/// directly, are wrong by 2.8e-2 or NaN, as 09b2c74 (3.4e-2 to 0.23).
+#[test]
+fn zero_external_keeps_its_orientation_where_the_reflected_chart_is_unresolved() {
+    on_stack(|| {
+        let data = data_lines(include_str!("data/contour_fresh_sweep.txt"), 3..4);
+        check_binary64_images(&data, 1, &REFLECTION_UNRESOLVED_IMAGES, BINARY64, 1e-14, false)
+    });
+}
+
+/// The relabellings of row 5 of tests/data/contour_fresh_sweep.txt that keep
+/// their orientation at 128 bits (see the data file).
+const FLOAT_REFLECTION_IMAGES: [usize; 12] = [0, 1, 4, 8, 9, 11, 13, 16, 17, 18, 20, 21];
+
+/// A box with an exact vanishing Gram determinant whose reflected
+/// zero-external chart selects a flat contour (row 5 of
+/// tests/data/contour_fresh_sweep.txt): binary64 within the row's tolerance in
+/// all 24 relabellings (5.5e2 at 09b2c74), and native code and interpreted
+/// expressions at 128 bits within 1e-15 in the relabellings that reach the
+/// reflection test, where `Float` keeps the original orientation (3.3e-16 at
+/// 64 tracked bits, as 09b2c74; 59b96e5 reflected and kept 20 tracked bits,
+/// wrong by up to 1.9e-5). The other 12 keep 1.2e-6 to 1.9e-5 at 20 tracked
+/// bits (09b2c74 3.7e-2 to 1.4e6 at 2 to 11).
+#[test]
+fn zero_external_keeps_its_orientation_in_float_where_the_reflected_contour_is_flat() {
+    on_stack(|| {
+        let data = data_lines(include_str!("data/contour_fresh_sweep.txt"), 4..5);
+        check_binary64(&data, 1, BINARY64, 1e-14, false);
+        let (args, expected, _) = rows(&data).remove(0);
+        let bits = 128;
+        let mut native =
+            NativeEvaluator::<Float>::with_binary_precision(ScalarIntegral::D0, bits).unwrap();
+        let mut expression = PrecisionEvaluator::with_binary_precision_and_backend(
+            ScalarIntegral::D0,
+            bits,
+            EvaluationBackend::Expression,
+        )
+        .unwrap();
+        let mut failures = Vec::new();
+        for (number, image) in images(&args).into_iter().enumerate() {
+            if !FLOAT_REFLECTION_IMAGES.contains(&number) {
+                continue;
+            }
+            let input: Vec<_> = image
+                .iter()
+                .map(|z| Complex::new(Float::with_val(bits, z.re), Float::with_val(bits, z.im)))
+                .collect();
+            for route in ["native", "expression"] {
+                let mut output = core::array::from_fn::<_, 3, _>(|_| {
+                    Complex::new(Float::new(bits), Float::new(bits))
+                });
+                if route == "native" {
+                    native.evaluate(&input, &mut output).unwrap();
+                } else {
+                    expression.evaluate(&input, &mut output).unwrap();
+                }
+                let value = C::new(output[0].re.to_f64(), output[0].im.to_f64());
+                let error = relative(value, expected);
+                if !(error <= PRECISE) {
+                    failures.push(format!("image {number} {route}: {value:?} vs {expected:?} ({error:e})"));
+                }
+            }
+        }
+        assert!(failures.is_empty(), "{} failures:\n{}", failures.len(), failures.join("\n"));
     });
 }
 

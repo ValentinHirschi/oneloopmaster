@@ -1,0 +1,30 @@
+# kind mu_squared momenta... squared_mass_real_imag... finite_real_imag pole1_real_imag pole2_real_imag [binary64 tolerance]
+# Contour-box D0 of the second verifier's fresh sweep of 59b96e5 (its own generator, seed 20261021,
+# 36,840 rows; its rows 16695, 15926, 15250, 15189 and 15486), each in all 24 relabellings.
+# References: COLLIER 1.2.9 in quadruple precision (COLI branch, fed the exact decimal expansions of
+# the binary64 inputs), which its DD branch confirms to 1e-13 (rows 1 to 3) or the 256-bit values of
+# this crate to 1e-30 (rows 4 and 5). Worst binary64 error over the 24 relabellings and the
+# hand-written, generated, interpreted and SymJIT routes, at 09b2c74 / 59b96e5 / now:
+#  1. 0CRR, exact vanishing Gram determinant: 1.0e-7 hand-written, 2.5e-8 on the other routes / 5.3e-6
+#     in all 24 (the other chart taken although its K rounds to zero, box_complex::tfun_chart) / as
+#     09b2c74.
+#  2. R0CR, Gram determinant 1e-13 of its terms: 4.9e-6 to 1.4e-5 in 12 relabellings (6.4e-10 in the
+#     others) / 4.9e-6 to 1.4e-5 in all 24 (every line product dropped where one edge's offset is 1.3e4
+#     times a1, box_complex::products_kept; and the reflected chart flat) / 6.4e-10 (2.4e-14 in 12).
+#  3. CRR0, exact vanishing Gram determinant: 6.8e-9 / NaN in all 24 (the other chart, whose K is a
+#     rounding residue, failed its test) / 6.8e-9.
+#  4. CRR0, Gram determinant 1e-15 of its terms, mu^2 0.103: in the 12 relabellings that zero_external
+#     may reflect (images 0, 1, 2, 9, 10, 11 and 15 to 20 in the order of tests/d0_contour_regressions.rs),
+#     9.7e-11 / 2.9e-2 or NaN (a flat reflected contour without a regular alternative) / 9.7e-11. In the
+#     other 12, which put the box into that orientation directly, 3.4e-2 to 0.23 / 2.9e-2 or NaN /
+#     unchanged (not tested).
+#  5. C0CC, exact vanishing Gram determinant: binary64 within 8.5e-9 in all 24 (5.5e2 at 09b2c74). At
+#     128 bits, in images 0, 1, 4, 8, 9, 11, 13, 16, 17, 18, 20 and 21: 3.3e-16 at 64 tracked bits /
+#     1.2e-6 to 1.9e-5 at 20 tracked bits (the flat reflected contour, which Float takes unchecked) /
+#     3.3e-16 at 64 bits; in the other 12, 3.7e-2 to 1.4e6 at 2 to 11 tracked bits / 1.2e-6 to 1.9e-5 at
+#     20 tracked bits / unchanged (not tested).
+4 1.0 0.04098646755605696 80.87964490738864 0.34880006767989435 0.03799755016883699 -0.011089534356888744 2356.381986129253 0.0 0.0 0.04098646755605696 -7.930678880397611e-07 0.34880006767952787 0.0 32.414184814516524 0.0 -0.00842928028404446601750734861279016881 0.00404507512141561610817427716086292932 0.0 0.0 0.0 0.0 2e-7
+4 1.0 0.004297055195600522 0.00751387778483086 -9.012596567209556e-09 0.0 -40.33793897594694 8.002091184977337e-07 0.004297055195626569 0.0 0.0 0.0 0.007513931048215164 -6.576886908708777e-09 0.1876486218291588 0.0 40.6651792459873544946395002162961705 0.287386301472200571384148621968558792 0.0 0.0 0.0 0.0 1e-9
+4 534.8924057051393 0.013528308252993539 -75.94773351966548 2.1234194105350483 0.3816571297235544 154.2097479275369 -0.1913598563492665 0.3816570936603247 -1.3078868566289377e-11 0.34991098974973833 0.0 2.1234194105350483 0.0 0.0 0.0 -2.20364145202680879009243711847324266 1.23512432150522802934665107304845359 0.0 0.0 0.0 0.0 1e-8
+4 0.10315244103338038 -6.676730478343101e-14 0.0 -0.008343875796334973 0.09149782777312178 0.26034961596173956 0.004208538178656358 0.09149782777312178 -1.1730939496373489e-14 0.04316362930938394 0.0 0.04316362930938394 0.0 0.0 0.0 809.769720020424769071906659687400439 0.000185858514520054640493716173535389333 0.0 0.0 0.0 0.0 1e-9
+4 1.0 -1.9028646374034393e-12 268.8476534386127 0.009062107680216253 0.0 365.83393896409467 5.274595741462245e-12 7.45405461852649 -0.00025548902484049123 0.0 0.0 268.8476534386127 -111.50926879738005 7.45405461852649 -0.00025548902484049123 0.000389282427624439367157189326965554662 0.000886152428329936549417749988046466390 0.0 0.0 0.0 0.0 1e-8
