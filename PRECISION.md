@@ -179,9 +179,13 @@ explicit resource limits; see [expression inspection](README.md#combining-integr
   7e-9), and is never true in `DoubleFloat`, which keeps `1 + x` exactly.
   `Float` takes the selected chart: at 128 bits the other chart lost two boxes
   with exactly vanishing invariant combinations to 4.2e-7 and 1.7e-6 (28 and
-  22 tracked bits; 09b2c74 4.5e-9 and 1.1e-16). Where no chart is regular,
-  binary64 tests the chart it uses: a flat selected chart must keep 10 bits
-  when the line's `g` moves to `g (1 + 2^-52)` (its sums by the same exact
+  22 tracked bits; 09b2c74 4.5e-9 and 1.1e-16). `Float` does not test the
+  chart it takes. On the adversarial sweeps of 2026-10-21 (STATUS.md), 126
+  and 69 `Float` rows, mostly with an exactly vanishing Gram determinant and
+  NaN at 09b2c74, are finite and wrong by more than 1e-6. Most track 1 to 4
+  bits, but one (ns 9210, wrong by 4.46) tracks 253 of 256. Where no chart
+  is regular, binary64 tests the chart it uses: a flat selected chart must
+  keep 10 bits when the line's `g` moves to `g (1 + 2^-52)` (its sums by the same exact
   amount), and a chart whose `K` rounds to zero (or the other chart taken,
   whose `K` is `b a1` of the flat one) 13 bits when `K` is set to its rounding
   level `2^-52 (|b a1| + |h b1|)`; otherwise it returns NaN, which the caller
@@ -199,7 +203,14 @@ explicit resource limits; see [expression inspection](README.md#combining-integr
   2.8e-2 generated in 4, NaN elsewhere, where 09b2c74 is wrong by 3.4e-2 to
   0.23 on every route), and a 13-bit line test, which makes those NaN,
   made a box that every route resolves (`tests/data/contour_unresolved.txt`
-  row 3) NaN on the generated and interpreted routes. Of the 26 boxes of the verifier's 32,600-row sweep that 09b2c74
+  row 3) NaN on the generated and interpreted routes. On the adversarial
+  sweeps of 2026-10-21 (STATUS.md), binary64 is finite and wrong by more
+  than 1e-6 on 21 boxes where 09b2c74 was right or NaN (up to 0.36; 10 of
+  them NaN at 09b2c74, which NinjaRS would have rescued), and some boxes
+  decide differently by route (ns 6303: 8.7e-2 hand-written, 4.4e-10
+  generated). So a NaN where binary64 cannot resolve the chart, and the
+  same chart on every route, are measured properties of these sets, not
+  guarantees. Of the 26 boxes of the verifier's 32,600-row sweep that 09b2c74
   returned as NaN and f2adce4 as finite wrong values (up to 2.8e2), 11 are
   NaN again, 14 right and one within 10 times its input conditioning; 7
   boxes that 09b2c74 already got wrong by more than 1e-6 are NaN, none that

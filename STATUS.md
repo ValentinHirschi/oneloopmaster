@@ -4,11 +4,413 @@ This page preserves the September 8 development snapshot. See the
 [Symbolica main migration report](SYMBOLICA_3_MIGRATION.md) for the current
 dependency setup and validation.
 
+## Adversarial sweeps and the remaining tail (landed 2026-10-21)
+
+`claude/olm-final-3` (3a322d0, the next section) lands on main as it
+stands, by the user's decision of 2026-10-21; the tail below is open work,
+not a list of accepted exceptions. Its two verifiers (verify-olm-sweep2 and
+verify-olm-gates2) ran it on three adversarial sweeps, two of them generated
+after the fixes, and on per-row comparisons of the oracle sweeps. Against
+09b2c74 each sweep has far fewer wrong and non-finite D0 values, but each
+also has rows that 3a322d0 gets wrong where 09b2c74 was right or NaN. The
+guarantees of the sections below (NaN where binary64 cannot resolve a
+chart, every route taking the same chart, no silent entry outside J and J*,
+nothing else worse) were measured on the sets those sections name and hold
+there only.
+
+**Sweeps.** All three are weighted to exact and near vanishing Gram
+determinants and to collinear, threshold, corner and near-shell boxes, and
+all three hold soft boxes in all 24 relabellings. The references are
+COLLIER 1.2.9 in quadruple precision: COLI where its DD branch agrees to
+1e-13, else COLI where the four 256-bit values of both builds (native and
+interpreted) agree to 1e-30 and COLI agrees with them to 1e-13; other rows
+have no reference.
+- **fs**: the next section's sweep (seed 20261021, 36,840 rows, 36,690
+  referenced).
+- **ns**: verify-olm-sweep2's generator `gen2.py` (seed 5150721, 42,560
+  rows, 41,584 referenced). 4,000 random boxes over the 81 mass patterns
+  (widths 1e-14 to 0.7 of Re m²); 5,000 with the Gram determinant solved
+  for one invariant (1e-4 to 1e-18 relative, or an exact root); 3,000 with
+  dyadic momenta in a plane (Gram determinant exactly 0, lightlike or
+  massive legs, masses on the legs' shells, an optional dyadic transverse
+  kick of 2^-2 to 2^-30); 2,000 physical 2 → 2 boxes at small angles (sin²θ
+  from 1e-2 to 1e-16, and θ = 0 or π); 2,000 each of collinear, threshold
+  and pseudo-threshold, and corner boxes (zero legs at massive corners);
+  1,500 each with small or zero channels and with near-shell legs and
+  complex masses; 450 boxes (10,800 rows) and 240 soft boxes (5,760 rows) in
+  all 24 relabellings; 3,000 C0. 10% of the rows are scaled by an exact
+  power of two.
+- **ns2**: the same generator at half the counts (seed 9081726, 21,280
+  rows, 20,845 referenced).
+
+**Counts**, route entries 09b2c74 → 3a322d0, with the definitions of
+verify-olm-sweep2's `tools/an2.py` and `tools/classify2.py`:
+- *wrong*: a referenced row with an error above 1e-6 or a non-finite value
+  (`an2.py`'s bad6);
+- *finite and wrong*: the finite part of those, the silently wrong values
+  that NinjaRS's non-finite detection cannot catch;
+- *non-finite*: the referenced non-finite rows, so that wrong = finite and
+  wrong + non-finite;
+- *non-finite, all rows*: referenced or not (`an2.py`'s nan_b and nan_c).
+  bad6 minus these mixes two row sets and undercounts the finite part (ns hw
+  now: 226 instead of 322);
+- *healed*: non-finite at 09b2c74, within 1e-6 now;
+- *>10x worse*: more than ten times 09b2c74's error and above 1e-12, a
+  non-finite value counting as infinitely wrong (in parentheses, the
+  non-finite ones);
+- *new silent*: finite and wrong by more than 1e-6 where 09b2c74 was within
+  1e-6 or non-finite (in parentheses, those outside classes J and J*;
+  kappa_1ulp from both builds at 512 bits and COLLIER, `tools/kappa3.py`).
+
+Routes: hw, gen, expr, jit and dd as in the sections below; nat128, int128,
+nat256 and int256 are native and interpreted `Float` at 128 and 256 bits.
+
+fs (36,840 rows):
+
+| route | wrong | finite and wrong | non-finite | non-finite, all rows | healed | >10x worse | new silent |
+|---|---|---|---|---|---|---|---|
+| hw | 3,979 → 236 | 1,400 → 195 | 2,579 → 41 | 2,611 → 54 | 2,545 | 15 (7) | 0 (0) |
+| gen | 3,984 → 250 | 1,354 → 187 | 2,630 → 63 | 2,662 → 76 | 2,574 | 15 (7) | 1 (0) |
+| expr | 3,955 → 248 | 1,363 → 192 | 2,592 → 56 | 2,623 → 68 | 2,541 | 12 (5) | 1 (0) |
+| jit | 3,965 → 239 | 1,397 → 195 | 2,568 → 44 | 2,600 → 57 | 2,531 | 12 (7) | 0 (0) |
+| dd | 3,362 → 2 | 1,158 → 1 | 2,204 → 1 | 2,235 → 12 | 2,204 | 1 (1) | 0 (0) |
+| nat128 | 3,402 → 2 | 958 → 1 | 2,444 → 1 | 2,476 → 14 | 2,444 | 3 (1) | 0 (0) |
+| int128 | 3,400 → 2 | 936 → 1 | 2,464 → 1 | 2,496 → 14 | 2,464 | 1 (1) | 0 (0) |
+| nat256 | 3,360 → 1 | 952 → 0 | 2,408 → 1 | 2,441 → 13 | 2,408 | 1 (1) | 0 (0) |
+| int256 | 3,360 → 1 | 988 → 0 | 2,372 → 1 | 2,405 → 14 | 2,372 | 1 (1) | 0 (0) |
+
+ns (42,560 rows):
+
+| route | wrong | finite and wrong | non-finite | non-finite, all rows | healed | >10x worse | new silent |
+|---|---|---|---|---|---|---|---|
+| hw | 5,333 → 627 | 2,062 → 322 | 3,271 → 305 | 3,455 → 401 | 3,038 | 142 (80) | 11 (9) |
+| gen | 5,403 → 723 | 2,069 → 325 | 3,334 → 398 | 3,522 → 497 | 3,038 | 172 (108) | 13 (10) |
+| expr | 5,429 → 733 | 2,066 → 319 | 3,363 → 414 | 3,551 → 513 | 3,048 | 159 (105) | 13 (9) |
+| jit | 5,264 → 746 | 2,076 → 351 | 3,188 → 395 | 3,365 → 497 | 2,885 | 162 (96) | 12 (9) |
+| dd | 3,654 → 33 | 1,410 → 4 | 2,244 → 29 | 2,393 → 126 | 2,215 | 1 (0) | 0 (0) |
+| nat128 | 4,149 → 280 | 1,529 → 250 | 2,620 → 30 | 2,815 → 126 | 2,524 | 34 (1) | 74 (73) |
+| int128 | 4,150 → 304 | 1,520 → 274 | 2,630 → 30 | 2,818 → 126 | 2,534 | 10 (1) | 98 (97) |
+| nat256 | 3,911 → 206 | 1,222 → 177 | 2,689 → 29 | 2,876 → 126 | 2,604 | 3 (0) | 57 (57) |
+| int256 | 3,913 → 208 | 1,287 → 179 | 2,626 → 29 | 2,809 → 126 | 2,537 | 16 (0) | 60 (60) |
+
+ns2 (21,280 rows):
+
+| route | wrong | finite and wrong | non-finite | non-finite, all rows | healed | >10x worse | new silent |
+|---|---|---|---|---|---|---|---|
+| hw | 2,711 → 367 | 1,156 → 180 | 1,555 → 187 | 1,640 → 231 | 1,425 | 95 (60) | 3 (3) |
+| gen | 2,761 → 388 | 1,112 → 179 | 1,649 → 209 | 1,732 → 253 | 1,501 | 75 (66) | 5 (3) |
+| expr | 2,781 → 384 | 1,155 → 177 | 1,626 → 207 | 1,709 → 251 | 1,478 | 73 (63) | 4 (3) |
+| jit | 2,692 → 391 | 1,167 → 176 | 1,525 → 215 | 1,606 → 264 | 1,376 | 106 (68) | 2 (2) |
+| dd | 1,894 → 34 | 753 → 16 | 1,141 → 18 | 1,220 → 63 | 1,123 | 0 (0) | 0 (0) |
+| nat128 | 2,195 → 185 | 818 → 166 | 1,377 → 19 | 1,471 → 64 | 1,343 | 22 (0) | 28 (28) |
+| int128 | 2,194 → 186 | 903 → 167 | 1,291 → 19 | 1,379 → 64 | 1,259 | 41 (0) | 27 (27) |
+| nat256 | 2,030 → 99 | 659 → 79 | 1,371 → 20 | 1,458 → 65 | 1,308 | 0 (0) | 43 (43) |
+| int256 | 2,030 → 99 | 683 → 79 | 1,347 → 20 | 1,435 → 65 | 1,284 | 0 (0) | 43 (43) |
+
+- **Totals.** Over the three sweeps (99,119 referenced rows per route), the
+  binary64 routes hw/gen/expr/jit go from 18,377 finite and wrong route
+  entries to 2,798 (6.6 times fewer; 6.4 to 6.7 per route), and from 31,076
+  non-finite entries (all rows) to 3,162 (9.8 times fewer). DoubleFloat goes
+  from 3,321 finite and wrong entries to 21.
+- **Most of that is the soft boxes.** The 14,400 referenced soft-box
+  relabellings (each sweep's soft family; the relabelling of d880be8) were
+  finite and wrong in 11,936 and non-finite in 21,824 binary64 route entries
+  at 09b2c74, and none is wrong now on any route. On the other 84,719
+  referenced rows per route:
+  - binary64 (hw/gen/expr/jit): finite and wrong 6,441 → 2,798 (2.3 times
+    fewer), non-finite 8,056 → 2,534 (3.2 times fewer);
+  - DoubleFloat: finite and wrong 197 → 21, non-finite 273 → 48;
+  - `Float` (native/interpreted): finite and wrong 873/871 → 417/442 at 128
+    bits and 413/414 → 256/258 at 256 bits; non-finite 433 to 449 → 50 per
+    route.
+- **Against 59b96e5**, the previous candidate, on ns and ns2: 25 and 4
+  binary64 route entries are more than ten times worse, none newly NaN. 23
+  of them are at most three times 09b2c74's error, 59b96e5's gains given
+  back (ns 7482 at 1.2e-11 to 3.1e-11 and ns 8083 at 6.9e-6 to
+  4.5e-5, as at 09b2c74, against 2e-14 and 3e-8 to 7e-8 at 59b96e5). The
+  others are ns 5527 (interpreted 2.3e-10), 8867 (SymJIT 4.0e-8), 20588
+  (4.3e-12 to 4.6e-12) and ns2 1613 (SymJIT 1.0e-12), and ns 11857 at 256
+  bits (below). ns 14935 (below) is also silent against 59b96e5.
+
+### The remaining tail
+
+- **New silent binary64 boxes on ns and ns2.** 18 rows of ns (37 route
+  entries) and 3 of ns2 (11 entries) are finite and wrong by more than 1e-6
+  where 09b2c74 was within 1e-6 or NaN, outside classes J and J*. Each
+  reproduces in a fresh single-row process, and 13 of the 18 ns boxes are
+  silent in all 24 of their relabellings on at least one route. DoubleFloat
+  is within 3e-14 on all 21.
+  - 7 ns boxes (5313, 5856, 6303, 7507, 16250, 20047, 22586) and all 3 ns2
+    boxes were NaN at 09b2c74 on the silent route and are now finite and
+    wrong, by up to 0.358. This is the class of the 26 v1 boxes of the
+    2026-10-20 section: NinjaRS rescued them at 09b2c74 and cannot now.
+  - 8 ns boxes are more than ten times worse, by up to 5.1e-4.
+  - 5 ns boxes cross 1e-6 by less than ten times. Some boxes fall into two
+    of these groups on different routes.
+
+  Origin: the first of the builds dbb2217, e72b404, 9f663c5, a5da789,
+  9a898ee, 14dd171, 66d84ec, f2adce4, 59b96e5 and 3a322d0 that has the
+  entry. Builds before the 9a898ee regeneration have stale generated code
+  and SymJIT asset, so their generated and SymJIT entries first appear at
+  9a898ee.
+  - The second contour (e72b404) and its regeneration (9a898ee): ns 5313,
+    5856, 6303, 7507, 11223, 14680, 16250 and 22586. ns2 7571, 7649 and
+    9343 were already finite at f2adce4 and are probably of this kind (no
+    per-commit builds ran on ns2).
+  - 14dd171 and f2adce4: ns 19844.
+  - The chart tests of the 59b96e5 round: ns 5420, 7856, 16607, 17226,
+    17241, 20047, 21773 and 22195.
+  - This round's 356c86e, ecdd288 and 4728b58: ns 14935.
+
+  By entry: e72b404 8, 9a898ee 9, 14dd171 1, f2adce4 1, 59b96e5 16,
+  3a322d0 2. Examples (now / 09b2c74, kappa_1ulp in parentheses):
+  - **ns 21773** (0RCR, collinear, near-shell, `|Gram|` about 1e-12), in 24
+    of 24 relabellings: hand-written and generated 6.92e-5, interpreted
+    2.87e-4, SymJIT 5.06e-4 / 4.2e-11 to 6.9e-11 (6.4e-14): `4 1.0
+    7.028187065255957e-07 0.0 0.005302184441384347 1.633183661366993
+    -174.06094317827635 175.69938044725544 0.0 0.0 0.04290512570476754 0.0
+    0.005302184441272015 -2.1268222108600294e-10 1.6331836613681863 0.0`.
+  - **ns 7507** (CR0R, Gram determinant solved exactly), in 24 of 24: every
+    route 0.357 to 0.358 / NaN (6.0e-5): `4 1.0 186.7538095418956
+    0.01695021310312886 0.0 -292.8378454800183 0.2351432365626144
+    0.04358616202006642 0.2351432365626144 -1.001675471196281e-12
+    0.016950213103128213 0.0 0.0 0.0 0.08879095923422525 0.0`.
+  - **ns 6303** (0RCC), where the routes decide differently: hand-written
+    8.73e-2 and SymJIT 9.73e-2, generated and interpreted 4.4e-10 / NaN on
+    every route (2.2e-12): `4 0.5568416628511574 0.0 133.25721355123596
+    133.25721355123596 133.25703827366746 -4.7832653970227776e-09
+    -19933864.53703898 0.0 0.0 0.6007759241424445 0.0 133.25721355123596
+    -1.5260843810449647e-08 133.25721355123596 -1.5260843810449647e-08`.
+  - **ns 14935** (CCC0, collinear, Gram determinant solved exactly):
+    interpreted 2.89e-6 / 4.05e-7 and SymJIT 5.95e-6 / 6.77e-7 (4.2e-15).
+    59b96e5 had 09b2c74's values, and 3a322d0 brings back f2adce4's
+    6.0e-6: `4 1.0 1.1500838214184512e-15 -2.369487656671137e-11
+    -0.2556607748249167 0.09128878098416279 -7.380219408034656e-13
+    0.09127140052919261 0.09128878098511474 -0.00027842117540001325
+    0.09128878098511474 -0.00027842117540001325 0.8876719139258283
+    -2.8381702426911448e-14 0.0 0.0`.
+  - **ns2 9343** (0RRR, corner): every route 1.5e-5 to 5.7e-5 / NaN
+    (f2adce4 3e2 to 2.1e3; 1.5e-16): `4 1.0 0.021324439102008253
+    -7.637400764437557e-07 0.0 -0.31679140864312216 -154.3957808427037
+    -1.672312005173147e-09 0.0 0.0 0.021324439102008253 0.0
+    0.021324439102008253 0.0 0.021324439102008253 0.0`.
+- **Silent `Float` rows.** ns has 126 rows (287 entries: nat128 73, int128
+  97, nat256 57, int256 60) on 77 distinct boxes. 67 of those boxes have
+  dyadic momenta in a plane, so their Gram determinant vanishes exactly; the
+  other rows are mostly relabellings of such boxes. ns2 has 69 rows (141
+  entries).
+  - Of ns's 287 entries, 250 were NaN at 09b2c74, 10 are more than ten
+    times worse and 27 cross 1e-6.
+  - 244 track 1 to 4 bits, 11 track 5 to 20 and 28 track 21 to 60; the 4
+    entries of ns 9210 (below) track 125 to 254. numerica's tracked
+    precision flags most of them, but NinjaRS's `SymbolicaMasters` does not
+    check it.
+  - Binary64 is right at 3a322d0 on most of these rows.
+  - By first build (entries): e72b404 82, 9a898ee 86, 14dd171 32, f2adce4
+    79, 59b96e5 4, 3a322d0 2, and dbb2217 and a5da789 1 each.
+  - In all 24 relabellings of these boxes, 1,103, 1,707, 862 and 910
+    entries are silent (nat128, int128, nat256, int256).
+
+  Examples:
+  - **ns 9210** (CCC0: three equal complex masses, lightlike `p3`, exactly
+    planar) is wrong by 4.46 at 128 and 256 bits, native and interpreted,
+    at 125/126 and 253/254 tracked bits, so it is silent under numerica's
+    tracking too. 09b2c74 is NaN, f2adce4 gives the same as now, 512 and
+    1024 bits are right, and every binary64 route is right at both builds:
+    `4 1.0 -285.2138671875 13.123821258544922 0.0 -780.9905891418457
+    -340.4909248352051 -104.8216438293457 6.957667603777042
+    -4.856459427327334 6.957667603777042 -4.856459427327334
+    6.957667603777042 -4.856459427327334 0.0 0.0`.
+  - **ns 11924**: 1.9e6 at 256 bits (1 tracked bit) and 5.8e4 to 1.2e5 at
+    128 bits / NaN, the same since f2adce4: `4 1.0 33.81325435638428
+    -31240.353622436523 34.98277282714844 -35793.02247714996
+    -32014.49529361725 -34824.33947753906 33.81325435638428
+    -2.3828418255129664e-05 264.13610827557284 -0.02144427586113098 0.0 0.0
+    264.13610827557284 -0.02144427586113098`.
+  - **ns 11857**, from this round: 7.99e2 (native) and 7.94e2 (interpreted)
+    at 256 bits, at 1 to 2 tracked bits / NaN; 59b96e5 was right (2.5e-16),
+    as are 128 bits and every binary64 route: `4 0.00390625
+    34.35824579000473 -29.8271062374115 0.0 0.5082151293754578
+    0.2645418047904968 -88.81898474693298 0.0 0.0 1.97227437591852e-05
+    -8.531542965385371e-15 4.155059391982788e-05 0.0 0.5082151293754578
+    0.0`.
+- **Non-silent regressions**, rows with route entries in parentheses:
+  - REG: finite, more than ten times worse, within 1e-6;
+  - REG-NaN: non-finite where 09b2c74 was within 1e-6;
+  - BOTHBAD: finite and more than ten times worse where 09b2c74 was also
+    wrong by more than 1e-6;
+  - F: the same at `Float` 128 and 256 bits.
+
+  | sweep | REG | REG-NaN | BOTHBAD | F:REG | F:BOTHBAD |
+  |---|---|---|---|---|---|
+  | fs | 10 (20) | 2 (5) | 0 | 2 (2) | 0 |
+  | ns | 75 (186) | 65 (147) | 2 (2) | 28 (28) | 23 (23) |
+  | ns2 | 63 (80) | 21 (41) | 1 (1) | 1 (1) | 33 (34) |
+
+  fs's rows are those of the next section. ns's largest REG entry is
+  8.35e-7 and its largest F:REG 5.9e-8; ns2's largest REG is 2.03e-7.
+
+  First builds on ns:
+  - REG: 9a898ee 74, dbb2217 46, 14dd171 21, f2adce4 16, 59b96e5 15,
+    a5da789 7, 3a322d0 7;
+  - REG-NaN: all 147 from the chart tests of the 59b96e5 round;
+  - F:REG: 26 first at f2adce4 (after 66d84ec), 1 each at 14dd171 and
+    dbb2217;
+  - F:BOTHBAD: all 23 at dbb2217.
+
+  Examples (now / 09b2c74):
+  - **ns 6273** (59b96e5 round), every route 8.35e-7 / 3.6e-11 to 1.0e-10:
+    `4 4194304.0 0.0 51525.63709926937 3163891072.5370736
+    0.012322961879810104 3164288313.0604987 -397135.87170897477
+    8279958.433742482 0.0 51525.63709926937 -4.363003471207825
+    30678043.29808802 -1122.059896503505 8279958.433742482 0.0`.
+  - **ns 18263** (59b96e5 round), every route 3.6e-8 to 1.1e-7 / 2.7e-14 to
+    4.0e-14: `4 954.2341360765037 5.329036581011877 200.5763636964664 0.0
+    5.333225737525935 255359.56520901964 -6.149803574401711e-14
+    5.333225737525935 -6.3243865323895084e-09 0.0 0.0 200.55286277477904
+    -0.10090954856671604 0.006586013687906813 0.0`.
+  - **ns 13231**, a physical 2 → 2 box at sin²θ = 1e-13: NaN on every route
+    / 6e-16 to 1.9e-15: `4 1.0 7.698400845381409 21.164391455333107 0.0
+    281.31618854147325 514.3399699486017 -208.2194430249316 0.0 0.0
+    7.698400845381409 -1.4741450958737954e-09 0.11831516768675966 0.0
+    281.31618854147325 0.0`.
+  - **ns 7106**: 2.7e-7 to 5.3e-7 / 1.4e-13 to 2.2e-12 (14dd171, f2adce4).
+  - **ns 4204**: NaN on every route / 1.3e-7 to 2.5e-7.
+  - **ns2 12840 to 12843** (four relabellings of one box): hand-written
+    2.03e-7 / 1.6e-8, NaN at 59b96e5 (this round).
+  - **ns 9891** (BOTHBAD): DoubleFloat -3.6e5, 1.97e11 relative, / 1.99. It
+    first appears at f2adce4, after 66d84ec (the pin or fdf587a): `4 1.0
+    -885.0625 38.89522933959961 -9383.1494140625 -9034.041904449463
+    161.2550926208496 -6228.628330230713 0.02100362395958677
+    -2.058012039370844e-08 0.048435620427935505 0.0 0.0 0.0
+    0.048435620427935505 0.0`.
+
+  Every entry of ns and ns2, with its input, is in verify-olm-sweep2's
+  `out/regressions_new_sweeps.tsv` (1,019 entries; the silent rows' inputs
+  are in `out/silent64.inputs` and `out/silentF.inputs`). These files are
+  in the session's verification scratch, not in the repository.
+- **`Float` boxes of the oracle sweeps from the Symbolica pin (F1).**
+  verify-olm-gates2 captured every row of `tests/oracle_sweep.py` for seeds
+  1 to 8 (93,432 rows) and compared each one against COLLIER quad
+  (`osw/rowcmp.py`, `osw/flagclass.py`). On four boxes the `Float` value is
+  finite and wrong where 09b2c74 was right or non-finite. f2adce4, 59b96e5
+  and 3a322d0 give the same values there, and f2adce4 built with the old
+  pin e679e8c1 gives 09b2c74's, so the cause is the pin 9cdc2949 (5cad984,
+  f551e9e). None is class J: kappa_1ulp from COLLIER is 1.4e-16 to 1.2e-14,
+  or 7.7e-4 on seed 5. numerica tracks only 1 to 10 bits on these values.
+  - **Seed 8**, 128 bits, native and interpreted, 8 of 24 relabellings (0,
+    2, 9, 10, 15, 16, 18, 19). The finite part is exactly -0 (error 1.0; 10
+    and 1 tracked bits) or 2.0e3 - 1.3e2i (error 2.0e4; 1 bit), where
+    09b2c74 is within 1.2e-14 at 122 to 127 bits (COLI 9.8815196023e-2;
+    kappa 1.4e-16). Binary64 is unchanged (1.5e-12 to 3.8e-12) and 256 bits
+    are right: `4 1.0 -0.1695108132588901 0.0 0.0 0.1760945671167822 0.0 0.0
+    2.272403422653186 0.0 2.272403422653186 0.0 2.272403422653186 0.0 0.0
+    0.0`.
+  - **Seed 4**, 128 bits, both routes, 4 relabellings (0, 9, 16, 18): from
+    1e-16 at 128 tracked bits to 5e2 and 4e2 at 2 bits (kappa 1.2e-14):
+    `4 1.0 -6.315335453952484 0.0 0.0 4.0 4.0 0.0 4.0 0.0 1.3898188895349246
+    0.0 4.0 0.0 0.0 0.0`.
+  - **Seed 5**, 128 bits, both routes, 4 relabellings: from non-finite (1
+    to 2 bits) to 3e2 and 2e2 at 1 bit. Binary64 is right (1e-13) at both
+    builds, and 256 bits are wrong at both (2.6e3 → 3.9e3). Its kappa of
+    7.7e-4 comes from moving m4's imaginary part, a move both builds
+    reject: `4 1.0 -0.2940726816893048 0.0 0.0 0.01993882455366009
+    0.026445643272267876 0.0 0.01993882455366009 -6.567951558000682e-06
+    0.19813041804948298 0.0 8.540666675875089 0.0 0.0 0.0`.
+  - **Seed 3**, native `Float` 256, 4 relabellings: from non-finite to 7e2
+    at 1 tracked bit. Native 128 is wrong at both builds (2e2 at 2 bits)
+    and interpreted is right (7e-17); kappa 1.6e-16: `4 1.0
+    -0.21090409510935626 -2.067110542029904 0.0 0.0 0.0 6750.214847012683
+    0.0 0.0 16.912035031070285 -0.3772374630384885 1.0 0.0
+    16.912035031070285 -0.3772374630384885`.
+
+  The official sweep scores all of these rows `pass` (binary64 matches a
+  stable OneLOop), so its failure lists cannot show them.
+- **The seed-6 box on the generated route**, changed in the 59b96e5 round
+  (between f2adce4 and 59b96e5): `4 1.0 -0.37294963436220124
+  5.260007236270751 0.0 1.5065765403203322 1.5065765403203322
+  3.1420157624102223 9.0 0.0 0.0 0.0 3.1420157624102223 0.0
+  3.1420157624102223 0.0`. The reference is COLI, 2.3609e-2 + 7.7165e-2i,
+  which the 256-bit values match in 12 relabellings.
+  - In relabellings 1, 11, 12 and 22 the generated route goes from NaN
+    (09b2c74, f2adce4) to wrong by 17 (59b96e5, 3a322d0). Every other route
+    of both builds is wrong there too: hand-written 2.6, interpreted 9.3 →
+    7.4, SymJIT 4.8 → 7.2, native 256 bits 37 → 68.
+  - In relabellings 0, 9, 16 and 18 the generated route goes from 16 to
+    6.1e16, and SymJIT from 11 to NaN (N-bbad).
+  - kappa_1ulp from COLLIER is 1.91, but only through moving m2's imaginary
+    part off zero (a massless line becoming complex); without that move it
+    is 5.6e-8. The NaN → 17 entries are therefore J* at best (17 ≤ 19.1),
+    and the 6.1e16 entries are more than ten times worse and not J.
+- **A seed-5 box of class J**, not listed before: `4 1.0
+  -0.11944519774097949 9.663435003899602 1.3773678802155616
+  10.071820572857055 4.0 1.3773678802155618 4.0 -0.00048353059955393447 0.0
+  0.0 0.0 0.0 1.3773678802155618 0.0`. Hand-written, generated and
+  interpreted give 2.33e-12 / 1.2e-13 to 3.4e-13 in 12 relabellings, from
+  a5da789 (interpreted) and 9a898ee (hand-written and generated).
+  kappa_1ulp is 9.31e-13 (m1's real part; COLLIER and both 512-bit builds
+  agree).
+- **A seed-7 box at 128 bits (F1, the pin)**: `4 1.0 0.0 1.2363871186155624
+  0.24549359199445073 1.8887603623418403 26.02901824828959
+  1.8887603623418403 1.8887603623418405 0.0 1.8887603623418405 0.0 0.0 0.0
+  0.0 0.0`. The interpreted route goes from 3.4e-12 to 5.0e-11 (36 tracked
+  bits) in 8 relabellings, native from 1.1e-11 to 1.0e-11. The box's worst
+  relabelling is unchanged (5.02e-11 at 09b2c74), and the old pin gives
+  09b2c74's values.
+- **Soft boxes of the fs 7225 kind** (a soft pair through a channel), where
+  native `Float` 256 goes from NaN to finite and wrong. Every binary64 route
+  of both builds is wrong on them, and so is interpreted 256.
+  - Seed 1, in 12 relabellings: binary64 wrong by 8 to 13; native 256 NaN
+    at 09b2c74 and wrong by 9.7e2 at 3 tracked bits now: `4 1.0 0.0 0.0
+    0.01192613990935523 4.833945758195477 0.24486115208314224
+    0.012691692998717053 0.24486115208314224 0.0 0.01192613990935523 0.0
+    0.0 0.0 0.01192613990935523 0.0`.
+  - Seed 8, in 8 relabellings: binary64 wrong by 7 to 19 at both builds;
+    native 256 from inf to 1.0e3: `4 1.0 0.0 5.175955216937658
+    1.8264179139306436 0.25 2.25 2.9117994088736086 0.0 0.0 1.0 0.0 2.25
+    0.0 0.25 0.0`.
+
+### Follow-ups (open work)
+
+1. **`Float` at a rounding-level `K` or Gram determinant.** `Float` takes
+   the selected or the second contour without checking its chart. Where a
+   contour's `K` or the Gram determinant is at the working precision's
+   rounding level, it should return NaN, as 09b2c74 did, or check the chart
+   as binary64 does. Rerun ns's planar and all-relabelling families at 128,
+   256 and 512 bits.
+2. **binary64 where the second contour is unresolved.** The boxes of the
+   e72b404 chain (ns 5313, 5856, 6303, 7507, 16250, 22586; ns2 7571, 7649,
+   9343) turn 09b2c74's NaN into finite wrong values. binary64 should
+   return NaN where the second contour (e72b404) is not resolved. The boxes
+   of the 59b96e5 round (ns 5420, 7856, 16607, 17226, 17241, 20047, 21773,
+   22195; `|Gram|` 1e-12 to 1e-18 with on-shell or near-shell legs) point
+   at the chart tests and the line-product probe; ns 14935 points at
+   356c86e, ecdd288 and 4728b58.
+3. **A gate for `Float`-only regressions.** The oracle-sweep gate compares
+   failure lists, and a row passes where binary64 matches a stable OneLOop
+   whatever its 128- and 256-bit values are. It cannot see `Float`-only
+   regressions: the four pin boxes passed at both revisions. Add a per-row
+   `Float` comparison against the previous main to the done-checklist, as
+   verify-olm-gates2's `osw/rowcmp.py` and `osw/flagclass.py` do.
+4. **Callers of the `Float` routes should check numerica's tracked
+   precision.** Most silent `Float` rows track 1 to 4 bits. NinjaRS's
+   `SymbolicaMasters` checks only finiteness, so a 128-bit D0 that tracks
+   20 bits passes as a success. Such a check would still miss rows like ns
+   9210, which tracks 253 of 256 bits and is wrong by 4.46.
+5. **Instruction headroom.** syn-n6-r7 is at +0.444% of the 0.5% gate with
+   the gate's driver and at +0.458% with verify-olm-gates2's own driver: a
+   headroom of about 0.04% to 0.06%. Further contour work will need
+   instructions back on the syn-n6 streams.
+6. **The rest of the tail**: the non-silent regressions above, the rows of
+   the next section's accepted lists, the seed-6 box and the soft boxes:
+   fix them, or accept them row by row.
+
 ## The final candidate after the fresh sweep (2026-10-21)
 
-`claude/olm-final-3`: the candidate of the next section (59b96e5) with three
-contour-box fixes for the silent errors of the second verifier's fresh
-sweep, regression tests for them, the C0 SymJIT asset rebuilt, and one
+`claude/olm-final-3` (3a322d0, landed on main on 2026-10-21 with the tail of
+the section above as open work): the candidate of the next section (59b96e5)
+with three contour-box fixes for the silent errors of the second verifier's
+fresh sweep, regression tests for them, the C0 SymJIT asset rebuilt, and one
 regeneration (`generated_d0.rs` 2,592,725 bytes, the D0 asset 1,558,784
 bytes, the C0 asset 85,547 bytes; the definitions take 95,753,728 bytes
 against the gate's 100,663,296). fs is that sweep (the verifier's own
@@ -45,9 +447,9 @@ referenced or not (SW: 24 of its 32 per route have no reference).
   takes `y - z` where the products move it more under the pole's shift.
   Reflected, fs 15926 (R0CR, `|Gram|` 1e-13) was wrong by 4.9e-6 to 1.4e-5
   and keeps 2.4e-14; fs 15326 goes from 8.0e-6 to 8.6e-13 (hand-written;
-  interpreted 2.6e-5 to 2.8e-6), fs 14025 from 6.2e-5 to 8.6e-10 on every
-  route; v1 8793 and 18833, for which the old rule was made, keep 59b96e5's
-  values (09b2c74's).
+  interpreted 2.6e-5 to 2.8e-6), fs 14025 from 6.2e-5 to 8.6e-10 to
+  9.4e-10 depending on the route (SymJIT 9.35e-10); v1 8793 and 18833, for
+  which the old rule was made, keep 59b96e5's values (09b2c74's).
 - **Zero-external orientation** (`box_complex::zero_external_suspicious`,
   `zero_external_state`, `tfun_flat_state`, `vertex::reflection_unresolved`).
   The reflection is skipped where the reflected chart selects a flat contour
@@ -73,9 +475,9 @@ referenced or not (SW: 24 of its 32 per route have no reference).
   real sheet signs (85,547 bytes, `7a7bd442...`; it was 102,902,
   `f8c7109a...`, built before PR #9). It keeps the binary64 SymJIT values
   of the 10,668 C0 rows of the two verifiers' sweeps and the NinjaRS master
-  calls (MS 534, NR 4,134, v1 3,000, fs 3,000) and of the 9,516 C0 rows of
-  the oracle sweeps (seeds 1 to 4), bit for bit but for the sign of one NaN
-  (fs 34317).
+  calls (MS 534, NR 4,134, v1 3,000, fs 3,000) and of the 8,890 distinct C0
+  rows that the oracle sweeps of seeds 1 to 4 evaluate (and the 4,420 of
+  seeds 7 and 8), bit for bit but for the sign of one NaN (fs 34317).
 - **Tests**: `tests/data/contour_fresh_sweep.txt` with the five boxes above
   (fs 16695, 15926 and 15250 in all 24 relabellings on every binary64 route;
   fs 15189 in the 12 relabellings that reach the reflection test; fs 15486 in
@@ -85,7 +487,9 @@ referenced or not (SW: 24 of its 32 per route have no reference).
 ### Results (2026-10-21)
 
 Rows worse / better / silent / new NaN against 09b2c74, as in the next
-section:
+section, on the sets of this section (every statement of this section is
+measured on them; the adversarial sweeps ns and ns2 are in the section
+above):
 
 | set | hw | gen | expr | jit | dd |
 |---|---|---|---|---|---|
@@ -103,17 +507,21 @@ section:
 (TM better counts with the second verifier's reference rule; the next
 section's 2122/2122/2121/2106 used the first verifier's.)
 
-- **Against 59b96e5**: no row of any set is more than ten times worse and
-  above 1e-12, or newly NaN, on any binary64 route, in DoubleFloat or at
+- **Against 59b96e5**: no row of these sets is more than ten times worse
+  and above 1e-12, or newly NaN, on any binary64 route, in DoubleFloat or at
   `Float` 128 and 256 bits. Better on fs 7/7/7/7 (hw/gen/expr/jit), rl
   96/96/120/96 and at 128 bits fs 1/1, rl 12/12 and v1 1/1. One silent
   route entry: fs 16941 interpreted, NaN at 59b96e5 and now 5.87e-6, the
   value of 09b2c74 (4.7e-6 to 6.0e-6 on the other routes there), within 10
   kappa_1ulp (1.36e-6; class J), in all 24 relabellings; the other routes
-  stay NaN.
-- **The fresh sweep's findings**: no silent route entry outside class J or
-  J* is left. Its three silent boxes are fixed (above; fs 15189 in the 12
-  relabellings that 09b2c74 got right). Of its 14 other rows outside the
+  stay NaN. On the adversarial sweeps ns and ns2, 25 and 4 binary64 route
+  entries are more than ten times worse than 59b96e5, ns 14935 is silent
+  against it and ns 11857 is wrong at 256 bits (section above).
+- **The fresh sweep's findings**: on fs and its relabellings rl, no silent
+  route entry outside class J or J* is left. (The adversarial sweeps ns and
+  ns2 have 18 and 3 such binary64 boxes and 126 and 69 such `Float` rows;
+  section above.) Its three silent boxes are fixed (above; fs 15189 in the
+  12 relabellings that 09b2c74 got right). Of its 14 other rows outside the
   accepted classes, fs 15244 and 15250 are fixed; the other 12 rows (25
   binary64 route entries: 20 finite, 5 NaN) are listed below; there were
   45 route entries on 17 rows at 59b96e5. fs 15744 (J*) improves on SymJIT
@@ -122,7 +530,9 @@ section's 2122/2122/2121/2106 used the first verifier's.)
 - **`Float`, rows worse than 09b2c74** (native/interpreted): fs 3/1 at 128
   bits (fs 14026 and 15340 below, and fs 1255, which is NaN where 09b2c74 was
   wrong) and 1/1 at 256 (fs 1255), none finite and wrong by more than 1e-6
-  where 09b2c74 was right or non-finite; rl 59/11 at 128 and 11/11 at 256.
+  where 09b2c74 was right or non-finite (on fs; not so on ns, ns2 and the
+  oracle sweeps' per-row comparison, section above); rl 59/11 at 128 and
+  11/11 at 256.
   fs 15486 at 128 bits keeps 1.15e-6 to 1.9e-5 at 20 tracked bits in the 12
   relabellings that put the box into the reflected orientation directly,
   where 09b2c74 was wrong by 3.7e-2 to 1.4e6 at 2 to 11 tracked bits.
@@ -136,7 +546,10 @@ section's 2122/2122/2121/2106 used the first verifier's.)
   0.15 at 59b96e5), but also makes row 3 of
   `tests/data/contour_unresolved.txt` NaN on the generated and interpreted
   routes (3.7e-14 and 7.3e-14 now). fs 16941: interpreted 5.87e-6 (J), the
-  other routes NaN.
+  other routes NaN. The adversarial sweeps add more such boxes, among them
+  ns 6303 (hand-written 8.7e-2 and SymJIT 9.7e-2, generated and
+  interpreted 4.4e-10) and ns 22195 (generated 1.2e-6, the other routes
+  5.5e-10), and the seed-6 oracle box (section above).
 
 ### Gates (2026-10-21)
 
@@ -147,12 +560,24 @@ section's 2122/2122/2121/2106 used the first verifier's.)
 - **Oracle sweeps** (seeds 1 to 4, C0 and D0, native, `--generated` and
   `--expression`, 128, 256 and 512 bits): all 36 failure lists equal
   59b96e5's, and differ from 09b2c74's only by the two boxes documented in
-  the next section.
+  the next section. verify-olm-gates2 reran seeds 1 to 8; the failure lists
+  of seeds 7 and 8 (128 and 256 bits) equal 09b2c74's. The gate compares
+  failure lists only, and a row passes where binary64 matches a stable
+  OneLOop whatever its `Float` values are, so it does not show `Float`-only
+  regressions: a per-row comparison found four `Float` boxes from the
+  Symbolica pin (section above).
 - **Instructions per binary64 D0 call** (perf stat instructions:u, 2001
   minus 1 repetitions, the 22 NinjaRS master streams, against 09b2c74):
   geometric mean -0.303%, at most +0.444% (syn-n6-r7; syn-n6-r5 +0.340%,
-  syn-n6-r6 +0.330%), within the 0.5% gate. The new tests run only where the
-  existing chart tests already hold.
+  syn-n6-r6 +0.330%), within the 0.5% gate. These figures come from the
+  session's scratch driver `zz_d0_percall` (`NativeEvaluator<f64>` over each
+  stream's D0 rows, built from each revision); verify-olm-gates'
+  `zz_vg_percall` gives the same. verify-olm-gates2's own driver
+  `vg2_percall` gives -0.264% and +0.458% (syn-n6-r5 +0.354%, syn-n6-r6
+  +0.347%). The kernel is monomorphized into each driver, so the figures
+  move by about 0.04% between drivers, and syn-n6-r7's headroom is 0.04% to
+  0.06%. The new tests run only where the existing chart tests already
+  hold.
 - **Definitions** 95,753,728 bytes (gate 100,663,296; headroom 4,909,568);
   `tests/full_expansion.rs`'s budget holds.
 - **Regeneration**: a second `generate_native`, `rebuild_evaluators D0` and
@@ -166,7 +591,9 @@ Every class of the next section stays accepted. The fresh sweep adds these
 rows (inputs as in `rows/fs.rows`; errors now / 09b2c74 / 59b96e5, which
 equals f2adce4 unless given; kappa_1ulp as defined below; none is finite
 and wrong by more than 1e-6). They come from commits before 59b96e5, mostly
-before f2adce4, that the first verifier's sets did not exercise:
+before f2adce4, that the first verifier's sets did not exercise. The
+adversarial sweeps' tail (section above) was not accepted row by row; it
+landed as open work:
 
 - **Reflected zero-external charts** (14dd171): fs 1531, every binary64
   route, 6.42e-11 / 1.1e-13 to 2.2e-13 / 6.42e-11 (kappa 1.1e-13), in 12
@@ -223,7 +650,7 @@ before f2adce4, that the first verifier's sets did not exercise:
   -21.059190935626223 0.0 3.212826502040012e-10 -0.005388485655161519
   0.023710975762189373 -2.3244568484745787e-07 4.673081630052052
   -2.4789513702080443e-07 9.97010965981591 -1.4111835911486574e-05
-  0.6967910957518927 0.0 0.0 0.0`; fs 14158, SymJIT, 1.85e-12 / 7.9e-15 /
+  0.6967910957518927 0.0 0.0 0.0`; fs 14158, SymJIT, 1.85e-12 / 7.84e-15 /
   1.85e-12 (f2adce4 1.1e-14, so from 59b96e5's regeneration; kappa
   1.0e-16), in 24 on some route: `4 1.0 0.0 -30.54329623783176
   -0.004775170598803929 1.2811282643436634 -1.7388541862237215
@@ -233,8 +660,9 @@ before f2adce4, that the first verifier's sets did not exercise:
   section are the same class.
 - **NaN where 09b2c74 was within 1e-6** (the chart tests of cdb4318, 97efa0f on claude/olm-final-2;
   f2adce4 had 09b2c74's values): fs 14026, generated and interpreted, NaN /
-  5.2e-14 (the hand-written route keeps 4.9e-14; SymJIT NaN where 09b2c74
-  was wrong by 0.98, N-bbad), in all 24: `4 1.0 -5.085267836351783e-13
+  5.2e-14 (kappa 1.44e-16, also without on-shell-breaking moves; the
+  hand-written route keeps 4.9e-14; SymJIT NaN where 09b2c74 was wrong by
+  0.98, N-bbad), in all 24: `4 1.0 -5.085267836351783e-13
   53.9782906826277 -172.99009918320144 -1.0049754268051605e-12
   -0.0855449903579419 -3.454085894812672e-12 0.0 0.0 36.19673827634061 0.0
   0.02284707832426455 0.0 0.8773920678951894 -3.389275623047775e-08`; fs
@@ -246,7 +674,8 @@ before f2adce4, that the first verifier's sets did not exercise:
   -4.028993948238839e-10 0.0 0.0`. In fs 14323 the other chart's K keeps
   4 digits (not a residue): taking the selected chart there as well (any
   K below 2^-26 of its terms) gives 09b2c74's values but made SymJIT wrong
-  by 0.13 on v1 11845. A NaN is detected and rescued by NinjaRS.
+  by 0.13 on v1 11845. NinjaRS detects such a NaN and rescues the row in
+  higher precision (a finite wrong value it cannot detect).
 - **`Float` at 128 bits** (F-R1 kind; 256 bits right): fs 14026, native,
   2.45e-8 at 33 tracked bits / 6.6e-11 at 42 / the same (interpreted 5.8e-9
   against 8.8e-10, not ten times), in 24; fs 15340, native, 6.0e-11 at 32
@@ -269,10 +698,18 @@ before f2adce4, that the first verifier's sets did not exercise:
   to 7.5e4), 16941 hw/gen/SymJIT (4.7e-6 to 6.0e-6), and fs
   15189 in the 12 relabellings where 09b2c74 was wrong.
 
-On the relabellings of the 30 finding boxes (rl), the same boxes: fs 1531
-and 3566 in 12, 4668 in 4, 6653 in 24, 10746 in 8, 11533 in 12 (J in 24),
-13316 in 16, 14158 in 24, 14473 in 8, 16627 in 24 (finite, at most the
-errors above), 14026 and 14323 NaN in 24.
+On the relabellings of the 30 finding boxes (rl), the same boxes, with the
+worst relabelling more than ten times worse than 09b2c74 per route (all
+finite and within 1e-6 but the NaN rows): fs 1531 6.42e-11 and 3566
+8.04e-11 in 12 on every route; 4668 SymJIT 3.92e-12 in 4; 6653 7.10e-7
+(hw/gen/expr) in 24 and 7.94e-7 (SymJIT) in 12, beyond the 5.48e-7 and
+8.9e-8 of its own labelling above; 10746 hand-written 5.69e-12 in 8; 11533
+interpreted 1.71e-10 in 12 (hand-written and generated 8.2e-11, J, in 24);
+13316 1.87e-12 to 1.90e-12 (hand-written and generated in 16, interpreted
+in 12); 14158 generated 3.74e-12 and SymJIT 1.85e-12 in 12 each and
+hand-written 1.87e-12 in 4, where only SymJIT is listed above; 14473
+generated 1.77e-12 in 8; 16627 hand-written 1.60e-12 in 24; 14026
+(gen/expr/jit) and 14323 (every route) NaN in 24.
 
 **Soft-box limitations found by the fresh sweep** (the same at 09b2c74 or
 NaN where it was wrong): fs 1798 (a soft box whose two on-shell partners
@@ -291,7 +728,9 @@ target labelling would have a zero channel. fs 7225 (`(0, m, m', M)` with
 236.76399409806788 -0.0001185860571787181`) is wrong by 20 to 7e3 on every
 route of both builds, 256 bits included, in all 24 relabellings. fs 68, 753,
 9027 and 14233 (soft rows) are wrong in binary64 by 1.3e-4 to 1.0 at
-09b2c74 and now, identically; DoubleFloat is right.
+09b2c74 and now, identically; DoubleFloat is right. The oracle sweeps hold
+two more boxes of the fs 7225 kind, on which native `Float` 256 goes from
+NaN to finite and wrong (section above).
 
 ## The final candidate (2026-10-20)
 
@@ -325,10 +764,15 @@ SymJIT and DoubleFloat (hw/gen/expr/jit/dd).
   ([PRECISION.md](PRECISION.md)). The thresholds are fixed powers of two, so
   that hw, gen, expr, jit and dd take the same chart on binary64 inputs;
   `Float` takes the selected chart. Both statements hold on the sets of this
-  section; the second verifier's fresh sweep found boxes where the routes
-  decide differently (fs 15189: 2.9e-2 hand-written, NaN on the other
-  routes) and boxes whose chart is finite and wrong on every route (fs 16695
-  and 15926), fixed in the section above.
+  section only. The second verifier's fresh sweep found boxes where the
+  routes decide differently (fs 15189: 2.9e-2 hand-written in 8
+  relabellings and 2.8e-2 generated in 4, NaN elsewhere) and boxes whose
+  chart is finite and wrong on every route (fs 16695 and 15926, fixed on
+  2026-10-21). The adversarial sweeps of 2026-10-21 (first section) found
+  21 boxes that binary64 returns finite and wrong by more than 1e-6 where
+  09b2c74 was right or NaN (10 of them NaN), more boxes where the routes
+  decide differently (ns 6303), and `Float` rows that are finite and wrong
+  where 09b2c74 was NaN (126 and 69 rows).
 - **One- and two-mass sheets** (Denner and Dittmaier's, with a width): the
   one-mass mass-pair complement from the roots' offsets, a small two-mass
   complement from the product in binary64, and in both the root nearer the
@@ -373,7 +817,8 @@ SymJIT and DoubleFloat (hw/gen/expr/jit/dd).
   OneLOop 3.6 quadruple-precision references; COLLIER agrees in all 24) now
   pass everywhere, where 09b2c74 failed 16 (or 8) labellings; on the
   verifier's sweep 32 rows are better on every binary64 route and at `Float`
-  128 and 256 bits, on the streams' sweep 344, and none is worse anywhere.
+  128 and 256 bits, on the streams' sweep 344, and none of those sets'
+  rows is worse anywhere.
 - **Test model** of `d0_two_mass_width`'s 256-bit shell check: it asserts the
   input-cancellation floor (at least `bits - 56` tracked and accurate bits)
   instead of accuracy within 8 bits of the tracked precision, which
@@ -466,7 +911,7 @@ value of 09b2c74; its hand-written route is NaN, R8 below).
 - **NinjaRS master calls.** Of the 309 distinct D0 calls (MS), 99 (hw), 191
   (gen), 191 (expr), 219 (jit) and 200 (dd) change their bits against
   09b2c74 (f2adce4: 107, 206, 217, 215, 221); the worst errors against
-  COLLIER are 1.43e-12, 1.42e-12, 1.29e-12, 5.17e-12 and 4.6e-15 (f2adce4
+  COLLIER are 1.43e-12, 1.42e-12, 1.29e-12, 5.17e-12 and 4.54e-15 (f2adce4
   1.85e-12, 1.72e-12, 1.83e-12, 5.17e-12; 09b2c74 3.60e-11, 3.59e-11,
   8.89e-12, 3.41e-11). The 534 C0 calls keep their binary64 and DoubleFloat
   bits (worst 8.3e-14, 9.1e-14, 6.9e-14, 6.2e-14). On NR, D0 (3,510 calls)
@@ -489,7 +934,9 @@ value of 09b2c74; its hand-written route is NaN, R8 below).
   1,184 (native) and 1,180 (interpreted) values that 09b2c74 returned
   non-finite are now right (the soft-box relabelling). None is worse than
   f2adce4, and none is finite and wrong by more than 1e-6 where 09b2c74 was
-  right or non-finite. The rows are listed below.
+  right or non-finite, on these sets' referenced rows. The rows are listed
+  below. The per-row comparison of the oracle sweeps on 2026-10-21 found
+  four `Float` boxes from the Symbolica pin that are (first section).
 - **Still wrong, as at 09b2c74** (not regressions; the largest binary64
   errors of the sets): v1 6671 (`0CCC` collinear: hand-written 4.3,
   interpreted and SymJIT 9.0, generated right), the C0 v1 30180 (SymJIT 40,
@@ -554,8 +1001,9 @@ above 1e-12, and no other finite value is wrong by more than 1e-6 where
 09b2c74 was right or non-finite, on the sets above (the first verifier's
 sets, the streams' sweep and the tests' rows). The second verifier's fresh
 sweep found 45 more binary64 route entries on 17 of its 36,840 rows, 3 of
-them silent; after the fixes of the section above 25 entries on 12 rows
-remain, none silent, listed there. kappa_1ulp is the
+them silent; after the fixes of the 2026-10-21 section 25 entries on 12 rows
+remain, none silent, listed there. The adversarial sweeps of 2026-10-21
+found many more, silent ones included (first section). kappa_1ulp is the
 largest relative change of D0 when one of the ten real binary64 inputs (the
 six invariants and the real and imaginary parts of the four masses; not
 mu²) moves by one ulp in either direction, evaluated at 256 bits where
@@ -588,15 +1036,17 @@ input equality (an on-shell or equal-mass relation).
   Each loss is reproduced by the route's own rounding of the chart's
   arguments (`ordered` on the hand-written route's chart inputs); a fix
   needs those arguments evaluated identically on every route. The
-  candidate's worst binary64 route over 09b2c74's worst route is 4.50
-  (v1 19098), 11.05 (v1 19320) and 0.99 (CT 2168); on the R6 rows below
-  3.25, 1.00, 1.00 and 1.52 (CT 38, 43, 48, 55) and 1.25 (g1 9239).
+  candidate's worst binary64 route over 09b2c74's worst route is, at
+  3a322d0, 4.51 (v1 19098), 11.05 (v1 19320) and 0.99 (CT 2168); on the R6
+  rows below 3.24 (3.25 at 59b96e5), 1.00, 1.00 and 1.52 (CT 38, 43, 48,
+  55) and 1.25 (g1 9239).
 - **The CT 31-70 scan around a vanishing Gram determinant (R6)**, the same at
   f2adce4: `4 1.0 6.329201971579061 102.98802777639872 3.3205818912242475
   3.320581891224248 13.28232756492699 51.33798400005867 3.343448813357665 0.0
   3.343448813357665 0.0 3.343448813357665 0.0 0.0 0.0` (CT 38) and its
-  neighbours in the last digits: CT 38 generated 5.56e-12 / 6.15e-14 /
-  5.48e-12 and interpreted 5.83e-12 / 2.71e-13 / 5.81e-12; CT 43 generated
+  neighbours in the last digits: CT 38 generated 5.527e-12 / 6.149e-14 /
+  5.481e-12 and interpreted 5.850e-12 / 2.712e-13 / 5.809e-12 (at 3a322d0;
+  5.56e-12 and 5.83e-12 at 59b96e5); CT 43 generated
   1.26e-11 / 1.15e-12 / 1.26e-11; CT 48 SymJIT 2.58e-11 / 3.02e-13 /
   2.58e-11; CT 55 SymJIT 1.97e-11 / 1.03e-12 / 1.96e-11 (kappa 5.549e-15).
   On the 40 rows of this scan the geometric mean of the error per binary64

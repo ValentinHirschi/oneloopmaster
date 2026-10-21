@@ -50,7 +50,7 @@ alphal00p/oneloopmaster#9, the infrared chart reclassification of #10, the
 contour box's chart tests for a Gram determinant at the rounding level (a
 vanishing K's far pole, the other contour where the selected one is flat,
 the selected one kept where the other's K is a rounding residue, and NaN
-where binary64 cannot resolve the chart;
+where binary64's chart tests fail;
 `tests/data/contour_gram_rounding.txt`, `tests/data/contour_unresolved.txt`,
 `tests/data/contour_fresh_sweep.txt`), the one- and two-mass terms'
 mass-pair complements and their root nearer the branch cut taken across it,
@@ -66,8 +66,9 @@ poorly next to the corner's vertex, and not into a chart whose flat contour
 is unresolved (`tests/d0_contour_regressions.rs`, which checks SymJIT too).
 C0 for the first time since PR #9 changed its real sheet signs: the rebuilt
 asset keeps the binary64 SymJIT values of the 10,668 C0 rows of the two
-verifiers' sweeps and the NinjaRS master calls, and of the 9,516 C0 rows of
-the oracle sweeps (seeds 1 to 4), bit for bit but for the sign of one NaN;
+verifiers' sweeps and the NinjaRS master calls, and of the 8,890 distinct C0
+rows that the oracle sweeps of seeds 1 to 4 evaluate (and the 4,420 of seeds
+7 and 8), bit for bit but for the sign of one NaN;
 the previous asset (102,902 bytes, `f8c7109a...`) was built from the
 expressions before PR #9.
 

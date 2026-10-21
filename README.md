@@ -101,19 +101,28 @@ at 09b2c74, keep 1.6e-11 (one of them 2.2e-9, SymJIT 4.9e-9) in every
 relabelling (`tests/d0_contour_regressions.rs`). Where no chart is regular,
 binary64 returns NaN unless the chart it uses keeps 10 bits when the line moves
 by one rounding unit (a flat chart) or 13 bits with its `K` at the rounding
-level (a `K` that rounds to zero), so that such a box is non-finite, as at
-09b2c74, rather than silently wrong (f2adce4: up to 1.9;
-`tests/data/contour_unresolved.txt`); `DoubleFloat` takes binary64's charts
-and `Float` the selected one, untested. Where the other chart's `K` is a
-rounding residue, the selected chart is kept if it moves 2^10 times less
-under its line's move and keeps 20 bits; and the zero-external reflection
-is not taken into a chart whose flat contour has no regular alternative
-(`tests/data/contour_fresh_sweep.txt`). These hold on the measured sets
-(STATUS.md): on the second verifier's 36,840-row sweep, 12 relabellings of
-one box still decide differently by route (finite and wrong by 2.9e-2 on the
-hand-written route in 8, NaN elsewhere, as wrong at 09b2c74), and 25 binary64
-route entries on 12 rows are more than ten times worse than 09b2c74 (none
-wrong by more than 1e-6). The
+level (a `K` that rounds to zero), so that the boxes of
+`tests/data/contour_unresolved.txt` are non-finite, as at 09b2c74, rather
+than silently wrong (f2adce4: up to 1.9); `DoubleFloat` takes binary64's
+charts and `Float` the selected one, untested. Where the other chart's `K`
+is a rounding residue, the selected chart is kept if setting that `K` to its
+rounding level moves the other chart more than 2^10 times as much as a
+one-unit move of the line moves the selected chart, and if the selected
+chart keeps 20 bits under that line move (NaN otherwise); and the
+zero-external reflection is not taken into a chart whose flat contour has no
+regular alternative (`tests/data/contour_fresh_sweep.txt`). These hold on
+the measured sets only (STATUS.md). On the second verifier's 36,840-row
+sweep, 12 relabellings of one box still decide differently by route (finite
+and wrong by 2.9e-2 hand-written in 8 and 2.8e-2 generated in 4, NaN
+elsewhere, as wrong at 09b2c74), and 25 binary64 route entries on 12 rows
+are more than ten times worse than 09b2c74 (20 finite entries, none wrong by
+more than 1e-6, and 5 NaN). Two adversarial sweeps of 42,560 and 21,280
+rows have far fewer wrong or non-finite values than 09b2c74 (most of the
+gain is on their soft boxes), but 18 and 3 of their binary64 boxes are
+finite and wrong by more than 1e-6 where 09b2c74 was right or NaN (by up to
+0.36), and so are 126 and 69 of their `Float` rows, usually at 1 to 4
+tracked bits. STATUS.md lists them, with the counts per route and the
+follow-ups, as open work. The
 product is taken only where `g + beta h` itself cancels: where the conic
 nearly vanishes at the line's intersection with an edge, the line's and the
 conic's terms keep `y - z` from the same pole (three-mass boxes lost up to
@@ -136,9 +145,10 @@ lines (m, m, 0, m) was finite without its soft pole in 16 of them). Symbolic
 uses of the D0 expressions (`OneLoopExpressions::d0`, `crate::d0`,
 `d0_mapped` and evaluators built from them) must relabel the point with
 `oneloop::regular_d0_labelling` first. [STATUS.md](STATUS.md) lists the
-rows on which this candidate is less accurate than 09b2c74, each accepted
-and explained, and the verification against COLLIER in quadruple
-precision.
+rows of the measured sets on which this version is less accurate than
+09b2c74, each accepted and explained, the remaining tail of the adversarial
+sweeps (counts per route, examples and open work), and the verification
+against COLLIER in quadruple precision.
 
 This work is based on **Andreas van Hameren's OneLOop package**. The original
 algorithms, analytic continuation conventions and Fortran reference results are
