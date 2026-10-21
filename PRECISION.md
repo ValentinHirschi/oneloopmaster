@@ -145,7 +145,13 @@ explicit resource limits; see [expression inspection](README.md#combining-integr
   (`4096 |a1|² < |g|² + |beta h|²`), and not on an edge whose intersection
   lies on the conic to within the square root of the rounding; an `a1` that
   rounds to zero is taken as `2^-52 g`, whose logarithm cancels between the
-  edges (exactly zero offsets gave `log 0` on each edge).
+  edges (exactly zero offsets gave `log 0` on each edge). A product whose
+  offset is more than 2^10 times `a1` (relative to its root) is kept and
+  probed as one that disagrees with its pole (`box_complex::products_kept`,
+  `tfun_selected`): the chart takes `y - z` everywhere where the products
+  move it more under the pole's shift. Dropping every product of such a
+  chart lost a reflected box of the second verifier's sweep to 1.4e-5 (fs
+  15926; every product keeps 2.4e-14).
   `K` of one beta is `b a1'` of the other: as `a1'` vanishes, one pole of
   this contour goes to infinity and its terms vanish with `K`, by which they
   are divided. A `K` that rounds to zero (0/0: every binary64 route returned
@@ -179,7 +185,21 @@ explicit resource limits; see [expression inspection](README.md#combining-integr
   amount), and a chart whose `K` rounds to zero (or the other chart taken,
   whose `K` is `b a1` of the flat one) 13 bits when `K` is set to its rounding
   level `2^-52 (|b a1| + |h b1|)`; otherwise it returns NaN, which the caller
-  detects. Of the 26 boxes of the verifier's 32,600-row sweep that 09b2c74
+  detects. Where the other chart's own `K` is a rounding residue (below
+  2^-52 of `|b a1|, |h b1|`), that chart is not regular either: the selected
+  chart is then kept where `K` at its rounding level moves the other chart
+  more than 2^10 times as much as the selected one moves with its line, if it
+  keeps 20 bits under that move (else NaN). Next to an exact vanishing Gram
+  determinant the other chart taken there was wrong by 5.3e-6 in all 24
+  relabellings of a box of the second verifier's sweep (fs 16695) where the
+  selected one keeps 09b2c74's 2.5e-8 to 1.0e-7, and another box was NaN
+  (fs 15250; 6.3e-9 now and at 09b2c74). These statements hold on the sets
+  measured (STATUS.md): the line test of a flat chart can pass on one route
+  and fail on another (fs 15189 in 12 relabellings: 2.9e-2 hand-written in 8,
+  2.8e-2 generated in 4, NaN elsewhere, where 09b2c74 is wrong by 3.4e-2 to
+  0.23 on every route), and a 13-bit line test, which makes those NaN,
+  made a box that every route resolves (`tests/data/contour_unresolved.txt`
+  row 3) NaN on the generated and interpreted routes. Of the 26 boxes of the verifier's 32,600-row sweep that 09b2c74
   returned as NaN and f2adce4 as finite wrong values (up to 2.8e2), 11 are
   NaN again, 14 right and one within 10 times its input conditioning; 7
   boxes that 09b2c74 already got wrong by more than 1e-6 are NaN, none that
@@ -221,7 +241,27 @@ explicit resource limits; see [expression inspection](README.md#combining-integr
   (`box_complex::tfun_vertex_suspicious`). Elsewhere the reflected chart has
   no such pole to gain and lost up to 1e-11 to its own cancellations (a far
   pole of a nearly vanishing `p4²`, a line product, a `K` cancelling by 2e3),
-  where the original orientation keeps 1.7e-14 to 8.2e-13.
+  where the original orientation keeps 1.7e-14 to 8.2e-13. Nor is it taken
+  where the reflected chart selects a flat contour without a regular
+  alternative (in `Float`, which takes the selected contour unchecked, any
+  flat contour) and the original selects none
+  (`box_complex::zero_external_state`): there the reflected value is decided
+  by the rounding of the line (fs 15189: 2.9e-2 or NaN reflected, 9.7e-11
+  unreflected), and at 128 bits a flat reflected contour kept 20 of 128
+  tracked bits (fs 15486; 64 unreflected). The reflection still loses on
+  two boxes of that sweep whose vertex tests hold (fs 1531 and 3566, 6.4e-11
+  and 8.0e-11 reflected, 1.1e-13 and 2.1e-12 unreflected).
+- The chart tests tell the arithmetic apart at run time:
+  `box_complex::rounds_like_binary64` (whether `2^60 t + t` rounds to `2^60
+  t` for `t = 1 + scale`) and `double_double` (whether `t + 2^-1000 t` is
+  kept). numerica's `Float` addition sets the result's precision from the
+  operands' tracked precisions, so a `Float` evaluation whose `t` tracks
+  fewer than about 60 bits is taken for binary64 (and takes binary64's line
+  products, probe and chart tests), and a `Float` of 1001 bits or more for
+  `DoubleFloat`. Neither occurs in the tests or the sweeps: `NativeEvaluator`
+  and `PrecisionEvaluator` set every input to the working precision, so the
+  first needs an internal loss of about 68 bits at 128 bits. Callers of the
+  symbolic expressions with low-precision inputs are not protected.
 - The finite massless, one-mass and two-adjacent-mass boxes (OneLOop's
   `boxf0`, `boxf1` and `boxf2`) take dilogarithms of `X r34/r13` and
   `X r24/r12` for the roots `X` of a quadratic that tends to

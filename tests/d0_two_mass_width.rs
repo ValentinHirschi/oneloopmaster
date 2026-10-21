@@ -234,11 +234,14 @@ fn complex_two_mass_boxes_match_the_references_at_128_bits() {
 /// The value is not checked against the precision it tracks: numerica's
 /// tracked precision is an estimate, not a bound. On row 0 the tracked bits
 /// exceed the accurate ones by up to 3.5, 8.4, 8.3 and 7.1 bits at 128, 192,
-/// 256 and 320 bits, and at 09b2c74 (before the two-mass sheets and the
-/// single-rounded products) by up to 5.9, 5.8, 5.8 and 16.1 (320 bits: 315
-/// tracked, 298.9 accurate, in 12 relabellings). The accuracy itself is the
-/// same: at least 202.5 bits at 256 (202.3 at 09b2c74) and 267.0 at 320
-/// (266.9), above the floor everywhere.
+/// 256 and 320 bits, against a 1024-bit reference. At 09b2c74 (before the
+/// two-mass sheets and the single-rounded products) row 0 falls at most 5.85
+/// bits short, but row 6 (native) 8.23, 9.09, 9.63 and 7.75 bits (at 256
+/// bits 253 tracked, 243.37 accurate); the rows' 90-digit references cannot
+/// measure more than about 299 accurate bits. The minimum accuracy over the
+/// relabellings is unchanged: at least 202.5 bits at 256 (202.3 at 09b2c74)
+/// and 267.0 at 320 (266.9). Single relabellings lose up to 40.3 bits against
+/// 09b2c74 (row 0), all above the floor and the same since f2adce4.
 #[test]
 fn complex_two_mass_boxes_next_to_their_shells_match_the_references_at_128_and_256_bits() {
     on_stack(|| {

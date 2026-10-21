@@ -9,25 +9,25 @@
 #  1. One real and two equal complex masses, p2 = 0: non-finite in 12 relabellings (right in
 #     the other 12) / 35 times the value in all 24 (the zero-external reflection took every
 #     labelling to the chart whose K rounds to zero, where the second contour, a1 at the
-#     rounding level, was wrong) / 6.8e-14.
+#     rounding level, was wrong) / 6.4e-14.
 #  2. p1 = 0, a complex, two real masses and a massless line, s12 = -1.3e-9 (1e-14 of s23):
 #     non-finite in 12 relabellings (2.2e-9 in the others) /
 #     4.7e-3 (reflected into a chart whose two contour directions agree to 1.4e-5) / 4.9e-9.
 #  3. Four equal complex masses: 5.7 (0.34 hand-written) / 5.1e-3 hand-written and interpreted
 #     (the known failure of tests/d0_contour_regressions.rs) / 4.8e-13.
 #  4. Four masses, two with widths of 1e-13 and 1e-9 of the mass: non-finite in 20 / 140 times
-#     the value / 4.7e-13.
-#  5. Three complex masses (two equal), p1 = 0: non-finite in 12 / 9.1 / 8.6e-14.
+#     the value / 4.3e-13.
+#  5. Three complex masses (two equal), p1 = 0: non-finite in 12 / 9.1 / 8.8e-14.
 #  6. Three complex masses (two equal), p3 = p4 = 0: 5.0 / 4.9 / 4.8e-14.
 #  7. Three equal real masses and a complex one, p1 = 0: 0.31 / 0.31 / 1.7e-12.
 #  8. A complex and three real masses, p2 = 0: 1.4e-2 / 1.4e-2 / 1.4e-13.
-#  9. Three equal real masses and a complex one, p2 = 2e-12: 2.1 / 1.8 / 1.5e-11 (interpreted).
+#  9. Three equal real masses and a complex one, p2 = 2e-12: 2.1 / 1.8 / 1.6e-11 (interpreted).
 # References: COLLIER 1.2.9 in quadruple precision (COLI branch), fed the exact decimal expansions
 # of the binary64 inputs (row 3: as in tests/d0_contour_regressions.rs); its DD branch agrees
 # within 1.5e-15 of |D0| on rows 1, 2 and 5 to 8 and fails on rows 4 and 9. The 128- and 256-bit native and interpreted values of all 24 relabellings agree with
 # COLI within 2.1e-16 (COLI's own accuracy here) and with each other within 4e-57 at 256 bits.
 # Binary64 tolerance 1e-11 unless given: row 2 keeps 2.3e-9 (4.9e-9 SymJIT), as 09b2c74 in its
-# finite relabellings; row 9 1.5e-11 on the interpreted route. DoubleFloat keeps 2.3e-15 on row 6,
+# finite relabellings; row 9 1.6e-11 on the interpreted route. DoubleFloat keeps 2.3e-15 on row 6,
 # as at 09b2c74.
 4 1.0 7.83411141296995 0.0 0.05539849041093991 1.2025720308924596e-10 0.44413758479240445 0.9771700504003817 0.18581901508118223 0.0 0.05539865304260027 -6.430669304543917e-07 0.05539865304260027 -6.430669304543917e-07 0.0 0.0 -2.54096698284410256175e+1 8.84429096461920655354e-1 0.0 0.0 0.0 0.0
 4 1.0 0.0 3.598382043529174 24.453495802712766 24.453495802712766 -1.255476097339391e-09 502241.0517849417 0.6808521119960873 -0.02266926845550123 0.02844863278465547 0.0 0.0 0.0 24.453495802712766 0.0 -3.13501509206047987199e-4 -7.76801060797781486213e-6 0.0 0.0 0.0 0.0 1e-8

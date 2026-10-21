@@ -104,7 +104,16 @@ by one rounding unit (a flat chart) or 13 bits with its `K` at the rounding
 level (a `K` that rounds to zero), so that such a box is non-finite, as at
 09b2c74, rather than silently wrong (f2adce4: up to 1.9;
 `tests/data/contour_unresolved.txt`); `DoubleFloat` takes binary64's charts
-and `Float` the selected one, untested. The
+and `Float` the selected one, untested. Where the other chart's `K` is a
+rounding residue, the selected chart is kept if it moves 2^10 times less
+under its line's move and keeps 20 bits; and the zero-external reflection
+is not taken into a chart whose flat contour has no regular alternative
+(`tests/data/contour_fresh_sweep.txt`). These hold on the measured sets
+(STATUS.md): on the second verifier's 36,840-row sweep, 12 relabellings of
+one box still decide differently by route (finite and wrong by 2.9e-2 on the
+hand-written route in 8, NaN elsewhere, as wrong at 09b2c74), and 25 binary64
+route entries on 12 rows are more than ten times worse than 09b2c74 (none
+wrong by more than 1e-6). The
 product is taken only where `g + beta h` itself cancels: where the conic
 nearly vanishes at the line's intersection with an edge, the line's and the
 conic's terms keep `y - z` from the same pole (three-mass boxes lost up to

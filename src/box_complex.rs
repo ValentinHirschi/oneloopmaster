@@ -90,7 +90,11 @@ fn undetermined(z: &Atom) -> Atom {
 /// `2^60 t` for a positive real `t`. `DoubleFloat` and `Float` keep the sum
 /// (and give zero), so that their charts are not tested at binary64's
 /// rounding (they resolve what binary64 does not; NinjaRS's rescue relies on
-/// them).
+/// them). numerica's `Float` addition takes the result's precision from the
+/// operands' tracked precisions: a `Float` whose `t` tracks fewer than about
+/// 60 bits rounds like binary64 here (and takes binary64's charts).
+/// `NativeEvaluator` and `PrecisionEvaluator` set their inputs to the working
+/// precision; symbolic callers with low-precision inputs are not protected.
 fn rounds_like_binary64(t: &Atom) -> Atom {
     let scaled = grouped(&(t * Atom::num(1i64 << 60)));
     let sum = grouped(&(&scaled + t));
@@ -101,7 +105,9 @@ fn rounds_like_binary64(t: &Atom) -> Atom {
 /// exactly for the exact `t = 1 + first` (1 or 2, with `first` 0 or 1), as
 /// its sums of two doubles never round, while binary64 and `Float` of fewer
 /// than 1000 bits round it to `t`. (A test that follows the working precision,
-/// `1 + x` rounding to 1, is therefore never true in `DoubleFloat`.)
+/// `1 + x` rounding to 1, is therefore never true in `DoubleFloat`.) A
+/// `Float` of 1001 bits or more keeps the sum too and is taken for
+/// `DoubleFloat`.
 fn double_double(first: &Atom) -> Atom {
     let t = grouped(&(1 + first));
     let power = Atom::num(symbolica::domains::integer::Integer::from(2).pow(1000));

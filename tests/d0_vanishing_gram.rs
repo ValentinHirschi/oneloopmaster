@@ -265,7 +265,7 @@ fn near_threshold_rows() -> Vec<(usize, Vec<C>, [C; 3])> {
 }
 
 /// Binary64 tolerance of the near-threshold scan, relative to the largest
-/// reference coefficient. Every route keeps 3.2e-12 or better on every row
+/// reference coefficient. Every route keeps 3.9e-12 or better on every row
 /// but line 73 (see [NEAR_THRESHOLD_RESIDUAL]). Before the poles' offsets
 /// from the line edges' roots (`box_complex::line_product`), 34 of the 200
 /// boxes were beyond it on some route and 22 beyond 1e-9 (up to 5e-3 native,
@@ -275,7 +275,7 @@ const NEAR_THRESHOLD: f64 = 5e-12;
 
 /// Line 73 (three masses and a massless line, the pair's Källén function
 /// 1.5e-11 of the largest invariant squared) keeps
-/// 1.3e-11 (interpreted) to 3.2e-10 (hand-written), as before this fix
+/// 1.35e-11 interpreted (09b2c74 1.16e-10) to 3.2e-10 hand-written
 /// (OneLOop's double precision 5.5e-11). There the canonical relabelling's first `tfun` has a nearly
 /// double contour direction `beta` and the other two `tfun` nearly
 /// coincident poles next to the end x = 0 of an edge, whose quadratic `s3`
