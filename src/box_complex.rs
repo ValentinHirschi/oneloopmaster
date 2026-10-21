@@ -2347,9 +2347,10 @@ fn zero_external(p: [&Atom; 6], m: [&Atom; 4]) -> Atom {
     let reflected = [p[0], p[3], p[2], p[1], p[5], p[4], m[1], m[0], m[3], m[2]];
     let original = [p[0], p[1], p[2], p[3], p[4], p[5], m[0], m[1], m[2], m[3]];
     // Only where the chart itself has a pole next to the corner (1, 0) that
-    // the rounding resolves poorly ([zero_external_suspicious]). The two
-    // orientations are algebraically identical: the inspection form keeps
-    // the test above alone.
+    // the rounding resolves poorly, and the reflected chart does not select an
+    // unresolved flat contour where the original selects none
+    // ([zero_external_suspicious]). The two orientations are algebraically
+    // identical: the inspection form keeps the test above alone.
     let suspicious = call("zero_external_suspicious", original);
     let reflect = Q::rounding_choice(if_nonzero_else(&reflect, suspicious, Atom::num(0)), reflect);
     let selected: [Atom; 10] = core::array::from_fn(|index| {
@@ -2365,12 +2366,92 @@ fn zero_external_chart(p: [&Atom; 6], m: [&Atom; 4]) -> Atom {
 
 /// Nonzero where one of the two [tfun] of [zero_external_chart] selects a
 /// contour with a pole next to the corner (1, 0) that the rounding resolves
-/// poorly ([tfun_vertex_suspicious]).
+/// poorly ([tfun_vertex_suspicious]), unless the reflected chart selects a
+/// flat contour that has no regular alternative in binary64
+/// ([zero_external_state] 2; in `Float`, which takes the selected contour
+/// unchecked, any flat one) and the original selects no flat contour. There
+/// the reflected chart's value is decided by the rounding of its line: fs
+/// 15189 of the second verifier's 36,840-row sweep (Gram determinant 1e-15
+/// of its terms) was wrong by 2.9e-2 or NaN reflected and keeps 9.7e-11
+/// unreflected in the 12 relabellings that reflect, and at 128 bits the flat
+/// reflected contour of fs 15486 (exact vanishing Gram determinant) kept 20
+/// bits where the original orientation keeps 64. The binary64 routes and
+/// `DoubleFloat` keep a reflected chart whose flat contour has a regular
+/// alternative: the agreement rule of [tfun_chart] resolves it there.
 fn zero_external_suspicious(p: [&Atom; 6], m: [&Atom; 4]) -> Atom {
     let [first, second] = zero_external_tfun_arguments(p, m);
     let flag =
         |x: &[Atom; 26]| call::<18>("tfun_vertex_suspicious", core::array::from_fn(|i| &x[i]));
-    1 - (1 - flag(&first)) * (1 - flag(&second))
+    let suspicious = 1 - (1 - flag(&first)) * (1 - flag(&second));
+    // The arithmetic, from a positive real formed at run time (`1 + |p2|²`)
+    // and a run-time 0 or 1 (`p1` is nonzero where the reflection is tested).
+    let binary64 = rounds_like_binary64(&grouped(&(1 + norm(p[2]))));
+    let float = (1 - binary64) * (1 - double_double(&if_nonzero(p[1], Atom::num(1))));
+    let state_reflected = zero_external_state([p[0], p[3], p[2], p[1], p[5], p[4]], [m[1], m[0], m[3], m[2]]);
+    let state_original = zero_external_state(p, m);
+    let unresolved = if_nonzero_else(
+        &float,
+        if_nonzero(&state_reflected, Atom::num(1)),
+        if_nonzero_else(&(&state_reflected - 2), Atom::num(0), Atom::num(1)),
+    );
+    let veto = if_nonzero_else(&state_original, Atom::num(0), unresolved);
+    suspicious * (1 - veto)
+}
+
+/// The flatness of the contour that [tfun] selects, from tfun's first 18
+/// arguments: 0 where its `a1` keeps 24 bits (`2^56 |a1|² >= |g|² + |beta
+/// h|²`), 1 where it is flat with a regular alternative (the other
+/// contour's `a1` is not flat and it has a pole within 2^7: [tfun_chart]'s
+/// `check`), 2 where it is flat without one ([tfun_chart] tests it only by
+/// moving its line). The thresholds are binary64's on every route. 0 for the
+/// `t1` branches (`a` or `b` zero).
+fn tfun_flat_state(
+    [a, b, c, gin, hin, d, e, f, jin, dpe, _dpf, dd, de, df, djin, ddpe, _ddpf, abc]: [&Atom; 18],
+) -> Atom {
+    let sj = imaginary_sign(jin, &imaginary_sign(djin, &Atom::num(-1)));
+    let g = -&sj * gin;
+    let h = -&sj * hin;
+    let j = -&sj * jin;
+    let dj = -&sj * djin;
+    let [beta1, w1, beta2, w2] = tfun_betas(a, b, c, abc);
+    let use_first = call(
+        "tfun_contour_choice",
+        [a, b, c, &g, &h, d, e, f, &j, dpe, dd, de, df, &dj, ddpe, abc],
+    );
+    let data = |beta: &Atom, w: &Atom| {
+        beta_data(beta, w, b, c, &g, &h, d, e, f, &j, dpe, dd, de, df, &dj, ddpe, None)
+    };
+    let [data1, data2] = [data(&beta1, &w1), data(&beta2, &w2)];
+    let flat = |data: &BetaData, beta: &Atom| {
+        below(56, &norm(&data.a), &(norm(&g) + norm(&(beta * &h))))
+    };
+    let near = |data: &BetaData| {
+        let within = |y: &Continued| less(&norm(&y.value), &Atom::num(1 << 14));
+        1 - (1 - within(&data.y[0])) * (1 - within(&data.y[1]))
+    };
+    let [flat1, flat2] = [flat(&data1, &beta1), flat(&data2, &beta2)];
+    let state = |selected: &Atom, other: &Atom, near_other: Atom| {
+        selected * (2 - (1 - other) * near_other)
+    };
+    let selected = if_nonzero_else(
+        &use_first,
+        state(&flat1, &flat2, near(&data2)),
+        state(&flat2, &flat1, near(&data1)),
+    );
+    if_nonzero_else(b, if_nonzero_else(a, selected, Atom::num(0)), Atom::num(0))
+}
+
+/// The larger [tfun_flat_state] of the two [tfun] of [zero_external_chart].
+///
+/// Formed in place, not as a registered function: a new function symbol
+/// renumbers every symbol created after it, and Symbolica orders the terms
+/// of sums and products by symbol, so the evaluators would round other
+/// expressions differently.
+fn zero_external_state(p: [&Atom; 6], m: [&Atom; 4]) -> Atom {
+    let [first, second] = zero_external_tfun_arguments(p, m);
+    let state = |x: &[Atom; 26]| tfun_flat_state(core::array::from_fn(|i| &x[i]));
+    let [first, second] = [state(&first), state(&second)];
+    if_nonzero_else(&less(&first, &second), second, first)
 }
 
 /// The arguments of the two [tfun] of [zero_external_chart].

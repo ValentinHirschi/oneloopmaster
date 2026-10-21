@@ -1424,15 +1424,18 @@ fn opposite(p: [Z; 6], m: [Z; 4], k: &Constants<f64>) -> Z {
 /// the line passes nearer the corner (1, 0) than (0, 0) by more than 1/128
 /// (`64 |at_10|² < 63 |at_00|²`, `box_complex::zero_external`), neither of
 /// the reflected chart's conics has a double contour direction (a
-/// discriminant `c² - 4 a b` within 2^-26 of its terms, `below`), and the
-/// chart itself has a pole that the rounding resolves poorly next to the
-/// corner (1, 0) (`vertex::zero_external_suspicious`).
+/// discriminant `c² - 4 a b` within 2^-26 of its terms, `below`), the chart
+/// itself has a pole that the rounding resolves poorly next to the corner
+/// (1, 0) (`vertex::zero_external_suspicious`), and the reflected chart does
+/// not select a flat contour without a regular alternative where the
+/// original selects none (`vertex::reflection_unresolved`).
 fn zero_external(p: [Z; 6], m: [Z; 4], k: &Constants<f64>) -> Z {
     if !nz(m[2]) && nz(m[3]) && nz(p[1]) {
         let at_10 = m[0] - m[1] + p[1] - p[4];
         let at_00 = m[0] - m[1] + p[5] - p[3];
         if negative(64.0 * norm(at_10) - 63.0 * norm(at_00)) {
             let reflected = [p[0], p[3], p[2], p[1], p[5], p[4]];
+            let reflected_m = [m[1], m[0], m[3], m[2]];
             let distinct = |a: Z, b: Z, c: Z| {
                 let [cc, ab] = [c * c, r(4.0) * a * b];
                 !below(52, norm(cc - ab), norm(cc) + norm(ab))
@@ -1441,8 +1444,9 @@ fn zero_external(p: [Z; 6], m: [Z; 4], k: &Constants<f64>) -> Z {
             if distinct(p2, p1, p5 - p1 - p2)
                 && distinct(p2, p4 - p0, p3 - p4 - p2)
                 && vertex::zero_external_suspicious(p, m)
+                && !vertex::reflection_unresolved(reflected, reflected_m, p, m)
             {
-                return zero_external_chart(reflected, [m[1], m[0], m[3], m[2]], k);
+                return zero_external_chart(reflected, reflected_m, k);
             }
         }
     }
