@@ -118,7 +118,9 @@ f2adce4 got right but that were NaN or wrong at 09b2c74; the others are
 f2adce4's gains given back to 09b2c74's level); CT 0/1/1/0/0; SW 4 on the
 interpreted route (the double real pole, now NaN as at 09b2c74); TD 48 per
 route (`tests/data/contour_unresolved.txt`, NaN by design); MS, NR, g1 and
-TM none.
+TM none. Finite and wrong by more than 1e-6 where f2adce4 was right: v1 395
+(generated, SymJIT; J* below) and v1 14736 on the generated route (0.65, the
+value of 09b2c74; its hand-written route is NaN, R8 below).
 
 - **Vanishing Gram determinants** (the verifier's finding on f2adce4). Box A
   (`4 1.0 7.83411141296995 0.0 0.05539849041093991 1.2025720308924596e-10
@@ -173,8 +175,29 @@ TM none.
 - **`Float`, rows worse than 09b2c74 against COLLIER** (native/interpreted):
   v1 3/27 at 128 bits and 0/0 at 256; CT 9/9 at 128 (eight relabellings of an
   on-shell scan point within 10 kappa_1ulp through an on-shell-breaking move,
-  and CT 337) and 1/1 at 256 (CT 337); MS none. None is worse than f2adce4.
-  The rows are listed below.
+  and CT 337) and 1/1 at 256 (CT 337); MS none; g1 none at 256 bits; TM
+  none at 128 and 256; SW 4/4 at 128 (four relabellings of a box with a mass
+  one ulp from an invariant, within 10 kappa_1ulp) and none at 256, where
+  1,184 (native) and 1,180 (interpreted) values that 09b2c74 returned
+  non-finite are now right (the soft-box relabelling). None is worse than
+  f2adce4, and none is finite and wrong by more than 1e-6 where 09b2c74 was
+  right or non-finite. The rows are listed below.
+- **Still wrong, as at 09b2c74** (not regressions; the largest binary64
+  errors of the sets): v1 6671 (`0CCC` collinear: hand-written 4.3,
+  interpreted and SymJIT 9.0, generated right), the C0 v1 30180 (SymJIT 40,
+  the other routes NaN), v1 14736 (generated 0.65, SymJIT 0.44) and 9649
+  (generated 1.6); the streams' sweep box `4 1.0 0.08938220565009944
+  -24.09653762111702 -0.8946129797968647 0.0 0.1941275888116677
+  0.08938220565009944 0.6383507753193867 0 0.25 0 0 0 0.6383507753193867 0`
+  (SW 22062 and its relabellings, against COLLIER where its COLI and DD
+  branches agree, in 16 of 24: every binary64 route wrong by 2.8 to 4.4 times
+  the value in 4, SymJIT by 2.5e2 in 4 more where the other routes are NaN;
+  DoubleFloat within 1.2e-11), SW 24778 (generated 7.2e6, SymJIT 2.0e7;
+  09b2c74 1.2e8 and 2.0e7) and SW 23555 (`4 1.0 0.04370275218626788
+  8.017760183204489 -3.3132567693387864 0.04370275218626788
+  0.018500872985981687 0 0.04370275218626788 -0.0039588657598020865 0 0 0 0 0
+  0`: every route, DoubleFloat and `Float` included, returns a finite part of
+  exactly 0, where COLLIER's two branches agree on 496 + 370i).
 
 ### Gates
 
@@ -207,6 +230,12 @@ TM none.
 - **Regeneration**: a second `generate_native` and `rebuild_evaluators D0`
   from the committed sources gives identical SHA-256 for every asset and
   generated file; `cargo metadata --locked` passes in the three build roots.
+  The C0 SymJIT asset is not rebuilt (as in PR #9's own regeneration): from
+  the current expressions `rebuild_evaluators C0` gives 85,547 bytes
+  (`7a7bd442...`) instead of the committed 102,902 (`f8c7109a...`); the
+  binary64 C0 values of the NinjaRS master calls (MS, NR) are bitwise those of
+  09b2c74 on every route, SymJIT included. `src/sheet_exact.rs` still reads
+  the debugging switches `ZZ_GEN_LOG` and `ZZ_GEN_DD` (from 3cbe08d).
 
 ### Accepted regressions against 09b2c74 (decision of 2026-10-20)
 
@@ -296,7 +325,13 @@ input equality (an on-shell or equal-mass relation).
   v1 18577 SymJIT 1.14e-11 / 2.23e-13 / 1.7e-10; TM 65774 hw and gen
   2.66e-12 / 1.58e-13 / 2.4e-12; TM 103232 hw, gen and expr 5.85e-12 /
   2.92e-13 / 7.7e-12; TM 103983 SymJIT 1.42e-12 / 1.06e-13 / 1.9e-12; and at
-  128 bits v1 16793 native 8.75e-11 / 2.31e-12 / 5.1e-7.
+  128 bits v1 16793 native 8.75e-11 / 2.31e-12 / 5.1e-7 and SW 36841, 36844,
+  36855 and 36858 (four relabellings of `4 1.0 0.0 11.923773121437657
+  10.57262939762882 0.04061179735123128 11.923773121437657
+  0.04061179735123127 0 0 0 0 11.923773121437659 0 0.04061179735123128
+  -6.341526100574037e-06`, a mass one ulp above two invariants) native
+  3.29e-12 and interpreted 1.17e-12 / 7.8e-17 / 18.6 (0.51 without
+  on-shell-breaking moves), the same at f2adce4.
 - **Within 10 kappa_1ulp only through an on-shell-breaking move (J*)**, now /
   09b2c74 / kappa_1ulp (without such moves): v1 395 generated 5.72e-6 /
   6.04e-7 / 1.1e-6 (7.8e-8) and SymJIT 3.65e-6 / 3.18e-7 (silent: finite
