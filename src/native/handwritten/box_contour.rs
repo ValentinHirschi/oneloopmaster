@@ -754,10 +754,12 @@ impl LineProduct<'_> {
 /// an `a1` within 16 units of its rounding (`2^96 |a1|² < scale`) or where a
 /// product replaces a rounded `y - z` that vanishes. Otherwise, among the
 /// edges whose nearer pole's `y - z` cancels by more than 64: none where one
-/// of them has no product or an offset more than 2^10 times `a1` relative to
-/// its root (`2^20 |z|² |a1|² < |y - z|² scale`), and else each but one whose
-/// pole lies within 8 offsets of an end of the edge (`min(|y|², |1 - y|²) <
-/// 64 |y - z|²`).
+/// of them has no product, and else each but one whose pole lies within 8
+/// offsets of an end of the edge (`min(|y|², |1 - y|²) < 64 |y - z|²`). A
+/// kept product whose offset is more than 2^10 times `a1` relative to its
+/// root (`2^20 |z|² |a1|² < |y - z|² scale`) is probed (`tfun_selected`) as
+/// one that disagrees with its pole by at least 128 units: the chart's
+/// `probe` records it with that disagreement (or its own where larger).
 #[cold]
 #[inline(never)]
 fn products_kept(lines: &[LineProduct; 3], data: &BetaData, scale: f64) -> [bool; 3] {
@@ -767,6 +769,7 @@ fn products_kept(lines: &[LineProduct; 3], data: &BetaData, scale: f64) -> [bool
         return kept;
     }
     let mut chart = true;
+    let mut unscaled: [Option<Probe>; 3] = [None; 3];
     for (index, line) in lines.iter().enumerate() {
         let [d, e, b, c, far] = line.line;
         if !nz(e) || !nz(b) {
@@ -787,16 +790,41 @@ fn products_kept(lines: &[LineProduct; 3], data: &BetaData, scale: f64) -> [bool
         if nearer == 0.0 && product.is_some() {
             return [true; 3];
         }
-        if product.is_none() || negative(1048576.0 * hzz * norm(line.a1) - nearer * scale) {
+        let Some(offset) = product else {
             chart = false;
-        }
+            continue;
+        };
         let [to_zero, to_one] = [norm(pole), norm(pole - ONE)];
         let end = if negative(to_zero - to_one) { to_zero } else { to_one };
         if negative(end - 64.0 * nearer) {
             kept[index] = false;
+        } else if negative(1048576.0 * hzz * norm(line.a1) - nearer * scale) {
+            // The disagreement `r1_with` records for this product (an exactly
+            // real `y - z` takes the product's real part), at least 128 units.
+            let first = negative(n1 - n2);
+            let direct = if first { o1 } else { o2 };
+            let offset = if direct.im != 0.0 { offset } else { r(offset.re) };
+            let difference = offset - direct;
+            let units = if nz(offset) {
+                norm(difference) * nearer / (f64::EPSILON * f64::EPSILON * hzz * norm(offset))
+            } else {
+                0.0
+            };
+            let units = if negative(units - 128.0) { 128.0 } else { units };
+            unscaled[index] = Some((units, if first { 0 } else { 1 }, difference * e));
         }
     }
-    if chart { kept } else { [false; 3] }
+    if !chart {
+        return [false; 3];
+    }
+    for (line, probe) in lines.iter().zip(unscaled) {
+        if let (Some(cell), Some(probe)) = (line.probe, probe)
+            && negative(cell.get().0 - probe.0)
+        {
+            cell.set(probe);
+        }
+    }
+    kept
 }
 
 /// The line products of `tfun_lines`: none (`y - z` everywhere), those

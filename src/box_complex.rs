@@ -1300,7 +1300,8 @@ fn real_intersections_absent(coefficients: [&Atom; 9]) -> Atom {
 }
 
 /// Nonzero where the line edge `index` (x = 1, y = x, y = 0, as in
-/// [tfun_lines]) of a parallel chart takes its product: the arguments are
+/// [tfun_lines]) of a parallel chart takes its product (2 where the product
+/// is also probed, see below): the arguments are
 /// `index`, the chart's poles, `beta, w, g, h, j`, the line's sums `gh, gj,
 /// ghj`, the three edges' products ([line_product]), `a1` and `scale =
 /// |g|² + |beta h|²`.
@@ -1317,14 +1318,24 @@ fn real_intersections_absent(coefficients: [&Atom; 9]) -> Atom {
 /// that [r1_line] gives the product) is tested, and the chart takes no
 /// product where such an edge has none (its intersection with the line lies
 /// on the conic, [line_product], and keeps `y - z`: v1 5635, whose y = 0 edge
-/// lies within 4e-16 of its pole) or has an offset `|y - z|/|z|` more than
-/// 2^10 times `a1/sqrt(scale)` (an offset that `a1` does not account for:
-/// v1 8793 and 18833, 460 to 5700 times). An edge whose pole lies within 8
+/// lies within 4e-16 of its pole). An edge whose pole lies within 8
 /// offsets of an end of the edge (`min(|y|², |1 - y|²) < 64 |y - z|²`) keeps
 /// `y - z`: there [r1_line] also takes the pole's distance to that end from
 /// the rounded pole, which the product's offset no longer matches (v1 19829,
 /// 2.4e-7 from the corner where the edges x = 1 and y = x meet, with
 /// offsets 5.4e-8 and 5.6e-8; v1 1255, 13854 and g1 6075).
+///
+/// A kept product whose offset `|y - z|/|z|` is more than 2^10 times
+/// `a1/sqrt(scale)` (an offset that `a1` does not account for) gives 2: the
+/// chart is then probed ([tfun_selected], [tfun_edge_units]) as if that
+/// product disagreed with its pole by at least 128 units, which takes `y - z`
+/// everywhere where the products move the chart more under the pole's shift
+/// (v1 8793 and 18833, 460 to 5700 times, as 09b2c74). Dropping every
+/// product of such a chart instead (59b96e5) lost the chart's digits where
+/// the products carry them: reflected, fs 15926 of the second verifier's
+/// 36,840-row sweep (one edge's offset 1.3e4 times `a1`, the two others 1.4
+/// and 2.6e-4 times) was wrong by 4.9e-6 to 1.4e-5, where every product keeps
+/// 2.4e-14.
 ///
 /// An `a1` within 16 units of its rounding (`2^96 |a1|² < scale`, the Gram
 /// determinant at the rounding level) has too few digits to compare the
@@ -1345,6 +1356,7 @@ fn products_kept(x: [&Atom; 16]) -> Atom {
     ];
     let mut chart = Atom::num(1);
     let mut corners = vec![];
+    let mut probes = vec![];
     let mut vanishing = Atom::num(1);
     for ([d, e, b, c, far], product) in edges.into_iter().zip([x[11], x[12], x[13]]) {
         let valid = if_nonzero(e, Atom::num(1)) * if_nonzero(b, Atom::num(1));
@@ -1359,23 +1371,27 @@ fn products_kept(x: [&Atom; 16]) -> Atom {
             * less(&(Atom::num(4096) * &nearer), &hzz)
             * if_nonzero(&(&p1 - &p2), Atom::num(1));
         let unscaled = less(&(Atom::num(1u64 << 20) * &hzz * norm(a1)), &(&nearer * scale));
-        let fails = &cancels * (1 - if_nonzero(product, Atom::num(1)) * (1 - unscaled));
+        let fails = &cancels * (1 - if_nonzero(product, Atom::num(1)));
         chart = chart * (1 - fails);
         vanishing = vanishing
             * (1 - &cancels * if_nonzero_else(&nearer, Atom::num(0), Atom::num(1)) * if_nonzero(product, Atom::num(1)));
         let end = min(&norm(&pole), &norm(&(&pole - 1)));
-        corners.push(cancels * less(&end, &(Atom::num(64) * nearer)));
+        corners.push(&cancels * less(&end, &(Atom::num(64) * nearer)));
+        probes.push(cancels * unscaled);
     }
-    let corner = if_nonzero_else(
-        index,
-        if_nonzero_else(&(index - 1), corners[2].clone(), corners[1].clone()),
-        corners[0].clone(),
-    );
+    let by_index = |values: &[Atom]| {
+        if_nonzero_else(
+            index,
+            if_nonzero_else(&(index - 1), values[2].clone(), values[1].clone()),
+            values[0].clone(),
+        )
+    };
+    let [corner, probe] = [by_index(&corners), by_index(&probes)];
     // An `a1` within 16 units of its rounding, or a product where the
     // rounded `y - z` vanishes, keeps every product.
     let unresolved = less(&(Atom::num(symbolica::domains::integer::Integer::from(2).pow(96)) * norm(a1)), scale);
     let all = 1 - (1 - unresolved) * vanishing;
-    if_nonzero_else(&all, Atom::num(1), chart * (1 - corner))
+    if_nonzero_else(&all, Atom::num(1), chart * (1 - corner) * (1 + probe))
 }
 
 /// The chart of [tfun] for the contour `beta` (with `w = beta - 1` and the
@@ -1634,19 +1650,21 @@ fn tfun_edge_probe(x: [&Atom; 31]) -> Atom {
             &raw[2], &a1, &scale,
         ],
     );
-    let product = kept * pick(raw[0].clone(), raw[1].clone(), raw[2].clone());
+    let product = if_nonzero(&kept, pick(raw[0].clone(), raw[1].clone(), raw[2].clone()));
+    let forced = if_nonzero_else(&(&kept - 2), Atom::num(0), Atom::num(1));
     call(
         "tfun_edge_units",
-        [&data.y[0].value, &data.y[1].value, &ed, &ee, &eb, &ec, &efar, &product, which],
+        [&data.y[0].value, &data.y[1].value, &ed, &ee, &eb, &ec, &efar, &product, &forced, which],
     )
 }
 
 /// [r1_line]'s offsets of a line edge `[d, e, b, c, far]` with its product,
 /// for the poles `y1`, `y2`: where the product is taken, its disagreement with
 /// the rounded `y - z` in units of `2^-52 |z|`, squared (`which` 0; zero where
-/// no product is taken), or the shift `e (offset - (y - z))` of pole 1 or 2
+/// no product is taken; at least 128 where `forced`, a product that
+/// [products_kept] probes), or the shift `e (offset - (y - z))` of pole 1 or 2
 /// (`which` 1 or 2; zero for the other pole).
-fn tfun_edge_units([y1, y2, d, e, b, c, far, product, which]: [&Atom; 9]) -> Atom {
+fn tfun_edge_units([y1, y2, d, e, b, c, far, product, forced, which]: [&Atom; 10]) -> Atom {
     let one = Atom::num(1);
     let rounding = Atom::num(symbolica::domains::integer::Integer::from(2).pow(104));
     let [p1, p2] = [y1, y2].map(|y| (d + y) / e);
@@ -1666,11 +1684,17 @@ fn tfun_edge_units([y1, y2, d, e, b, c, far, product, which]: [&Atom; 9]) -> Ato
     let offset = if_nonzero(&far_offset, product / &far_offset);
     let offset = if_nonzero_else(&im(&near), offset.clone(), re(&offset));
     let difference = &offset - &near;
-    let units = taken
+    let units = &taken
         * if_nonzero(
             &offset,
             rounding * norm(&difference) * &nearer / (&hzz * norm(&offset)),
         );
+    let floor = Atom::num(128);
+    let units = if_nonzero_else(
+        &(forced * taken),
+        if_nonzero_else(&less(&units, &floor), floor.clone(), units.clone()),
+        units,
+    );
     let shift = difference * e;
     if_nonzero_else(
         which,
@@ -2834,7 +2858,7 @@ pub(crate) fn register(map: &mut FunctionMap) {
     define(map, "products_kept", 16, |x| {
         products_kept(core::array::from_fn(|idx| &x[idx]))
     });
-    define(map, "tfun_edge_units", 9, |x| {
+    define(map, "tfun_edge_units", 10, |x| {
         tfun_edge_units(core::array::from_fn(|idx| &x[idx]))
     });
     define(map, "tfun_edge_probe", 31, |x| {
