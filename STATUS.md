@@ -231,7 +231,7 @@ before f2adce4, that the first verifier's sets did not exercise:
   -3.1883451577633146e-06 2.0281683293083486 -0.9363637293480552
   2.3140068531658553 -0.0012961339967214824`. The R3 rows of the next
   section are the same class.
-- **NaN where 09b2c74 was within 1e-6** (59b96e5's chart tests, 97efa0f;
+- **NaN where 09b2c74 was within 1e-6** (the chart tests of cdb4318, 97efa0f on claude/olm-final-2;
   f2adce4 had 09b2c74's values): fs 14026, generated and interpreted, NaN /
   5.2e-14 (the hand-written route keeps 4.9e-14; SymJIT NaN where 09b2c74
   was wrong by 0.98, N-bbad), in all 24: `4 1.0 -5.085267836351783e-13
