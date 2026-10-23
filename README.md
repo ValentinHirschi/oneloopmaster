@@ -622,10 +622,11 @@ parameters are runtime inputs, including
 
 `NativeEvaluator` requires `generated-evaluators` and owns reusable constants
 and a workspace. Its arithmetic runs
-in generated Rust. Binary64 dilogarithms call Symbolica's
-`transcendental::dilog_complex_f64` kernel directly (no callback lookup, no
-MPFR); `DoubleFloat` and `Float` use Symbolica's registered polylog callback, so
-first use can initialize Symbolica and the requested OneLOop backend. Rational
+in generated Rust. Dilogarithms use Symbolica's registered complex `polylog(2,z)`
+callback, resolved once per numeric domain. Current upstream Symbolica evaluates
+binary64 inputs through guarded MPFR arithmetic before converting back to
+binary64; older direct-kernel timings do not describe this route. First use can
+initialize Symbolica and the requested OneLOop backend. Rational
 constants are converted directly at construction.
 Clones have independent workspaces; batches run the generated scalar function
 for each row, without a SIMD promise or hidden worker threads. See

@@ -21,6 +21,16 @@ fn resolve_dilog<T: symbolica::evaluate::EvaluationDomain>()
     .expect("Symbolica provides complex polylog evaluation")
 }
 
+fn dilog_f64_callback() -> &'static dyn symbolica::evaluate::ExternalFunction<C<f64>> {
+    static CALLBACK: std::sync::OnceLock<Box<dyn symbolica::evaluate::ExternalFunction<C<f64>>>> =
+        std::sync::OnceLock::new();
+    if let Some(callback) = CALLBACK.get() {
+        return callback.as_ref();
+    }
+    let _ = symbolica::get_symbol!("symbolica::polylog");
+    CALLBACK.get_or_init(resolve_dilog).as_ref()
+}
+
 fn dilog_float_callback() -> &'static dyn symbolica::evaluate::ExternalFunction<C<Float>> {
     static CALLBACK: std::sync::OnceLock<Box<dyn symbolica::evaluate::ExternalFunction<C<Float>>>> =
         std::sync::OnceLock::new();
@@ -139,9 +149,9 @@ impl NativeFloat for f64 {
     }
     #[inline]
     fn dilog(z: &C<Self>) -> C<Self> {
-        // Symbolica's binary64 kernel, also behind its registered polylog(2, z)
-        // callback; calling it directly skips the callback and its lookup.
-        symbolica::transcendental::dilog_complex_f64(*z)
+        // Use Symbolica's registered complex binary64 polylog(2, z) API,
+        // retaining its principal branch and both output components.
+        dilog_f64_callback()(std::slice::from_ref(z))
     }
     #[inline]
     fn exact_i64(&self) -> Option<i64> {

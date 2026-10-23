@@ -108,13 +108,13 @@ and logarithm lips. For binary64 off the axes and inside `[2^-500, 2^500]`, comp
 reciprocals use one division and norms `sqrt(x²+y²)` (within a few ulps; tested
 against 256 bits); axes, non-finite values and extreme scales keep the scaled
 algorithms. They avoid converting arbitrary-precision predicates through
-f64. Dilogarithms call the same state-free native Symbolica numerical kernels:
-binary64 calls `symbolica::transcendental::dilog_complex_f64` directly (a
-Bernoulli-series kernel with Symbolica's lips and signed zeros, Symbolica PR89),
-without the registered-callback lookup or MPFR. Its normwise relative error is at
-most 1.2e-15 (about 10 units of 2^-53, reached next to Re z = 1/2 where the
-reflection cancels; 99.86% of points within 4 units) on a 200,745-point review
-grid against mpmath, where the previous MPFR route was correctly rounded. DoubleFloat's
+f64. Dilogarithms reuse Symbolica's registered complex `polylog(2,z)` callback,
+resolved once per numeric domain. Current upstream Symbolica converts binary64
+inputs exactly to 53-bit Float components, evaluates with precision guards and
+converts the complex result back to binary64. Both signs of zero on the real
+cut select its lower lip; nonzero imaginary inputs select their respective
+sides. This MPFR-backed route supersedes the removed direct binary64 kernel;
+that kernel's historical error and timing measurements do not apply. DoubleFloat's
 dilogarithm uses a precision-preserving MPFR conversion of both
 compensated components, while ordinary generated arithmetic remains DoubleFloat.
 This is not a runtime scalar-master evaluator callback.

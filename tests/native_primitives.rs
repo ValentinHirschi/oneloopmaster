@@ -417,7 +417,67 @@ fn native_primitives_general_powers_and_quadrants() {
         assert!((actual.im.abs() - 1.0).abs() < 4.0 * f64::EPSILON);
         assert_eq!(actual.im.is_sign_negative(), zero.is_sign_negative());
         let dilog = primitives::polylog2(&C::new(2.0, zero));
-        assert_eq!(dilog.im, -std::f64::consts::PI * 2.0_f64.ln());
+        // The registered evaluator rounds once to binary64; the analytic
+        // reference here rounds pi, log(2) and their product separately.
+        let expected = -std::f64::consts::PI * 2.0_f64.ln();
+        assert!((dilog.im - expected).abs() <= 4.0 * f64::EPSILON * expected.abs());
+    }
+}
+
+#[test]
+fn native_binary64_dilog_known_real_and_complex_points() {
+    let pi = std::f64::consts::PI;
+    let log_two = 2.0_f64.ln();
+    let catalan = 0.915_965_594_177_219;
+    for (input, expected) in [
+        (C::new(0.0, 0.0), C::new(0.0, 0.0)),
+        (C::new(1.0, 0.0), C::new(pi * pi / 6.0, 0.0)),
+        (C::new(-1.0, 0.0), C::new(-pi * pi / 12.0, 0.0)),
+        (
+            C::new(0.5, 0.0),
+            C::new(pi * pi / 12.0 - log_two * log_two / 2.0, 0.0),
+        ),
+        (C::new(0.0, 1.0), C::new(-pi * pi / 48.0, catalan)),
+        (C::new(0.0, -1.0), C::new(-pi * pi / 48.0, -catalan)),
+        (
+            C::new(1.0, 1.0),
+            C::new(pi * pi / 16.0, catalan + pi * log_two / 4.0),
+        ),
+    ] {
+        let actual = primitives::polylog2(&input);
+        for (value, reference) in [(actual.re, expected.re), (actual.im, expected.im)] {
+            assert!(
+                (value - reference).abs() <= 8.0 * f64::EPSILON * reference.abs().max(1.0),
+                "Li2({input:?}) = {actual:?}, expected {expected:?}"
+            );
+        }
+        if expected.im == 0.0 {
+            assert_eq!(actual.im, 0.0);
+        }
+    }
+}
+
+#[test]
+fn native_binary64_dilog_cut_sides_and_signed_zero() {
+    let pi = std::f64::consts::PI;
+    let expected_real = pi * pi / 4.0;
+    let imaginary_magnitude = pi * 2.0_f64.ln();
+    // Exactly real inputs take the lower lip for BOTH signs of zero.
+    // Nonzero imaginary parts instead approach the corresponding cut side.
+    for imaginary in [0.0, -0.0, 1e-20, -1e-20, 1e-300, -1e-300] {
+        let actual = primitives::polylog2(&C::new(2.0, imaginary));
+        let expected_imaginary = if imaginary > 0.0 {
+            imaginary_magnitude
+        } else {
+            -imaginary_magnitude
+        };
+        assert!((actual.re - expected_real).abs() <= 8.0 * f64::EPSILON * expected_real);
+        assert!(
+            (actual.im - expected_imaginary).abs()
+                <= 8.0 * f64::EPSILON * imaginary_magnitude,
+            "Li2(2 + {imaginary:?} i) = {actual:?}"
+        );
+        assert_eq!(actual.im.is_sign_negative(), imaginary <= 0.0);
     }
 }
 
