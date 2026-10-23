@@ -19,6 +19,7 @@ mod labelling;
 pub use labelling::regular_d0_labelling;
 mod native;
 mod precision;
+mod poles;
 #[cfg(feature = "rust-codegen")]
 pub mod rust_codegen;
 mod sheet_exact;
@@ -40,6 +41,7 @@ pub use inspection::{
 };
 pub use native::{NativeEvaluator, NativeFloat, NativeTensorEvaluator, TensorIntegral};
 pub use precision::PrecisionEvaluator;
+pub use poles::{PoleCoefficient, PoleSelection};
 
 symbolica::initialize!(
     initialization::from_symbolica,

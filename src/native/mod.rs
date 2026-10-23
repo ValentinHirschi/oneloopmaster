@@ -87,6 +87,7 @@ impl<T: NativeFloat> Context<T> {
 #[cfg(feature = "generated-evaluators")]
 pub struct NativeEvaluator<T: NativeFloat> {
     family: ScalarIntegral,
+    poles: crate::PoleSelection,
     bits: u32,
     context: Context<T>,
     arguments: Vec<C<T>>,
@@ -115,6 +116,7 @@ impl<T: NativeFloat> NativeEvaluator<T> {
         }
         Ok(Self {
             family,
+            poles: crate::PoleSelection::BOTH,
             bits,
             context: Context::new(bits)?,
             arguments: (0..family.arity())
@@ -142,6 +144,21 @@ impl<T: NativeFloat> NativeEvaluator<T> {
     /// Working precision in bits (not decimal digits).
     pub fn binary_precision(&self) -> u32 {
         self.bits
+    }
+
+    /// Retain the chosen UV/IR poles, leaving the finite result unchanged.
+    pub fn with_pole_selection(mut self, selection: crate::PoleSelection) -> Self {
+        self.set_pole_selection(selection);
+        self
+    }
+
+    /// Change pole selection for subsequent calls on this evaluator.
+    pub fn set_pole_selection(&mut self, selection: crate::PoleSelection) {
+        self.poles = selection;
+    }
+
+    pub fn pole_selection(&self) -> crate::PoleSelection {
+        self.poles
     }
 
     /// Evaluate one point. Shape/domain errors leave output unchanged.
@@ -183,7 +200,7 @@ impl<T: NativeFloat> NativeEvaluator<T> {
             }
             &self.arguments
         };
-        let values = match self.family {
+        let mut values = match self.family {
             ScalarIntegral::A0 if !truth(&input[0]) => {
                 let mut values = simple::zeros(&input[0].re);
                 values[1] = input[0].clone();
@@ -218,6 +235,14 @@ impl<T: NativeFloat> NativeEvaluator<T> {
                     generated_d0::evaluate(input, &self.context)
                 }),
         };
+        // All finite terms have been calculated before separating the poles.
+        if self.poles != crate::PoleSelection::BOTH
+            && values.iter().all(|z| z.re.is_finite() && z.im.is_finite())
+        {
+            self.poles
+                .apply(crate::PoleCoefficient::Scalar(self.family), &mut values)
+                .expect("scalar pole coefficients have no unsupported ranks");
+        }
         for (out, value) in output.iter_mut().zip(values) {
             *out = value;
         }

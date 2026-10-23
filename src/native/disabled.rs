@@ -28,6 +28,18 @@ impl<T: NativeFloat> NativeEvaluator<T> {
         match self.unavailable {}
     }
 
+    pub fn with_pole_selection(self, _selection: crate::PoleSelection) -> Self {
+        match self.unavailable {}
+    }
+
+    pub fn set_pole_selection(&mut self, _selection: crate::PoleSelection) {
+        match self.unavailable {}
+    }
+
+    pub fn pole_selection(&self) -> crate::PoleSelection {
+        match self.unavailable {}
+    }
+
     pub fn evaluate(&mut self, _input: &[C<T>], _output: &mut [C<T>]) -> Result<(), String> {
         match self.unavailable {}
     }

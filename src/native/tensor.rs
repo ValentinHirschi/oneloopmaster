@@ -544,6 +544,7 @@ impl TensorIntegral {
 #[derive(Clone)]
 pub struct NativeTensorEvaluator<T: NativeFloat> {
     family: TensorIntegral,
+    poles: crate::PoleSelection,
     bits: u32,
     kernel: TensorKernel<T>,
     /// The binary64 kernels, present exactly for `T = f64`.
@@ -572,6 +573,7 @@ impl<T: NativeFloat> NativeTensorEvaluator<T> {
         }
         Ok(Self {
             family,
+            poles: crate::PoleSelection::BOTH,
             bits,
             kernel: TensorKernel::new(bits)?,
             binary64: Self::binary64_kernel()?,
@@ -611,6 +613,22 @@ impl<T: NativeFloat> NativeTensorEvaluator<T> {
         self.bits
     }
 
+    /// Retain the chosen UV/IR poles after the complete tensor calculation.
+    /// All finite coefficients, including rational terms, are unchanged.
+    pub fn with_pole_selection(mut self, selection: crate::PoleSelection) -> Self {
+        self.set_pole_selection(selection);
+        self
+    }
+
+    /// Change the selection for future rows and batches on this evaluator.
+    pub fn set_pole_selection(&mut self, selection: crate::PoleSelection) {
+        self.poles = selection;
+    }
+
+    pub fn pole_selection(&self) -> crate::PoleSelection {
+        self.poles
+    }
+
     /// Evaluate one row into `family().outputs()` values.
     pub fn evaluate(&mut self, input: &[C<T>], output: &mut [C<T>]) -> Result<(), String> {
         self.validate_shape(input.len(), output.len(), 1)?;
@@ -646,6 +664,7 @@ impl<T: NativeFloat> NativeTensorEvaluator<T> {
         if let Some(kernel) = &self.binary64
             && binary64_row(kernel, self.family, input, output)
         {
+            self.select_poles(output);
             return;
         }
         let input = if T::FIXED_BITS.is_some() {
@@ -662,6 +681,27 @@ impl<T: NativeFloat> NativeTensorEvaluator<T> {
             TensorIntegral::B11 => self.kernel.bubble(input, 2, output),
             TensorIntegral::B111 => self.kernel.bubble(input, 3, output),
             TensorIntegral::B1111 => self.kernel.bubble(input, 4, output),
+        }
+        self.select_poles(output);
+    }
+
+    fn select_poles(&self, output: &mut [C<T>]) {
+        if self.poles == crate::PoleSelection::BOTH
+            || output
+                .iter()
+                .any(|z| !z.re.is_finite() || !z.im.is_finite())
+        {
+            return;
+        }
+        for (rank, triple) in output.chunks_exact_mut(3).enumerate() {
+            let coefficient = if self.family == TensorIntegral::An {
+                crate::PoleCoefficient::TadpoleTensor
+            } else {
+                crate::PoleCoefficient::BubbleMoment { rank }
+            };
+            self.poles
+                .apply(coefficient, triple.try_into().expect("Laurent triple"))
+                .expect("native tensor families stop at rank four");
         }
     }
 

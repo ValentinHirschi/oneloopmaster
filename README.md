@@ -877,6 +877,53 @@ callbacks remain necessary for extreme scales. See the
 limitations and the standalone cases.
 
 
+### UV and IR pole selection
+
+`NativeEvaluator` and `NativeTensorEvaluator` accept a per-instance
+`PoleSelection`. `BOTH` is the default and retains the existing numerical
+results. `UV`, `IR` and `NONE` affect only the simple and double poles; the
+finite coefficient, including finite rational terms, is unchanged.
+
+```rust
+use oneloop::{NativeTensorEvaluator, PoleSelection, TensorIntegral};
+use symbolica::domains::float::Complex;
+
+let mut bubbles = NativeTensorEvaluator::<f64>::new(TensorIntegral::B1111)?
+    .with_pole_selection(PoleSelection::UV);
+let input = [Complex::new(0., 0.), Complex::new(0., 0.),
+             Complex::new(0., 0.), Complex::new(1., 0.)];
+let mut output = [Complex::new(0., 0.); 15];
+bubbles.evaluate(&input, &mut output)?;
+// B0, B1, B11, B111, B1111 UV residues: 1, -1/2, 1/3, -1/4, 1/5.
+bubbles.set_pole_selection(PoleSelection::IR);
+bubbles.evaluate(&input, &mut output)?;
+// The same scaleless integral has the opposite IR residues.
+# Ok::<(), String>(())
+```
+
+The scalar and tensor interfaces support `f64`, `DoubleFloat` and `Float`;
+fractions are evaluated in the selected numerical precision. A0 and its tensor
+coefficients have only UV poles. B0 and longitudinal bubble moments have UV
+residues `(-1)^rank/(rank+1)`, including the scaleless limit. The derivative
+dB0 has no UV pole (its on-shell IR pole is retained). Scalar C0 and D0 have
+only IR poles. The double pole is always IR. No second loop reduction is
+required to select these residues.
+
+For an interpreted or external evaluator, apply
+`PoleSelection::apply(PoleCoefficient, &mut [finite, single, double])` after a
+successful combined evaluation. `PoleCoefficient::Scalar` identifies a scalar
+family, `TadpoleTensor` a tadpole coefficient, and `BubbleMoment { rank }` a
+longitudinal bubble coefficient through rank four. Selection must occur after
+the full evaluation, since internal recurrences can use ordinary poles to
+construct finite terms. Native evaluators preserve nonfinite failure outputs;
+the public projection helper assumes that its caller already validated success.
+
+Consumers performing integrand reduction must retain scaleless-bubble
+coefficients when requesting separated poles. Discarding such bubbles before
+calling this library loses the individually nonzero UV and IR contributions.
+This option concerns unrenormalized loop integrals; it does not classify or
+change model counterterms.
+
 ## Python (PyO3)
 
 The separate [Python adapter](python/README.md) supplies scalar and batched
